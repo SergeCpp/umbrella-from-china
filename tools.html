@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots"   content="noindex">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tools &mdash; Umbrella from China still touches as new</title>
+  <link rel="icon" type="image/jpeg" sizes="192x192" href="/images/xie-an-ran-192x192.jpg">
+  <link rel="stylesheet" type="text/css" media="all" href="/style.css">
+</head>
+
+<body>
+<header class="header">
+  <a href="/">&#x2602;&#xFE0F;</a> <!-- Umbrella opened -->
+  <nav class="header-nav">
+    <a href="/chinese-songs">Chinese Songs</a>
+    <a href="/lingyuan-yousa-songs">Lingyuan Yousa</a>
+    <a href="/liu-keyi-songs">Liu Keyi</a>
+    <a href="/ren-ran-songs">Ren Ran</a>
+    <a href="/tang-yufei-songs">Tang Yufei</a>
+    <a href="/wang-ziyu-songs">Wang Ziyu</a>
+    <a href="/zhao-fangjing-songs">Zhao Fangjing</a>
+  </nav>
+  <a href="/archive/archive-org-items">&#x1F302;&#xFE0F;</a> <!-- Umbrella closed -->
+</header>
+
+<div><video controls
+   id     ="play"
+   poster ="/images/lingyuan-yousa-2000x1250.jpg"><source
+   src    ="https://archive.org/download/lingyuan-yousa-time-mark-10th-anniversary-concert/
+Lingyuan%20Yousa.%20Time%20Mark.%2010th%20Anniversary%20Concert%20360p.mp4"
+   type   ="video/mp4"><track default
+   kind   ="subtitles"
+   label  ="English"
+   srclang="en"
+   src    ="/lingyuan-yousa-concert.english.vtt.txt"></video></div>
+
+<p class  ="text-center"
+   style  ="font-family:monospace; font-size:1.5em;"><input
+   id     ="time"
+   style  ="font-family:monospace; font-size:1.5em;"
+   type   ="text"
+   minlength="8"
+   maxlength="8"
+   size     ="8"
+   autofocus>&nbsp;<button
+   onclick="set_time()"
+   style  ="font-family:monospace; font-size:1.5em;"
+   type   ="button">Set time x play</button>&nbsp;(1..36 tracks are corrected)</p>
+
+<script>
+document.getElementById("time").value = "01:36:46";
+function set_time() {
+  const p   = document.getElementById("play");
+  const hms = document.getElementById("time").value;
+  if   (hms.length === 8) {
+    const [h, m, s] = hms.split(':').map(Number);
+    p.currentTime = (h * 60 + m) * 60 + s;
+    p.play();
+  }
+}
+</script>
+
+</body>
+</html>
+
+
+
+
+
+

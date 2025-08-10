@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://umbrella-from-china.neocities.org/sitemap.xml
