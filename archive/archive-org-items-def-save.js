@@ -252,13 +252,15 @@ function get_grow_fixed(curr, prev) {
 }
 
 function get_total_counts(results) {
-  const total_counts = { movies: 0, audio: 0, favorited: 0, favorites: 0 };
+  const total_counts = { audio: 0, video: 0, views: 0, favorites: 0, favorited: 0 };
   results.forEach(item => {
-    if (item.mediatype === "movies") total_counts.movies++;
     if (item.mediatype === "audio" ) total_counts.audio++;
+    if (item.mediatype === "movies") total_counts.video++;
 
-    total_counts.favorited += item.favorites != 0;
-    total_counts.favorites += item.favorites;
+    total_counts.views += (item.views_old + item.views_23 + item.views_7);
+
+    total_counts.favorites +=  item.favorites;
+    total_counts.favorited += (item.favorites != 0);
   });
   return total_counts;
 }
@@ -349,14 +351,15 @@ function render_results(results_curr, results_prev) {
 
   // Total counts displaying (for expanded results)
   const curr_exp_counts  = get_total_counts(results_curr_exp);
-  const curr_exp_total   = curr_exp_counts.movies + curr_exp_counts.audio;
+  const curr_exp_total   = curr_exp_counts.audio + curr_exp_counts.video;
   const counts_div       = document.createElement("div");
   counts_div.className   = "subtitle text-center text-normal";
-  counts_div.textContent = 'Total ' + curr_exp_total            +   ' ' +
-                          '(Audio ' + curr_exp_counts.audio     + ' / ' +
-                           'Video ' + curr_exp_counts.movies    +  ') ' +
-                           'Fav '   + curr_exp_counts.favorited + ' / ' +
-                                      curr_exp_counts.favorites;
+  counts_div.textContent = 'Total ' + curr_exp_total            + ' '        +
+                           '('      + curr_exp_counts.audio     + ' Audio '  +
+                           '/ '     + curr_exp_counts.video     + ' Video) ' +
+                                      curr_exp_counts.views     + ' Views '  +
+                           '/ '     + curr_exp_counts.favorites + ' Favs '   +
+                           '('      + curr_exp_counts.favorited + ' Items)';
   container.appendChild(counts_div);
 
   // Both stats displaying
