@@ -231,11 +231,11 @@ function get_grow_ratio(curr, prev) {
                          return "---";
 }
 
-function get_grow_fixed(curr, prev) {
-  const diff = curr - prev;
+function get_grow_fixed ( curr , prev ) {
+  const diff     =        curr - prev;
   if   (diff     === 0) { return "   "; }
 
-  const diff_abs = Math.abs(diff);
+  const diff_abs =   Math.abs(diff);
   if   (diff_abs === 1) { return ".  "; }
   if   (diff_abs === 2) { return ".. "; }
   if   (diff_abs === 3) { return "..."; }
