@@ -15,8 +15,9 @@ https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-202
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-07-27.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-07-31.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-08-07.xml.txt
+https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-08-14.xml.txt
 -------
-6 files
+7 files
 
 https://umbrella-from-china.neocities.org/images/chinese-songs-1280x720.jpg
 https://umbrella-from-china.neocities.org/images/lingyuan-yousa-2000x1250.jpg
@@ -69,7 +70,7 @@ https://umbrella-from-china.neocities.org/zhao-fangjing-songs.txt
 --------
 26 files
 
-Total onsite size averaged 30 megabytes.
+Total onsite size averaged 31 megabytes.
 
 All media (audio x video) files are from archive.org and udrop.com only.
 
