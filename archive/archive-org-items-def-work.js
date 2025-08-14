@@ -199,8 +199,7 @@ function get_grow_ratio(curr, prev) {
 
     if (curr <= 0.25)  { return "+  "; }
     if (curr <= 0.50)  { return "++ "; }
-                         return "+++";
-  }
+                         return "+++"; }
 
   if  (!curr) {
     if (prev <= 0.05)  { return ".  "; }
@@ -209,25 +208,23 @@ function get_grow_ratio(curr, prev) {
 
     if (prev <= 0.25)  { return "-  "; }
     if (prev <= 0.50)  { return "-- "; }
-                         return "---";
-  }
+                         return "---"; }
 
   const ratio = curr / prev;
 
   if   (ratio === 1)   { return "   "; }
 
-  if  ((ratio >= 0.99) && (ratio <= 1.01)) { return ".  "; }
-  if  ((ratio >= 0.98) && (ratio <= 1.02)) { return ".. "; }
-  if  ((ratio >= 0.97) && (ratio <= 1.03)) { return "..."; }
+  if  ((ratio >= 0.98) && (ratio <= 1.02)) { return ".  "; }
+  if  ((ratio >= 0.95) && (ratio <= 1.05)) { return ".. "; }
+  if  ((ratio >= 0.90) && (ratio <= 1.10)) { return "..."; }
 
   if   (ratio >  1) {
-    if (ratio <= 1.05) { return "+  "; }
-    if (ratio <= 1.07) { return "++ "; }
-                         return "+++";
-  }
+    if (ratio <= 1.20) { return "+  "; }
+    if (ratio <= 1.30) { return "++ "; }
+                         return "+++"; }
   //    ratio <  1
-  if   (ratio >= 0.95) { return "-  "; }
-  if   (ratio >= 0.93) { return "-- "; }
+  if   (ratio >= 0.80) { return "-  "; }
+  if   (ratio >= 0.70) { return "-- "; }
                          return "---";
 }
 
@@ -242,12 +239,11 @@ function get_grow_fixed ( curr , prev ) {
 
   if   (diff     >   0) {
     if (diff_abs <=  5) { return "+  "; }
-    if (diff_abs <=  7) { return "++ "; }
-                          return "+++";
-  }
+    if (diff_abs <= 10) { return "++ "; }
+                          return "+++"; }
   //    diff     <   0
   if   (diff_abs <=  5) { return "-  "; }
-  if   (diff_abs <=  7) { return "-- "; }
+  if   (diff_abs <= 10) { return "-- "; }
                           return "---";
 }
 
