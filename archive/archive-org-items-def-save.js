@@ -189,62 +189,71 @@ function calculate_stats(filtered_items, stats_date) {
 
 /* Display */
 
+//    07-21  07-23  07-31  08-07 > 07-21
+//    07-27  07-31  08-07  08-14 > 08-14
+//
+// ^^^    0      2     19      0 >    25
+// ^^     1      8     37      3 >    40
+// ^      5     24     49      3 >    82
+// +++   11     58     91     12 >    94
+// ++    58    142    164     85 >   133
+// +     64     88    112     85 >    53
+//
+// -    293    175    129    256 >    69
+// --   150    130     72    144 >   115
+// ---   65     26     10     55 >    95
+// v     28     26     12     34 >    20
+// vv     0      2      0      0 >    14
+// vvv    0      0      0      0 >     6
+
 function get_grow_ratio(curr, prev) {
-  if  (!curr && !prev) { return "   "; }
-
-  if  (!prev) {
-    if (curr <= 0.05)  { return ".  "; }
-    if (curr <= 0.10)  { return ".. "; }
-    if (curr <= 0.15)  { return "..."; }
-
-    if (curr <= 0.25)  { return "+  "; }
-    if (curr <= 0.50)  { return "++ "; }
-                         return "+++"; }
-
-  if  (!curr) {
-    if (prev <= 0.05)  { return ".  "; }
-    if (prev <= 0.10)  { return ".. "; }
-    if (prev <= 0.15)  { return "..."; }
-
-    if (prev <= 0.25)  { return "-  "; }
-    if (prev <= 0.50)  { return "-- "; }
-                         return "---"; }
+  if (!curr && !prev) { return "   "; }
+  if (!curr || !prev) { return "o  "; }
 
   const ratio = curr / prev;
 
-  if   (ratio === 1)   { return "   "; }
+  if   (ratio === 1)  { return "   "; }
 
-  if  ((ratio >= 0.98) && (ratio <= 1.02)) { return ".  "; }
-  if  ((ratio >= 0.95) && (ratio <= 1.05)) { return ".. "; }
-  if  ((ratio >= 0.90) && (ratio <= 1.10)) { return "..."; }
+  if   (ratio > 1) {
+    if (ratio < 1.01) { return "+  "; }
+    if (ratio < 1.03) { return "++ "; }
+    if (ratio < 1.06) { return "+++"; }
 
-  if   (ratio >  1) {
-    if (ratio <= 1.20) { return "+  "; }
-    if (ratio <= 1.30) { return "++ "; }
-                         return "+++"; }
-  //    ratio <  1
-  if   (ratio >= 0.80) { return "-  "; }
-  if   (ratio >= 0.70) { return "-- "; }
-                         return "---";
+    if (ratio < 1.12) { return "^  "; }
+    if (ratio < 1.24) { return "^^ "; }
+                        return "^^^"; }
+  //    ratio < 1
+  if   (ratio > 0.99) { return "-  "; }
+  if   (ratio > 0.98) { return "-- "; }
+  if   (ratio > 0.96) { return "---"; }
+
+  if   (ratio > 0.94) { return "v  "; }
+  if   (ratio > 0.90) { return "vv "; }
+                        return "vvv";
 }
 
-function get_grow_fixed ( curr , prev ) {
-  const diff     =        curr - prev;
-  if   (diff     === 0) { return "   "; }
+function get_grow_fixed(curr, prev) {
+  const diff = curr - prev;
+  if   (diff === 0)     { return "   "; }
 
-  const diff_abs =   Math.abs(diff);
-  if   (diff_abs === 1) { return ".  "; }
-  if   (diff_abs === 2) { return ".. "; }
-  if   (diff_abs === 3) { return "..."; }
+  const diff_abs = Math.abs(diff);
 
-  if   (diff     >   0) {
-    if (diff_abs <=  5) { return "+  "; }
-    if (diff_abs <= 10) { return "++ "; }
-                          return "+++"; }
-  //    diff     <   0
-  if   (diff_abs <=  5) { return "-  "; }
-  if   (diff_abs <= 10) { return "-- "; }
-                          return "---";
+  if   (diff > 0) {
+    if (diff_abs === 1) { return "+  "; }
+    if (diff_abs === 2) { return "++ "; }
+    if (diff_abs === 3) { return "+++"; }
+
+    if (diff_abs <=  5) { return "^  "; }
+    if (diff_abs <= 10) { return "^^ "; }
+                          return "^^^"; }
+  //    diff < 0
+  if   (diff_abs === 1) { return "-  "; }
+  if   (diff_abs === 2) { return "-- "; }
+  if   (diff_abs === 3) { return "---"; }
+
+  if   (diff_abs <=  5) { return "v  "; }
+  if   (diff_abs <= 10) { return "vv "; }
+                          return "vvv";
 }
 
 function get_total_counts(results) {
