@@ -70,6 +70,7 @@ function filter_items(items, archived_min, archived_max, created_min, created_ma
   const filtered_items = items.filter(doc => {
     const identifier_node = doc.querySelector("str[name='identifier']");
     const title_node      = doc.querySelector("str[name='title']"     );
+    const item_size_node  = doc.querySelector("str[name='item_size']" );
     const mediatype_node  = doc.querySelector("str[name='mediatype']" );
     const date_node       = doc.querySelector("str[name='date']"      );
     const publicdate_node = doc.querySelector("str[name='publicdate']");
@@ -77,7 +78,7 @@ function filter_items(items, archived_min, archived_max, created_min, created_ma
     const month_node      = doc.querySelector("str[name='month']"     );
     const week_node       = doc.querySelector("str[name='week']"      );
 
-    if (!identifier_node || !title_node || !mediatype_node ||
+    if (!identifier_node || !title_node || !item_size_node || !mediatype_node ||
         !publicdate_node ||
         !downloads_node  || !month_node || !week_node) {
       return false;
@@ -143,6 +144,7 @@ function calculate_stats(filtered_items, stats_date) {
   const results = filtered_items.map(doc => {
     const identifier =          doc.querySelector("str[name='identifier']").textContent;
     const title      =          doc.querySelector("str[name='title']"     ).textContent;
+    const item_size  = parseInt(doc.querySelector("str[name='item_size']" ).textContent, 10);
     const mediatype  =          doc.querySelector("str[name='mediatype']" ).textContent;
     const publicdate = new Date(doc.querySelector("str[name='publicdate']").textContent);
     const downloads  = parseInt(doc.querySelector("str[name='downloads']" ).textContent, 10);
@@ -173,6 +175,7 @@ function calculate_stats(filtered_items, stats_date) {
     return {
       identifier,
       title     ,
+      item_size ,
       mediatype ,
       days_old  ,
       views_old ,
@@ -257,17 +260,34 @@ function get_grow_fixed(curr, prev) {
 }
 
 function get_total_counts(results) {
-  const total_counts = { audio: 0, video: 0, views: 0, favorites: 0, favorited: 0 };
+  const total_counts = { audio: 0, video: 0, bytes: 0, views: 0, favorites: 0, favorited: 0 };
   results.forEach(item => {
     if (item.mediatype === "audio" ) total_counts.audio++;
     if (item.mediatype === "movies") total_counts.video++;
 
+    total_counts.bytes +=  item.item_size;
     total_counts.views += (item.views_old + item.views_23 + item.views_7);
 
     total_counts.favorites +=  item.favorites;
     total_counts.favorited += (item.favorites != 0);
   });
   return total_counts;
+}
+
+function format_bytes(bytes) {
+  const units = ['KiB', 'MiB', 'GiB'];
+  let   value = bytes;
+  let   index = -1;
+
+  while (value >= 1024) {
+         value /= 1024;
+         index++;
+  }
+  let fract = (value <   9.9995) ? 3 :
+              (value <  99.995 ) ? 2 :
+              (value < 999.95  ) ? 1 : 0;
+
+  return value.toFixed(fract) + ' ' + units[index];
 }
 
 function sort_results(results) {
@@ -362,7 +382,8 @@ function render_results(results_curr, results_prev) {
   counts_div.textContent = 'Total ' + curr_exp_total            + ' '        +
                            '('      + curr_exp_counts.audio     + ' Audio '  +
                            '/ '     + curr_exp_counts.video     + ' Video) ' +
-                                      curr_exp_counts.views     + ' Views '  +
+                         format_bytes(curr_exp_counts.bytes)    + ' '        +
+                           '/ '     + curr_exp_counts.views     + ' Views '  +
                            '/ '     + curr_exp_counts.favorites + ' Favs '   +
                            '('      + curr_exp_counts.favorited + ' Items)';
   container.appendChild(counts_div);
@@ -828,7 +849,7 @@ function date_change_menu(event, what) {
       if (k === 'Enter' || k === ' ') {
         e.preventDefault();
       } else {
-        if(!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab'].includes(k)) return;
+        if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab'].includes(k)) return;
         e.preventDefault();
 
         const menu = e.currentTarget.parentElement;
@@ -853,7 +874,7 @@ function date_change_menu(event, what) {
     };
   };
 
-  for(let i = i_beg; i <= i_end; i++) {
+  for (let i = i_beg; i <= i_end; i++) {
     const date     = stat_file_dates[i];
     const date_opt = document.createElement('div');
     init_opt(date_opt, '#696969', date); // DimGray, L41
@@ -892,7 +913,7 @@ function init_dates() {
       const dates_lines     = text.trim().split("\n");
       const dates_lines_cnt = dates_lines.length;
 
-      for(let line_num = 0; line_num < dates_lines_cnt; line_num++) {
+      for (let line_num = 0; line_num < dates_lines_cnt; line_num++) {
         stat_file_dates[line_num] = dates_lines[line_num].trim();
       }
       stat_file_dates.sort();
