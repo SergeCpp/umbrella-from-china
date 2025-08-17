@@ -85,30 +85,29 @@ function filter_items(items, archived_min, archived_max, created_min, created_ma
     }
 
     // Mediatype
-    const mediatype =  mediatype_node.textContent;
-    const is_movies = (mediatype === "movies");
-    const is_audio  = (mediatype === "audio" );
+    const mediatype = mediatype_node.textContent;
+    if ((mediatype !== "movies") && (mediatype !== "audio")) return false;
 
     // Created
     let date = null;
 
-    if (!date_node) {
-      if (is_audio) { // Set default date to audio items
+    if (date_node) {
+      date = new Date(date_node.textContent);
+      if (isNaN(date.getTime())) return false;
+    } else { // No date set for item
+      if (mediatype === "audio") { // Set default date to audio item
         date = new Date("2012-01-01T00:00:00Z"); // UTC date, earliest for entire stat
       } else {
         return false;
       }
-    } else {
-      date = new Date(date_node.textContent);
-      if (isNaN(date.getTime())) return false;
     }
 
-    const created_ok = (date >= created_min) && (date <= created_max);
+    if ((date < created_min) || (date > created_max)) return false;
 
     // Archived
     const publicdate = new Date(publicdate_node.textContent);
     if (isNaN(publicdate.getTime())) return false;
-    const archived_ok = (publicdate >= archived_min) && (publicdate <= archived_max);
+    if ((publicdate < archived_min) || (publicdate > archived_max)) return false;
 
     // Views
     const downloads = parseInt(downloads_node.textContent, 10);
@@ -125,6 +124,7 @@ function filter_items(items, archived_min, archived_max, created_min, created_ma
       collections,
       (value, term) => value.toLowerCase().includes(term.toLowerCase())
     );
+    if (!matches_collections) return false;
 
     // Creators
     const matches_creators = filter_matches(
@@ -133,9 +133,10 @@ function filter_items(items, archived_min, archived_max, created_min, created_ma
       creators,
       (value, term) => value.toLowerCase().includes(term.toLowerCase())
     );
+    if (!matches_creators) return false;
 
-    // Check all together
-    return (is_movies || is_audio) && created_ok && archived_ok && matches_collections && matches_creators;
+    // Item passed filter
+    return true;
   });
   return filtered_items;
 }
@@ -724,7 +725,7 @@ function process_filter() {
     err_beg + 'Allowed are digits only: 0-9' +
     err_end;
   const err_favs_range =
-    err_beg + 'Min favs must be less than or equal to max favs' +
+    err_beg + 'Min favorites count must be less than or equal to max favorites count' +
     err_end;
 
   // Archived range
