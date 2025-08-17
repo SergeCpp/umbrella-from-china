@@ -342,10 +342,25 @@ function render_stats(results, date, what, container) {
   container.appendChild(stats_text);
 }
 
-function render_results(results_curr, results_prev) {
+function render_results(results_curr, results_prev, favs_min_str, favs_max_str) {
   const container = document.getElementById("results");
         container.innerHTML = "";
 
+  // Filtering by favorites count
+  if (favs_min_str || favs_max_str) {
+    const favs_min = favs_min_str ? parseInt(favs_min_str, 10) : 0;
+    const favs_max = favs_max_str ? parseInt(favs_max_str, 10) : Infinity;
+
+    results_curr = results_curr.filter(item => {
+      return (item.favorites >= favs_min) && (item.favorites <= favs_max);
+    });
+
+    results_prev = results_prev.filter(item => {
+      return (item.favorites >= favs_min) && (item.favorites <= favs_max);
+    });
+  }
+
+  // Checking for no results
   if ((results_curr.length === 0) && (results_prev.length === 0)) {
     container.innerHTML =
       '<div class="text-center text-comment">No items matched the filters</div>';
@@ -540,7 +555,8 @@ function render_results(results_curr, results_prev) {
 
 function init_controls() {
   // 1. Add Enter key to all date inputs
-  ["archived-min", "archived-max", "created-min", "created-max", "collections", "creators"]
+  ["collections",  "creators",
+   "archived-min", "archived-max", "created-min", "created-max", "favs-min", "favs-max"]
   .forEach(id => {
     const input = document.getElementById(id);
     if   (input) {
@@ -682,18 +698,34 @@ function input_allowed_chars(input) {
   return !/[^a-zA-Z0-9._\-'" ,]/.test(input);
 }
 
+function input_allowed_favs(input) {
+  return !/[^0-9]/.test(input);
+}
+
 function process_filter() {
   const time_0    = performance.now();
   const container = document.getElementById("results");
   const timings   = document.getElementById("timings");
         timings.textContent = "";
 
-  const err_dates = '<div class="text-center text-comment">' +
-    'Valid dates are: YYYY / YYYY-MM / YYYY-MM-DD</div>';
-  const err_range = '<div class="text-center text-comment">' +
-    'Start date must be before end date</div>';
-  const err_chars = '<div class="text-center text-comment">' +
-    'Allowed characters are: a-z, 0-9, underscore, dash, period, comma, quote, and space</div>';
+  const err_beg   = '<div class="text-center text-comment">';
+  const err_end   = '</div>';
+
+  const err_date =
+    err_beg + 'Valid dates are: YYYY / YYYY-MM / YYYY-MM-DD' +
+    err_end;
+  const err_date_range =
+    err_beg + 'Start date must be before end date' +
+    err_end;
+  const err_chars =
+    err_beg + 'Allowed characters are: a-z, 0-9, underscore, dash, period, comma, quote, and space' +
+    err_end;
+  const err_favs =
+    err_beg + 'Allowed are digits only: 0-9' +
+    err_end;
+  const err_favs_range =
+    err_beg + 'Min favs must be less than or equal to max favs' +
+    err_end;
 
   // Archived range
   const archived_min_str = document.getElementById("archived-min").value.trim();
@@ -703,7 +735,7 @@ function process_filter() {
   const archived_max_range = get_date_range(archived_max_str);
 
   if (!archived_min_range || !archived_max_range) {
-    container.innerHTML = err_dates;
+    container.innerHTML = err_date;
     return;
   }
 
@@ -711,7 +743,7 @@ function process_filter() {
   const archived_max = archived_max_range.max;
 
   if (archived_min > archived_max) {
-    container.innerHTML = err_range;
+    container.innerHTML = err_date_range;
     return;
   }
 
@@ -723,7 +755,7 @@ function process_filter() {
   const created_max_range = get_date_range(created_max_str);
 
   if (!created_min_range || !created_max_range) {
-    container.innerHTML = err_dates;
+    container.innerHTML = err_date;
     return;
   }
 
@@ -731,7 +763,7 @@ function process_filter() {
   const created_max = created_max_range.max;
 
   if (created_min > created_max) {
-    container.innerHTML = err_range;
+    container.innerHTML = err_date_range;
     return;
   }
 
@@ -747,6 +779,25 @@ function process_filter() {
   const collections = input_clean_parse(collections_str);
   const creators    = input_clean_parse(creators_str   );
 
+  // Favs
+  const favs_min_str = document.getElementById("favs-min").value.trim();
+  const favs_max_str = document.getElementById("favs-max").value.trim();
+
+  if (!input_allowed_favs(favs_min_str) || !input_allowed_favs(favs_max_str)) {
+    container.innerHTML = err_favs;
+    return;
+  }
+
+  if (favs_min_str && favs_max_str) {
+    const favs_min = parseInt(favs_min_str, 10);
+    const favs_max = parseInt(favs_max_str, 10);
+
+    if (favs_min > favs_max) {
+      container.innerHTML = err_favs_range;
+      return;
+    }
+  }
+
   // Process
   const filtered_curr_items = filter_items(
     stat_curr_items, archived_min, archived_max, created_min, created_max, collections, creators);
@@ -758,7 +809,7 @@ function process_filter() {
   const results_prev = calculate_stats(filtered_prev_items, stat_prev_date);
   const time_2       = performance.now();
 
-  if (!render_results(results_curr, results_prev)) {
+  if (!render_results(results_curr, results_prev, favs_min_str, favs_max_str)) {
     return;
   }
 
