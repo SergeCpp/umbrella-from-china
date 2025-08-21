@@ -19,6 +19,8 @@ https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-202
 ...
 See archive-dates.txt for complete actual list
 
+https://umbrella-from-china.neocities.org/images/acfun-dance-monthly-2021-05-2000x1250.jpg
+https://umbrella-from-china.neocities.org/images/acfun-dance-monthly-2021-05-600x375.jpg
 https://umbrella-from-china.neocities.org/images/bilibili-dancing-festival-2021-1840x1150.jpg
 https://umbrella-from-china.neocities.org/images/bilibili-dancing-festival-2021-600x375.jpg
 https://umbrella-from-china.neocities.org/images/chinese-clothing-600x375.jpg
@@ -27,9 +29,9 @@ https://umbrella-from-china.neocities.org/images/chinese-dance-sun-jingchen-1420
 https://umbrella-from-china.neocities.org/images/chinese-dance-sun-jingchen-600x840.jpg
 https://umbrella-from-china.neocities.org/images/chinese-songs-1280x720.jpg
 https://umbrella-from-china.neocities.org/images/dashenhui-1440x1440.jpg
+-
 https://umbrella-from-china.neocities.org/images/dashenhui-600x600.jpg
 https://umbrella-from-china.neocities.org/images/dong-min-1152x720.jpg
--
 https://umbrella-from-china.neocities.org/images/dong-min-600x375.jpg
 https://umbrella-from-china.neocities.org/images/huang-ling-600x375.jpg
 https://umbrella-from-china.neocities.org/images/huang-ling-960x600.jpg
@@ -38,9 +40,9 @@ https://umbrella-from-china.neocities.org/images/lan-youjin-600x375.jpg
 https://umbrella-from-china.neocities.org/images/lingyuan-yousa-2000x1250.jpg
 https://umbrella-from-china.neocities.org/images/ren-ran-1280x720.jpg
 https://umbrella-from-china.neocities.org/images/tang-poetry-720x720.jpg
+-
 https://umbrella-from-china.neocities.org/images/tong-hua-nichole-3088x1930.jpg
 https://umbrella-from-china.neocities.org/images/tong-hua-nichole-600x375.jpg
--
 https://umbrella-from-china.neocities.org/images/wan-yi-3040x1900.jpg
 https://umbrella-from-china.neocities.org/images/wan-yi-600x375.jpg
 https://umbrella-from-china.neocities.org/images/wang-ziyu-1728x1080.jpg
@@ -49,12 +51,12 @@ https://umbrella-from-china.neocities.org/images/xiaoye-ting-600x375.jpg
 https://umbrella-from-china.neocities.org/images/xie-an-ran-192x192.jpg
 https://umbrella-from-china.neocities.org/images/xie-an-ran-5000x5000.jpg
 https://umbrella-from-china.neocities.org/images/xie-an-ran-5504x8256.jpg
+-
 https://umbrella-from-china.neocities.org/images/xie-an-ran-600x900.jpg
 https://umbrella-from-china.neocities.org/images/xue-qiu-1192x745.jpg
--
 https://umbrella-from-china.neocities.org/images/zhao-fangjing-2880x1800.jpg
 --------
-31 files
+33 files
 
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-01-720x720.jpg
 ...
@@ -93,7 +95,7 @@ https://umbrella-from-china.neocities.org/zhao-fangjing-songs.txt
 --------
 26 files
 
-The total size of the site files is less than 37 megabytes.
+The total size of the site files is less than 38 megabytes.
 
 All media (audio x video) files are from archive.org and udrop.com only.
 
