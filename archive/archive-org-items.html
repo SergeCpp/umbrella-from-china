@@ -28,14 +28,15 @@
 
 <h1 class="text-center">Umbrella from China &mdash; Archived Items by Views/Day</h1>
 
-<div class ="text-center"
-     style ="margin-bottom: 1em;"><a
-     target="_blank"
+<div style ="width: 192px; margin: 0 auto 1em;">
+<a   target="_blank"
      href  ="/images/xie-an-ran-5000x5000.jpg"><img
      src   ="/images/xie-an-ran-192x192.jpg"
      alt   ="Xie An Ran【谢安然】"
      title ="Xie An Ran【谢安然】"
-     style ="width: 192px; height: 192px;"></a></div>
+     style ="display: block;"
+     width ="192"
+     height="192"></a></div>
 
 <div class ="text-center">Based on <a
      style ="text-decoration: none;"
@@ -75,7 +76,9 @@
      type       ="text"
      size       ="10"
      maxlength  ="10"
-     value      ="2012-01-01">&nbsp;Created&nbsp;<input
+     value      ="2012-01-01"><label
+     for        ="created-min"
+     style      ="cursor: pointer;">&nbsp;Created&nbsp;</label><input
      id         ="created-max"
      style      ="font-family: monospace;"
      type       ="text"
@@ -102,7 +105,9 @@
      type       ="text"
      size       ="10"
      maxlength  ="10"
-     value      ="2022-05-06">&nbsp;Archived&nbsp;<input
+     value      ="2022-05-06"><label
+     for        ="archived-min"
+     style      ="cursor: pointer;">&nbsp;Archived&nbsp;</label><input
      id         ="archived-max"
      style      ="font-family: monospace;"
      type       ="text"
