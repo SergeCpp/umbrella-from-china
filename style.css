@@ -7,19 +7,21 @@
   display: flex;
   justify-content: space-between; /* Pushes emoji to edges */
   margin: 0 auto 0.5rem;
-  padding: 0.5em 0.5em;
 }
 .header a {
+  padding: 0.5em 0.5em; /* Emoji will have that */
   text-decoration: none;
 }
 .header-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 1em;
+  gap: 0.4em; /* Between text links */
   justify-content: center;
 }
 .header-nav a {
   color: #696969; /* DimGray, L41 */
+  padding-left: 0.3em; /* Override for text links */
+  padding-right: 0.3em; /* Override for text links */
   text-align: center;
   text-decoration: none;
 }
@@ -63,7 +65,7 @@ details[open] .collapse {
 .media-container {
   margin: 0 auto 1rem;
   max-width: 960px;
-  text-align: center;
+  text-align: center; /* For a fallback "not supported" text to be centered */
 }
 .song-list {
   background-color: #fafafa; /* Gray98 */
@@ -76,8 +78,8 @@ details[open] .collapse {
 .song-line {
   border-radius: 0.5rem;
   box-sizing: border-box;
-  margin-bottom: 2px; /* Space for focus frame */
   display: inline-block;
+  margin-bottom: 2px; /* Space for focus frame */
   padding-left: 0.3em;
   width: 100%;
 }
