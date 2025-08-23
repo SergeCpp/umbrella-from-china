@@ -3,25 +3,31 @@
   background-color: #fafafa; /* Gray98 */
   border-bottom-color: #ebebeb; /* Gray92 */
   border-bottom-style: solid;
-  border-bottom-width: medium;
+  border-bottom-width: 3px; /* Medium */
   display: flex;
   justify-content: space-between; /* Pushes emoji to edges */
   margin: 0 auto 0.5rem;
 }
 .header a {
-  padding: 0.5em 0.5em; /* Emoji will have that */
+  padding: 0.5em 0.5em;
   text-decoration: none;
+}
+.header > a:first-child { /* First emoji only, no nav's first */
+  padding-right: 2.5em;
+}
+.header > a:last-child { /* Last emoji only, no nav's last */
+  padding-left: 2.5em;
+}
+.header a:hover {
+  background-color: #f2f2f2; /* Gray95 */
 }
 .header-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4em; /* Between text links */
   justify-content: center;
 }
 .header-nav a {
   color: #696969; /* DimGray, L41 */
-  padding-left: 0.3em; /* Override for text links */
-  padding-right: 0.3em; /* Override for text links */
   text-align: center;
   text-decoration: none;
 }
@@ -83,13 +89,20 @@ details[open] .collapse {
   padding-left: 0.3em;
   width: 100%;
 }
+.song-line:hover {
+  background-color: #f2f2f2; /* Gray95 */
+}
 .song-line.paused {
   background-color: #ebebeb; /* Gray92 */
-  border-radius: 0.5rem;
+}
+.song-line.paused:hover {
+  background-color: #e3e3e3; /* Gray89 */
 }
 .song-line.played {
   background-color: #dbdbdb; /* Gray86 */
-  border-radius: 0.5rem;
+}
+.song-line.played:hover {
+  background-color: #d4d4d4; /* Gray83 */
 }
 
 .subtitle {
