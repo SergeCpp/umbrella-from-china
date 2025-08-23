@@ -54,10 +54,10 @@
 .item-wrapper {
   border-top-color: white;
   border-top-style: solid;
-  border-top-width: medium;
+  border-top-width: 3px; /* Medium */
   border-bottom-color: #ebebeb; /* Gray92 */
   border-bottom-style: solid;
-  border-bottom-width: medium;
+  border-bottom-width: 3px; /* Medium */
 }
 .item-wrapper:last-child {
   border-bottom: none;
