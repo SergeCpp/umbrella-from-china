@@ -328,17 +328,17 @@ function set_song_list_buttons(coll_key) {
     if(song_line.includes("video audio audio")) {
        were_buttons   = true;
        song.innerHTML = song_line.replace("video audio audio",
-'<span role ="button" style="cursor:pointer; padding:1px;" tabindex="0" ' +
+'<span class="player-button" role="button" tabindex="0" ' +
   'onkeydown="kbd(event)" ' +
   'onkeyup  ="kbu(event, \'v\')" ' +
   'onclick  ="mou(event, \'v\')">' +
   'video</span> ' +
-'<span role ="button" style="cursor:pointer; padding:1px;" tabindex="0" ' +
+'<span class="player-button" role="button" tabindex="0" ' +
   'onkeydown="kbd(event)" ' +
   'onkeyup  ="kbu(event, \'a\')" ' +
   'onclick  ="mou(event, \'a\')">' +
   'audio</span> ' +
-'<span role ="button" style="cursor:pointer; padding:1px;" tabindex="0" ' +
+'<span class="player-button" role="button" tabindex="0" ' +
   'onkeydown="kbd(event)" ' +
   'onkeyup  ="kbu(event, \'b\')" ' +
   'onclick  ="mou(event, \'b\')">' +

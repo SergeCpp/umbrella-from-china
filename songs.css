@@ -1,0 +1,69 @@
+.media-container {
+  margin: 0 auto 1rem;
+  max-width: 960px;
+  text-align: center; /* For a fallback "not supported" text to be centered */
+}
+
+.player-button {
+  border-radius: 0.5rem;
+  cursor: pointer;
+  padding: 4px 2px 4.5px;
+}
+.player-button:first-child {
+  margin-left: 2px;
+}
+.player-button:last-child {
+  margin-right: 2px;
+}
+
+.song-list {
+  background-color: #fafafa; /* Gray98 */
+  border-radius: 1rem;
+  margin: 0 auto 2rem;
+  max-width: 60%;
+  padding: 1em;
+  text-align: left;
+}
+
+.song-line {
+  border-radius: 0.5rem;
+  box-sizing: border-box;
+  display: inline-block;
+  margin-bottom: 2px; /* Space for focus frame */
+  padding-left: 0.3em;
+  width: 100%;
+}
+.song-line:hover {
+  background-color: #f2f2f2; /* Gray95 */
+}
+.song-line:hover .player-button:hover {
+  background-color: #ebebeb; /* Gray92 */
+}
+
+.song-line.paused {
+  background-color: #ebebeb; /* Gray92 */
+}
+.song-line.paused:hover {
+  background-color: #e3e3e3; /* Gray89 */
+}
+.song-line.paused:hover .player-button:hover {
+  background-color: #dbdbdb; /* Gray86 */
+}
+
+.song-line.played {
+  background-color: #dbdbdb; /* Gray86 */
+}
+.song-line.played:hover {
+  background-color: #d4d4d4; /* Gray83 */
+}
+.song-line.played:hover .player-button:hover {
+  background-color: #cccccc; /* Gray80 */
+}
+
+/* EOF */
+
+
+
+
+
+
