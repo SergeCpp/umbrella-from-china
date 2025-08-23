@@ -846,7 +846,7 @@ function date_change_menu(event, what) {
 
   const d_count  = i_end - i_beg + 1;
   const rect     = event.target.getBoundingClientRect();
-  let   menu_top = rect.top    + window.scrollY - (45 + 28 * d_count);
+  let   menu_top = rect.top    + window.scrollY - (9 + 32 * d_count);
   if   (menu_top <               window.scrollY)     {
         menu_top = rect.bottom + window.scrollY + 2; }
 
@@ -856,13 +856,12 @@ function date_change_menu(event, what) {
   menu.style.position        = 'absolute';
   menu.style.left            = (rect.left + window.scrollX) + 'px';
   menu.style.top             =  menu_top                    + 'px';
-  menu.style.zIndex          = '1000';
   menu.style.backgroundColor = '#fafafa'; // Gray98
-  menu.style.border          = '2px solid #ebebeb'; // Gray92
+  menu.style.color           = '#696969'; // DimGray, L41
+  menu.style.border          = '#ebebeb solid 2px'; // Gray92
   menu.style.borderRadius    = '4px';
-  menu.style.padding         = '4px';
-  menu.style.boxShadow       = '2px 2px 4px rgba(0,0,0,0.2)';
-  menu.setAttribute            ('role', 'menu');
+  menu.style.boxShadow       = '2px 2px 4px rgb(0 0 0 / 0.2)';
+  menu.setAttribute           ('role', 'menu');
 
   menu.remove_ex = function() {
     document.removeEventListener('click', menu.outside_click);
@@ -884,17 +883,23 @@ function date_change_menu(event, what) {
     if (e.key === 'Escape') { menu.remove_ex(); }
   };
 
-  const init_opt = (opt, color, text) => {
+  const init_opt = (opt, text) => {
     opt.style.borderRadius = '4px';
-    opt.style.padding      = '2px 4px';
+    opt.style.padding      = '4px 8px';
     opt.style.cursor       = 'pointer';
     opt.style.textAlign    = 'center';
-    opt.style.color        = color;
-    opt.textContent        = text;
-    opt.tabIndex           = 0;
-    opt.setAttribute         ('role', 'menuitem');
-    opt.onmouseover        = () => { opt.style.backgroundColor = '#ebebeb'; }; // Gray92
-    opt.onmouseout         = () => { opt.style.backgroundColor = ""; };
+    opt.textContent        =  text;
+    opt.tabIndex           =  0;
+    opt.setAttribute        ('role', 'menuitem');
+
+    opt.onmouseover = () => {
+      opt.style.backgroundColor = '#f2f2f2'; // Gray95
+      opt.style.color = '#4a4a4a'; // Gray29
+    };
+    opt.onmouseout = () => {
+      opt.style.backgroundColor = ""; // From menu
+      opt.style.color = ""; // From menu
+    };
 
     opt.onkeydown = (e) => {
       const k = e.key;
@@ -917,7 +922,6 @@ function date_change_menu(event, what) {
         opts[next].focus();
       }
     };
-
     opt.onkeyup = (e) => {
       const k = e.key;
       if (k === 'Enter' || k === ' ') {
@@ -929,7 +933,7 @@ function date_change_menu(event, what) {
   for (let i = i_beg; i <= i_end; i++) {
     const date     = stat_file_dates[i];
     const date_opt = document.createElement('div');
-    init_opt(date_opt, '#696969', date); // DimGray, L41
+    init_opt(date_opt, date);
 
     date_opt.onclick = function() {
       menu.remove_ex();
@@ -937,14 +941,6 @@ function date_change_menu(event, what) {
     };
     menu.appendChild(date_opt);
   }
-
-  const close_opt = document.createElement('div');
-  init_opt(close_opt, '#9e9e9e', 'Close'); // Gray62
-
-  close_opt.onclick = function() {
-    menu.remove_ex();
-  };
-  menu.appendChild(close_opt);
 
   document.body.appendChild(menu);
   menu.children[i_date - i_beg].focus();
