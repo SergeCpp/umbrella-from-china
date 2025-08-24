@@ -18,7 +18,9 @@
   border-radius: 0.5rem;
   color: inherit; /* Use parent text color instead of link color */
   display: block; /* Ensures full title area is clickable */
-  padding: 1em 0; /* To fill entire title area */
+  outline-offset: -2px; /* For outline not to be clipped */
+  padding: 0.5em 0;
+  padding-left: 0.5em; /* Matches right margin for item-grow-container, and header */
   text-decoration: none;
 }
 .item-title a:hover {
@@ -54,7 +56,8 @@
   flex-direction: column;
   font-family: monospace;
   white-space: pre;
-  margin-left: 0.3em;
+  margin-left: 0.5em; /* Half a spacer */
+  margin-right: 0.5em; /* Matches left padding for item-title a, and header */
 }
 .item-grow-old {
   color: black;
@@ -65,7 +68,7 @@
   color: #696969; /* DimGray, L41 */
 }
 
-.item-wrapper {
+.item-wrapper { /* Border matches header */
   border-top-color: white;
   border-top-style: solid;
   border-top-width: 3px; /* Medium */
