@@ -1,8 +1,13 @@
 .item {
   align-items: center; /* Vertically center title, stats, spacer, and grow */
+  border-radius: 0.5rem;
   display: flex;
   justify-content: space-between;
 }
+.item:hover {
+  background-color: #fafafa; /* Gray98 */
+}
+
 .item-title {
   flex: 1 1 60%;
   overflow: hidden;
@@ -10,14 +15,21 @@
   white-space: nowrap;
 }
 .item-title a {
-  color: inherit; /* Use parent text color */
+  border-radius: 0.5rem;
+  color: inherit; /* Use parent text color instead of link color */
   display: block; /* Ensures full title area is clickable */
+  padding: 1em 0; /* To fill entire title area */
   text-decoration: none;
 }
+.item-title a:hover {
+  background-color: #f2f2f2; /* Gray95 */
+}
+
 .item-spacer {
   flex: 0 0 1em;
   height: 1em;
 }
+
 .item-stat-container {
   align-items: flex-end; /* Right-align all stat */
   display: flex;
@@ -34,6 +46,7 @@
 .item-stat-7 {
   color: #696969; /* DimGray, L41 */
 }
+
 .item-grow-container {
   align-items: flex-start; /* Left-align all grow */
   display: flex;
@@ -51,6 +64,7 @@
 .item-grow-7 {
   color: #696969; /* DimGray, L41 */
 }
+
 .item-wrapper {
   border-top-color: white;
   border-top-style: solid;
