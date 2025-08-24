@@ -24,6 +24,12 @@
   padding: 1em;
   text-align: left;
 }
+.song-list summary {
+  border-radius: 0.5rem;
+}
+.song-list summary:hover {
+  background-color: #f2f2f2; /* Gray95 */
+}
 
 .song-line {
   border-radius: 0.5rem;

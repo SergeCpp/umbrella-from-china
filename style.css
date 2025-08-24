@@ -49,14 +49,6 @@ audio, video {
   width: 100%;
 }
 
-pre {
-  font-size: 1.6em;
-  line-height: 1.6;
-  margin-bottom: 0;
-}
-pre i {
-  color: #9e9e9e; /* Gray62 */
-}
 summary {
   cursor: pointer;
 }
@@ -68,6 +60,15 @@ details[open] .collapse {
 }
 .collapse {
   display: none;
+}
+
+pre {
+  font-size: 1.6em;
+  line-height: 1.6;
+  margin-bottom: 0;
+}
+pre i {
+  color: #9e9e9e; /* Gray62 */
 }
 
 .subtitle {
