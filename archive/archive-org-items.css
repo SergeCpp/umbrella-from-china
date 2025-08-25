@@ -17,10 +17,9 @@
 .item-title a {
   border-radius: 0.5rem;
   color: inherit; /* Use parent text color instead of link color */
-  display: block; /* Ensures full title area is clickable */
-  outline-offset: -2px; /* For outline not to be clipped */
-  padding: 0.5em 0;
-  padding-left: 0.5em; /* Matches right margin for item-grow-container, and header */
+  display: block; /* For full title area to be clickable */
+  outline-offset: -2px; /* For outline not to be clipped, within padding */
+  padding: 0.5em 0.5em; /* Matches right margin for item-grow-container, and header */
   text-decoration: none;
 }
 .item-title a:hover {
