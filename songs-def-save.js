@@ -325,19 +325,19 @@ function set_song_list_buttons(coll_key) {
   document.querySelectorAll('span.song-line[data-' + coll_name + ']').forEach(song => {
   //const song_id   = song.id;
     const song_line = song.innerHTML;
-    if(song_line.includes("video audio audio")) {
+    if(song_line.includes(" video audio audio ")) {
        were_buttons   = true;
-       song.innerHTML = song_line.replace("video audio audio",
+       song.innerHTML = song_line.replace(" video audio audio ", // also remove spaces
 '<span class="player-button" role="button" tabindex="0" ' +
   'onkeydown="kbd(event)" ' +
   'onkeyup  ="kbu(event, \'v\')" ' +
   'onclick  ="mou(event, \'v\')">' +
-  'video</span> ' +
+  'video</span>' +
 '<span class="player-button" role="button" tabindex="0" ' +
   'onkeydown="kbd(event)" ' +
   'onkeyup  ="kbu(event, \'a\')" ' +
   'onclick  ="mou(event, \'a\')">' +
-  'audio</span> ' +
+  'audio</span>' +
 '<span class="player-button" role="button" tabindex="0" ' +
   'onkeydown="kbd(event)" ' +
   'onkeyup  ="kbu(event, \'b\')" ' +

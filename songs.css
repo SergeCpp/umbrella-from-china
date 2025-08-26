@@ -7,13 +7,14 @@
 .player-button {
   border-radius: 0.5rem;
   cursor: pointer;
-  padding: 4px 2px 4.5px;
+  margin: 0 1px; /* Matches (1+1) 2px margin-bottom for song-line */
+  padding: 4px 8px 4.5px;
 }
 .player-button:first-child {
-  margin-left: 2px;
+  margin-left: 10px; /* Also for padding and margin from before */
 }
 .player-button:last-child {
-  margin-right: 2px;
+  margin-right: 10px; /* Also for padding and margin from before */
 }
 
 .song-list {
