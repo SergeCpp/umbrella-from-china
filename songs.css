@@ -14,7 +14,7 @@
   margin-left: 10px; /* Also for padding and margin from before */
 }
 .player-button:last-child {
-  margin-right: 10px; /* Also for padding and margin from before */
+  margin-right: 10px; /* Also for padding and margin from after */
 }
 
 .song-list {
