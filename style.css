@@ -85,6 +85,10 @@ pre i {
 .text-normal {
   font-weight: normal;
 }
+.text-top-right {
+  margin-top: 0;
+  text-align: right;
+}
 
 /* EOF */
 
