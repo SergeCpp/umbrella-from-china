@@ -415,23 +415,23 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
   // Show item list with flex alignment
   results_curr_exp.forEach((item, index) => {
     // 1. Outer wrapper (for spacing/divider)
-    const wrapper = document.createElement("div");
-    wrapper.className = "item-wrapper";
+    const item_wrapper = document.createElement("div");
+    item_wrapper.className = "item-wrapper";
 
     // 2. Inner flex container
-    const inner = document.createElement("div");
-    inner.className = "item";
+    const item_inner = document.createElement("div");
+    item_inner.className = "item";
 
     // 3. Title
-    const title = document.createElement("div");
-    title.className = "item-title";
+    const item_title = document.createElement("div");
+    item_title.className = "item-title";
 
-    const link = document.createElement("a");
-    link.textContent = (index + 1) + ". " + item.title;
-    link.href = "https://archive.org/details/" + item.identifier;
-    link.target = "_blank";
-    link.rel = "noopener"; // Safe for _blank
-    title.appendChild(link);
+    const item_link = document.createElement("a");
+    item_link.textContent = (index + 1) + ". " + item.title;
+    item_link.href = "https://archive.org/details/" + item.identifier;
+    item_link.target = "_blank";
+    item_link.rel = "noopener"; // Safe for _blank
+    item_title.appendChild(item_link);
 
     // 4.0. Get matching prev item
     const item_prev = map_prev[item.identifier];
@@ -471,8 +471,8 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
     stat_prev_container.appendChild(stat_prev_7  );
 
     // 5. Spacer between prev and curr
-    const spacer = document.createElement("div");
-    spacer.className = "item-spacer";
+    const item_spacer = document.createElement("div");
+    item_spacer.className = "item-spacer";
 
     // 6.1. Curr stat container (stacked)
     const stat_curr_container = document.createElement("div");
@@ -539,15 +539,15 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
     stat_grow_container.appendChild(stat_grow_7  );
 
     // 8. Add all parts
-    inner.appendChild(title);
-    inner.appendChild(stat_prev_container);
-    inner.appendChild(spacer);
-    inner.appendChild(stat_curr_container);
-    inner.appendChild(stat_grow_container);
+    item_inner.appendChild(item_title);
+    item_inner.appendChild(stat_prev_container);
+    item_inner.appendChild(item_spacer);
+    item_inner.appendChild(stat_curr_container);
+    item_inner.appendChild(stat_grow_container);
 
-    // 9. And wrap
-    wrapper  .appendChild(inner  ); // Add inner flex to wrapper
-    container.appendChild(wrapper); // Add wrapper to the page
+    // 9. And wrap them
+    item_wrapper.appendChild(item_inner  ); // Add inner flex to wrapper
+    container   .appendChild(item_wrapper); // Add wrapper to the page
   });
   return true;
 }
