@@ -726,16 +726,23 @@ function update_song_cover() {
   const cover_regex = /#/;
   if  (!cover_regex.test(cover_tmplt)) return;
 
-  const cover_url = cover_tmplt.replace(cover_regex, song_id_num);
+  const cover_url_base = cover_tmplt.replace(cover_regex, song_id_num);
+  const cover_url_avif = cover_url_base + ".avif";
+  const cover_url_jpg  = cover_url_base + ".jpg";
 
   const cover_a = cover.querySelector('a');
-  if   (cover_a && (cover_a.href !== cover_url)) {
-        cover_a.href = cover_url;
+  if   (cover_a && (cover_a.href !== cover_url_jpg)) {
+                    cover_a.href   = cover_url_jpg;
+  }
+
+  const cover_source = cover.querySelector('source[type="image/avif"]');
+  if   (cover_source && (cover_source.srcset !== cover_url_avif)) {
+                         cover_source.srcset   = cover_url_avif;
   }
 
   const cover_img = cover.querySelector('img');
-  if   (cover_img && (cover_img.src !== cover_url)) {
-        cover_img.src = cover_url;
+  if   (cover_img && (cover_img.src !== cover_url_jpg)) {
+                      cover_img.src   = cover_url_jpg;
   }
 }
 
