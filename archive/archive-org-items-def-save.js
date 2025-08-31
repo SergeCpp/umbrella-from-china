@@ -427,6 +427,7 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
     item_title.className = "item-title";
 
     const item_link = document.createElement("a");
+    item_link.className = "text-ellipsis";
     item_link.textContent = (index + 1) + ". " + item.title;
     item_link.href = "https://archive.org/details/" + item.identifier;
     item_link.target = "_blank";
