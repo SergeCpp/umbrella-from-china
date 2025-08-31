@@ -16,6 +16,7 @@ https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-202
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-07-31.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-08-07.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-08-14.xml.txt
+https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-08-31.xml.txt
 ...
 See archive-dates.txt for complete actual list
 

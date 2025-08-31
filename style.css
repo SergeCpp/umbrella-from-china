@@ -82,6 +82,14 @@ pre i {
   color: #9e9e9e; /* Gray62 */
   font-style: italic;
 }
+.text-ellipsis {
+  overflow-x: clip; /* For the ellipsis. Value "hidden" may add vertical spacing to element */
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.text-justify {
+  text-align: justify;
+}
 .text-normal {
   font-weight: normal;
 }

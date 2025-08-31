@@ -1,7 +1,11 @@
 .media-container {
   margin: 0 auto 1rem;
-  max-width: 960px;
+  max-width: 960px; /* 240 x 4 */
   text-align: center; /* For a fallback "not supported" text to be centered */
+}
+.media-desc {
+  margin: 0 auto 1.5rem;
+  max-width: 960px; /* 240 x 4 */
 }
 
 .player-button {
@@ -20,8 +24,9 @@
 .song-list {
   background-color: #fafafa; /* Gray98 */
   border-radius: 1rem;
+  box-sizing: border-box;
   margin: 0 auto 2rem;
-  max-width: 60%;
+  max-width: 720px; /* 240 x 3 */
   padding: 1em;
   text-align: left;
 }

@@ -261,7 +261,7 @@ function load_song_list() {
                          String(s).padStart(2, '0');
 
         song_list_html +=
-          '<span class="song-line" data-item ' +
+          '<span class="song-line text-ellipsis" data-item ' +
                 'id="' + song_id + '" ' +
                 'role="button" style="cursor:pointer;" tabindex="0" ' +
                 'onkeydown="kbd(event)" ' +
@@ -306,7 +306,7 @@ function set_song_list_lines(coll_key) {
     const song_id_match = song_line.match(/ (\d+)\./);
     if   (song_id_match) {
       const song_id = coll_name + "-" + song_id_match[1];
-      return '<span class="song-line"' +
+      return '<span class="song-line text-ellipsis"' +
                   ' data-' + coll_name +
                   ' id="'  + song_id   + '"' + button_attr + '>' + song_line + '</span>';
     }
