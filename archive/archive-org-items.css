@@ -10,7 +10,7 @@
 
 .item-title {
   flex: 1 1 60%;
-  overflow: hidden; /* To constrain the child, for ellipsis to use there */
+  overflow-x: hidden; /* To constrain the child, to use ellipsis there. Value "clip" not works here */
 }
 .item-title a {
   border-radius: 0.5rem;
