@@ -414,13 +414,13 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
 
   // Show item list with flex alignment
   results_curr_exp.forEach((item, index) => {
-    // 1. Outer wrapper (for spacing/divider)
+    // 1. Outer wrapper, for border/divider and spacing
     const item_wrapper = document.createElement("div");
     item_wrapper.className = "item-wrapper";
 
     // 2. Inner flex container
     const item_inner = document.createElement("div");
-    item_inner.className = "item";
+    item_inner.className = "item-inner";
 
     // 3. Title
     const item_title = document.createElement("div");
@@ -439,7 +439,7 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
 
     // 4.1. Prev stat container (stacked)
     const stat_prev_container = document.createElement("div");
-    stat_prev_container.className = "item-stat-container";
+    stat_prev_container.className = "item-stat-container"; // flex: 0 0 22ch;
 
     // 4.2. Prev: old stat line
     const stat_prev_old = document.createElement("div");
@@ -477,7 +477,7 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
 
     // 6.1. Curr stat container (stacked)
     const stat_curr_container = document.createElement("div");
-    stat_curr_container.className = "item-stat-container";
+    stat_curr_container.className = "item-stat-container"; // flex: 0 0 22ch;
 
     // 6.2. Curr: old stat line
     const stat_curr_old = document.createElement("div");
@@ -511,7 +511,7 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
 
     // 7.1. Grow container (stacked)
     const stat_grow_container = document.createElement("div");
-    stat_grow_container.className = "item-grow-container";
+    stat_grow_container.className = "item-grow-container"; // flex: 0 0 3ch;
 
     // 7.2. Grow: old
     const stat_grow_old = document.createElement("div");
@@ -546,9 +546,9 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
     item_inner.appendChild(stat_curr_container);
     item_inner.appendChild(stat_grow_container);
 
-    // 9. And wrap them
-    item_wrapper.appendChild(item_inner  ); // Add inner flex to wrapper
-    container   .appendChild(item_wrapper); // Add wrapper to the page
+    // 9. Wrap and add item to the page
+    item_wrapper.appendChild(item_inner  );
+    container   .appendChild(item_wrapper);
   });
   return true;
 }
