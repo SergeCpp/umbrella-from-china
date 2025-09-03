@@ -471,15 +471,11 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
     stat_prev_container.appendChild(stat_prev_23 );
     stat_prev_container.appendChild(stat_prev_7  );
 
-    // 5. Spacer between prev and curr
-    const item_spacer = document.createElement("div");
-    item_spacer.className = "item-spacer";
-
-    // 6.1. Curr stat container (stacked)
+    // 5.1. Curr stat container (stacked)
     const stat_curr_container = document.createElement("div");
     stat_curr_container.className = "item-stat-container"; // flex: 0 0 22ch;
 
-    // 6.2. Curr: old stat line
+    // 5.2. Curr: old stat line
     const stat_curr_old = document.createElement("div");
     stat_curr_old.className   ="item-stat-old";
     stat_curr_old.textContent = item.is_exp
@@ -488,7 +484,7 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
                                 item.days_old .toString().padStart( 5) + " =" +
                                 item.ratio_old.toFixed(3).padStart( 7);
 
-    // 6.3. Curr: 23-day stat line
+    // 5.3. Curr: 23-day stat line
     const stat_curr_23 = document.createElement("div");
     stat_curr_23.className   ="item-stat-23";
     stat_curr_23.textContent = item.is_exp
@@ -496,7 +492,7 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
                              : item.views_23.toString().padStart( 6) + " /   23 =" +
                                item.ratio_23.toFixed(3).padStart( 7);
 
-    // 6.4. Curr: 7-day stat line
+    // 5.4. Curr: 7-day stat line
     const stat_curr_7 = document.createElement("div");
     stat_curr_7.className   ="item-stat-7";
     stat_curr_7.textContent = item.is_exp
@@ -504,49 +500,48 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
                             : item.views_7.toString().padStart( 6) + " /    7 =" +
                               item.ratio_7.toFixed(3).padStart( 7);
 
-    // 6.5. Curr: assemble the hierarchy
+    // 5.5. Curr: assemble the hierarchy
     stat_curr_container.appendChild(stat_curr_old);
     stat_curr_container.appendChild(stat_curr_23 );
     stat_curr_container.appendChild(stat_curr_7  );
 
-    // 7.1. Grow container (stacked)
+    // 6.1. Grow container (stacked)
     const stat_grow_container = document.createElement("div");
     stat_grow_container.className = "item-grow-container"; // flex: 0 0 3ch;
 
-    // 7.2. Grow: old
+    // 6.2. Grow: old
     const stat_grow_old = document.createElement("div");
     stat_grow_old.className ="item-grow-old";
 
     const grow_old = item_prev ? get_grow_ratio(item.ratio_old, item_prev.ratio_old) : "   ";
     stat_grow_old.textContent = grow_old;
 
-    // 7.3. Grow: 23
+    // 6.3. Grow: 23
     const stat_grow_23 = document.createElement("div");
     stat_grow_23.className ="item-grow-23";
 
     const grow_23 = item_prev ? get_grow_fixed(item.views_23, item_prev.views_23) : "   ";
     stat_grow_23.textContent = grow_23;
 
-    // 7.4. Grow: 7
+    // 6.4. Grow: 7
     const stat_grow_7 = document.createElement("div");
     stat_grow_7.className ="item-grow-7";
 
     const grow_7 = item_prev ? get_grow_fixed(item.views_7, item_prev.views_7) : "   ";
     stat_grow_7.textContent = grow_7;
 
-    // 7.5. Grow: assemble the hierarchy
+    // 6.5. Grow: assemble the hierarchy
     stat_grow_container.appendChild(stat_grow_old);
     stat_grow_container.appendChild(stat_grow_23 );
     stat_grow_container.appendChild(stat_grow_7  );
 
-    // 8. Add all parts
+    // 7. Add all parts
     item_inner.appendChild(item_title);
     item_inner.appendChild(stat_prev_container);
-    item_inner.appendChild(item_spacer);
     item_inner.appendChild(stat_curr_container);
     item_inner.appendChild(stat_grow_container);
 
-    // 9. Wrap and add item to the page
+    // 8. Wrap and add item to the page
     item_wrapper.appendChild(item_inner  );
     container   .appendChild(item_wrapper);
   });

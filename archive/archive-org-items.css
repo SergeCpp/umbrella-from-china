@@ -11,7 +11,7 @@
 }
 
 .item-inner {
-  align-items: center; /* Vertically center title, stats, spacer, and grow */
+  align-items: center; /* Vertically center title, stats, and grow */
   border-radius: 0.5rem;
   display: flex;
   justify-content: space-between;
@@ -28,8 +28,8 @@
   border-radius: 0.5rem;
   color: inherit; /* Use parent text color instead of link color */
   display: block; /* For full title area to be clickable */
-  outline-offset: -2px; /* For outline not to be clipped, within padding */
-  padding: 0.5em 0.5em; /* Matches right margin for item-grow-container, and header */
+  outline-offset: -2px; /* For outline not to be clipped, to be within padding */
+  padding: 0.5rem 0.5rem; /* Matches right margin of item-grow-container, and header */
   text-decoration: none;
 }
 .item-title a:hover {
@@ -37,11 +37,12 @@
 }
 
 .item-stat-container {
-  align-items: flex-end; /* Right-align all stat */
+  align-items: flex-end; /* Right align all stat */
   display: flex;
   flex: 0 0 22ch;
   flex-direction: column;
   font-family: monospace;
+  margin-right: 0.5rem; /* Matches left and right spacings of item */
   white-space: pre;
 }
 .item-stat-old {
@@ -52,20 +53,14 @@
   color: #696969; /* DimGray, L41 */
 }
 
-.item-spacer {
-  flex: 0 0 0.5em;
-  height: 1em;
-}
-
 .item-grow-container {
-  align-items: flex-start; /* Left-align all grow */
+  align-items: flex-start; /* Left align all grow */
   display: flex;
   flex: 0 0 3ch;
   flex-direction: column;
   font-family: monospace;
+  margin-right: 0.5rem; /* Matches left padding of item-title a, and header */
   white-space: pre;
-  margin-left: 0.5em; /* Half a spacer */
-  margin-right: 0.5em; /* Matches left padding for item-title a, and header */
 }
 .item-grow-old {
   color: black;
