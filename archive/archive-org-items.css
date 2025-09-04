@@ -19,6 +19,12 @@
 .item-inner:hover {
   background-color: #fafafa; /* Gray98 */
 }
+.item-inner:hover .item-grow-mark {
+  background-color: hsl(0.42turn 75% 89%); /* Lower L by 3 */
+}
+.item-inner:hover .item-fall-mark {
+  background-color: hsl(0.58turn 75% 92%); /* As above */
+}
 
 .item-title {
   flex: 1 1 auto;
@@ -29,7 +35,7 @@
   color: inherit; /* Use parent text color instead of link color */
   display: block; /* For full title area to be clickable */
   outline-offset: -2px; /* For outline not to be clipped, to be within padding */
-  padding: 0.5rem 0.5rem; /* Matches right margin of item-grow-container, and header */
+  padding: 0.5rem 0.5rem; /* Matches right padding of grow values, and header */
   text-decoration: none;
 }
 .item-title a:hover {
@@ -42,15 +48,17 @@
   flex: 0 0 22ch;
   flex-direction: column;
   font-family: monospace;
-  margin-right: 0.5rem; /* Matches left and right spacings of item */
   white-space: pre;
 }
 .item-stat-old {
+  border-radius: 0.5rem 0 0 0.5rem;
   color: black;
+  padding-right: 0.5rem; /* Matches left and right spacings of item */
 }
 .item-stat-23,
 .item-stat-7 {
   color: #696969; /* DimGray, L41 */
+  padding-right: 0.5rem; /* As above */
 }
 
 .item-grow-container {
@@ -59,15 +67,24 @@
   flex: 0 0 3ch;
   flex-direction: column;
   font-family: monospace;
-  margin-right: 0.5rem; /* Matches left padding of item-title a, and header */
   white-space: pre;
 }
 .item-grow-old {
+  border-radius: 0 0.5rem 0.5rem 0;
   color: black;
+  padding-right: 0.5rem; /* Matches left padding of item-title a, and header */
 }
 .item-grow-23,
 .item-grow-7 {
   color: #696969; /* DimGray, L41 */
+  padding-right: 0.5rem; /* As above */
+}
+
+.item-grow-mark {
+  background-color: hsl(0.42turn 75% 92%);
+}
+.item-fall-mark {
+  background-color: hsl(0.58turn 75% 95%);
 }
 
 /* EOF */

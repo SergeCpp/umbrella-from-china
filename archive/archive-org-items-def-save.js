@@ -327,8 +327,8 @@ function render_stats(results, date, what, container) {
   stats_text.innerHTML =
     '<span ' +
        'role="button" style="cursor:pointer;" tabindex="0" ' +
-       'onkeydown="if (event.key === \'Enter\' || event.key === \' \') { event.preventDefault(); }" ' +
-       'onkeyup  ="if (event.key === \'Enter\' || event.key === \' \') { ' +
+       'onkeydown="if ((event.key === \'Enter\') || (event.key === \' \')) { event.preventDefault(); }" ' +
+       'onkeyup  ="if ((event.key === \'Enter\') || (event.key === \' \')) { ' +
                   'date_change_menu(event, \'' + what + '\'); }" ' +
        'onclick  ="date_change_menu(event, \'' + what + '\')" ' +
        '>' + date + '</span>'        + ' : ' +
@@ -515,6 +515,16 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
 
     const grow_old = item_prev ? get_grow_ratio(item.ratio_old, item_prev.ratio_old) : "   ";
     stat_grow_old.textContent = grow_old;
+
+    if ((grow_old === "^^^") || (grow_old === "^^ ")) {
+      stat_curr_old.classList.add("item-grow-mark");
+      stat_grow_old.classList.add("item-grow-mark");
+    }
+
+    if ((grow_old === "vvv") || (grow_old === "vv ")) {
+      stat_curr_old.classList.add("item-fall-mark");
+      stat_grow_old.classList.add("item-fall-mark");
+    }
 
     // 6.3. Grow: 23
     const stat_grow_23 = document.createElement("div");
@@ -899,7 +909,7 @@ function date_change_menu(event, what) {
 
     opt.onkeydown = (e) => {
       const k = e.key;
-      if (k === 'Enter' || k === ' ') {
+      if ((k === 'Enter') || (k === ' ')) {
         e.preventDefault();
       } else {
         if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab'].includes(k)) return;
@@ -910,7 +920,7 @@ function date_change_menu(event, what) {
         const curr = opts.indexOf(e.currentTarget);
         let   next;
 
-        if ((k === 'ArrowUp') || (k === 'ArrowLeft') || (k === 'Tab' && e.shiftKey)) {
+        if ((k === 'ArrowUp') || (k === 'ArrowLeft') || ((k === 'Tab') && e.shiftKey)) {
           next = (curr - 1 + opts.length) % opts.length;
         } else { // ArrowDown or ArrowRight or Tab
           next = (curr + 1)               % opts.length;
@@ -920,7 +930,7 @@ function date_change_menu(event, what) {
     };
     opt.onkeyup = (e) => {
       const k = e.key;
-      if (k === 'Enter' || k === ' ') {
+      if ((k === 'Enter') || (k === ' ')) {
         opt.click();
       }
     };
