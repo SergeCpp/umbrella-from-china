@@ -2,9 +2,9 @@
   border-top-color: white;
   border-top-style: solid;
   border-top-width: 3px; /* Medium */
-  border-bottom-color: #ebebeb; /* Gray92, matches header */
+  border-bottom-color: #ebebeb; /* Gray92. Matches header */
   border-bottom-style: solid;
-  border-bottom-width: 3px; /* Medium, matches header */
+  border-bottom-width: 3px; /* Medium. Matches header */
 }
 .item-wrapper:last-child {
   border-bottom: none;
@@ -17,18 +17,57 @@
   justify-content: space-between;
 }
 .item-inner:hover {
-  background-color: #fafafa; /* Gray98 */
-}
-.item-inner:hover .item-grow-mark {
-  background-color: hsl(0.42turn 75% 89%); /* Lower L by 3 */
-}
-.item-inner:hover .item-fall-mark {
-  background-color: hsl(0.58turn 75% 92%); /* As above */
+  background-color: #fafafa; /* Gray98. Matches header */
 }
 
-.item-title {
+.item-inner:hover .item-title-above-a {
+  background-color: hsl(0.91turn 75% 86%); /* Lower Lightness by 3 from 89 */
+}
+.item-inner:hover .item-title-above-b {
+  background-color: white; /* Not used currently */
+}
+
+.item-inner:hover .item-title-below-a {
+  background-color: hsl(0.42turn 75% 83%); /* Lower Lightness by 3 from 86 */
+}
+.item-inner:hover .item-title-below-b {
+  background-color: hsl(0.58turn 75% 86%); /* Lower Lightness by 3 from 89 */
+}
+
+.item-inner:hover .item-stat-23,
+.item-inner:hover .item-stat-7,
+.item-inner:hover .item-grow-23,
+.item-inner:hover .item-grow-7 {
+  color: #595959; /* Gray35. Lower Lightness by 6 from 41 */
+}
+
+.item-inner:hover .item-mark-grow {
+  background-color: hsl(0.42turn 75% 89%); /* Lower Lightness by 3 from 92 */
+}
+.item-inner:hover .item-mark-fall {
+  background-color: hsl(0.58turn 75% 92%); /* Lower Lightness by 3 from 95 */
+}
+
+.item-title-container {
+  align-items: stretch; /* Expands title and above/below to full container width, if not set explicitly */
+  display: flex;
   flex: 1 1 auto;
+  flex-direction: column;
   overflow-x: hidden; /* To constrain the child, to use ellipsis there. Value "clip" not works here */
+}
+
+.item-title-above-a { /* Ratio all */
+  background-color: hsl(0.91turn 75% 89%);
+  height: 3px;
+  width: 0;
+}
+.item-title-above-b { /* Not used currently */
+  background-color: white;
+  height: 3px;
+  width: 0;
+}
+
+.item-title { /* Link holder */
 }
 .item-title a {
   border-radius: 0.5rem;
@@ -40,6 +79,17 @@
 }
 .item-title a:hover {
   background-color: #f2f2f2; /* Gray95 */
+}
+
+.item-title-below-a { /* Favorites prev count */
+  background-color: hsl(0.42turn 75% 86%);
+  height: 3px;
+  width: 0;
+}
+.item-title-below-b { /* Favorites curr count */
+  background-color: hsl(0.58turn 75% 89%);
+  height: 3px;
+  width: 0;
 }
 
 .item-stat-container {
@@ -57,7 +107,7 @@
 }
 .item-stat-23,
 .item-stat-7 {
-  color: #696969; /* DimGray, L41 */
+  color: #696969; /* DimGray. L41 */
   padding-right: 0.5rem; /* As above */
 }
 
@@ -76,14 +126,14 @@
 }
 .item-grow-23,
 .item-grow-7 {
-  color: #696969; /* DimGray, L41 */
+  color: #696969; /* DimGray. L41 */
   padding-right: 0.5rem; /* As above */
 }
 
-.item-grow-mark {
+.item-mark-grow {
   background-color: hsl(0.42turn 75% 92%);
 }
-.item-fall-mark {
+.item-mark-fall {
   background-color: hsl(0.58turn 75% 95%);
 }
 

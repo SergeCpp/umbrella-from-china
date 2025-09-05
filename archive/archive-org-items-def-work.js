@@ -260,19 +260,40 @@ function get_grow_fixed(curr, prev) {
                           return "vvv";
 }
 
-function get_total_counts(results) {
-  const total_counts = { audio: 0, video: 0, bytes: 0, views: 0, favorites: 0, favorited: 0 };
+function get_totals(results) {
+  const totals = { audio: 0, video: 0, bytes: 0, views: 0, favorites: 0, favorited: 0,
+                   max_favorites: 0, min_item_size: Infinity, max_item_size: 0, max_ratio_all: 0 };
+
   results.forEach(item => {
-    if (item.mediatype === "audio" ) total_counts.audio++;
-    if (item.mediatype === "movies") total_counts.video++;
+    if (item.mediatype === "audio" ) totals.audio++;
+    if (item.mediatype === "movies") totals.video++;
 
-    total_counts.bytes +=  item.item_size;
-    total_counts.views += (item.views_old + item.views_23 + item.views_7);
+    const views_all = item.views_old + item.views_23 + item.views_7;
+    const ratio_all = views_all / (item.days_old + 30);
 
-    total_counts.favorites +=  item.favorites;
-    total_counts.favorited += (item.favorites != 0);
+    if (totals.max_ratio_all < ratio_all) {
+        totals.max_ratio_all = ratio_all; }
+
+    totals.bytes += item.item_size;
+    totals.views += views_all;
+
+    totals.favorites +=  item.favorites;
+    totals.favorited += (item.favorites != 0);
+
+    if (totals.max_favorites < item.favorites) {
+        totals.max_favorites = item.favorites; }
+
+    if (totals.min_item_size > item.item_size) {
+        totals.min_item_size = item.item_size; }
+
+    if (totals.max_item_size < item.item_size) {
+        totals.max_item_size = item.item_size; }
   });
-  return total_counts;
+
+  if (totals.min_item_size === Infinity) { // No items exist
+      totals.min_item_size   = 0;        }
+
+  return totals;
 }
 
 function format_bytes(bytes) {
@@ -391,17 +412,17 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
   });
 
   // Total counts displaying (for expanded results)
-  const curr_exp_counts  = get_total_counts(results_curr_exp);
-  const curr_exp_total   = curr_exp_counts.audio + curr_exp_counts.video;
+  const curr_exp_totals  = get_totals(results_curr_exp);
+  const curr_exp_total   = curr_exp_totals.audio + curr_exp_totals.video;
   const counts_div       = document.createElement("div");
   counts_div.className   = "subtitle text-center text-normal";
   counts_div.textContent = 'Total ' + curr_exp_total            + ' '        +
-                           '('      + curr_exp_counts.audio     + ' Audio '  +
-                           '/ '     + curr_exp_counts.video     + ' Video) ' +
-                         format_bytes(curr_exp_counts.bytes)    + ' '        +
-                           '/ '     + curr_exp_counts.views     + ' Views '  +
-                           '/ '     + curr_exp_counts.favorites + ' Favs '   +
-                           '('      + curr_exp_counts.favorited + ' Items)';
+                           '('      + curr_exp_totals.audio     + ' Audio '  +
+                           '/ '     + curr_exp_totals.video     + ' Video) ' +
+                         format_bytes(curr_exp_totals.bytes)    + ' '        +
+                           '/ '     + curr_exp_totals.views     + ' Views '  +
+                           '/ '     + curr_exp_totals.favorites + ' Favs '   +
+                           '('      + curr_exp_totals.favorited + ' Items)';
   container.appendChild(counts_div);
 
   // Both stats displaying
@@ -412,8 +433,18 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
 
   sort_results(results_curr_exp);
 
+  // Log scaling
+  function get_percentage(value, min, max) {
+    if (value <= min) return   0;
+    if (value >= max) return 100;
+    return (Math.log(value - min + 1) / Math.log(max - min + 1)) * 100;
+  }
+
   // Show item list with flex alignment
   results_curr_exp.forEach((item, index) => {
+    // 0. Get matching prev item
+    const item_prev = map_prev[item.identifier];
+
     // 1. Outer wrapper, for border/divider and spacing
     const item_wrapper = document.createElement("div");
     item_wrapper.className = "item-wrapper";
@@ -423,6 +454,24 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
     item_inner.className = "item-inner";
 
     // 3. Title
+    const item_title_container = document.createElement("div");
+    item_title_container.className = "item-title-container";
+
+    // Above gauges
+    const item_title_above_a = document.createElement("div");
+    item_title_above_a.className = "item-title-above-a";
+
+    const item_title_above_b = document.createElement("div");
+    item_title_above_b.className = "item-title-above-b";
+
+    // Display ratio all on the first above gauge
+    const views_all = item.views_old + item.views_23 + item.views_7;
+    const ratio_all = views_all / (item.days_old + 30);
+
+    const percentage_a_a = get_percentage(ratio_all, 0, curr_exp_totals.max_ratio_all);
+    item_title_above_a.style.width = percentage_a_a + "%";
+
+    // Link button
     const item_title = document.createElement("div");
     item_title.className = "item-title";
 
@@ -434,8 +483,30 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
     item_link.rel = "noopener"; // Safe for _blank
     item_title.appendChild(item_link);
 
-    // 4.0. Get matching prev item
-    const item_prev = map_prev[item.identifier];
+    // Below gauges
+    const item_title_below_a = document.createElement("div");
+    item_title_below_a.className = "item-title-below-a";
+
+    const item_title_below_b = document.createElement("div");
+    item_title_below_b.className = "item-title-below-b";
+
+    // Display favorites counts on the below gauges
+    if (item_prev) {
+      const percentage_b_a = get_percentage(item_prev.favorites, 0, curr_exp_totals.max_favorites);
+      item_title_below_a.style.width = percentage_b_a + "%";
+    }
+
+    if (!item.is_exp) {
+      const percentage_b_b = get_percentage(item.favorites, 0, curr_exp_totals.max_favorites);
+      item_title_below_b.style.width = percentage_b_b + "%";
+    }
+
+    // 3. Title: assemble the hierarchy
+    item_title_container.appendChild(item_title_above_a);
+    item_title_container.appendChild(item_title_above_b);
+    item_title_container.appendChild(item_title        );
+    item_title_container.appendChild(item_title_below_a);
+    item_title_container.appendChild(item_title_below_b);
 
     // 4.1. Prev stat container (stacked)
     const stat_prev_container = document.createElement("div");
@@ -517,13 +588,13 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
     stat_grow_old.textContent = grow_old;
 
     if ((grow_old === "^^^") || (grow_old === "^^ ")) {
-      stat_curr_old.classList.add("item-grow-mark");
-      stat_grow_old.classList.add("item-grow-mark");
+      stat_curr_old.classList.add("item-mark-grow");
+      stat_grow_old.classList.add("item-mark-grow");
     }
 
     if ((grow_old === "vvv") || (grow_old === "vv ")) {
-      stat_curr_old.classList.add("item-fall-mark");
-      stat_grow_old.classList.add("item-fall-mark");
+      stat_curr_old.classList.add("item-mark-fall");
+      stat_grow_old.classList.add("item-mark-fall");
     }
 
     // 6.3. Grow: 23
@@ -546,10 +617,10 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
     stat_grow_container.appendChild(stat_grow_7  );
 
     // 7. Add all parts
-    item_inner.appendChild(item_title);
-    item_inner.appendChild(stat_prev_container);
-    item_inner.appendChild(stat_curr_container);
-    item_inner.appendChild(stat_grow_container);
+    item_inner.appendChild(item_title_container);
+    item_inner.appendChild(stat_prev_container );
+    item_inner.appendChild(stat_curr_container );
+    item_inner.appendChild(stat_grow_container );
 
     // 8. Wrap and add item to the page
     item_wrapper.appendChild(item_inner  );
