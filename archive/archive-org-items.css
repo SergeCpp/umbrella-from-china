@@ -20,17 +20,17 @@
   background-color: #fafafa; /* Gray98. Matches header */
 }
 
-.item-inner:hover .item-title-above-a {
+.item-inner:hover .item-gauge-above-a {
+  background-color: hsl(0.07turn 75% 89%); /* Lower Lightness by 3 from 92 */
+}
+.item-inner:hover .item-gauge-above-b {
   background-color: hsl(0.91turn 75% 86%); /* Lower Lightness by 3 from 89 */
 }
-.item-inner:hover .item-title-above-b {
-  background-color: white; /* Not used currently */
-}
 
-.item-inner:hover .item-title-below-a {
+.item-inner:hover .item-gauge-below-a {
   background-color: hsl(0.42turn 75% 83%); /* Lower Lightness by 3 from 86 */
 }
-.item-inner:hover .item-title-below-b {
+.item-inner:hover .item-gauge-below-b {
   background-color: hsl(0.58turn 75% 86%); /* Lower Lightness by 3 from 89 */
 }
 
@@ -49,22 +49,22 @@
 }
 
 .item-title-container {
-  align-items: stretch; /* Expands title and above/below to full container width, if not set explicitly */
+  align-items: stretch; /* Expands title and gauges to full container width, if not set explicitly */
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
   overflow-x: hidden; /* To constrain the child, to use ellipsis there. Value "clip" not works here */
 }
 
-.item-title-above-a { /* Ratio all */
+.item-gauge-above-a { /* Ratio old */
+  background-color: hsl(0.07turn 75% 92%);
+  height: 3px;
+  width: 0; /* Width will be controlled by JavaScript */
+}
+.item-gauge-above-b { /* Ratio all */
   background-color: hsl(0.91turn 75% 89%);
   height: 3px;
-  width: 0;
-}
-.item-title-above-b { /* Not used currently */
-  background-color: white;
-  height: 3px;
-  width: 0;
+  width: 0; /* Width will be controlled by JavaScript */
 }
 
 .item-title { /* Link holder */
@@ -81,15 +81,15 @@
   background-color: #f2f2f2; /* Gray95 */
 }
 
-.item-title-below-a { /* Favorites prev count */
+.item-gauge-below-a { /* Favorites prev count */
   background-color: hsl(0.42turn 75% 86%);
   height: 3px;
-  width: 0;
+  width: 0; /* Width will be controlled by JavaScript */
 }
-.item-title-below-b { /* Favorites curr count */
+.item-gauge-below-b { /* Favorites curr count */
   background-color: hsl(0.58turn 75% 89%);
   height: 3px;
-  width: 0;
+  width: 0; /* Width will be controlled by JavaScript */
 }
 
 .item-stat-container {
@@ -108,7 +108,7 @@
 .item-stat-23,
 .item-stat-7 {
   color: #696969; /* DimGray. L41 */
-  padding-right: 0.5rem; /* As above */
+  padding-right: 0.5rem; /* Matches left and right spacings of item */
 }
 
 .item-grow-container {
@@ -127,7 +127,7 @@
 .item-grow-23,
 .item-grow-7 {
   color: #696969; /* DimGray. L41 */
-  padding-right: 0.5rem; /* As above */
+  padding-right: 0.5rem; /* Matches left padding of item-title a, and header */
 }
 
 .item-mark-grow {

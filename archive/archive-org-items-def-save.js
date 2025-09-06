@@ -152,9 +152,14 @@ function calculate_stats(filtered_items, stats_date) {
     const month      = parseInt(doc.querySelector("str[name='month']"     ).textContent, 10);
     const week       = parseInt(doc.querySelector("str[name='week']"      ).textContent, 10);
 
-    const calc_date  = new Date(stats_date + "T11:59:59.999Z");
-    const days_old   = Math.round((calc_date - publicdate) / (24 * 60 * 60 * 1000)) - 30;
-    const views_old  = downloads - month;
+    const calc_date  = new Date(stats_date + "T11:59:59.999Z"); // To count a day for published on day before
+
+    const days_all   = Math.round((calc_date - publicdate) / (24 * 60 * 60 * 1000));
+    const views_all  = downloads;
+    const ratio_all  = parseFloat((views_all / days_all).toFixed(3));
+
+    const days_old   = days_all - 30; // Always valid
+    const views_old  = views_all - month;
     const ratio_old  = parseFloat((views_old / days_old).toFixed(3));
 
     // Get collections and count favorites
@@ -178,6 +183,9 @@ function calculate_stats(filtered_items, stats_date) {
       title     ,
       item_size ,
       mediatype ,
+      days_all  ,
+      views_all ,
+      ratio_all ,
       days_old  ,
       views_old ,
       ratio_old ,
@@ -262,20 +270,14 @@ function get_grow_fixed(curr, prev) {
 
 function get_totals(results) {
   const totals = { audio: 0, video: 0, bytes: 0, views: 0, favorites: 0, favorited: 0,
-                   max_favorites: 0, min_item_size: Infinity, max_item_size: 0, max_ratio_all: 0 };
-
+                   max_favorites: 0, max_ratio_old: 0, max_ratio_all: 0
+  };
   results.forEach(item => {
     if (item.mediatype === "audio" ) totals.audio++;
     if (item.mediatype === "movies") totals.video++;
 
-    const views_all = item.views_old + item.views_23 + item.views_7;
-    const ratio_all = views_all / (item.days_old + 30);
-
-    if (totals.max_ratio_all < ratio_all) {
-        totals.max_ratio_all = ratio_all; }
-
     totals.bytes += item.item_size;
-    totals.views += views_all;
+    totals.views += item.views_all;
 
     totals.favorites +=  item.favorites;
     totals.favorited += (item.favorites != 0);
@@ -283,16 +285,12 @@ function get_totals(results) {
     if (totals.max_favorites < item.favorites) {
         totals.max_favorites = item.favorites; }
 
-    if (totals.min_item_size > item.item_size) {
-        totals.min_item_size = item.item_size; }
+    if (totals.max_ratio_old < item.ratio_old) {
+        totals.max_ratio_old = item.ratio_old; }
 
-    if (totals.max_item_size < item.item_size) {
-        totals.max_item_size = item.item_size; }
+    if (totals.max_ratio_all < item.ratio_all) {
+        totals.max_ratio_all = item.ratio_all; }
   });
-
-  if (totals.min_item_size === Infinity) { // No items exist
-      totals.min_item_size   = 0;        }
-
   return totals;
 }
 
@@ -434,10 +432,15 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
   sort_results(results_curr_exp);
 
   // Log scaling
-  function get_percentage(value, min, max) {
-    if (value <= min) return   0;
-    if (value >= max) return 100;
-    return (Math.log(value - min + 1) / Math.log(max - min + 1)) * 100;
+  const max_ratio     = Math.max(curr_exp_totals.max_ratio_old, curr_exp_totals.max_ratio_all);
+  const max_favorites = curr_exp_totals.max_favorites;
+
+  const base_ratio     = 100 / Math.log(max_ratio     + 1);
+  const base_favorites = 100 / Math.log(max_favorites + 1);
+
+  function get_percentage(value, max, base) {
+    return (value <=   0) ?   0 :
+           (value >= max) ? 100 : Math.log(value + 1) * base;
   }
 
   // Show item list with flex alignment
@@ -458,18 +461,18 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
     item_title_container.className = "item-title-container";
 
     // Above gauges
-    const item_title_above_a = document.createElement("div");
-    item_title_above_a.className = "item-title-above-a";
+    const item_gauge_above_a = document.createElement("div");
+    item_gauge_above_a.className = "item-gauge-above-a";
 
-    const item_title_above_b = document.createElement("div");
-    item_title_above_b.className = "item-title-above-b";
+    const item_gauge_above_b = document.createElement("div");
+    item_gauge_above_b.className = "item-gauge-above-b";
 
-    // Display ratio all on the first above gauge
-    const views_all = item.views_old + item.views_23 + item.views_7;
-    const ratio_all = views_all / (item.days_old + 30);
+    // Display ratios old and all on the above gauges
+    const percentage_a_a = get_percentage(item.ratio_old, max_ratio, base_ratio);
+    item_gauge_above_a.style.width = percentage_a_a + "%";
 
-    const percentage_a_a = get_percentage(ratio_all, 0, curr_exp_totals.max_ratio_all);
-    item_title_above_a.style.width = percentage_a_a + "%";
+    const percentage_a_b = get_percentage(item.ratio_all, max_ratio, base_ratio);
+    item_gauge_above_b.style.width = percentage_a_b + "%";
 
     // Link button
     const item_title = document.createElement("div");
@@ -484,29 +487,29 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
     item_title.appendChild(item_link);
 
     // Below gauges
-    const item_title_below_a = document.createElement("div");
-    item_title_below_a.className = "item-title-below-a";
+    const item_gauge_below_a = document.createElement("div");
+    item_gauge_below_a.className = "item-gauge-below-a";
 
-    const item_title_below_b = document.createElement("div");
-    item_title_below_b.className = "item-title-below-b";
+    const item_gauge_below_b = document.createElement("div");
+    item_gauge_below_b.className = "item-gauge-below-b";
 
-    // Display favorites counts on the below gauges
+    // Display favorites prev and curr counts on the below gauges
     if (item_prev) {
-      const percentage_b_a = get_percentage(item_prev.favorites, 0, curr_exp_totals.max_favorites);
-      item_title_below_a.style.width = percentage_b_a + "%";
+      const percentage_b_a = get_percentage(item_prev.favorites, max_favorites, base_favorites);
+      item_gauge_below_a.style.width = percentage_b_a + "%";
     }
 
     if (!item.is_exp) {
-      const percentage_b_b = get_percentage(item.favorites, 0, curr_exp_totals.max_favorites);
-      item_title_below_b.style.width = percentage_b_b + "%";
+      const percentage_b_b = get_percentage(item.favorites, max_favorites, base_favorites);
+      item_gauge_below_b.style.width = percentage_b_b + "%";
     }
 
     // 3. Title: assemble the hierarchy
-    item_title_container.appendChild(item_title_above_a);
-    item_title_container.appendChild(item_title_above_b);
+    item_title_container.appendChild(item_gauge_above_a);
+    item_title_container.appendChild(item_gauge_above_b);
     item_title_container.appendChild(item_title        );
-    item_title_container.appendChild(item_title_below_a);
-    item_title_container.appendChild(item_title_below_b);
+    item_title_container.appendChild(item_gauge_below_a);
+    item_title_container.appendChild(item_gauge_below_b);
 
     // 4.1. Prev stat container (stacked)
     const stat_prev_container = document.createElement("div");
