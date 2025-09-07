@@ -40,6 +40,18 @@
 .item-inner:hover .item-grow-7 {
   color: #595959; /* Gray35. Lower Lightness by 6 from 41 */
 }
+.item-inner:hover .item-stat-23.item-mark-grow,
+.item-inner:hover .item-stat-7.item-mark-grow,
+.item-inner:hover .item-grow-23.item-mark-grow,
+.item-inner:hover .item-grow-7.item-mark-grow {
+  color: #4a4a4a; /* Gray29. Lower Lightness by 12 from 41 */
+}
+.item-inner:hover .item-stat-23.item-mark-fall,
+.item-inner:hover .item-stat-7.item-mark-fall,
+.item-inner:hover .item-grow-23.item-mark-fall,
+.item-inner:hover .item-grow-7.item-mark-fall {
+  color: #525252; /* Gray32. Lower Lightness by 9 from 41 */
+}
 
 .item-inner:hover .item-mark-grow {
   background-color: hsl(0.42turn 75% 89%); /* Lower Lightness by 3 from 92 */
@@ -116,6 +128,15 @@
   padding-right: 0.5rem; /* Matches left and right spacings of item */
 }
 
+.item-stat-23.item-mark-grow,
+.item-stat-7.item-mark-grow {
+  color: #525252; /* Gray32. Lower Lightness by 9 from 41 */
+}
+.item-stat-23.item-mark-fall,
+.item-stat-7.item-mark-fall {
+  color: #595959; /* Gray35. Lower Lightness by 6 from 41 */
+}
+
 .item-grow-container {
   align-items: flex-start; /* Left align all grow */
   display: flex;
@@ -138,6 +159,15 @@
   border-radius: 0 0 0.5rem 0;
   color: #696969; /* DimGray. L41 */
   padding-right: 0.5rem; /* Matches left padding of item-title a, and header */
+}
+
+.item-grow-23.item-mark-grow,
+.item-grow-7.item-mark-grow {
+  color: #525252; /* Gray32. Lower Lightness by 9 from 41 */
+}
+.item-grow-23.item-mark-fall,
+.item-grow-7.item-mark-fall {
+  color: #595959; /* Gray35. Lower Lightness by 6 from 41 */
 }
 
 .item-mark-grow {
