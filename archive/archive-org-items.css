@@ -1,3 +1,5 @@
+/* Wrapper > inner > [title, stat:prev, stat:curr, grow] */
+
 .item-wrapper {
   border-top-color: white;
   border-top-style: solid;
@@ -20,45 +22,7 @@
   background-color: #fafafa; /* Gray98. Matches header */
 }
 
-.item-inner:hover .item-gauge-above-a {
-  background-color: hsl(0.07turn 75% 89%); /* Lower Lightness by 3 from 92 */
-}
-.item-inner:hover .item-gauge-above-b {
-  background-color: hsl(0.91turn 75% 86%); /* Lower Lightness by 3 from 89 */
-}
-
-.item-inner:hover .item-gauge-below-a {
-  background-color: hsl(0.42turn 75% 83%); /* Lower Lightness by 3 from 86 */
-}
-.item-inner:hover .item-gauge-below-b {
-  background-color: hsl(0.58turn 75% 86%); /* Lower Lightness by 3 from 89 */
-}
-
-.item-inner:hover .item-stat-23,
-.item-inner:hover .item-stat-7,
-.item-inner:hover .item-grow-23,
-.item-inner:hover .item-grow-7 {
-  color: #595959; /* Gray35. Lower Lightness by 6 from 41 */
-}
-.item-inner:hover .item-stat-23.item-mark-grow,
-.item-inner:hover .item-stat-7.item-mark-grow,
-.item-inner:hover .item-grow-23.item-mark-grow,
-.item-inner:hover .item-grow-7.item-mark-grow {
-  color: #4a4a4a; /* Gray29. Lower Lightness by 12 from 41 */
-}
-.item-inner:hover .item-stat-23.item-mark-fall,
-.item-inner:hover .item-stat-7.item-mark-fall,
-.item-inner:hover .item-grow-23.item-mark-fall,
-.item-inner:hover .item-grow-7.item-mark-fall {
-  color: #525252; /* Gray32. Lower Lightness by 9 from 41 */
-}
-
-.item-inner:hover .item-mark-grow {
-  background-color: hsl(0.42turn 75% 89%); /* Lower Lightness by 3 from 92 */
-}
-.item-inner:hover .item-mark-fall {
-  background-color: hsl(0.58turn 75% 92%); /* Lower Lightness by 3 from 95 */
-}
+/* Title with gauges above and below */
 
 .item-title-container {
   align-items: stretch; /* Expands title and gauges to full container width, if not set explicitly */
@@ -69,7 +33,7 @@
 }
 
 .item-gauge-above-a { /* Ratio old */
-  background-color: hsl(0.07turn 75% 92%);
+  background-color: hsl(0.07turn 75% 92%); /* Perceived lighter than above-b:89 */
   height: 3px;
   width: 0; /* Width will be controlled by JavaScript */
 }
@@ -79,6 +43,13 @@
   width: 0; /* Width will be controlled by JavaScript */
 }
 
+.item-inner:hover .item-gauge-above-a {
+  background-color: hsl(0.07turn 75% 89%); /* Lower Lightness by 3 from 92 */
+}
+.item-inner:hover .item-gauge-above-b {
+  background-color: hsl(0.91turn 75% 86%); /* Lower Lightness by 3 from 89 */
+}
+
 .item-title { /* Link holder */
 }
 .item-title a {
@@ -86,7 +57,7 @@
   color: inherit; /* Use parent text color instead of link color */
   display: block; /* For full title area to be clickable */
   outline-offset: -2px; /* For outline not to be clipped, to be within padding */
-  padding: 0.5rem 0.5rem; /* Matches right padding of grow values, and header */
+  padding: 0.5rem 0.5rem; /* Matches right padding of grow indicators, and header */
   text-decoration: none;
 }
 .item-title a:hover {
@@ -94,7 +65,7 @@
 }
 
 .item-gauge-below-a { /* Favorites prev count */
-  background-color: hsl(0.42turn 75% 86%);
+  background-color: hsl(0.42turn 75% 86%); /* Perceived lighter than below-b:89 */
   height: 3px;
   width: 0; /* Width will be controlled by JavaScript */
 }
@@ -103,6 +74,15 @@
   height: 3px;
   width: 0; /* Width will be controlled by JavaScript */
 }
+
+.item-inner:hover .item-gauge-below-a {
+  background-color: hsl(0.42turn 75% 83%); /* Lower Lightness by 3 from 86 */
+}
+.item-inner:hover .item-gauge-below-b {
+  background-color: hsl(0.58turn 75% 86%); /* Lower Lightness by 3 from 89 */
+}
+
+/* Stats with grow indicators */
 
 .item-stat-container {
   align-items: flex-end; /* Right align all stat */
@@ -126,15 +106,6 @@
   border-radius: 0 0 0 0.5rem;
   color: #696969; /* DimGray. L41 */
   padding-right: 0.5rem; /* Matches left and right spacings of item */
-}
-
-.item-stat-23.item-mark-grow,
-.item-stat-7.item-mark-grow {
-  color: #525252; /* Gray32. Lower Lightness by 9 from 41 */
-}
-.item-stat-23.item-mark-fall,
-.item-stat-7.item-mark-fall {
-  color: #595959; /* Gray35. Lower Lightness by 6 from 41 */
 }
 
 .item-grow-container {
@@ -161,20 +132,53 @@
   padding-right: 0.5rem; /* Matches left padding of item-title a, and header */
 }
 
-.item-grow-23.item-mark-grow,
-.item-grow-7.item-mark-grow {
-  color: #525252; /* Gray32. Lower Lightness by 9 from 41 */
-}
-.item-grow-23.item-mark-fall,
-.item-grow-7.item-mark-fall {
+.item-inner:hover .item-stat-23,
+.item-inner:hover .item-stat-7,
+.item-inner:hover .item-grow-23,
+.item-inner:hover .item-grow-7 {
   color: #595959; /* Gray35. Lower Lightness by 6 from 41 */
 }
 
+/* Substantial changes marking */
+
 .item-mark-grow {
-  background-color: hsl(0.42turn 75% 92%);
+  background-color: hsl(0.42turn 75% 92%); /* Perceived lighter than fall:95 */
 }
 .item-mark-fall {
   background-color: hsl(0.58turn 75% 95%);
+}
+
+.item-inner:hover .item-mark-grow {
+  background-color: hsl(0.42turn 75% 89%); /* Lower Lightness by 3 from 92 */
+}
+.item-inner:hover .item-mark-fall {
+  background-color: hsl(0.58turn 75% 92%); /* Lower Lightness by 3 from 95 */
+}
+
+.item-mark-grow.item-stat-23,
+.item-mark-grow.item-stat-7,
+.item-mark-grow.item-grow-23,
+.item-mark-grow.item-grow-7 {
+  color: #525252; /* Gray32. Lower Lightness by 9 from 41 */
+}
+.item-mark-fall.item-stat-23,
+.item-mark-fall.item-stat-7,
+.item-mark-fall.item-grow-23,
+.item-mark-fall.item-grow-7 {
+  color: #595959; /* Gray35. Lower Lightness by 6 from 41 */
+}
+
+.item-inner:hover .item-mark-grow.item-stat-23,
+.item-inner:hover .item-mark-grow.item-stat-7,
+.item-inner:hover .item-mark-grow.item-grow-23,
+.item-inner:hover .item-mark-grow.item-grow-7 {
+  color: #4a4a4a; /* Gray29. Lower Lightness by 12 from 41 */
+}
+.item-inner:hover .item-mark-fall.item-stat-23,
+.item-inner:hover .item-mark-fall.item-stat-7,
+.item-inner:hover .item-mark-fall.item-grow-23,
+.item-inner:hover .item-mark-fall.item-grow-7 {
+  color: #525252; /* Gray32. Lower Lightness by 9 from 41 */
 }
 
 /* EOF */
