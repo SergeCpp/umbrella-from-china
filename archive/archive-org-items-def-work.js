@@ -590,6 +590,7 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
     const grow_old = item_prev ? get_grow_ratio(item.ratio_old, item_prev.ratio_old) : "   ";
     stat_grow_old.textContent = grow_old;
 
+    // Substantial changes marking
     if ((grow_old === "^^^") || (grow_old === "^^ ")) {
       stat_curr_old.classList.add("item-mark-grow");
       stat_grow_old.classList.add("item-mark-grow");
@@ -613,6 +614,21 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
 
     const grow_7 = item_prev ? get_grow_fixed(item.views_7, item_prev.views_7) : "   ";
     stat_grow_7.textContent = grow_7;
+
+    // Substantial changes marking
+    if ((item.ratio_all / item.ratio_old) > 1.075) {
+      stat_curr_23.classList.add("item-mark-grow");
+      stat_curr_7 .classList.add("item-mark-grow");
+      stat_grow_23.classList.add("item-mark-grow");
+      stat_grow_7 .classList.add("item-mark-grow");
+    }
+
+    if ((item.ratio_all / item.ratio_old) < 0.850) { // Twice the up difference
+      stat_curr_23.classList.add("item-mark-fall");
+      stat_curr_7 .classList.add("item-mark-fall");
+      stat_grow_23.classList.add("item-mark-fall");
+      stat_grow_7 .classList.add("item-mark-fall");
+    }
 
     // 6.5. Grow: assemble the hierarchy
     stat_grow_container.appendChild(stat_grow_old);
