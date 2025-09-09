@@ -431,6 +431,43 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
 
   sort_results(results_curr_exp);
 
+  // Substantial changes marking: horizontal impact of old from prev to curr
+  const horz_curr_prev = [];
+
+  results_curr_exp.forEach(item => {
+    const item_prev = map_prev[item.identifier];
+    if  (!item_prev) return;
+
+    horz_curr_prev.push(item.ratio_old / item_prev.ratio_old);
+  });
+  horz_curr_prev.sort((a, b) => a - b);
+
+  // 3:0, 4:1, 10:1, 20:3, 50:5, 100:7, 200:11, 500:16, 800:21, 826:21
+  const horz_mark_cnt = Math.round(Math.floor(Math.sqrt(horz_curr_prev.length * 0.33)) * 1.33);
+  let   mark_grow_old = Infinity;
+  let   mark_fall_old = 0;
+
+  if (horz_mark_cnt > 0) {
+    mark_grow_old = horz_curr_prev[horz_curr_prev.length - horz_mark_cnt];
+    mark_fall_old = horz_curr_prev[horz_mark_cnt         -             1];
+  }
+  if (mark_grow_old <= 1) mark_grow_old = Infinity;
+  if (mark_fall_old >= 1) mark_fall_old = 0;
+
+  // Substantial changes marking: vertical impact of 23 and 7 into all within curr
+  const vert_all_old   = results_curr_exp.map(item => item.ratio_all / item.ratio_old).sort((a, b) => a - b);
+  // 3:0, 4:1, 10:1, 20:2, 50:3, 100:5, 200:7, 500:11, 800:14, 826:14
+  const vert_mark_cnt  = Math.floor(Math.sqrt(vert_all_old.length * 0.25));
+  let   mark_grow_23_7 = Infinity;
+  let   mark_fall_23_7 = 0;
+
+  if (vert_mark_cnt > 0) {
+    mark_grow_23_7 = vert_all_old[vert_all_old.length - vert_mark_cnt];
+    mark_fall_23_7 = vert_all_old[vert_mark_cnt       -             1];
+  }
+  if (mark_grow_23_7 <= 1) mark_grow_23_7 = Infinity;
+  if (mark_fall_23_7 >= 1) mark_fall_23_7 = 0;
+
   // Log scaling
   const max_ratio     = Math.max(curr_exp_totals.max_ratio_old, curr_exp_totals.max_ratio_all);
   const max_favorites = curr_exp_totals.max_favorites;
@@ -590,15 +627,17 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
     const grow_old = item_prev ? get_grow_ratio(item.ratio_old, item_prev.ratio_old) : "   ";
     stat_grow_old.textContent = grow_old;
 
-    // Substantial changes marking
-    if ((grow_old === "^^^") || (grow_old === "^^ ")) {
-      stat_curr_old.classList.add("item-mark-grow");
-      stat_grow_old.classList.add("item-mark-grow");
-    }
+    // Substantial changes marking: horizontal impact of old from prev to curr
+    if (item_prev) {
+      if ((item.ratio_old / item_prev.ratio_old) >= mark_grow_old) {
+        stat_curr_old.classList.add("item-mark-grow");
+        stat_grow_old.classList.add("item-mark-grow");
+      }
 
-    if ((grow_old === "vvv") || (grow_old === "vv ")) {
-      stat_curr_old.classList.add("item-mark-fall");
-      stat_grow_old.classList.add("item-mark-fall");
+      if ((item.ratio_old / item_prev.ratio_old) <= mark_fall_old) {
+        stat_curr_old.classList.add("item-mark-fall");
+        stat_grow_old.classList.add("item-mark-fall");
+      }
     }
 
     // 6.3. Grow: 23
@@ -615,15 +654,15 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
     const grow_7 = item_prev ? get_grow_fixed(item.views_7, item_prev.views_7) : "   ";
     stat_grow_7.textContent = grow_7;
 
-    // Substantial changes marking
-    if ((item.ratio_all / item.ratio_old) > 1.075) {
+    // Substantial changes marking: vertical impact of 23 and 7 into all within curr
+    if ((item.ratio_all / item.ratio_old) >= mark_grow_23_7) {
       stat_curr_23.classList.add("item-mark-grow");
       stat_curr_7 .classList.add("item-mark-grow");
       stat_grow_23.classList.add("item-mark-grow");
       stat_grow_7 .classList.add("item-mark-grow");
     }
 
-    if ((item.ratio_all / item.ratio_old) < 0.850) { // Twice the up difference
+    if ((item.ratio_all / item.ratio_old) <= mark_fall_23_7) {
       stat_curr_23.classList.add("item-mark-fall");
       stat_curr_7 .classList.add("item-mark-fall");
       stat_grow_23.classList.add("item-mark-fall");
