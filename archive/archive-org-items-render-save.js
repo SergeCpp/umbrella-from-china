@@ -230,6 +230,42 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
 
   sort_results(results_curr_exp);
 
+  // Substantial changes marking
+  function get_marks(rel, cnt) {
+    if (cnt <= 0) return { grow: Infinity, fall: 0 };
+
+    let grow_c = cnt;
+    let fall_c = cnt;
+    let grow_i = rel.length - cnt;
+    let fall_i = cnt - 1;
+    let grow   = rel[grow_i];
+    let fall   = rel[fall_i];
+
+    while (grow <= 1) { // Off grow side and add their places to fall side
+      fall_i++;
+      fall = rel[fall_i];
+
+      grow_c--;
+      if (grow_c === 0) break;
+
+      grow_i++;
+      grow = rel[grow_i];
+    }
+    while (fall >= 1) { // Off fall side and add their places to grow side
+      grow_i--;
+      grow = rel[grow_i];
+
+      fall_c--;
+      if (fall_c === 0) break;
+
+      fall_i--;
+      fall = rel[fall_i];
+    }
+    return { grow: grow_c > 0 ? grow : Infinity,
+             fall: fall_c > 0 ? fall : 0
+    };
+  }
+
   // Substantial changes marking: horizontal impact of old from prev to curr
   const horz_curr_prev = [];
 
@@ -242,42 +278,18 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
   horz_curr_prev.sort((a, b) => a - b);
 
   // 3:0, 4:1, 10:1, 20:3, 50:5, 100:7, 200:11, 500:16, 800:21, 826:21
-  const horz_mark_cnt = Math.round(Math.floor(Math.sqrt(horz_curr_prev.length * 0.33)) * 1.33);
-  let   mark_grow_old = Infinity;
-  let   mark_fall_old = 0;
-
-  if (horz_mark_cnt > 0) {
-      mark_grow_old = horz_curr_prev[horz_curr_prev.length - horz_mark_cnt];
-      mark_fall_old = horz_curr_prev[horz_mark_cnt - 1];
-  }
-  if (mark_grow_old <= 1) { // Off side and add their places to other side
-      mark_grow_old = Infinity;
-      mark_fall_old = horz_curr_prev[horz_mark_cnt * 2 - 1];
-  }
-  if (mark_fall_old >= 1) { // Off side and add their places to other side
-      mark_fall_old = 0;
-      mark_grow_old = horz_curr_prev[horz_curr_prev.length - horz_mark_cnt * 2];
-  }
+  const horz_marks_cnt = Math.round(Math.floor(Math.sqrt(horz_curr_prev.length * 0.33)) * 1.33);
+  const horz_marks     = get_marks(horz_curr_prev, horz_marks_cnt);
+  const mark_grow_old  = horz_marks.grow;
+  const mark_fall_old  = horz_marks.fall;
 
   // Substantial changes marking: vertical impact of 23 and 7 into all within curr
   const vert_all_old   = results_curr_exp.map(item => item.ratio_all / item.ratio_old).sort((a, b) => a - b);
   // 3:0, 4:1, 10:1, 20:2, 50:3, 100:5, 200:7, 500:11, 800:14, 826:14
-  const vert_mark_cnt  = Math.floor(Math.sqrt(vert_all_old.length * 0.25));
-  let   mark_grow_23_7 = Infinity;
-  let   mark_fall_23_7 = 0;
-
-  if (vert_mark_cnt > 0) {
-      mark_grow_23_7 = vert_all_old[vert_all_old.length - vert_mark_cnt];
-      mark_fall_23_7 = vert_all_old[vert_mark_cnt - 1];
-  }
-  if (mark_grow_23_7 <= 1) { // Off side and add their places to other side
-      mark_grow_23_7 = Infinity;
-      mark_fall_23_7 = vert_all_old[vert_mark_cnt * 2 - 1];
-  }
-  if (mark_fall_23_7 >= 1) { // Off side and add their places to other side
-      mark_fall_23_7 = 0;
-      mark_grow_23_7 = vert_all_old[vert_all_old.length - vert_mark_cnt * 2];
-  }
+  const vert_marks_cnt = Math.floor(Math.sqrt(vert_all_old.length * 0.25));
+  const vert_marks     = get_marks(vert_all_old, vert_marks_cnt);
+  const mark_grow_23_7 = vert_marks.grow;
+  const mark_fall_23_7 = vert_marks.fall;
 
   // Log scaling
   const max_ratio     = Math.max(curr_exp_totals.max_ratio_old, curr_exp_totals.max_ratio_all);
