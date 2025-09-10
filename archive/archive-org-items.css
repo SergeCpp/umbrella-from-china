@@ -33,21 +33,21 @@
 }
 
 .item-gauge-above-a { /* Ratio old */
-  background-color: hsl(0.07turn 75% 92%); /* Perceived lighter than above-b:89 */
+  background-color: hsl(0.42turn 75% 86%); /* Perceived lighter than above-b:89 */
   height: 3px;
   width: 0; /* Width will be controlled by JavaScript */
 }
 .item-gauge-above-b { /* Ratio all */
-  background-color: hsl(0.91turn 75% 89%);
+  background-color: hsl(0.58turn 75% 89%);
   height: 3px;
   width: 0; /* Width will be controlled by JavaScript */
 }
 
 .item-inner:hover .item-gauge-above-a {
-  background-color: hsl(0.07turn 75% 89%); /* Lower Lightness by 3 from 92 */
+  background-color: hsl(0.42turn 75% 83%); /* Lower Lightness by 3 from 86 */
 }
 .item-inner:hover .item-gauge-above-b {
-  background-color: hsl(0.91turn 75% 86%); /* Lower Lightness by 3 from 89 */
+  background-color: hsl(0.58turn 75% 86%); /* Lower Lightness by 3 from 89 */
 }
 
 .item-title { /* Link holder */
@@ -65,21 +65,21 @@
 }
 
 .item-gauge-below-a { /* Favorites prev count */
-  background-color: hsl(0.42turn 75% 86%); /* Perceived lighter than below-b:89 */
+  background-color: hsl(0.07turn 75% 92%); /* Perceived lighter than below-b:89 */
   height: 3px;
   width: 0; /* Width will be controlled by JavaScript */
 }
 .item-gauge-below-b { /* Favorites curr count */
-  background-color: hsl(0.58turn 75% 89%);
+  background-color: hsl(0.91turn 75% 89%);
   height: 3px;
   width: 0; /* Width will be controlled by JavaScript */
 }
 
 .item-inner:hover .item-gauge-below-a {
-  background-color: hsl(0.42turn 75% 83%); /* Lower Lightness by 3 from 86 */
+  background-color: hsl(0.07turn 75% 89%); /* Lower Lightness by 3 from 92 */
 }
 .item-inner:hover .item-gauge-below-b {
-  background-color: hsl(0.58turn 75% 86%); /* Lower Lightness by 3 from 89 */
+  background-color: hsl(0.91turn 75% 86%); /* Lower Lightness by 3 from 89 */
 }
 
 /* Stats with grow indicators */
