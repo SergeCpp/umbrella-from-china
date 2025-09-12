@@ -92,17 +92,34 @@
   font-family: monospace;
   white-space: pre;
 }
-.item-stat-old {
+
+.item-stat-prev-old {
+  border-radius: 0.5rem 0.5rem 0 0;
+  color: black;
+  padding-right: 0.5rem; /* Matches left and right spacings of item */
+}
+.item-stat-prev-23 {
+  border-radius: 0 0 0 0;
+  color: #696969; /* DimGray. L41 */
+  padding-right: 0.5rem; /* Matches left and right spacings of item */
+}
+.item-stat-prev-7 {
+  border-radius: 0 0 0.5rem 0.5rem;
+  color: #696969; /* DimGray. L41 */
+  padding-right: 0.5rem; /* Matches left and right spacings of item */
+}
+
+.item-stat-curr-old {
   border-radius: 0.5rem 0 0 0.5rem;
   color: black;
   padding-right: 0.5rem; /* Matches left and right spacings of item */
 }
-.item-stat-23 {
+.item-stat-curr-23 {
   border-radius: 0.5rem 0 0 0;
   color: #696969; /* DimGray. L41 */
   padding-right: 0.5rem; /* Matches left and right spacings of item */
 }
-.item-stat-7 {
+.item-stat-curr-7 {
   border-radius: 0 0 0 0.5rem;
   color: #696969; /* DimGray. L41 */
   padding-right: 0.5rem; /* Matches left and right spacings of item */
@@ -116,6 +133,7 @@
   font-family: monospace;
   white-space: pre;
 }
+
 .item-grow-old {
   border-radius: 0 0.5rem 0.5rem 0;
   color: black;
@@ -132,8 +150,10 @@
   padding-right: 0.5rem; /* Matches left padding of item-title a, and header */
 }
 
-.item-inner:hover .item-stat-23,
-.item-inner:hover .item-stat-7,
+.item-inner:hover .item-stat-prev-23,
+.item-inner:hover .item-stat-prev-7,
+.item-inner:hover .item-stat-curr-23,
+.item-inner:hover .item-stat-curr-7,
 .item-inner:hover .item-grow-23,
 .item-inner:hover .item-grow-7 {
   color: #595959; /* Gray35. Lower Lightness by 6 from 41 */
@@ -155,30 +175,72 @@
   background-color: hsl(0.58turn 75% 92%); /* Lower Lightness by 3 from 95 */
 }
 
-.item-mark-grow.item-stat-23,
-.item-mark-grow.item-stat-7,
+.item-mark-grow.item-stat-curr-23,
+.item-mark-grow.item-stat-curr-7,
 .item-mark-grow.item-grow-23,
 .item-mark-grow.item-grow-7 {
   color: #525252; /* Gray32. Lower Lightness by 9 from 41 */
 }
-.item-mark-fall.item-stat-23,
-.item-mark-fall.item-stat-7,
+.item-mark-fall.item-stat-curr-23,
+.item-mark-fall.item-stat-curr-7,
 .item-mark-fall.item-grow-23,
 .item-mark-fall.item-grow-7 {
   color: #595959; /* Gray35. Lower Lightness by 6 from 41 */
 }
 
-.item-inner:hover .item-mark-grow.item-stat-23,
-.item-inner:hover .item-mark-grow.item-stat-7,
+.item-inner:hover .item-mark-grow.item-stat-curr-23,
+.item-inner:hover .item-mark-grow.item-stat-curr-7,
 .item-inner:hover .item-mark-grow.item-grow-23,
 .item-inner:hover .item-mark-grow.item-grow-7 {
-  color: #4a4a4a; /* Gray29. Lower Lightness by 12 from 41 */
+  color: #4a4a4a; /* Gray29. Lower Lightness by 3 from 32 */
 }
-.item-inner:hover .item-mark-fall.item-stat-23,
-.item-inner:hover .item-mark-fall.item-stat-7,
+.item-inner:hover .item-mark-fall.item-stat-curr-23,
+.item-inner:hover .item-mark-fall.item-stat-curr-7,
 .item-inner:hover .item-mark-fall.item-grow-23,
 .item-inner:hover .item-mark-fall.item-grow-7 {
-  color: #525252; /* Gray32. Lower Lightness by 9 from 41 */
+  color: #525252; /* Gray32. Lower Lightness by 3 from 35 */
+}
+
+/* Rank changes marking */
+
+.item-mark-up {
+  background-color: hsl(0.07turn 75% 95%); /* Perceived lighter than dn:95 */
+}
+.item-mark-dn {
+  background-color: hsl(0.91turn 75% 95%);
+}
+
+.item-inner:hover .item-mark-up {
+  background-color: hsl(0.07turn 75% 92%); /* Lower Lightness by 3 from 95 */
+}
+.item-inner:hover .item-mark-dn {
+  background-color: hsl(0.91turn 75% 92%); /* Lower Lightness by 3 from 95 */
+}
+
+.item-mark-up.item-stat-prev-23,
+.item-mark-up.item-stat-prev-7,
+.item-mark-up.item-grow-23,
+.item-mark-up.item-grow-7 {
+  color: #595959; /* Gray35. Lower Lightness by 6 from 41 */
+}
+.item-mark-dn.item-stat-prev-23,
+.item-mark-dn.item-stat-prev-7,
+.item-mark-dn.item-grow-23,
+.item-mark-dn.item-grow-7 {
+  color: #595959; /* Gray35. Lower Lightness by 6 from 41 */
+}
+
+.item-inner:hover .item-mark-up.item-stat-prev-23,
+.item-inner:hover .item-mark-up.item-stat-prev-7,
+.item-inner:hover .item-mark-up.item-grow-23,
+.item-inner:hover .item-mark-up.item-grow-7 {
+  color: #525252; /* Gray32. Lower Lightness by 3 from 35 */
+}
+.item-inner:hover .item-mark-dn.item-stat-prev-23,
+.item-inner:hover .item-mark-dn.item-stat-prev-7,
+.item-inner:hover .item-mark-dn.item-grow-23,
+.item-inner:hover .item-mark-dn.item-grow-7 {
+  color: #525252; /* Gray32. Lower Lightness by 3 from 35 */
 }
 
 /* EOF */

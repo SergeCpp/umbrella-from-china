@@ -110,7 +110,7 @@ function format_bytes(bytes) {
 }
 
 function sort_results(results) {
-  results.sort((a, b) => { // Descending for views
+  results.sort((a, b) => { // Descending for ratios
     if (a.ratio_old !== b.ratio_old) { return b.ratio_old - a.ratio_old; }
     if (a.ratio_23  !== b.ratio_23 ) { return b.ratio_23  - a.ratio_23;  }
     if (a.ratio_7   !== b.ratio_7  ) { return b.ratio_7   - a.ratio_7;   }
@@ -165,7 +165,7 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
   const container = document.getElementById("results");
         container.innerHTML = "";
 
-  // Filtering by favorites count
+  // 1. Filtering by favorites count
   if (favs_min_str || favs_max_str) {
     const favs_min = favs_min_str ? parseInt(favs_min_str, 10) : 0;
     const favs_max = favs_max_str ? parseInt(favs_max_str, 10) : Infinity;
@@ -179,58 +179,88 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
     });
   }
 
-  // Checking for no results
+  // 2. Checking for no results
   if ((results_curr.length === 0) && (results_prev.length === 0)) {
     container.innerHTML =
       '<div class="text-center text-comment">No items matched the filters</div>';
     return false;
   }
 
-  // Lookup helper
+  // 3.1. Lookup helper for create curr expanded results array
   const results_curr_ids = {};
   results_curr.forEach(item => {
     results_curr_ids[item.identifier] = true;
   });
 
-  // Create expanded results array
-  const results_curr_exp = results_curr.map(item => ({ ...item, is_exp: false }));
+  // 3.2 Create curr expanded results array
+  const results_curr_exp = results_curr.map(item => ({ ...item, is_exp: false, index_prev: null }));
 
-  // Add items from results_prev that aren't in results_curr
+  // 3.3. Add items from results_prev that absent in results_curr
   results_prev.forEach(item => {
     if (!results_curr_ids[item.identifier]) {
-      results_curr_exp.push({ ...item, is_exp: true });
+      results_curr_exp.push({ ...item, is_exp: true, index_prev: null });
     }
   });
 
-  // Build a map of prev results by identifier
+  // 4.1. Build a map of prev results by identifier
   const map_prev = {};
   results_prev.forEach(item => {
     map_prev[item.identifier] = item;
   });
 
-  // Total counts displaying (for expanded results)
+  // 4.2. Create prev expanded results array
+  const results_prev_exp = [...results_prev]; // Make copy
+
+  // 4.3. Add items from results_curr that absent in results_prev
+  results_curr.forEach(item => {
+    if (!map_prev[item.identifier]) {
+      results_prev_exp.push({ ...item });
+    }
+  });
+
+  // 5.1. Build a map of curr expanded results by identifier
+  const map_curr_exp = {};
+  results_curr_exp.forEach(item => {
+    map_curr_exp[item.identifier] = item;
+  });
+
+  // 5.2. Sort prev expanded
+  sort_results(results_prev_exp);
+
+  // 5.3. Traverse prev expanded and set index_prev in curr expanded
+  results_prev_exp.forEach((item, index) => {
+    map_curr_exp[item.identifier].index_prev = index;
+  });
+
+  // 6. Mark rank changes only if absolute difference > mark_up_dn
+  // 3:1, 4:1, 10:2, 20:2, 50:3, 100:5, 200:6, 500:10, 800:12, 826:12
+  const mark_up_dn = Math.ceil(Math.sqrt(results_curr_exp.length) / 2.4);
+
+  // 7. Total counts displaying (for expanded results)
   const curr_exp_totals  = get_totals(results_curr_exp);
   const curr_exp_total   = curr_exp_totals.audio + curr_exp_totals.video;
-  const counts_div       = document.createElement("div");
-  counts_div.className   = "subtitle text-center text-normal";
-  counts_div.textContent = 'Total ' + curr_exp_total            + ' '        +
+  const totals_div       = document.createElement("div");
+  totals_div.className   = "subtitle text-center text-normal";
+  totals_div.textContent = 'Total ' + curr_exp_total            + ' '        +
                            '('      + curr_exp_totals.audio     + ' Audio '  +
                            '/ '     + curr_exp_totals.video     + ' Video) ' +
                          format_bytes(curr_exp_totals.bytes)    + ' '        +
                            '/ '     + curr_exp_totals.views     + ' Views '  +
                            '/ '     + curr_exp_totals.favorites + ' Favs '   +
                            '('      + curr_exp_totals.favorited + ' Items)';
-  container.appendChild(counts_div);
+  container.appendChild(totals_div);
 
-  // Both stats displaying
+  // 8. Both stats displaying
   render_stats(results_prev, stat_prev_date, "prev", container); // Also sorts results_prev
   render_stats(results_curr, stat_curr_date, "curr", container); // Also sorts results_curr
 
+  // 9. Spacing
   container.lastElementChild.style.marginBottom = "1em"; // Add space before item list
 
+  // 10. Sorting
   sort_results(results_curr_exp);
 
-  // Substantial changes marking
+  // 11.1. Substantial changes marking
   function get_marks(rel, cnt) {
     if (cnt <= 0) return { grow: Infinity, fall: 0 };
 
@@ -261,12 +291,12 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
       fall_i--;
       fall = rel[fall_i];
     }
-    return { grow: grow_c > 0 ? grow : Infinity,
-             fall: fall_c > 0 ? fall : 0
+    return { grow: grow_c > 0 ? grow : Infinity, // Possible array of all 1's is handled here
+             fall: fall_c > 0 ? fall : 0         // Because both grow_c and fall_c will be 0
     };
   }
 
-  // Substantial changes marking: horizontal impact of old from prev to curr
+  // 11.2. Substantial changes marking: horizontal impact of old from prev to curr
   const horz_curr_prev = [];
 
   results_curr_exp.forEach(item => {
@@ -283,7 +313,7 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
   const mark_grow_old  = horz_marks.grow;
   const mark_fall_old  = horz_marks.fall;
 
-  // Substantial changes marking: vertical impact of 23 and 7 into all within curr
+  // 11.3. Substantial changes marking: vertical impact of 23 and 7 into all within curr
   const vert_all_old   = results_curr_exp.map(item => item.ratio_all / item.ratio_old).sort((a, b) => a - b);
   // 3:0, 4:1, 10:1, 20:2, 50:3, 100:5, 200:7, 500:11, 800:14, 826:14
   const vert_marks_cnt = Math.floor(Math.sqrt(vert_all_old.length * 0.25));
@@ -291,7 +321,7 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
   const mark_grow_23_7 = vert_marks.grow;
   const mark_fall_23_7 = vert_marks.fall;
 
-  // Log scaling
+  // 12. Log scaling
   const max_ratio     = Math.max(curr_exp_totals.max_ratio_old, curr_exp_totals.max_ratio_all);
   const max_favorites = curr_exp_totals.max_favorites;
 
@@ -303,7 +333,7 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
            (value >= max) ? 100 : Math.log(value + 1) * base;
   }
 
-  // Show item list with flex alignment
+  // 13. Show item list with flex alignment
   results_curr_exp.forEach((item, index) => {
     // 0. Get matching prev item
     const item_prev = map_prev[item.identifier];
@@ -377,7 +407,7 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
 
     // 4.2. Prev: old stat line
     const stat_prev_old = document.createElement("div");
-    stat_prev_old.className   ="item-stat-old";
+    stat_prev_old.className   ="item-stat-prev-old";
     stat_prev_old.textContent = item_prev
                               ? item_prev.views_old.toString().padStart( 6) + " /" +
                                 item_prev.days_old .toString().padStart( 5) + " =" +
@@ -386,7 +416,7 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
 
     // 4.3. Prev: 23-day stat line
     const stat_prev_23 = document.createElement("div");
-    stat_prev_23.className   ="item-stat-23";
+    stat_prev_23.className   ="item-stat-prev-23";
     stat_prev_23.textContent = item_prev
                              ? item_prev.views_23.toString().padStart( 6) + " /   23 =" +
                                item_prev.ratio_23.toFixed(3).padStart( 7)
@@ -394,11 +424,25 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
 
     // 4.4. Prev: 7-day stat line
     const stat_prev_7 = document.createElement("div");
-    stat_prev_7.className   ="item-stat-7";
+    stat_prev_7.className   ="item-stat-prev-7";
     stat_prev_7.textContent = item_prev
                             ? item_prev.views_7.toString().padStart( 6) + " /    7 =" +
                               item_prev.ratio_7.toFixed(3).padStart( 7)
                             :                           "".padStart(22);
+
+    // Rank changes marking
+    if (item_prev && !item.is_exp && (Math.abs(index - item.index_prev) > mark_up_dn)) {
+      if (index < item.index_prev) {
+        stat_prev_old.classList.add("item-mark-up");
+        stat_prev_23 .classList.add("item-mark-up");
+        stat_prev_7  .classList.add("item-mark-up");
+      }
+      if (index > item.index_prev) {
+        stat_prev_old.classList.add("item-mark-dn");
+        stat_prev_23 .classList.add("item-mark-dn");
+        stat_prev_7  .classList.add("item-mark-dn");
+      }
+    }
 
     // 4.5. Prev: assemble the hierarchy
     stat_prev_container.appendChild(stat_prev_old);
@@ -411,7 +455,7 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
 
     // 5.2. Curr: old stat line
     const stat_curr_old = document.createElement("div");
-    stat_curr_old.className   ="item-stat-old";
+    stat_curr_old.className   ="item-stat-curr-old";
     stat_curr_old.textContent = item.is_exp
                               ?                        "".padStart(22)
                               : item.views_old.toString().padStart( 6) + " /" +
@@ -420,7 +464,7 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
 
     // 5.3. Curr: 23-day stat line
     const stat_curr_23 = document.createElement("div");
-    stat_curr_23.className   ="item-stat-23";
+    stat_curr_23.className   ="item-stat-curr-23";
     stat_curr_23.textContent = item.is_exp
                              ?                       "".padStart(22)
                              : item.views_23.toString().padStart( 6) + " /   23 =" +
@@ -428,7 +472,7 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
 
     // 5.4. Curr: 7-day stat line
     const stat_curr_7 = document.createElement("div");
-    stat_curr_7.className   ="item-stat-7";
+    stat_curr_7.className   ="item-stat-curr-7";
     stat_curr_7.textContent = item.is_exp
                             ?                      "".padStart(22)
                             : item.views_7.toString().padStart( 6) + " /    7 =" +
@@ -451,12 +495,11 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
     stat_grow_old.textContent = grow_old;
 
     // Substantial changes marking: horizontal impact of old from prev to curr
-    if (item_prev) {
+    if (item_prev && !item.is_exp) {
       if ((item.ratio_old / item_prev.ratio_old) >= mark_grow_old) {
         stat_curr_old.classList.add("item-mark-grow");
         stat_grow_old.classList.add("item-mark-grow");
       }
-
       if ((item.ratio_old / item_prev.ratio_old) <= mark_fall_old) {
         stat_curr_old.classList.add("item-mark-fall");
         stat_grow_old.classList.add("item-mark-fall");
@@ -478,18 +521,19 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
     stat_grow_7.textContent = grow_7;
 
     // Substantial changes marking: vertical impact of 23 and 7 into all within curr
-    if ((item.ratio_all / item.ratio_old) >= mark_grow_23_7) {
-      stat_curr_23.classList.add("item-mark-grow");
-      stat_curr_7 .classList.add("item-mark-grow");
-      stat_grow_23.classList.add("item-mark-grow");
-      stat_grow_7 .classList.add("item-mark-grow");
-    }
-
-    if ((item.ratio_all / item.ratio_old) <= mark_fall_23_7) {
-      stat_curr_23.classList.add("item-mark-fall");
-      stat_curr_7 .classList.add("item-mark-fall");
-      stat_grow_23.classList.add("item-mark-fall");
-      stat_grow_7 .classList.add("item-mark-fall");
+    if (!item.is_exp) {
+      if ((item.ratio_all / item.ratio_old) >= mark_grow_23_7) {
+        stat_curr_23.classList.add("item-mark-grow");
+        stat_curr_7 .classList.add("item-mark-grow");
+        stat_grow_23.classList.add("item-mark-grow");
+        stat_grow_7 .classList.add("item-mark-grow");
+      }
+      if ((item.ratio_all / item.ratio_old) <= mark_fall_23_7) {
+        stat_curr_23.classList.add("item-mark-fall");
+        stat_curr_7 .classList.add("item-mark-fall");
+        stat_grow_23.classList.add("item-mark-fall");
+        stat_grow_7 .classList.add("item-mark-fall");
+      }
     }
 
     // 6.5. Grow: assemble the hierarchy
