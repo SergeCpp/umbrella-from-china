@@ -71,38 +71,38 @@ function get_grow_fixed(curr, prev) {
 function get_marks(rel, cnt, mid) {
   if (cnt <= 0) return { above: +Infinity, below: -Infinity };
 
-  let above_c = cnt;
-  let below_c = cnt;
-  let above_i = rel.length - cnt;
-  let below_i = cnt - 1;
-  let above   = rel[above_i];
-  let below   = rel[below_i];
+  let above_cnt = cnt;
+  let below_cnt = cnt;
+  let above_idx = rel.length - cnt;
+  let below_idx = cnt - 1;
+  let above_val = rel[above_idx];
+  let below_val = rel[below_idx];
 
-  while (above <= mid) { // Off above side and add their places to below side
-    below_i++;
-    below = rel[below_i];
-    below_c++;
+  while (above_val <= mid) { // Above value is in below side
+    below_idx++; // Move below side to right
+    below_val = rel[below_idx]; // Update its value
+    below_cnt++; // Count it
 
-    above_c--;
-    if (above_c === 0) break;
-    above_i++;
-    above = rel[above_i];
+    above_cnt--; // Use place
+    if (above_cnt === 0) break; // Above side is empty
+    above_idx++; // Move above side to right
+    above_val = rel[above_idx]; // Update its value
   }
-  while (below >= mid) { // Off below side and add their places to above side
-    if (above_c > 0) {
-      above_i--;
-      if (rel[above_i] > mid) {
-        above = rel[above_i];
-        above_c++;
+  while (below_val >= mid) { // Below value is in above side
+    if (above_cnt > 0) { // Above side not empty
+      if (rel[above_idx - 1] > mid) { // And something is present there to add to above side
+        above_val = rel[above_idx - 1]; // Update its value
+        above_cnt++; // Count it
+        above_idx--; // Move above side to left
       }
     }
-    below_c--;
-    if (below_c === 0) break;
-    below_i--;
-    below = rel[below_i];
+    below_cnt--; // Use place
+    if (below_cnt === 0) break; // Below side is empty
+    below_idx--; // Move below side to left
+    below_val = rel[below_idx]; // Update its value
   }
-  return { above: above_c > 0 ? above : +Infinity, // Possible array of all mid's is handled here
-           below: below_c > 0 ? below : -Infinity  // Because both above_c and below_c will be 0
+  return { above: above_cnt > 0 ? above_val : +Infinity, // Possible array of all mid's is handled here
+           below: below_cnt > 0 ? below_val : -Infinity  // Because both above_cnt and below_cnt will be 0
   };
 }
 
@@ -277,15 +277,16 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
   });
 
   // 6. Mark rank changes
-  const rank_base  = Math.log(results_curr_exp.length);
-  const rank_decay = 9;
+  const rank_base  = Math.log(results_curr_exp.length); // For length === 0 is check below
+  const rank_decay = 9; // For scale from top: 1 to bottom: 0.1
+  const rank_steep = 3; // To more prioritize top items (1.5 also good)
 
   const rank_up_dn = results_curr_exp.map((item, index_curr) => {
-    const diff = item.index_prev - index_curr;
-    if   (diff === 0) return 0;
+    const diff = item.index_prev - index_curr; // No abs
+    if   (diff === 0) return 0; // Also length === 1 is checked here (index_prev === index_curr)
 
-    const weight = 1 / (1 + (rank_decay * Math.log(index_curr + 1) / rank_base));
-    const change = diff * weight;
+    const scale  = 1 + (rank_decay * Math.pow(Math.log(index_curr + 1) / rank_base, rank_steep));
+    const change = diff / scale;
     item.rank_change = change;
     return change;
   })
