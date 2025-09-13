@@ -71,6 +71,8 @@ function get_grow_fixed(curr, prev) {
 function get_marks(rel, cnt, mid) {
   if (cnt <= 0) return { above: +Infinity, below: -Infinity };
 
+  rel.sort((a, b) => a - b);
+
   let above_cnt = cnt;
   let below_cnt = cnt;
   let above_idx = rel.length - cnt;
@@ -78,7 +80,7 @@ function get_marks(rel, cnt, mid) {
   let above_val = rel[above_idx];
   let below_val = rel[below_idx];
 
-  while (above_val <= mid) { // Above value is in below side
+  while (above_val <= mid) { // Above value is in below side, or at mid
     below_idx++; // Move below side to right
     below_val = rel[below_idx]; // Update its value
     below_cnt++; // Count it
@@ -88,7 +90,7 @@ function get_marks(rel, cnt, mid) {
     above_idx++; // Move above side to right
     above_val = rel[above_idx]; // Update its value
   }
-  while (below_val >= mid) { // Below value is in above side
+  while (below_val >= mid) { // Below value is in above side, or at mid
     if (above_cnt > 0) { // Above side not empty
       if (rel[above_idx - 1] > mid) { // And something is present there to add to above side
         above_val = rel[above_idx - 1]; // Update its value
@@ -233,13 +235,13 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
 
   // 3.2 Create curr expanded results array
   const results_curr_exp = results_curr.map(item => ({ ...item,
-    is_prev: false, index_prev: null, rank_change: 0 }));
+    is_prev: false, no_prev: null, index_prev: null, rank_change: 0 }));
 
   // 3.3. Add items from results_prev that absent in results_curr
   results_prev.forEach(item => {
     if (!results_curr_ids[item.identifier]) {
       results_curr_exp.push({ ...item,
-        is_prev: true, index_prev: null, rank_change: 0 });
+        is_prev: true, no_prev: null, index_prev: null, rank_change: 0 });
     }
   });
 
@@ -266,31 +268,34 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
   sort_results(results_prev_exp);
 
   // 5.1. Build a map of curr expanded results by identifier
+  // 5.2. Set no_prev actual values in curr expanded results
   const map_curr_exp = {};
   results_curr_exp.forEach(item => {
     map_curr_exp[item.identifier] = item;
+    item.no_prev = !map_prev[item.identifier];
   });
 
-  // 5.2. Traverse prev expanded and set index_prev in curr expanded
+  // 5.3. Traverse prev expanded and set index_prev in curr expanded
   results_prev_exp.forEach((item, index) => {
     map_curr_exp[item.identifier].index_prev = index;
   });
 
   // 6. Mark rank changes
-  const rank_base  = Math.log(results_curr_exp.length); // For length === 0 is check below
+  const rank_base  = Math.log(results_curr_exp.length); // For length === 1 is checked below
   const rank_decay = 9; // For scale from top: 1 to bottom: 0.1
-  const rank_steep = 3; // To more prioritize top items (1.5 also good)
+  const rank_steep = 3; // To more prioritize top items
 
   const rank_up_dn = results_curr_exp.map((item, index_curr) => {
     const diff = item.index_prev - index_curr; // No abs
-    if   (diff === 0) return 0; // Also length === 1 is checked here (index_prev === index_curr)
+    if   (diff === 0) return 0; // Also if length === 1 then index_prev === index_curr
+
+    if (item.is_prev || item.no_prev) return 0; // Item is non-markable
 
     const scale  = 1 + (rank_decay * Math.pow(Math.log(index_curr + 1) / rank_base, rank_steep));
     const change = diff / scale;
     item.rank_change = change;
     return change;
-  })
-  .sort((a, b) => a - b);
+  });
 
   // 3:1, 4:1, 10:2, 20:2, 50:3, 100:5, 200:6, 500:10, 800:12, 826:12
   // Math.ceil(Math.sqrt(results_curr_exp.length) / 2.4);
@@ -322,16 +327,24 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
   // 9. Spacing
   container.lastElementChild.style.marginBottom = "1em"; // Add space before item list
 
-  // 10.1. Substantial changes marking: horizontal impact of old from prev to curr
+  // 10.1. Substantial changes marking: horizontal impact of old      from prev to     curr
+  // 10.2. Substantial changes marking: vertical   impact of 23 and 7 into all  within curr
   const horz_curr_prev = [];
+  const vert_all_old   = [];
 
   results_curr_exp.forEach(item => {
     const item_prev = map_prev[item.identifier];
-    if  (!item_prev) return;
-
-    horz_curr_prev.push(item.ratio_old / item_prev.ratio_old);
+    if   (item_prev) {
+      horz_curr_prev.push(item.ratio_old / item_prev.ratio_old);
+    } else {
+      horz_curr_prev.push(1); // Item is non-markable
+    }
+    if (!item.is_prev) {
+      vert_all_old.push(item.ratio_all / item.ratio_old);
+    } else {
+      vert_all_old.push(1); // Item is non-markable
+    }
   });
-  horz_curr_prev.sort((a, b) => a - b);
 
   // 3:0, 4:1, 10:1, 20:3, 50:5, 100:7, 200:11, 500:16, 800:21, 826:21
   const horz_marks_cnt = Math.round(Math.floor(Math.sqrt(horz_curr_prev.length * 0.33)) * 1.33);
@@ -339,8 +352,6 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
   const mark_grow_old  = horz_marks.above;
   const mark_fall_old  = horz_marks.below;
 
-  // 10.2. Substantial changes marking: vertical impact of 23 and 7 into all within curr
-  const vert_all_old   = results_curr_exp.map(item => item.ratio_all / item.ratio_old).sort((a, b) => a - b);
   // 3:0, 4:1, 10:1, 20:2, 50:3, 100:5, 200:7, 500:11, 800:14, 826:14
   const vert_marks_cnt = Math.floor(Math.sqrt(vert_all_old.length * 0.25));
   const vert_marks     = get_marks(vert_all_old, vert_marks_cnt, 1);
