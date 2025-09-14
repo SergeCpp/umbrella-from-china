@@ -71,7 +71,7 @@ function get_grow_fixed(curr, prev) {
 function get_marks(rel, cnt, mid) {
   if (cnt <= 0) return { above: +Infinity, below: -Infinity };
 
-  rel.sort((a, b) => a - b);
+  rel.sort((above, below) => above - below); // Ascending
 
   let above_cnt = cnt;
   let below_cnt = cnt;
