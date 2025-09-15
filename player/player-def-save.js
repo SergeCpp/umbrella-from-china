@@ -219,7 +219,7 @@ function load_song_list() {
       return response.text();
     })
     .then(text => {
-      const song_list_lines     = text.trim().split("\n");
+      const song_list_lines     = text.trim().split('\n');
       const song_list_lines_cnt = song_list_lines.length;
       if  ((song_list_lines_cnt === 1) && (song_list_lines[0] === "")) {
         throw new Error("Song list is empty");
@@ -531,7 +531,7 @@ function get_song_id_curr(player, player_type, coll_key) {
   }
   if(player_type === "item") {
     const  player_src     = player.currentSrc;
-    const  song_file_name = player_src.split('/').pop();
+    const  song_file_name = player_src.substring(item_song_root.length);
     if   (!song_file_name) return null;
 
     const  song_id = item_file_name_songs[song_file_name];
