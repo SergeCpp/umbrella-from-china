@@ -34,6 +34,7 @@ const coll_data             = {};    // [coll_key] = {
 // Item
 
 let   item_present          = false; // possibly item_count in future
+let   item_type_name        = null;  // "Song" (default), "Dance", etc.
 let   item_song_list_file   = null;  // url
 let   item_song_root        = null;  // url
 
@@ -211,24 +212,24 @@ function load_song_list() {
   const song_list = document.getElementById("item-song-list");
   if  (!song_list) return;
 
-  song_list.innerHTML = '<span class="text-comment">Song list loading...</span>';
+  song_list.innerHTML = '<span class="text-comment">' + item_type_name + ' list loading...</span>';
 
   fetch(item_song_list_file)
     .then(response => {
-      if (!response.ok) { throw new Error("Song list not found"); }
+      if (!response.ok) { throw new Error(item_type_name + " list not found"); }
       return response.text();
     })
     .then(text => {
       const song_list_lines     = text.trim().split('\n');
       const song_list_lines_cnt = song_list_lines.length;
       if  ((song_list_lines_cnt === 1) && (song_list_lines[0] === "")) {
-        throw new Error("Song list is empty");
+        throw new Error(item_type_name + " list is empty");
       }
 
       const lps                 = 3; // lines per song
       const song_list_songs_cnt = Math.floor(song_list_lines_cnt / lps);
       if   (song_list_songs_cnt > 999) {
-        throw new Error("Song list is too long");
+        throw new Error(item_type_name + " list is too long");
       }
 
       const song_id_len   = song_list_songs_cnt <=  9 ? 1
@@ -250,7 +251,7 @@ function load_song_list() {
         }
 
         if(isNaN(song_seconds)) {
-          throw new Error("Song " + song_num + " &mdash; length format is incorrect");
+          throw new Error(item_type_name + ' ' + song_num + " &mdash; length format is incorrect");
         }
 
         const h = Math.floor( total_seconds         / 3600);
@@ -271,7 +272,7 @@ function load_song_list() {
 
         const song_file_name_conv = song_file_name.replace(/ /g, "%20");
         if(item_file_name_songs[song_file_name_conv]) { // already present
-          throw new Error("Song " + song_num + " &mdash; duplicate file name");
+          throw new Error(item_type_name + ' ' + song_num + " &mdash; duplicate file name");
         }
         item_song_file_names[song_id] = song_file_name_conv;
         item_file_name_songs[song_file_name_conv] = song_id;
@@ -281,7 +282,8 @@ function load_song_list() {
       song_list.innerHTML = song_list_html;
 
       if(song_list.children.length === 0) {
-         song_list.innerHTML = '<span class="text-comment">No correct song entries found</span>';
+         song_list.innerHTML =
+           '<span class="text-comment">No correct ' + item_type_name.toLowerCase() + ' entries found</span>';
       }
     })
     .catch(err => {
@@ -408,6 +410,9 @@ function init() {
 
   const item_list = document.getElementById("item-song-list");
   if   (item_list) {
+    const type_name     = item_list.getAttribute("data-name");
+    item_type_name      = type_name ? type_name : "Song";
+
     item_song_list_file = item_list.getAttribute("data-file");
     item_song_root      = item_list.getAttribute("data-root");
 
