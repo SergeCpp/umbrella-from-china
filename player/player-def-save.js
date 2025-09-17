@@ -240,7 +240,7 @@ function load_song_list() {
 
       for(let line_num = 0; line_num < (song_list_songs_cnt * lps); line_num += lps) {
         const song_title       = song_list_lines[line_num    ].trim().replace(/  +/g, ' ').replace(/_/g, "");
-        const song_file_name   = song_list_lines[line_num + 1].trim();
+        const song_file_name   = song_list_lines[line_num + 1].trim().replace(/  +/g, ' ');
         const song_seconds_str = song_list_lines[line_num + 2].trim();
         const song_seconds     = parseFloat(song_seconds_str);
         const song_num         = String(Math.floor(line_num / lps) + 1).padStart(song_id_len, '0');
@@ -250,8 +250,11 @@ function load_song_list() {
           break; // stop song list processing
         }
 
+        if(!song_seconds_str) {
+          throw new Error(item_type_name + ' ' + song_num + " &mdash; Length is not set");
+        }
         if(isNaN(song_seconds)) {
-          throw new Error(item_type_name + ' ' + song_num + " &mdash; length format is incorrect");
+          throw new Error(item_type_name + ' ' + song_num + " &mdash; Length format is incorrect");
         }
 
         const h = Math.floor( total_seconds / 3600      );
@@ -283,7 +286,7 @@ function load_song_list() {
 
         const song_file_name_conv = song_file_name.replace(/ /g, "%20");
         if(item_file_name_songs[song_file_name_conv]) { // already present
-          throw new Error(item_type_name + ' ' + song_num + " &mdash; duplicate file name");
+          throw new Error(item_type_name + ' ' + song_num + " &mdash; Duplicate file name");
         }
         item_song_file_names[song_id] = song_file_name_conv;
         item_file_name_songs[song_file_name_conv] = song_id;
