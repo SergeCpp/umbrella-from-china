@@ -42,7 +42,7 @@
   box-sizing: border-box;
   display: inline-block;
   margin-bottom: 2px; /* Space for focus frame */
-  padding-left: 0.3em;
+  padding: 0 0.3em;
   width: 100%;
 }
 .song-line:hover {
@@ -70,6 +70,20 @@
 }
 .song-line.played:hover .player-button:hover {
   background-color: #cccccc; /* Gray80 */
+}
+
+.line-flex {
+  align-items: center;
+  display: flex;
+  gap: 0.3em;
+}
+.line-left {
+  flex: 1 1 auto;
+  min-width: 0; /* For ellipsis to work */
+}
+.line-right {
+  flex: 0 0 auto;
+  font-style: italic;
 }
 
 /* EOF */

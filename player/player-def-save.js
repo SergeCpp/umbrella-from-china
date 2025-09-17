@@ -254,21 +254,32 @@ function load_song_list() {
           throw new Error(item_type_name + ' ' + song_num + " &mdash; length format is incorrect");
         }
 
-        const h = Math.floor( total_seconds         / 3600);
-        const m = Math.floor((total_seconds % 3600) /   60);
-        const s = Math.round( total_seconds         %   60); // to nearest whole second
+        const h = Math.floor( total_seconds / 3600      );
+        const m = Math.floor((total_seconds % 3600) / 60);
+        const s = Math.round( total_seconds         % 60); // to nearest whole second
         const song_hms = String(h).padStart(2, '0') + ':' +
                          String(m).padStart(2, '0') + ':' +
                          String(s).padStart(2, '0');
 
-        song_list_html +=
-          '<span class="song-line text-ellipsis" data-item ' +
-                'id="' + song_id + '" ' +
-                'role="button" style="cursor:pointer;" tabindex="0" ' +
-                'onkeydown="kbd(event)" ' +
-                'onkeyup  ="kbu(event)" ' +
-                'onclick  ="mou(event)">' +
-                 song_hms + ' ' + song_num + ' ' + song_title + '</span>' + '\n';
+        const [title_left, title_right] = song_title.split('<>', 2);
+
+        let song_line_html = '<span class="song-line ';
+        song_line_html += title_right ? 'line-flex' : 'text-ellipsis';
+        song_line_html += '" ' +
+         'data-item ' +
+         'id="' + song_id + '" ' +
+         'role="button" style="cursor:pointer;" tabindex="0" ' +
+         'onkeydown="kbd(event)" ' +
+         'onkeyup  ="kbu(event)" ' +
+         'onclick  ="mou(event)">';
+        song_line_html += title_right ? '<span class="line-left text-ellipsis">' : "";
+        song_line_html += song_hms + ' ' + song_num + ' ' + title_left;
+        song_line_html += title_right ? '</span>' : "";
+        song_line_html += title_right ? '<span class="line-right">' + title_right + '</span>' : "";
+        song_line_html += '</span>';               // not needed \n at end for flex         in line-flex
+        song_line_html += title_right ? "" : '\n'; //     needed \n at end for inline-block in song-line
+
+        song_list_html += song_line_html;
 
         const song_file_name_conv = song_file_name.replace(/ /g, "%20");
         if(item_file_name_songs[song_file_name_conv]) { // already present
