@@ -9,6 +9,7 @@
   margin: 0 auto 0.5rem;
 }
 .header a {
+  outline-offset: -2px; /* For outline not to be clipped, to be within padding */
   padding: 0.5em 0.5em;
   text-decoration: none;
 }
@@ -31,7 +32,6 @@
   padding-left: 0.75em;
   padding-right: 0.75em;
   text-align: center;
-  text-decoration: none;
 }
 .header-nav a:hover {
   color: #4a4a4a; /* Gray29 */
