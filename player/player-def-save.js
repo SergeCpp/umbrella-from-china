@@ -39,6 +39,7 @@ let   item_song_list_file   = null;  // url
 let   item_song_root        = null;  // url
 
 let   item_player_load_time = 0;     //  milliseconds
+let   item_player_running   = false; //  true if started
 let   item_song_to_start    = null;  //  song_id to start at next timer tick
 const item_song_states      = {};    // [song_id]        = state: "played" / "paused", can be 0..1 states
 const item_song_file_names  = {};    // [song_id]        = song_file_name
@@ -60,10 +61,11 @@ function goto_song(song_id, pl) {
     const player_src_new = item_song_root + song_file_name;
 
     /*
-    alert('[' + player_src_cur    + ']\n' +
-          '[' + player_src_new    + ']\n' +
-          '[' + player.paused     + ']\n' +
-          '[' + player.readyState + ']');
+    alert('[' + player_src_cur      + ']\n' +
+          '[' + player_src_new      + ']\n' +
+          '[' + player.paused       + ']\n' +
+          '[' + player.networkState + ']\n' +
+          '[' + player.readyState   + ']');
     */
 
     // 1.10 A quick introduction to HTML
@@ -81,10 +83,16 @@ function goto_song(song_id, pl) {
     }
     else // src is already set
     {
-      if  (player.paused) {
-           player.play();
+      if(player.paused) {
+        if((player.networkState === HTMLMediaElement.NETWORK_IDLE) ||  // 1
+           (player.networkState === HTMLMediaElement.NETWORK_LOADING)) // 2
+        {
+          player.play();
+          item_player_running = true;
+        }
       } else { // played
-           player.pause();
+        player.pause();
+        item_player_running = false;
       }
     }
   }
@@ -772,18 +780,29 @@ function player_transitions() {
      goto_song(song_id);
      return;
   }
+
   const player = document.getElementById('item-song-player');
-  if   (player) {
-    const song_id = get_song_id_curr(player, "item");
-    if  (!song_id) return;
-    if  ( item_song_states[song_id] === "paused") {
-      if( player.ended  ||
-         (player.paused && (player.networkState === HTMLMediaElement.NETWORK_NO_SOURCE /* 3 */))) {
-        const       song_id_next = get_song_id_next(song_id, "item");
-        if         (song_id_next) {
-          goto_song(song_id_next);
-        }
-      }
+  if  (!player) return;
+                            // HTMLMediaElement.NETWORK_NO_SOURCE /* 3 */
+  if (player.paused) {      // HTMLMediaElement.NETWORK_LOADING   /* 2 */
+    if(player.networkState === HTMLMediaElement.NETWORK_IDLE) {   /* 1 */
+       item_player_running   = false;
+    }
+  } else { // played
+    item_player_running = true;
+  }
+
+  const song_id = get_song_id_curr(player, "item");
+  if  (!song_id) return;
+  if  ( item_song_states[song_id] !== "paused") return;
+
+  if( player.ended ||
+     (player.paused
+      && (player.networkState === HTMLMediaElement.NETWORK_NO_SOURCE)
+      && item_player_running)) {
+    const       song_id_next = get_song_id_next(song_id, "item");
+    if         (song_id_next) {
+      goto_song(song_id_next);
     }
   }
 }
