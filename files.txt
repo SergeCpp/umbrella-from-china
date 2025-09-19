@@ -92,8 +92,9 @@ https://umbrella-from-china.neocities.org/images/xie-an-ran-600x900.jpg
 https://umbrella-from-china.neocities.org/images/xie-an-ran-600x900.webp
 https://umbrella-from-china.neocities.org/images/xue-qiu-1192x745.jpg
 https://umbrella-from-china.neocities.org/images/zhao-fangjing-2880x1800.jpg
+https://umbrella-from-china.neocities.org/images/ziyan-zi-jiaer-xue-wei-luoxi-3072x1920.jpg
 -------------------------------------
-14 avif + 36 jpg + 13 webp = 63 files
+14 avif + 37 jpg + 13 webp = 64 files
 
 https://umbrella-from-china.neocities.org/player/player-def-save.js // Not used, just copy of work
 https://umbrella-from-china.neocities.org/player/player-def-work.js
@@ -184,15 +185,17 @@ https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-35-
 
 https://umbrella-from-china.neocities.org/chinese-dance.html
 https://umbrella-from-china.neocities.org/chinese-dance.txt
+https://umbrella-from-china.neocities.org/chinese-group-dance.html
+https://umbrella-from-china.neocities.org/chinese-group-dance.txt
 https://umbrella-from-china.neocities.org/chinese-songs.html
 https://umbrella-from-china.neocities.org/chinese-songs.txt
 https://umbrella-from-china.neocities.org/files.txt // This file
 https://umbrella-from-china.neocities.org/index.html
 https://umbrella-from-china.neocities.org/lingyuan-yousa-concert.english.vtt.txt
 https://umbrella-from-china.neocities.org/lingyuan-yousa-songs.html
+-
 https://umbrella-from-china.neocities.org/lingyuan-yousa-songs.txt
 https://umbrella-from-china.neocities.org/liu-keyi-songs.html
--
 https://umbrella-from-china.neocities.org/liu-keyi-songs.txt
 https://umbrella-from-china.neocities.org/not_found.html
 https://umbrella-from-china.neocities.org/ren-ran-songs.html
@@ -201,17 +204,17 @@ https://umbrella-from-china.neocities.org/robots.txt
 https://umbrella-from-china.neocities.org/sitemap.xml
 https://umbrella-from-china.neocities.org/style.css
 https://umbrella-from-china.neocities.org/tang-yufei-songs.html
+-
 https://umbrella-from-china.neocities.org/tang-yufei-songs.txt
 https://umbrella-from-china.neocities.org/tools.html // Used only for testing, etc.
--
 https://umbrella-from-china.neocities.org/wang-ziyu-songs.html
 https://umbrella-from-china.neocities.org/wang-ziyu-songs.txt
 https://umbrella-from-china.neocities.org/zhao-fangjing-songs.html
 https://umbrella-from-china.neocities.org/zhao-fangjing-songs.txt
 --------
-24 files
+26 files
 
-The total size of the site files is less than 44 megabytes.
+The total size of the site files is less than 46 megabytes.
 
 All media (audio x video) files are from archive.org and udrop.com only.
 

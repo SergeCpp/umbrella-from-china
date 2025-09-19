@@ -7,6 +7,19 @@
   <title>Tools &mdash; Umbrella from China still touches as new</title>
   <link rel="icon" type="image/jpeg" sizes="192x192" href="/images/xie-an-ran-192x192.jpg">
   <link rel="stylesheet" type="text/css" media="all" href="/style.css">
+
+<style>
+body {
+/* max-width: 50%; */
+}
+
+.header:has(+ .header-sub) {
+  margin-bottom: 0;
+}
+.header-sub {
+  justify-content: center;
+}
+</style>
 </head>
 
 <body>
@@ -15,6 +28,18 @@
   <nav class="header-nav">
     <a href="/chinese-dance">Chinese Dance</a>
     <a href="/chinese-songs">Chinese Songs</a>
+  </nav>
+  <a href="/archive/archive-org-items">&#x1F302;&#xFE0F;</a> <!-- Umbrella closed -->
+</header>
+
+<div class="header header-sub">
+  <nav class="header-nav">
+    <a href="/chinese-group-dance">Group Dance</a>
+  </nav>
+</div>
+
+<div class="header header-sub">
+  <nav class="header-nav">
     <a href="/lingyuan-yousa-songs">Lingyuan Yousa</a>
     <a href="/liu-keyi-songs">Liu Keyi</a>
     <a href="/ren-ran-songs">Ren Ran</a>
@@ -22,13 +47,13 @@
     <a href="/wang-ziyu-songs">Wang Ziyu</a>
     <a href="/zhao-fangjing-songs">Zhao Fangjing</a>
   </nav>
-  <a href="/archive/archive-org-items">&#x1F302;&#xFE0F;</a> <!-- Umbrella closed -->
-</header>
+</div>
 
 <main>
 <div><video controls
    id     ="play"
-   poster ="/images/lingyuan-yousa-2000x1250.jpg"><source
+   poster ="/images/lingyuan-yousa-2000x1250.jpg"
+   preload="none"><source
    src    ="https://archive.org/download/lingyuan-yousa-time-mark-10th-anniversary-concert/
 Lingyuan%20Yousa.%20Time%20Mark.%2010th%20Anniversary%20Concert%20360p.mp4"
    type   ="video/mp4"><track default
@@ -44,7 +69,7 @@ Lingyuan%20Yousa.%20Time%20Mark.%2010th%20Anniversary%20Concert%20360p.mp4"
    type   ="text"
    maxlength="8"
    size     ="8"
-   autofocus>&nbsp;<button
+no-autofocus>&nbsp;<button
    onclick="set_time()"
    style  ="font-family:monospace; font-size:1.5em;"
    type   ="button">Set time x play</button>&nbsp;(1..36 tracks are corrected)</p>
