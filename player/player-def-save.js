@@ -247,8 +247,10 @@ function load_song_list() {
       song_list.innerHTML = "";
 
       for(let line_num = 0; line_num < (song_list_songs_cnt * lps); line_num += lps) {
-        const song_title       = song_list_lines[line_num    ].trim().replace(/  +/g, ' ').replace(/_/g, "");
-        const song_file_name   = song_list_lines[line_num + 1].trim().replace(/  +/g, ' ');
+        const song_title       = song_list_lines[line_num    ].trim()
+                                .replace(/  +/g, ' ').replace(/_/g, "").replace(/ ?< ?> ?/, "<>");
+        const song_file_name   = song_list_lines[line_num + 1].trim()
+                                .replace(/  +/g, ' ');
         const song_seconds_str = song_list_lines[line_num + 2].trim();
         const song_seconds     = parseFloat(song_seconds_str);
         const song_num         = String(Math.floor(line_num / lps) + 1).padStart(song_id_len, '0');
@@ -267,12 +269,12 @@ function load_song_list() {
 
         const h = Math.floor( total_seconds / 3600      );
         const m = Math.floor((total_seconds % 3600) / 60);
-        const s = Math.round( total_seconds         % 60); // to nearest whole second
+        const s = Math.round( total_seconds         % 60); // to the nearest whole second
         const song_hms = String(h).padStart(2, '0') + ':' +
                          String(m).padStart(2, '0') + ':' +
                          String(s).padStart(2, '0');
 
-        const [title_left, title_right] = song_title.split('<>', 2);
+        const [title_left, title_right] = song_title.split("<>", 2);
 
         let song_line_html = '<span class="song-line ';
         song_line_html += title_right ? 'line-flex' : 'text-ellipsis';
