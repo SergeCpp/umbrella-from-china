@@ -93,9 +93,10 @@ https://umbrella-from-china.neocities.org/images/xie-an-ran-600x900.jpg
 https://umbrella-from-china.neocities.org/images/xie-an-ran-600x900.webp
 https://umbrella-from-china.neocities.org/images/xue-qiu-1192x745.jpg
 https://umbrella-from-china.neocities.org/images/zhao-fangjing-2880x1800.jpg
+https://umbrella-from-china.neocities.org/images/zi-jiaer-1976x1235.jpg
 https://umbrella-from-china.neocities.org/images/ziyan-zi-jiaer-xue-wei-luoxi-3072x1920.jpg
 -------------------------------------
-14 avif + 38 jpg + 13 webp = 65 files
+14 avif + 39 jpg + 13 webp = 66 files
 
 https://umbrella-from-china.neocities.org/player/player-def-save.js // Not used, just copy of work
 https://umbrella-from-china.neocities.org/player/player-def-work.js
@@ -214,10 +215,12 @@ https://umbrella-from-china.neocities.org/xiangcai-mao-bing-dancer.html
 https://umbrella-from-china.neocities.org/xiangcai-mao-bing-dancer.txt
 https://umbrella-from-china.neocities.org/zhao-fangjing-songs.html
 https://umbrella-from-china.neocities.org/zhao-fangjing-songs.txt
+https://umbrella-from-china.neocities.org/zi-jiaer-dancer.html
+https://umbrella-from-china.neocities.org/zi-jiaer-dancer.txt
 --------
-28 files
+30 files
 
-The total size of the site files is less than 47 megabytes.
+The total size of the site files is less than 48 megabytes.
 
 All media (audio x video) files are from archive.org and udrop.com only.
 
