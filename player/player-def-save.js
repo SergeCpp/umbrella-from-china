@@ -240,11 +240,12 @@ function load_song_list() {
         throw new Error(item_type_name + " list is too long");
       }
 
-      const song_id_len   = song_list_songs_cnt <=  9 ? 1
-                          : song_list_songs_cnt <= 99 ? 2 : 3;
-      let total_seconds   = 0;
-      let song_list_html  = "";
-      song_list.innerHTML = "";
+      const song_id_len    = song_list_songs_cnt <=  9 ? 1
+                           : song_list_songs_cnt <= 99 ? 2 : 3;
+      const length_regex   = /^[0-9]{2,4}\.[0-9]{2}$/;
+      let   total_seconds  = 0;
+      let   song_list_html = "";
+      song_list.innerHTML  = "";
 
       for(let line_num = 0; line_num < (song_list_songs_cnt * lps); line_num += lps) {
         const song_title       = song_list_lines[line_num    ].trim()
@@ -263,7 +264,7 @@ function load_song_list() {
         if(!song_seconds_str) {
           throw new Error(item_type_name + ' ' + song_num + " &mdash; Length is not set");
         }
-        if(isNaN(song_seconds)) {
+        if(!length_regex.test(song_seconds_str) || isNaN(song_seconds)) {
           throw new Error(item_type_name + ' ' + song_num + " &mdash; Length format is incorrect");
         }
 
