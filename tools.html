@@ -17,28 +17,45 @@ body {
   margin-bottom: 0;
 }
 .header-sub {
-  justify-content: center;
+/* justify-content: center; */
+}
+.header-sub > a {
+  color: #00a000;
+}
+.header-sub > a:active {
+/* color: #696969; */
 }
 </style>
 </head>
 
 <body>
-<header class="header">
+<header>
+<div class="header">
   <a href="/">&#x2602;&#xFE0F;</a> <!-- Umbrella opened -->
   <nav class="header-nav">
     <a href="/chinese-dance">Chinese Dance</a>
+    <a href="/chinese-group-dance">Group Dance</a>
+    <a href="/xiangcai-mao-bing-dancer">Xiangcai Mao Bing</a>
     <a href="/chinese-songs">Chinese Songs</a>
+    <a href="/lingyuan-yousa-songs">Lingyuan Yousa</a>
+    <a href="/liu-keyi-songs">Liu Keyi</a>
+    <a href="/ren-ran-songs">Ren Ran</a>
   </nav>
   <a href="/archive/archive-org-items">&#x1F302;&#xFE0F;</a> <!-- Umbrella closed -->
-</header>
-
-<div class="header header-sub">
-  <nav class="header-nav">
-    <a href="/chinese-group-dance">Group Dance</a>
-  </nav>
 </div>
 
 <div class="header header-sub">
+  <a href="">A...</a>
+  <nav class="header-nav">
+    <a href="/chinese-dance">Chinese Dance</a>
+    <a href="/chinese-group-dance">Group Dance</a>
+    <a href="/xiangcai-mao-bing-dancer">Xiangcai Mao Bing</a>
+  </nav>
+  <a href="">...Z</a>
+</div>
+
+<div class="header header-sub extra-header">
+  <a href="">A...</a>
   <nav class="header-nav">
     <a href="/lingyuan-yousa-songs">Lingyuan Yousa</a>
     <a href="/liu-keyi-songs">Liu Keyi</a>
@@ -47,7 +64,9 @@ body {
     <a href="/wang-ziyu-songs">Wang Ziyu</a>
     <a href="/zhao-fangjing-songs">Zhao Fangjing</a>
   </nav>
+  <a href="">...Z</a>
 </div>
+</header>
 
 <main>
 <div><video controls
