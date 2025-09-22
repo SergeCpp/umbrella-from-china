@@ -93,8 +93,16 @@ pre i {
 .text-normal {
   font-weight: normal;
 }
+.text-nowrap {
+  text-wrap-mode: nowrap;
+}
 .text-top-right {
   margin-top: 0;
+  text-align: right;
+}
+.text-top-right-bottom {
+  margin-top: 0;
+  margin-bottom: 0;
   text-align: right;
 }
 
