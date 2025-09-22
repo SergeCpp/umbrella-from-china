@@ -49,7 +49,7 @@ const item_file_name_songs  = {};    // [song_file_name] = song_id
 
 function scroll_to(player) {
   if(player && (player.tagName.toLowerCase() === 'video')) {
-     player.scrollIntoView({ behavior: 'smooth', block: 'start' });
+     player.scrollIntoView({ behavior: 'smooth', block: 'start' }); // better overall than 'center'
   }
 }
 
