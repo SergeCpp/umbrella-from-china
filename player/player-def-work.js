@@ -47,7 +47,7 @@ const item_file_name_songs  = {};    // [song_file_name] = song_id
 
 /* Player Control */
 
-function scroll_to(player) {
+function scroll_to_view(player) {
   if(player && (player.tagName.toLowerCase() === 'video')) {
      player.scrollIntoView({ behavior: 'smooth', block: 'start' }); // better overall than 'center'
   }
@@ -93,7 +93,7 @@ function goto_song(song_id, pl) {
         if((player.networkState === HTMLMediaElement.NETWORK_IDLE) ||  // 1
            (player.networkState === HTMLMediaElement.NETWORK_LOADING)) // 2
         {
-          scroll_to(player);
+          scroll_to_view(player);
           player.play();
           item_player_running = true;
         }
@@ -131,7 +131,7 @@ function goto_song(song_id, pl) {
     {
       if  (player.paused) {
         if(player.duration) {
-           scroll_to(player);
+           scroll_to_view(player);
            player.play();
         }
       } else { // played
@@ -142,7 +142,7 @@ function goto_song(song_id, pl) {
     {
       if(player.duration) {
          player.currentTime = coll_data[coll_key].song_begins[song_id];
-         scroll_to(player);
+         scroll_to_view(player);
          player.play();
       }
     }
