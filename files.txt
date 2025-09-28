@@ -226,6 +226,8 @@ https://umbrella-from-china.neocities.org/style.css
 https://umbrella-from-china.neocities.org/tang-yufei-songs.html
 -
 https://umbrella-from-china.neocities.org/tang-yufei-songs.txt
+https://umbrella-from-china.neocities.org/tong-hua-nichole-dancer.html
+https://umbrella-from-china.neocities.org/tong-hua-nichole-dancer.txt
 https://umbrella-from-china.neocities.org/tools.html // Used only for testing, etc.
 https://umbrella-from-china.neocities.org/wang-ziyu-songs.html
 https://umbrella-from-china.neocities.org/wang-ziyu-songs.txt
@@ -233,19 +235,19 @@ https://umbrella-from-china.neocities.org/xiangcai-mao-bing-dancer.html
 https://umbrella-from-china.neocities.org/xiangcai-mao-bing-dancer.txt
 https://umbrella-from-china.neocities.org/xiao-wu-dancer.html
 https://umbrella-from-china.neocities.org/xiao-wu-dancer.txt
+-
 https://umbrella-from-china.neocities.org/zhao-fangjing-songs.html
 https://umbrella-from-china.neocities.org/zhao-fangjing-songs.txt
--
 https://umbrella-from-china.neocities.org/zi-jiaer-dancer.html
 https://umbrella-from-china.neocities.org/zi-jiaer-dancer.txt
 --------
-42 files
+44 files
 
 The total size of the site files is less than 55 megabytes
 
 No external images hotlinking, all images are hosted on Neocities
 
-All audio and video files are from Internet Archive (archive.org), with some copied onto udrop.com
+All audio and video files are from Internet Archive (archive.org), with some of them are copied onto udrop.com
 
 EOF
 
