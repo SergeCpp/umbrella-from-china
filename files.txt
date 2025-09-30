@@ -20,8 +20,9 @@ https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-202
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-08-14.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-08-31.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-09-15.xml.txt
-...
-See archive-dates.txt for complete actual list
+https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-09-30.xml.txt
+----------------------------
+1 dates + 9 stats = 10 files // See archive-dates.txt for the complete actual list
 
 https://umbrella-from-china.neocities.org/images/acfun-dance-monthly-2021-05-2000x1250.jpg
 https://umbrella-from-china.neocities.org/images/acfun-dance-monthly-2021-05-600x375.avif
@@ -86,9 +87,10 @@ https://umbrella-from-china.neocities.org/images/wan-yi-600x375.webp
 https://umbrella-from-china.neocities.org/images/wang-ziyu-1728x1080.jpg
 https://umbrella-from-china.neocities.org/images/wu-tong-1728x1080.jpg
 https://umbrella-from-china.neocities.org/images/xiangcai-mao-bing-1920x1200.jpg
+https://umbrella-from-china.neocities.org/images/xiao-qian-teng-3584x2240.jpg
 https://umbrella-from-china.neocities.org/images/xiao-wu-2016x1260.jpg
-https://umbrella-from-china.neocities.org/images/xiaoye-ting-3136x1960.jpg
 -
+https://umbrella-from-china.neocities.org/images/xiaoye-ting-3136x1960.jpg
 https://umbrella-from-china.neocities.org/images/xiaoye-ting-600x375.avif
 https://umbrella-from-china.neocities.org/images/xiaoye-ting-600x375.jpg
 https://umbrella-from-china.neocities.org/images/xiaoye-ting-600x375.webp
@@ -98,13 +100,14 @@ https://umbrella-from-china.neocities.org/images/xie-an-ran-5504x8256.jpg
 https://umbrella-from-china.neocities.org/images/xie-an-ran-600x900.avif
 https://umbrella-from-china.neocities.org/images/xie-an-ran-600x900.jpg
 https://umbrella-from-china.neocities.org/images/xie-an-ran-600x900.webp
-https://umbrella-from-china.neocities.org/images/xue-qiu-1192x745.jpg
 -
+https://umbrella-from-china.neocities.org/images/xisi-1616x1010.jpg
+https://umbrella-from-china.neocities.org/images/xue-qiu-1192x745.jpg
 https://umbrella-from-china.neocities.org/images/zhao-fangjing-2880x1800.jpg
 https://umbrella-from-china.neocities.org/images/zi-jiaer-1976x1235.jpg
 https://umbrella-from-china.neocities.org/images/ziyan-zi-jiaer-xue-wei-luoxi-3072x1920.jpg
 -------------------------------------
-14 avif + 46 jpg + 13 webp = 73 files
+14 avif + 48 jpg + 13 webp = 75 files
 
 https://umbrella-from-china.neocities.org/player/player-def-save.js // Not used, just copy of work
 https://umbrella-from-china.neocities.org/player/player-def-work.js
@@ -237,16 +240,20 @@ https://umbrella-from-china.neocities.org/wu-tong-dancer.txt
 https://umbrella-from-china.neocities.org/xiangcai-mao-bing-dancer.html
 https://umbrella-from-china.neocities.org/xiangcai-mao-bing-dancer.txt
 -
+https://umbrella-from-china.neocities.org/xiao-qian-teng-dancer.html
+https://umbrella-from-china.neocities.org/xiao-qian-teng-dancer.txt
 https://umbrella-from-china.neocities.org/xiao-wu-dancer.html
 https://umbrella-from-china.neocities.org/xiao-wu-dancer.txt
+https://umbrella-from-china.neocities.org/xisi-dancer.html
+https://umbrella-from-china.neocities.org/xisi-dancer.txt
 https://umbrella-from-china.neocities.org/zhao-fangjing-songs.html
 https://umbrella-from-china.neocities.org/zhao-fangjing-songs.txt
 https://umbrella-from-china.neocities.org/zi-jiaer-dancer.html
 https://umbrella-from-china.neocities.org/zi-jiaer-dancer.txt
 --------
-46 files
+50 files
 
-The total size of the site files is less than 56 megabytes
+The total size of the site files is less than 59 megabytes
 
 No external images hotlinking, all images are hosted on Neocities
 
