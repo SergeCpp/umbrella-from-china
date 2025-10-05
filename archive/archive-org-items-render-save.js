@@ -202,7 +202,8 @@ function render_stats(results, date, what, container) {
   container.appendChild(stats_text);
 }
 
-function render_results(results_curr, results_prev, favs_min_str, favs_max_str) {
+function render_results(
+  results_curr, date_curr, results_prev, date_prev, favs_min_str, favs_max_str) {
   const container = document.getElementById("results");
         container.innerHTML = "";
 
@@ -321,8 +322,8 @@ function render_results(results_curr, results_prev, favs_min_str, favs_max_str) 
   container.appendChild(totals_div);
 
   // 8. Both stats displaying
-  render_stats(results_prev, stat_prev_date, "prev", container); // Also sorts results_prev
-  render_stats(results_curr, stat_curr_date, "curr", container); // Also sorts results_curr
+  render_stats(results_prev, date_prev, "prev", container); // Also sorts results_prev
+  render_stats(results_curr, date_curr, "curr", container); // Also sorts results_curr
 
   // 9. Spacing
   container.lastElementChild.style.marginBottom = "1em"; // Add space before item list

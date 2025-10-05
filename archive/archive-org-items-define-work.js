@@ -457,7 +457,8 @@ function process_filter() {
   const results_prev = calculate_stats(filtered_prev_items, stat_prev_date);
   const time_2       = performance.now();
 
-  if (!render_results(results_curr, results_prev, favs_min_str, favs_max_str)) {
+  if (!render_results(
+    results_curr, stat_curr_date, results_prev, stat_prev_date, favs_min_str, favs_max_str)) {
     return;
   }
 
