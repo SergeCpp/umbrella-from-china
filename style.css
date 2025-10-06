@@ -1,3 +1,9 @@
+/* To prevent Cumulative Layout Shift */
+html { /* Need html to work, not body */
+  overflow-y: auto; /* Need also */
+  scrollbar-gutter: stable both-edges; /* Both for symmetry */
+}
+
 .header {
   align-items: center; /* Vertically centers all items */
   background-color: #fafafa; /* Gray98 */
