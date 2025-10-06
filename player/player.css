@@ -1,11 +1,27 @@
+.media-desc {
+  margin: 0 auto 1.5rem;
+  max-width: 960px; /* 240 x 4 */
+}
 .media-container {
   margin: 0 auto 1rem;
   max-width: 960px; /* 240 x 4 */
   text-align: center; /* For a fallback "not supported" text to be centered */
 }
-.media-desc {
-  margin: 0 auto 1.5rem;
-  max-width: 960px; /* 240 x 4 */
+.media-container:has(.media-poster) {
+  margin-bottom: 0.2rem;
+}
+.media-poster {
+  font-size: 0.8em;
+  font-variant: small-caps;
+  margin: -1em 0 0 0;
+  text-align: right;
+}
+.media-poster-link {
+  color: #9e9e9e; /* Gray62 */
+  text-decoration: none;
+}
+.media-poster-link:hover {
+  color: #696969; /* DimGray, L41 */
 }
 
 .player-button {
