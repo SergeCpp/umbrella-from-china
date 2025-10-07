@@ -51,9 +51,6 @@ body {
   margin: 0 auto;
   padding: 0 1rem;
 }
-audio, video {
-  width: 100%;
-}
 
 summary {
   cursor: pointer;
