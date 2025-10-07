@@ -1,3 +1,8 @@
+audio, video {
+  display: block;
+  width: 100%;
+}
+
 .media-desc {
   margin: 0 auto 1.5rem;
   max-width: 960px; /* 240 x 4 */
@@ -8,19 +13,20 @@
   text-align: center; /* For a fallback "not supported" text to be centered */
 }
 .media-container:has(.media-poster) {
-  margin-bottom: 0.2rem;
+  margin-bottom: 0;
 }
 .media-poster {
   font-size: 0.8em;
   font-variant: small-caps;
-  margin: -1em 0 0 0;
+  line-height: 1;
+  margin: 0;
   text-align: right;
 }
-.media-poster-link {
+.media-poster a {
   color: #9e9e9e; /* Gray62 */
   text-decoration: none;
 }
-.media-poster-link:hover {
+.media-poster a:hover {
   color: #696969; /* DimGray, L41 */
 }
 

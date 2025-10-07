@@ -125,12 +125,18 @@ function goto_song(song_id, pl) {
     const player = document.getElementById(play_base + pl);
     if  (!player) return;
 
+    /*
+    alert('[' + player.paused       + ']\n' +
+          '[' + player.networkState + ']\n' +
+          '[' + player.readyState   + ']');
+    */
+
     const song_id_curr = get_song_id_curr(player, "coll", coll_key);
 
     if   (song_id_curr === song_id) // player is already on song_id
     {
       if  (player.paused) {
-        if(player.duration) {
+        if(player.duration || (player.networkState === HTMLMediaElement.NETWORK_IDLE)) { // 1
            scroll_to_view(player);
            player.play();
         }
@@ -140,7 +146,7 @@ function goto_song(song_id, pl) {
     }
     else // start another song_id
     {
-      if(player.duration) {
+      if(player.duration || (player.networkState === HTMLMediaElement.NETWORK_IDLE)) { // 1
          player.currentTime = coll_data[coll_key].song_begins[song_id];
          scroll_to_view(player);
          player.play();
