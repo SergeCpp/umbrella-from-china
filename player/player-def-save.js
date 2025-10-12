@@ -837,8 +837,10 @@ function timer_logic_sing() {
   const player = document.getElementById('sing-song-player');
   if  (!player) return;
   if  (!player.ended) return;
+  if  ( player.tagName.toLowerCase() !== 'video') return;
 
-  player.load(); // to show the poster image of the video element
+  player.src = player.currentSrc; // reset video to show poster, with respect to preload="none"
+//player.load() alone also shows poster, but forces a load, so ignores preload="none"
 }
 
 function timer_logic() {
