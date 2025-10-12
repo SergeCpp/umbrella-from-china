@@ -115,6 +115,11 @@ pre i {
   margin-bottom: 0;
   text-align: right;
 }
+.text-top-right-part {
+  margin-top: 0;
+  margin-bottom: 1.5em;
+  text-align: right;
+}
 
 /* EOF */
 
