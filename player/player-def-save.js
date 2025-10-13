@@ -53,6 +53,13 @@ function scroll_to_view(player) {
   }
 }
 
+function poster_to_show(player) {
+  if(player && (player.tagName.toLowerCase() === 'video') && player.poster) {
+     player.src = player.currentSrc; // reset video to show poster, with respect to preload="none"
+   //player.load() alone also shows poster, but forces a load, so ignores preload="none"
+  }
+}
+
 function goto_song(song_id, pl) {
   if(pl === undefined) // Item Player
   {
@@ -821,6 +828,8 @@ function player_transitions() {
     const       song_id_next = get_song_id_next(song_id, "item");
     if         (song_id_next) {
       goto_song(song_id_next);
+    } else {
+      poster_to_show(player);
     }
   }
 }
@@ -837,10 +846,8 @@ function timer_logic_sing() {
   const player = document.getElementById('sing-song-player');
   if  (!player) return;
   if  (!player.ended) return;
-  if  ( player.tagName.toLowerCase() !== 'video') return;
 
-  player.src = player.currentSrc; // reset video to show poster, with respect to preload="none"
-//player.load() alone also shows poster, but forces a load, so ignores preload="none"
+  poster_to_show(player);
 }
 
 function timer_logic() {
@@ -851,7 +858,7 @@ function timer_logic() {
   if(item_present) { // Item
     player_transitions();
     update_song_states();
-    update_song_cover();
+    update_song_cover ();
   }
 
   timer_logic_sing(); // Single
