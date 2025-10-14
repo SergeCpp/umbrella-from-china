@@ -81,20 +81,20 @@ function goto_song(song_id, pl) {
           '[' + player.readyState   + ']');
     */
 
-    // 1.10 A quick introduction to HTML
-    // HTML user agents (e.g., web browsers)
-    //
     // 4.8.11.2 Location of the media resource
     // If a src attribute of a media element is set or changed,
-    // the user agent must invoke the media element's media element load algorithm.
+    // the user agent [browser] must invoke the media element's media element load algorithm.
+    //
+    // For preload="none" no actual load is performed in case of src change.
+    // Calling load() performs metadata load for preload="none".
 
     if(player_src_cur !== player_src_new)  // start a new src
     {
-       player.src       = player_src_new;  // invokes player.load()
+       player.src       = player_src_new;  // loads with respect to preload value
        item_player_load_time = Date.now();
        item_song_to_start    = song_id;    // defer to next timer tick
     }
-    else // src is already set
+    else // src is already set to song_id
     {
       if(player.paused) {
         if((player.networkState === HTMLMediaElement.NETWORK_IDLE) ||  // 1
@@ -124,9 +124,9 @@ function goto_song(song_id, pl) {
       const pb = document.getElementById(play_base + 'b');
       const pv = document.getElementById(play_base + 'v');
 
-      if     (pa && (pa.networkState !== HTMLMediaElement.NETWORK_NO_SOURCE /* 3 */)) { pl = 'a'; }
-      else if(pb && (pb.networkState !== HTMLMediaElement.NETWORK_NO_SOURCE /* 3 */)) { pl = 'b'; }
-      else if(pv && (pv.networkState !== HTMLMediaElement.NETWORK_NO_SOURCE /* 3 */)) { pl = 'v'; }
+      if     (pa && (pa.networkState !== HTMLMediaElement.NETWORK_NO_SOURCE /* 3 */ )) { pl = 'a'; }
+      else if(pb && (pb.networkState !== HTMLMediaElement.NETWORK_NO_SOURCE /* 3 */ )) { pl = 'b'; }
+      else if(pv && (pv.networkState !== HTMLMediaElement.NETWORK_NO_SOURCE /* 3 */ )) { pl = 'v'; }
     }
 
     const player = document.getElementById(play_base + pl);
@@ -808,9 +808,9 @@ function player_transitions() {
 
   const player = document.getElementById('item-song-player');
   if  (!player) return;
-                            // HTMLMediaElement.NETWORK_NO_SOURCE /* 3 */
-  if (player.paused) {      // HTMLMediaElement.NETWORK_LOADING   /* 2 */
-    if(player.networkState === HTMLMediaElement.NETWORK_IDLE) {   /* 1 */
+                            // HTMLMediaElement.NETWORK_NO_SOURCE // 3
+  if (player.paused) {      // HTMLMediaElement.NETWORK_LOADING   // 2
+    if(player.networkState === HTMLMediaElement.NETWORK_IDLE) {   // 1
        item_player_running   = false;
     }
   } else { // played
@@ -823,7 +823,7 @@ function player_transitions() {
 
   if( player.ended ||
      (player.paused
-      && (player.networkState === HTMLMediaElement.NETWORK_NO_SOURCE)
+      && (player.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) // 3
       && item_player_running)) {
     const       song_id_next = get_song_id_next(song_id, "item");
     if         (song_id_next) {
