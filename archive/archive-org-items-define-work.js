@@ -347,7 +347,7 @@ function input_allowed_chars(input) {
 }
 
 function input_allowed_favs(input) {
-  return !/[^0-9]/.test(input);
+  return (input === "") || (input === "diff") || /^\d{1,4}$/.test(input);
 }
 
 function process_filter() {
@@ -369,7 +369,7 @@ function process_filter() {
     err_beg + 'Allowed characters are: a-z, 0-9, underscore, dash, period, comma, quote, and space' +
     err_end;
   const err_favs =
-    err_beg + 'Allowed are digits only: 0-9' +
+    err_beg + 'Allowed are numbers: 0 to 9999, ' + "and 'diff'" +
     err_end;
   const err_favs_range =
     err_beg + 'Min favorites count must be less than or equal to max favorites count' +
@@ -428,15 +428,18 @@ function process_filter() {
   const creators    = input_clean_parse(creators_str   );
 
   // Favs
-  const favs_min_str = document.getElementById("favs-min").value.trim();
-  const favs_max_str = document.getElementById("favs-max").value.trim();
+  const favs_min_str = document.getElementById("favs-min").value.trim().toLowerCase();
+  const favs_max_str = document.getElementById("favs-max").value.trim().toLowerCase();
 
   if (!input_allowed_favs(favs_min_str) || !input_allowed_favs(favs_max_str)) {
     container.innerHTML = err_favs;
     return;
   }
 
-  if (favs_min_str && favs_max_str) {
+  const is_min_diff_exp = (favs_min_str === "diff") || (favs_min_str === "");
+  const is_max_diff_exp = (favs_max_str === "diff") || (favs_max_str === "");
+
+  if (!is_min_diff_exp && !is_max_diff_exp) {
     const favs_min = parseInt(favs_min_str, 10);
     const favs_max = parseInt(favs_max_str, 10);
 
