@@ -2,6 +2,6 @@
 
 init_controls();
 init_dates   ()
-  .then(process_stats);
+  .then(load_stats);
 
 // EOF

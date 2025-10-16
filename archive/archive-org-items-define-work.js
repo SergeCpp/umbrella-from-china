@@ -11,7 +11,7 @@ let   stat_prev_items = [];
 let   du_load         = 0;    // Duration of load
 let   du_parse        = 0;    // Duration of parse
 
-/* Items */
+/* Filter Items */
 
 function evaluate_term(term, values, matcher) {
   switch(term.type) {
@@ -141,6 +141,8 @@ function filter_items(items, archived_min, archived_max, created_min, created_ma
   return filtered_items;
 }
 
+/* Calculate Stats */
+
 function calculate_stats(filtered_items, stats_date) {
   const results = filtered_items.map(doc => {
     const identifier =          doc.querySelector("str[name='identifier']").textContent;
@@ -199,6 +201,94 @@ function calculate_stats(filtered_items, stats_date) {
   return results;
 }
 
+/* Filter Favs */
+
+// Build favs_map: { identifier: item }
+function build_favs_map(items, is_diff_exp, favs_str) {
+  const favs_map = {};
+
+  if (is_diff_exp) { // Include all items
+    for (const item of items) {
+      favs_map[item.identifier] = item;
+    }
+  } else { // Include only items with exact match to cnt
+    const favs_cnt = parseInt(favs_str, 10);
+    for (const item of items) {
+      if (item.favorites === favs_cnt) {
+        favs_map[item.identifier] = item;
+      }
+    }
+  }
+  return favs_map;
+}
+
+// Usage: favs_min as favs_prev, favs_max as favs_curr
+function filter_favs_diff(items_prev, items_curr, favs_prev_str, favs_curr_str) {
+  const is_prev_diff = (favs_prev_str === "diff");
+  const is_curr_diff = (favs_curr_str === "diff");
+
+  if (!is_prev_diff && !is_curr_diff) return { done: false };
+
+  const is_prev_diff_exp = is_prev_diff || (favs_prev_str === "");
+  const is_curr_diff_exp = is_curr_diff || (favs_curr_str === "");
+
+  const favs_prev = build_favs_map(items_prev, is_prev_diff_exp, favs_prev_str);
+  const favs_curr = build_favs_map(items_curr, is_curr_diff_exp, favs_curr_str);
+
+  // Find common items in both favs_prev and favs_curr, and apply diff logic
+  const results_prev = [];
+  const results_curr = [];
+
+  for (const identifier in favs_prev) {
+    if (favs_curr[identifier] !== undefined) {
+      const item_prev = favs_prev[identifier];
+      const item_curr = favs_curr[identifier];
+
+      let include = false;
+
+      if (is_prev_diff_exp && is_curr_diff_exp) { // Any change in favorites
+        include = (item_prev.favorites !== item_curr.favorites);
+      }
+      else if (is_prev_diff) { // Changed to curr
+        const favs_curr_cnt = parseInt(favs_curr_str, 10);
+        include = (item_prev.favorites !== item_curr.favorites) && (item_curr.favorites === favs_curr_cnt);
+      }
+      else if (is_curr_diff) { // Changed from prev
+        const favs_prev_cnt = parseInt(favs_prev_str, 10);
+        include = (item_prev.favorites === favs_prev_cnt) && (item_prev.favorites !== item_curr.favorites);
+      }
+
+      if (include) {
+        results_prev.push(item_prev);
+        results_curr.push(item_curr);
+      }
+    }
+  }
+  return { done: true, prev: results_prev, curr: results_curr };
+}
+
+// Filtering by favorites count: from min to max, or by diff logic
+function filter_favs(items_prev, items_curr, favs_min_str, favs_max_str) {
+  if (!favs_min_str && !favs_max_str) return { done: false };
+
+  const favs_diff = filter_favs_diff(items_prev, items_curr, favs_min_str, favs_max_str);
+
+  if (favs_diff.done) return favs_diff;
+
+  const favs_min_cnt = favs_min_str ? parseInt(favs_min_str, 10) : 0;
+  const favs_max_cnt = favs_max_str ? parseInt(favs_max_str, 10) : Infinity;
+
+  const results_prev = items_prev.filter(item => {
+    return (item.favorites >= favs_min_cnt) && (item.favorites <= favs_max_cnt);
+  });
+
+  const results_curr = items_curr.filter(item => {
+    return (item.favorites >= favs_min_cnt) && (item.favorites <= favs_max_cnt);
+  });
+
+  return { done: true, prev: results_prev, curr: results_curr };
+}
+
 /* Controls */
 
 function init_controls() {
@@ -244,7 +334,7 @@ function get_date_range(date_str) {
   const parts = parts_str.map(Number);
   if   (parts.some(isNaN)) return null;
 
-  // And process them
+  // And get range from them
   if (parts.length === 1) { // Year
     const year = parts[0];
     return {
@@ -455,23 +545,33 @@ function process_filter() {
   const filtered_prev_items = filter_items(
     stat_prev_items, archived_min, archived_max, created_min, created_max, collections, creators);
 
-  const time_1       = performance.now();
-  const results_curr = calculate_stats(filtered_curr_items, stat_curr_date);
-  const results_prev = calculate_stats(filtered_prev_items, stat_prev_date);
-  const time_2       = performance.now();
+  const time_1        = performance.now();
+  let   results_curr  = calculate_stats(filtered_curr_items, stat_curr_date);
+  let   results_prev  = calculate_stats(filtered_prev_items, stat_prev_date);
+  const time_2        = performance.now();
 
-  if (!render_results(
-    results_curr, stat_curr_date, results_prev, stat_prev_date, favs_min_str, favs_max_str)) {
+  const filtered_favs = filter_favs(results_prev, results_curr, favs_min_str, favs_max_str);
+  if   (filtered_favs.done) {
+    results_curr = filtered_favs.curr;
+    results_prev = filtered_favs.prev;
+  }
+  const time_3 = performance.now();
+
+  if (!render_results(results_curr, stat_curr_date, results_prev, stat_prev_date)) {
     return;
   }
+  const time_4 = performance.now();
 
   // Timings
-  const time_3        = performance.now();
-  timings.textContent = 'Load '   + du_load          .toFixed(1) + ' ms / ' +
-                        'Parse '  + du_parse         .toFixed(1) + ' ms / ' +
-                        'Filter ' + (time_1 - time_0).toFixed(1) + ' ms / ' +
-                        'Calc '   + (time_2 - time_1).toFixed(1) + ' ms / ' +
-                        'Render ' + (time_3 - time_2).toFixed(1) + ' ms';
+  const du_filter = (time_1 - time_0) + (time_3 - time_2);
+  const du_calc   =  time_2 - time_1;
+  const du_render =  time_4 - time_3;
+
+  timings.textContent = 'Load '   + du_load  .toFixed(1) + ' ms / ' +
+                        'Parse '  + du_parse .toFixed(1) + ' ms / ' +
+                        'Filter ' + du_filter.toFixed(1) + ' ms / ' +
+                        'Calc '   + du_calc  .toFixed(1) + ' ms / ' +
+                        'Render ' + du_render.toFixed(1) + ' ms';
 }
 
 /* Date Change */
@@ -588,7 +688,7 @@ function date_change_menu(event, what) {
 
     date_opt.onclick = function() {
       menu.remove_ex();
-      reload_stat(date, what);
+      load_stat(date, what);
     };
     menu.appendChild(date_opt);
   }
@@ -655,7 +755,7 @@ function load_stat_file(date) {
     });
 }
 
-function reload_stat(date, what) {
+function load_stat(date, what) {
   if (!stat_file_dates.includes(date)) return;
 
   if (what === "curr") {
@@ -685,7 +785,7 @@ function reload_stat(date, what) {
     });
 }
 
-function process_stats() {
+function load_stats() {
   const container = document.getElementById("results");
         container.innerHTML = '<div class="text-center text-comment">Loading...</div>';
 
