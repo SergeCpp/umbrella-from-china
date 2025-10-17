@@ -298,7 +298,7 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   const curr_exp_total   = curr_exp_totals.audio + curr_exp_totals.video;
   const totals_div       = document.createElement("div");
   totals_div.className   = "subtitle text-center text-normal";
-  totals_div.textContent = 'Total ' + curr_exp_total            + ' '        +
+  totals_div.textContent =            curr_exp_total            + ' Items '  +
                            '('      + curr_exp_totals.audio     + ' Audio '  +
                            '/ '     + curr_exp_totals.video     + ' Video) ' +
                          format_bytes(curr_exp_totals.bytes)    + ' '        +

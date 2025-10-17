@@ -66,7 +66,9 @@ function filter_matches(doc, field, terms, matcher) {
   });
 }
 
-function filter_items(items, archived_min, archived_max, created_min, created_max, collections, creators) {
+function filter_items(
+  items, archived_min, archived_max, created_min, created_max,
+  collections, creators, title) {
   const filtered_items = items.filter(doc => {
     const identifier_node = doc.querySelector("str[name='identifier']");
     const title_node      = doc.querySelector("str[name='title']"     );
@@ -134,6 +136,15 @@ function filter_items(items, archived_min, archived_max, created_min, created_ma
       (value, term) => value.toLowerCase().includes(term.toLowerCase())
     );
     if (!matches_creators) return false;
+
+    // Title
+    const matches_title = filter_matches(
+      doc,
+     "title",
+      title,
+      (value, term) => value.toLowerCase().includes(term.toLowerCase())
+    );
+    if (!matches_title) return false;
 
     // Item passed filter
     return true;
@@ -244,23 +255,25 @@ function filter_favs_diff(items_prev, items_curr, favs_prev_str, favs_curr_str) 
       const item_prev = favs_prev[identifier];
       const item_curr = favs_curr[identifier];
 
-      let include = false;
+      if (item_prev.favorites !== item_curr.favorites) {
+        let include = false;
 
-      if (is_prev_diff_exp && is_curr_diff_exp) { // Any change in favorites
-        include = (item_prev.favorites !== item_curr.favorites);
-      }
-      else if (is_prev_diff) { // Changed to curr
-        const favs_curr_cnt = parseInt(favs_curr_str, 10);
-        include = (item_prev.favorites !== item_curr.favorites) && (item_curr.favorites === favs_curr_cnt);
-      }
-      else if (is_curr_diff) { // Changed from prev
-        const favs_prev_cnt = parseInt(favs_prev_str, 10);
-        include = (item_prev.favorites === favs_prev_cnt) && (item_prev.favorites !== item_curr.favorites);
-      }
+        if (is_prev_diff_exp && is_curr_diff_exp) { // Any change in favorites
+          include = true;
+        }
+        else if (is_prev_diff) { // Changed to curr
+          const favs_curr_cnt = parseInt(favs_curr_str, 10);
+          include = (item_curr.favorites === favs_curr_cnt);
+        }
+        else if (is_curr_diff) { // Changed from prev
+          const favs_prev_cnt = parseInt(favs_prev_str, 10);
+          include = (item_prev.favorites === favs_prev_cnt);
+        }
 
-      if (include) {
-        results_prev.push(item_prev);
-        results_curr.push(item_curr);
+        if (include) {
+          results_prev.push(item_prev);
+          results_curr.push(item_curr);
+        }
       }
     }
   }
@@ -292,14 +305,14 @@ function filter_favs(items_prev, items_curr, favs_min_str, favs_max_str) {
 /* Controls */
 
 function init_controls() {
-  // 1. Add Enter key to all date inputs
-  ["collections",  "creators",
+  // 1. Add Enter key to all text inputs
+  ["collections", "creators", "title",
    "archived-min", "archived-max", "created-min", "created-max", "favs-min", "favs-max"]
   .forEach(id => {
     const input = document.getElementById(id);
     if   (input) {
       input.onkeyup = function(event) {
-        if (event.key === "Enter") {
+        if (event.key === 'Enter') {
           process_filter();
         }
       };
@@ -505,17 +518,21 @@ function process_filter() {
     return;
   }
 
-  // Collections and Creators
+  // Collections, Creators, Title
   const collections_str = document.getElementById("collections").value;
   const creators_str    = document.getElementById("creators"   ).value;
+  const title_str       = document.getElementById("title"      ).value;
 
-  if (!input_allowed_chars(collections_str) || !input_allowed_chars(creators_str)) {
+  if (!input_allowed_chars(collections_str) ||
+      !input_allowed_chars(creators_str   ) ||
+      !input_allowed_chars(title_str      )) {
     container.innerHTML = err_chars;
     return;
   }
 
   const collections = input_clean_parse(collections_str);
   const creators    = input_clean_parse(creators_str   );
+  const title       = input_clean_parse(title_str      );
 
   // Favs
   const favs_min_str = document.getElementById("favs-min").value.trim().toLowerCase();
@@ -541,9 +558,11 @@ function process_filter() {
 
   // Process
   const filtered_curr_items = filter_items(
-    stat_curr_items, archived_min, archived_max, created_min, created_max, collections, creators);
+    stat_curr_items, archived_min, archived_max, created_min, created_max,
+    collections, creators, title);
   const filtered_prev_items = filter_items(
-    stat_prev_items, archived_min, archived_max, created_min, created_max, collections, creators);
+    stat_prev_items, archived_min, archived_max, created_min, created_max,
+    collections, creators, title);
 
   const time_1        = performance.now();
   let   results_curr  = calculate_stats(filtered_curr_items, stat_curr_date);
