@@ -381,12 +381,14 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     const item_gauge_above_b = document.createElement("div");
     item_gauge_above_b.className = "item-gauge-above-b";
 
-    // Display ratios old and all on the above gauges
-    const percentage_a_a = get_percentage(item.ratio_old, max_ratio, base_ratio);
-    item_gauge_above_a.style.width = percentage_a_a + "%";
+    // Display ratios old and all for curr on the above gauges
+    if (!item.is_prev) {
+      const percentage_a_a = get_percentage(item.ratio_old, max_ratio, base_ratio);
+      item_gauge_above_a.style.width = percentage_a_a + "%";
 
-    const percentage_a_b = get_percentage(item.ratio_all, max_ratio, base_ratio);
-    item_gauge_above_b.style.width = percentage_a_b + "%";
+      const percentage_a_b = get_percentage(item.ratio_all, max_ratio, base_ratio);
+      item_gauge_above_b.style.width = percentage_a_b + "%";
+    }
 
     // Link button
     const item_title = document.createElement("div");

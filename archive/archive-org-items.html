@@ -30,7 +30,7 @@
 <main>
 <h1 class="text-center">Umbrella from&nbsp;China&nbsp;&mdash; Archived&nbsp;Items by&nbsp;Views/Day</h1>
 
-<div style ="width: 192px; margin: 0 auto 0.5em;">
+<div style ="width: 192px; margin: 0 auto 0.8em;">
 <a   target="_blank"
      href  ="/images/xie-an-ran-5000x5000.jpg">
 <img src   ="/images/xie-an-ran-192x192.jpg"
@@ -54,7 +54,7 @@
 &amp;callback=callback&amp;output=xml">Internet Archive Query</a> results</div>
 
 <div class      ="text-center"
-     style      ="font-family: monospace; margin: 0.5em 0 0.3em;"><input
+     style      ="font-family: monospace; margin: 0.8em 0 0.3em;"><input
      id         ="collections"
      style      ="font-family: monospace;"
      type       ="text"
@@ -73,6 +73,15 @@
 
 <div class      ="text-center"
      style      ="font-family: monospace; margin: 0.3em 0;"><input
+     id         ="subjects"
+     style      ="font-family: monospace;"
+     type       ="text"
+     size       ="89"
+     maxlength  ="89"
+     placeholder="Subjects: Ancient Style, Hanfu, Fan Dance"></div>
+
+<div class      ="text-center"
+     style      ="font-family: monospace; margin: 0.3em 0;"><input
      id         ="title"
      style      ="font-family: monospace;"
      type       ="text"
@@ -81,12 +90,58 @@
      placeholder="Title: Flowers and the Moon, Ronin Pipa / AND OR NOT NOTANY NOTALL / a-z, 0-9, ._-, ' '"></div>
 
 <div class      ="text-center"
-     style      ="font-family: monospace; margin: 0.3em 0 0.5em;"><input
+     style      ="font-family: monospace; margin: 0.3em 0;"><input
+     id         ="downloads-min"
+     style      ="font-family: monospace;"
+     type       ="text"
+     size       ="10"
+     maxlength  ="10"
+     placeholder="Min"><label
+     for        ="downloads-min"
+     style      ="cursor: pointer;">&nbsp;Downloads&nbsp;</label><input
+     id         ="downloads-max"
+     style      ="font-family: monospace;"
+     type       ="text"
+     size       ="10"
+     maxlength  ="10"
+     placeholder="Max">&nbsp;<input
+     id         ="month-min"
+     style      ="font-family: monospace; margin-left: 11.5px;"
+     type       ="text"
+     size       ="9"
+     maxlength  ="9"
+     placeholder="Min"><label
+     for        ="month-min"
+     style      ="cursor: pointer;">&nbsp;Month&nbsp;</label><input
+     id         ="month-max"
+     style      ="font-family: monospace; margin-right: 11.5px;"
+     type       ="text"
+     size       ="9"
+     maxlength  ="9"
+     placeholder="Max">&nbsp;<input
+     id         ="week-min"
+     style      ="font-family: monospace;"
+     type       ="text"
+     size       ="8"
+     maxlength  ="8"
+     placeholder="Min"><label
+     for        ="week-min"
+     style      ="cursor: pointer;">&nbsp;Week&nbsp;</label><input
+     id         ="week-max"
+     style      ="font-family: monospace;"
+     type       ="text"
+     size       ="8"
+     maxlength  ="8"
+     placeholder="Max"></div>
+
+<div class      ="text-center"
+     style      ="font-family: monospace; margin: 0.3em 0 0.8em;"><input
      id         ="created-min"
      style      ="font-family: monospace;"
      type       ="text"
      size       ="10"
      maxlength  ="10"
+     placeholder="Min"
      value      ="2012-01-01"><label
      for        ="created-min"
      style      ="cursor: pointer;">&nbsp;Created&nbsp;</label><input
@@ -95,6 +150,7 @@
      type       ="text"
      size       ="10"
      maxlength  ="10"
+     placeholder="Max"
      value      ="2024-10-19">&nbsp;<input
      id         ="favs-min"
      style      ="font-family: monospace; margin-left: 1.5px;"
@@ -116,6 +172,7 @@
      type       ="text"
      size       ="10"
      maxlength  ="10"
+     placeholder="Min"
      value      ="2022-05-06"><label
      for        ="archived-min"
      style      ="cursor: pointer;">&nbsp;Archived&nbsp;</label><input
@@ -124,6 +181,7 @@
      type       ="text"
      size       ="10"
      maxlength  ="10"
+     placeholder="Max"
      value      ="2025-03-08"></div>
 
 <div id        ="results"

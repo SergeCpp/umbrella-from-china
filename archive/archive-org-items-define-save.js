@@ -86,6 +86,10 @@ function filter_items(
       return false;
     }
 
+    // Item Size
+    const item_size = parseInt(item_size_node.textContent, 10);
+    if (isNaN(item_size) || (item_size < 0)) return false;
+
     // Mediatype
     const mediatype = mediatype_node.textContent;
     if ((mediatype !== "movies") && (mediatype !== "audio")) return false;
@@ -117,6 +121,7 @@ function filter_items(
     const week      = parseInt(week_node     .textContent, 10);
 
     if (isNaN(downloads) || isNaN(month) || isNaN(week)) return false;
+    if ((downloads < 0) || (month < 0) || (week < 0)) return false;
     if ((downloads < month) || (month < week)) return false;
 
     // Collections
@@ -202,6 +207,7 @@ function calculate_stats(filtered_items, stats_date) {
       days_old  ,
       views_old ,
       ratio_old ,
+      views_30  :              month,
       views_23  :              month - week,
       ratio_23  : parseFloat(((month - week) / 23).toFixed(3)),
       views_7   :                      week,
@@ -210,6 +216,40 @@ function calculate_stats(filtered_items, stats_date) {
     };
   });
   return results;
+}
+
+/* Filter Views */
+
+// Filtering by views count: from min to max
+// *_str are: number / ""
+function filter_views(items_prev, items_curr,
+  downloads_min_str, downloads_max_str, month_min_str, month_max_str, week_min_str, week_max_str) {
+  if (!downloads_min_str && !downloads_max_str &&
+      !month_min_str     && !month_max_str     &&
+      !week_min_str      && !week_max_str) return { done: false };
+
+  const downloads_min_cnt = downloads_min_str ? parseInt(downloads_min_str, 10) : 0;
+  const downloads_max_cnt = downloads_max_str ? parseInt(downloads_max_str, 10) : Infinity;
+
+  const month_min_cnt = month_min_str ? parseInt(month_min_str, 10) : 0;
+  const month_max_cnt = month_max_str ? parseInt(month_max_str, 10) : Infinity;
+
+  const week_min_cnt = week_min_str ? parseInt(week_min_str, 10) : 0;
+  const week_max_cnt = week_max_str ? parseInt(week_max_str, 10) : Infinity;
+
+  const results_prev = items_prev.filter(item => {
+    return ((item.views_all >= downloads_min_cnt) && (item.views_all <= downloads_max_cnt)) &&
+           ((item.views_30  >= month_min_cnt    ) && (item.views_30  <= month_max_cnt    )) &&
+           ((item.views_7   >= week_min_cnt     ) && (item.views_7   <= week_max_cnt     ));
+  });
+
+  const results_curr = items_curr.filter(item => {
+    return ((item.views_all >= downloads_min_cnt) && (item.views_all <= downloads_max_cnt)) &&
+           ((item.views_30  >= month_min_cnt    ) && (item.views_30  <= month_max_cnt    )) &&
+           ((item.views_7   >= week_min_cnt     ) && (item.views_7   <= week_max_cnt     ));
+  });
+
+  return { done: true, prev: results_prev, curr: results_curr };
 }
 
 /* Filter Favs */
@@ -234,7 +274,7 @@ function get_favs_map(items, is_diff_exp, favs_str) {
   return favs_map;
 }
 
-// Usage: favs_min as favs_prev, favs_max as favs_curr
+// Usage: favs_min_str as favs_prev_str, favs_max_str as favs_curr_str
 // *_str are: number / "" / "diff"
 function filter_favs_diff(items_prev, items_curr, favs_prev_str, favs_curr_str) {
   const is_prev_diff = (favs_prev_str === "diff");
@@ -297,8 +337,9 @@ function filter_favs(items_prev, items_curr, favs_min_str, favs_max_str) {
 
 function init_controls() {
   // 1. Add Enter key to all text inputs
-  ["collections", "creators", "title",
-   "archived-min", "archived-max", "created-min", "created-max", "favs-min", "favs-max"]
+  [  "collections",      "creators",    "subjects",       "title",
+   "downloads-min", "downloads-max",   "month-min",   "month-max", "week-min", "week-max",
+    "archived-min",  "archived-max", "created-min", "created-max", "favs-min", "favs-max"]
   .forEach(id => {
     const input = document.getElementById(id);
     if   (input) {
@@ -440,6 +481,10 @@ function input_allowed_chars(input) {
   return !/[^a-zA-Z0-9._\-'" ,]/.test(input);
 }
 
+function input_allowed_views(input) {
+  return (input === "") || /^\d{1,10}$/.test(input);
+}
+
 function input_allowed_favs(input) {
   return (input === "") || (input === "diff") || /^\d{1,4}$/.test(input);
 }
@@ -450,17 +495,23 @@ function process_filter() {
   const timings   = document.getElementById("timings");
         timings.textContent = "";
 
-  const err_beg   = '<div class="text-center text-comment">';
-  const err_end   = '</div>';
+  const err_beg  = '<div class="text-center text-comment">';
+  const err_end  = '</div>';
 
   const err_date =
     err_beg + 'Valid dates are: YYYY / YYYY-MM / YYYY-MM-DD' +
     err_end;
   const err_date_range =
-    err_beg + 'Start date must be before end date' +
+    err_beg + 'Min date of range must be before or at max date of range' +
     err_end;
   const err_chars =
     err_beg + 'Allowed characters are: a-z, 0-9, underscore, dash, period, comma, quote, and space' +
+    err_end;
+  const err_views =
+    err_beg + 'Allowed are non-negative numbers only' +
+    err_end;
+  const err_views_range =
+    err_beg + 'Min views count must be less than or equal to max views count' +
     err_end;
   const err_favs =
     err_beg + 'Allowed are numbers: 0 to 9999, ' + "and 'diff'" +
@@ -469,7 +520,7 @@ function process_filter() {
     err_beg + 'Min favorites count must be less than or equal to max favorites count' +
     err_end;
 
-  // Archived range
+  // Archived Range
   const archived_min_str = document.getElementById("archived-min").value.trim();
   const archived_max_str = document.getElementById("archived-max").value.trim();
 
@@ -489,7 +540,7 @@ function process_filter() {
     return;
   }
 
-  // Created range
+  // Created Range
   const created_min_str = document.getElementById("created-min").value.trim();
   const created_max_str = document.getElementById("created-max").value.trim();
 
@@ -525,6 +576,55 @@ function process_filter() {
   const creators    = input_clean_parse(creators_str   );
   const title       = input_clean_parse(title_str      );
 
+  // Views
+  const downloads_min_str = document.getElementById("downloads-min").value.trim();
+  const downloads_max_str = document.getElementById("downloads-max").value.trim();
+  const month_min_str     = document.getElementById("month-min"    ).value.trim();
+  const month_max_str     = document.getElementById("month-max"    ).value.trim();
+  const week_min_str      = document.getElementById("week-min"     ).value.trim();
+  const week_max_str      = document.getElementById("week-max"     ).value.trim();
+
+  if (!input_allowed_views(downloads_min_str) || !input_allowed_views(downloads_max_str) ||
+      !input_allowed_views(month_min_str    ) || !input_allowed_views(month_max_str    ) ||
+      !input_allowed_views(week_min_str     ) || !input_allowed_views(week_max_str     )) {
+    container.innerHTML = err_views;
+    return;
+  }
+
+  const is_downloads_not_cnt = (downloads_min_str === "") || (downloads_max_str === "");
+  const is_month_not_cnt     = (month_min_str     === "") || (month_max_str     === "");
+  const is_week_not_cnt      = (week_min_str      === "") || (week_max_str      === "");
+
+  if (!is_downloads_not_cnt) {
+    const downloads_min_cnt = parseInt(downloads_min_str, 10);
+    const downloads_max_cnt = parseInt(downloads_max_str, 10);
+
+    if (downloads_min_cnt > downloads_max_cnt) {
+      container.innerHTML = err_views_range;
+      return;
+    }
+  }
+
+  if (!is_month_not_cnt) {
+    const month_min_cnt = parseInt(month_min_str, 10);
+    const month_max_cnt = parseInt(month_max_str, 10);
+
+    if (month_min_cnt > month_max_cnt) {
+      container.innerHTML = err_views_range;
+      return;
+    }
+  }
+
+  if (!is_week_not_cnt) {
+    const week_min_cnt = parseInt(week_min_str, 10);
+    const week_max_cnt = parseInt(week_max_str, 10);
+
+    if (week_min_cnt > week_max_cnt) {
+      container.innerHTML = err_views_range;
+      return;
+    }
+  }
+
   // Favs
   const favs_min_str = document.getElementById("favs-min").value.trim().toLowerCase();
   const favs_max_str = document.getElementById("favs-max").value.trim().toLowerCase();
@@ -538,10 +638,10 @@ function process_filter() {
   const is_max_diff_exp = (favs_max_str === "diff") || (favs_max_str === "");
 
   if (!is_min_diff_exp && !is_max_diff_exp) {
-    const favs_min = parseInt(favs_min_str, 10);
-    const favs_max = parseInt(favs_max_str, 10);
+    const favs_min_cnt = parseInt(favs_min_str, 10);
+    const favs_max_cnt = parseInt(favs_max_str, 10);
 
-    if (favs_min > favs_max) {
+    if (favs_min_cnt > favs_max_cnt) {
       container.innerHTML = err_favs_range;
       return;
     }
@@ -555,10 +655,17 @@ function process_filter() {
     stat_prev_items, archived_min, archived_max, created_min, created_max,
     collections, creators, title);
 
-  const time_1        = performance.now();
-  let   results_curr  = calculate_stats(filtered_curr_items, stat_curr_date);
-  let   results_prev  = calculate_stats(filtered_prev_items, stat_prev_date);
-  const time_2        = performance.now();
+  const time_1       = performance.now();
+  let   results_curr = calculate_stats(filtered_curr_items, stat_curr_date);
+  let   results_prev = calculate_stats(filtered_prev_items, stat_prev_date);
+  const time_2       = performance.now();
+
+  const filtered_views = filter_views(results_prev, results_curr,
+    downloads_min_str, downloads_max_str, month_min_str, month_max_str, week_min_str, week_max_str);
+  if (filtered_views.done) {
+    results_curr = filtered_views.curr;
+    results_prev = filtered_views.prev;
+  }
 
   const filtered_favs = filter_favs(results_prev, results_curr, favs_min_str, favs_max_str);
   if   (filtered_favs.done) {
