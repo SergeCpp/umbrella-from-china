@@ -235,7 +235,7 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   // 3.4. Sort curr expanded
   sort_results(results_curr_exp);
 
-  // 4.1. Build a map of prev results by identifier
+  // 4.1. Create a map of prev results by identifier
   const map_prev = {};
   results_prev.forEach(item => {
     map_prev[item.identifier] = item;
@@ -254,7 +254,7 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   // 4.4. Sort prev expanded
   sort_results(results_prev_exp);
 
-  // 5.1. Build a map of curr expanded results by identifier
+  // 5.1. Create a map of curr expanded results by identifier
   // 5.2. Set no_prev actual values in curr expanded results
   const map_curr_exp = {};
   results_curr_exp.forEach(item => {
@@ -298,13 +298,13 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   const curr_exp_total   = curr_exp_totals.audio + curr_exp_totals.video;
   const totals_div       = document.createElement("div");
   totals_div.className   = "subtitle text-center text-normal";
-  totals_div.textContent =            curr_exp_total            + ' Items '  +
-                           '('      + curr_exp_totals.audio     + ' Audio '  +
-                           '/ '     + curr_exp_totals.video     + ' Video) ' +
-                         format_bytes(curr_exp_totals.bytes)    + ' '        +
-                           '/ '     + curr_exp_totals.views     + ' Views '  +
-                           '/ '     + curr_exp_totals.favorites + ' Favs '   +
-                           '('      + curr_exp_totals.favorited + ' Items)';
+  totals_div.textContent = curr_exp_total            + ' Items '  +
+                '('      + curr_exp_totals.audio     + ' Audio '  +
+                '/ '     + curr_exp_totals.video     + ' Video) ' +
+              format_bytes(curr_exp_totals.bytes)    + ' '        +
+                '/ '     + curr_exp_totals.views     + ' Views '  +
+                '/ '     + curr_exp_totals.favorites + ' Favs '   +
+                '('      + curr_exp_totals.favorited + ' Items)';
   container.appendChild(totals_div);
 
   // 8. Both stats displaying

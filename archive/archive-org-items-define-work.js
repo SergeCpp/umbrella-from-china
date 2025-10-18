@@ -214,15 +214,16 @@ function calculate_stats(filtered_items, stats_date) {
 
 /* Filter Favs */
 
-// Build favs_map: { identifier: item }
-function build_favs_map(items, is_diff_exp, favs_str) {
+// Get favs_map: { identifier: item }
+// favs_str is: "" / "diff" if is_diff_exp true, or number if is_diff_exp false
+function get_favs_map(items, is_diff_exp, favs_str) {
   const favs_map = {};
 
   if (is_diff_exp) { // Include all items
     for (const item of items) {
       favs_map[item.identifier] = item;
     }
-  } else { // Include only items with exact match to cnt
+  } else { // Include only items with favorites === cnt
     const favs_cnt = parseInt(favs_str, 10);
     for (const item of items) {
       if (item.favorites === favs_cnt) {
@@ -234,6 +235,7 @@ function build_favs_map(items, is_diff_exp, favs_str) {
 }
 
 // Usage: favs_min as favs_prev, favs_max as favs_curr
+// *_str are: number / "" / "diff"
 function filter_favs_diff(items_prev, items_curr, favs_prev_str, favs_curr_str) {
   const is_prev_diff = (favs_prev_str === "diff");
   const is_curr_diff = (favs_curr_str === "diff");
@@ -243,37 +245,25 @@ function filter_favs_diff(items_prev, items_curr, favs_prev_str, favs_curr_str) 
   const is_prev_diff_exp = is_prev_diff || (favs_prev_str === "");
   const is_curr_diff_exp = is_curr_diff || (favs_curr_str === "");
 
-  const favs_prev = build_favs_map(items_prev, is_prev_diff_exp, favs_prev_str);
-  const favs_curr = build_favs_map(items_curr, is_curr_diff_exp, favs_curr_str);
+  const favs_prev = get_favs_map(items_prev, is_prev_diff_exp, favs_prev_str);
+  const favs_curr = get_favs_map(items_curr, is_curr_diff_exp, favs_curr_str);
 
   // Find common items in both favs_prev and favs_curr, and apply diff logic
   const results_prev = [];
   const results_curr = [];
 
-  for (const identifier in favs_prev) {
-    if (favs_curr[identifier] !== undefined) {
+  const [outer, inner] = is_prev_diff
+    ? [favs_curr, favs_prev]  // Curr may be smaller
+    : [favs_prev, favs_curr]; // Prev may be smaller
+
+  for (const identifier in outer) {
+    if (inner[identifier]) {
       const item_prev = favs_prev[identifier];
       const item_curr = favs_curr[identifier];
 
       if (item_prev.favorites !== item_curr.favorites) {
-        let include = false;
-
-        if (is_prev_diff_exp && is_curr_diff_exp) { // Any change in favorites
-          include = true;
-        }
-        else if (is_prev_diff) { // Changed to curr
-          const favs_curr_cnt = parseInt(favs_curr_str, 10);
-          include = (item_curr.favorites === favs_curr_cnt);
-        }
-        else if (is_curr_diff) { // Changed from prev
-          const favs_prev_cnt = parseInt(favs_prev_str, 10);
-          include = (item_prev.favorites === favs_prev_cnt);
-        }
-
-        if (include) {
-          results_prev.push(item_prev);
-          results_curr.push(item_curr);
-        }
+        results_prev.push(item_prev);
+        results_curr.push(item_curr);
       }
     }
   }
@@ -281,6 +271,7 @@ function filter_favs_diff(items_prev, items_curr, favs_prev_str, favs_curr_str) 
 }
 
 // Filtering by favorites count: from min to max, or by diff logic
+// *_str are: number / "" / "diff"
 function filter_favs(items_prev, items_curr, favs_min_str, favs_max_str) {
   if (!favs_min_str && !favs_max_str) return { done: false };
 
