@@ -22,8 +22,9 @@ https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-202
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-09-15.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-09-30.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-10-15.xml.txt
------------------------------
-1 dates + 10 stats = 11 files // See archive-dates.txt for the complete actual list
+https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-10-19-subjects.xml.txt
+------------------------------------------
+1 dates + 10 stats + 1 subjects = 12 files // See archive-dates.txt for the complete actual stat list
 
 https://umbrella-from-china.neocities.org/images/acfun-dance-monthly-2021-05-2000x1250.jpg
 https://umbrella-from-china.neocities.org/images/acfun-dance-monthly-2021-05-600x375.avif
