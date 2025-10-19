@@ -8,6 +8,8 @@ let   stat_curr_items = [];
 let   stat_prev_date  = null; //  "YYYY-MM-DD"
 let   stat_prev_items = [];
 
+let   stat_subjects   = null; // null / [] / undefined
+
 let   du_load         = 0;    // Duration of load
 let   du_parse        = 0;    // Duration of parse
 
@@ -159,8 +161,8 @@ function filter_items(
 
 /* Calculate Stats */
 
-function calculate_stats(filtered_items, stats_date) {
-  const results = filtered_items.map(doc => {
+function calculate_stats(stats_items, stats_date) {
+  const stats = stats_items.map(doc => {
     const identifier =          doc.querySelector("str[name='identifier']").textContent;
     const title      =          doc.querySelector("str[name='title']"     ).textContent;
     const item_size  = parseInt(doc.querySelector("str[name='item_size']" ).textContent, 10);
@@ -215,7 +217,7 @@ function calculate_stats(filtered_items, stats_date) {
       favorites
     };
   });
-  return results;
+  return stats;
 }
 
 /* Filter Views */
@@ -331,6 +333,16 @@ function filter_favs(items_prev, items_curr, favs_min_str, favs_max_str) {
   });
 
   return { done: true, prev: results_prev, curr: results_curr };
+}
+
+/* Subjects Processing */
+
+//... need
+
+//... load
+
+function filter_subjects(items_prev, items_curr, subjects_items, subjects_query) {
+  return { done: false };
 }
 
 /* Controls */
@@ -560,13 +572,15 @@ function process_filter() {
     return;
   }
 
-  // Collections, Creators, Title
+  // Collections, Creators, Subjects, and Title
   const collections_str = document.getElementById("collections").value;
   const creators_str    = document.getElementById("creators"   ).value;
+  const subjects_str    = document.getElementById("subjects"   ).value;
   const title_str       = document.getElementById("title"      ).value;
 
   if (!input_allowed_chars(collections_str) ||
       !input_allowed_chars(creators_str   ) ||
+      !input_allowed_chars(subjects_str   ) ||
       !input_allowed_chars(title_str      )) {
     container.innerHTML = err_chars;
     return;
@@ -574,6 +588,7 @@ function process_filter() {
 
   const collections = input_clean_parse(collections_str);
   const creators    = input_clean_parse(creators_str   );
+  const subjects    = input_clean_parse(subjects_str   );
   const title       = input_clean_parse(title_str      );
 
   // Views
@@ -671,6 +686,12 @@ function process_filter() {
   if   (filtered_favs.done) {
     results_curr = filtered_favs.curr;
     results_prev = filtered_favs.prev;
+  }
+
+  const filtered_subjects = filter_subjects(results_prev, results_curr, stat_subjects, subjects);
+  if   (filtered_subjects.done) {
+    results_curr = filtered_subjects.curr;
+    results_prev = filtered_subjects.prev;
   }
   const time_3 = performance.now();
 
@@ -838,8 +859,7 @@ function init_dates() {
       stat_prev_date = stat_file_dates[stat_file_dates.length - 2];
     })
     .catch(err => {
-      document.getElementById("results").innerHTML =
-        '<div class="text-center text-comment">Error: ' + err.message + '</div>';
+      container.innerHTML = '<div class="text-center text-comment">Error: ' + err.message + '</div>';
       throw err;
     });
 }
