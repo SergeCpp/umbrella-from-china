@@ -15,14 +15,12 @@ let   du_parse        = 0;    // Duration of parse
 
 /* Subjects Processing */
 
-function wait_subjects(subjects_items, subjects_query) {
-  if (!subjects_query)              return false; // No    filter for subjects
-  if  (subjects_query.length === 0) return false; // Empty filter for subjects
+function wait_subjects(subjects_items, subjects_terms) {
+  if (!subjects_terms || (subjects_terms.length === 0)) return false; // No or empty filter for subjects
 
   if (subjects_items)               return false; // Subjects already   loaded
   if (subjects_items === undefined) return false; // Subjects cannot be loaded
-
-  if (subjects_items !== null) return false; // Some error
+  if (subjects_items !== null)      return false; // Error, must be null here
 
   load_subjects();
 
@@ -52,7 +50,7 @@ function load_subjects() {
       if (xml.querySelector("parsererror")) { throw new Error("Subjects XML file invalid format"); }
       const xml_doc = [...xml.querySelectorAll("doc")];
 
-      // Create subjects lookup map: id >> subjects
+      // Create subjects lookup map for id: subjects
       stat_subjects = new Map();
       for (const doc of xml_doc) {
         const node_i = doc.querySelector('str[name="identifier"]');
@@ -80,26 +78,24 @@ function load_subjects() {
     });
 }
 
-function filter_subjects(items_prev, items_curr, subjects_items, subjects_query) {
-  if (!subjects_query)              return { done: false }; // No    filter for subjects
-  if  (subjects_query.length === 0) return { done: false }; // Empty filter for subjects
-
+function filter_subjects(items_prev, items_curr, subjects_items, subjects_terms) {
+  if (!subjects_terms || (subjects_terms.length === 0)) return { done: false };
   if (!subjects_items) return { error: true };
 
-  // Helper: does a subjects match the query?
-  const matches_subjects = (subjects) => {
-    return subjects_query.some(term => {
+  // Does a subjects match the query terms?
+  const filter_matches_subjects = (subjects) => {
+    return subjects_terms.some(term => {
       return evaluate_term(term, subjects,
         (value, term) => value.toLowerCase().includes(term.toLowerCase())
       );
     });
   };
 
-  // Filter prev/curr: keep only items whose identifier is in subjects_map and matches query
+  // Keep only items whose identifier is in subjects_items and matches query terms
   const filter_by_subjects = (items) => {
     return items.filter(item => {
       const subjects = subjects_items.get(item.identifier);
-      return subjects && matches_subjects(subjects);
+      return subjects && filter_matches_subjects(subjects);
     });
   };
 

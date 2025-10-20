@@ -32,20 +32,15 @@ function evaluate_term(term, values, matcher) {
 }
 
 function filter_matches(doc, field, terms, matcher) {
-  if (!terms)              return true; // No    filter = match all
-  if  (terms.length === 0) return true; // Empty filter = match all
+  if (!terms || (terms.length === 0)) return true; // No or empty filter = match all
 
   // Get all values for this field (handles both <arr> and <str>)
   const node = doc.querySelector('arr[name="' + field + '"], str[name="' + field + '"]');
-  let values = [];
-
-  if (node) {
-    if (node.tagName.toLowerCase() === "arr") {
-      values = Array.from(node.querySelectorAll("str")).map(n => n.textContent);
-    } else {
-      values = [node.textContent];
-    }
-  }
+  const values = node
+    ? node.tagName.toLowerCase() === "arr"
+      ? Array.from(node.querySelectorAll("str")).map(n => n.textContent)
+      : [node.textContent]
+    : [];
 
   // Check if any term matches
   return terms.some(term => {
@@ -53,33 +48,43 @@ function filter_matches(doc, field, terms, matcher) {
   });
 }
 
+function get_doc_text(doc, name) {
+  if (!doc.text_cache) doc.text_cache = {};
+  let text = doc.text_cache[name];
+  if (text !== undefined) return text;
+
+  const node = doc.querySelector('str[name="' + name + '"]');
+  text = node ? node.textContent : null;
+  doc.text_cache[name] = text;
+  return text;
+}
+
 function filter_items(
   items, archived_min, archived_max, created_min, created_max,
   collections, creators, title) {
   const filtered_items = items.filter(doc => {
-    const identifier_node = doc.querySelector("str[name='identifier']");
-    const title_node      = doc.querySelector("str[name='title']"     );
-    const item_size_node  = doc.querySelector("str[name='item_size']" );
-    const mediatype_node  = doc.querySelector("str[name='mediatype']" );
-    const date_node       = doc.querySelector("str[name='date']"      );
-    const publicdate_node = doc.querySelector("str[name='publicdate']");
-    const downloads_node  = doc.querySelector("str[name='downloads']" );
-    const month_node      = doc.querySelector("str[name='month']"     );
-    const week_node       = doc.querySelector("str[name='week']"      );
+    const identifier_text = get_doc_text(doc, 'identifier');
+    const title_text      = get_doc_text(doc, 'title'     );
+    const item_size_text  = get_doc_text(doc, 'item_size' );
+    const mediatype_text  = get_doc_text(doc, 'mediatype' );
+    const date_node       = doc.querySelector("str[name='date']"); // Not cached, not used later
+    const publicdate_text = get_doc_text(doc, 'publicdate');
+    const downloads_text  = get_doc_text(doc, 'downloads' );
+    const month_text      = get_doc_text(doc, 'month'     );
+    const week_text       = get_doc_text(doc, 'week'      );
 
-    if (!identifier_node || !title_node || !item_size_node || !mediatype_node ||
-        !publicdate_node ||
-        !downloads_node  || !month_node || !week_node) {
+    if ((identifier_text === null) || (title_text      === null) || (item_size_text === null) ||
+        (mediatype_text  === null) || (publicdate_text === null) ||
+        (downloads_text  === null) || (month_text      === null) || (week_text === null)) {
       return false;
     }
 
     // Item Size
-    const item_size = parseInt(item_size_node.textContent, 10);
+    const item_size = parseInt(item_size_text, 10);
     if (isNaN(item_size) || (item_size < 0)) return false;
 
     // Mediatype
-    const mediatype = mediatype_node.textContent;
-    if ((mediatype !== "movies") && (mediatype !== "audio")) return false;
+    if ((mediatype_text !== "movies") && (mediatype_text !== "audio")) return false;
 
     // Created
     let date = null;
@@ -88,7 +93,7 @@ function filter_items(
       date = new Date(date_node.textContent);
       if (isNaN(date.getTime())) return false;
     } else { // No date set for item
-      if (mediatype === "audio") { // Set default date to audio item
+      if (mediatype_text === "audio") { // Set default date to audio item
         date = new Date("2012-01-01T00:00:00Z"); // UTC date, earliest for entire stat
       } else {
         return false;
@@ -98,14 +103,14 @@ function filter_items(
     if ((date < created_min) || (date > created_max)) return false;
 
     // Archived
-    const publicdate = new Date(publicdate_node.textContent);
+    const publicdate = new Date(publicdate_text);
     if (isNaN(publicdate.getTime())) return false;
     if ((publicdate < archived_min) || (publicdate > archived_max)) return false;
 
     // Views
-    const downloads = parseInt(downloads_node.textContent, 10);
-    const month     = parseInt(month_node    .textContent, 10);
-    const week      = parseInt(week_node     .textContent, 10);
+    const downloads = parseInt(downloads_text, 10);
+    const month     = parseInt(month_text,     10);
+    const week      = parseInt(week_text,      10);
 
     if (isNaN(downloads) || isNaN(month) || isNaN(week)) return false;
     if ((downloads < 0) || (month < 0) || (week < 0)) return false;
@@ -148,14 +153,14 @@ function filter_items(
 
 function calculate_stats(stats_items, stats_date) {
   const stats = stats_items.map(doc => {
-    const identifier =          doc.querySelector("str[name='identifier']").textContent;
-    const title      =          doc.querySelector("str[name='title']"     ).textContent;
-    const item_size  = parseInt(doc.querySelector("str[name='item_size']" ).textContent, 10);
-    const mediatype  =          doc.querySelector("str[name='mediatype']" ).textContent;
-    const publicdate = new Date(doc.querySelector("str[name='publicdate']").textContent);
-    const downloads  = parseInt(doc.querySelector("str[name='downloads']" ).textContent, 10);
-    const month      = parseInt(doc.querySelector("str[name='month']"     ).textContent, 10);
-    const week       = parseInt(doc.querySelector("str[name='week']"      ).textContent, 10);
+    const identifier =          get_doc_text(doc, 'identifier');
+    const title      =          get_doc_text(doc, 'title'     );
+    const item_size  = parseInt(get_doc_text(doc, 'item_size' ), 10);
+    const mediatype  =          get_doc_text(doc, 'mediatype' );
+    const publicdate = new Date(get_doc_text(doc, 'publicdate'));
+    const downloads  = parseInt(get_doc_text(doc, 'downloads' ), 10);
+    const month      = parseInt(get_doc_text(doc, 'month'     ), 10);
+    const week       = parseInt(get_doc_text(doc, 'week'      ), 10);
 
     const calc_date  = new Date(stats_date + "T11:59:59.999Z"); // To count a day for published on day before
 
@@ -168,20 +173,13 @@ function calculate_stats(stats_items, stats_date) {
     const ratio_old  = parseFloat((views_old / days_old).toFixed(3));
 
     // Get collections and count favorites
-    const collection_node = doc.querySelector("arr[name='collection']");
-    let   favorites       = 0;
-    
-    if (collection_node) {
-      if (collection_node.tagName.toLowerCase() === "arr") {
-        // Handle array of collections
-        const collections = Array.from(collection_node.querySelectorAll("str")).map(n => n.textContent);
-        favorites = collections.filter(c => c.toLowerCase().startsWith("fav-")).length;
-      } else {
-        // Handle single collection
-        const collection = collection_node.textContent;
-        favorites = collection.toLowerCase().startsWith("fav-") ? 1 : 0;
-      }
-    }
+    const collection_node = doc.querySelector("arr[name='collection'], str[name='collection']");
+    const collections = collection_node
+      ? collection_node.tagName.toLowerCase() === "arr"
+        ? Array.from(collection_node.querySelectorAll("str")).map(n => n.textContent)
+        : [collection_node.textContent]
+      : [];
+    const favorites = collections.filter(c => c.toLowerCase().startsWith("fav-")).length;
 
     return {
       identifier,
