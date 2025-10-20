@@ -8,366 +8,105 @@ let   stat_curr_items = [];
 let   stat_prev_date  = null; //  "YYYY-MM-DD"
 let   stat_prev_items = [];
 
-let   stat_subjects   = null; // null / [] / undefined
+let   stat_subjects   = null; // null / Map / undefined
 
 let   du_load         = 0;    // Duration of load
 let   du_parse        = 0;    // Duration of parse
 
-/* Filter Items */
-
-function evaluate_term(term, values, matcher) {
-  switch(term.type) {
-    case "AND":
-      return term.terms.every(part => 
-        evaluate_term(part, values, matcher));
-
-    case "OR":
-      return term.terms.some(part => 
-        evaluate_term(part, values, matcher));
-
-    case "NOT":
-    case "NOTANY":
-      //  NOTANY: Exclude if any value matches term.excl
-      const any_match = evaluate_term(term.excl, values, matcher);
-      return (!term.incl || evaluate_term(term.incl, values, matcher)) && !any_match;
-
-    case "NOTALL":
-      //  NOTALL: Exclude if all values matches term.excl
-      const all_match = values.every(value => {
-        return evaluate_term(term.excl, [value], matcher);
-      });
-      return (!term.incl || evaluate_term(term.incl, values, matcher)) && !all_match;
-
-    case "TEXT":
-      return values.some(value => matcher(value, term.text));
-
-    default:
-      return false; // Unknown type
-  }
-}
-
-function filter_matches(doc, field, terms, matcher) {
-  if (!terms)              return true; // No    filter = match all
-  if  (terms.length === 0) return true; // Empty filter = match all
-
-  // Get all values for this field (handles both <arr> and <str>)
-  const node = doc.querySelector('arr[name="' + field + '"], str[name="' + field + '"]');
-  let values = [];
-
-  if (node) {
-    if (node.tagName.toLowerCase() === "arr") {
-      values = Array.from(node.querySelectorAll("str")).map(n => n.textContent);
-    } else {
-      values = [node.textContent];
-    }
-  }
-
-  // Check if any term matches
-  return terms.some(term => {
-    return evaluate_term(term, values, matcher);
-  });
-}
-
-function filter_items(
-  items, archived_min, archived_max, created_min, created_max,
-  collections, creators, title) {
-  const filtered_items = items.filter(doc => {
-    const identifier_node = doc.querySelector("str[name='identifier']");
-    const title_node      = doc.querySelector("str[name='title']"     );
-    const item_size_node  = doc.querySelector("str[name='item_size']" );
-    const mediatype_node  = doc.querySelector("str[name='mediatype']" );
-    const date_node       = doc.querySelector("str[name='date']"      );
-    const publicdate_node = doc.querySelector("str[name='publicdate']");
-    const downloads_node  = doc.querySelector("str[name='downloads']" );
-    const month_node      = doc.querySelector("str[name='month']"     );
-    const week_node       = doc.querySelector("str[name='week']"      );
-
-    if (!identifier_node || !title_node || !item_size_node || !mediatype_node ||
-        !publicdate_node ||
-        !downloads_node  || !month_node || !week_node) {
-      return false;
-    }
-
-    // Item Size
-    const item_size = parseInt(item_size_node.textContent, 10);
-    if (isNaN(item_size) || (item_size < 0)) return false;
-
-    // Mediatype
-    const mediatype = mediatype_node.textContent;
-    if ((mediatype !== "movies") && (mediatype !== "audio")) return false;
-
-    // Created
-    let date = null;
-
-    if (date_node) {
-      date = new Date(date_node.textContent);
-      if (isNaN(date.getTime())) return false;
-    } else { // No date set for item
-      if (mediatype === "audio") { // Set default date to audio item
-        date = new Date("2012-01-01T00:00:00Z"); // UTC date, earliest for entire stat
-      } else {
-        return false;
-      }
-    }
-
-    if ((date < created_min) || (date > created_max)) return false;
-
-    // Archived
-    const publicdate = new Date(publicdate_node.textContent);
-    if (isNaN(publicdate.getTime())) return false;
-    if ((publicdate < archived_min) || (publicdate > archived_max)) return false;
-
-    // Views
-    const downloads = parseInt(downloads_node.textContent, 10);
-    const month     = parseInt(month_node    .textContent, 10);
-    const week      = parseInt(week_node     .textContent, 10);
-
-    if (isNaN(downloads) || isNaN(month) || isNaN(week)) return false;
-    if ((downloads < 0) || (month < 0) || (week < 0)) return false;
-    if ((downloads < month) || (month < week)) return false;
-
-    // Collections
-    const matches_collections = filter_matches(
-      doc,
-     "collection",
-      collections,
-      (value, term) => value.toLowerCase().includes(term.toLowerCase())
-    );
-    if (!matches_collections) return false;
-
-    // Creators
-    const matches_creators = filter_matches(
-      doc,
-     "creator",
-      creators,
-      (value, term) => value.toLowerCase().includes(term.toLowerCase())
-    );
-    if (!matches_creators) return false;
-
-    // Title
-    const matches_title = filter_matches(
-      doc,
-     "title",
-      title,
-      (value, term) => value.toLowerCase().includes(term.toLowerCase())
-    );
-    if (!matches_title) return false;
-
-    // Item passed filter
-    return true;
-  });
-  return filtered_items;
-}
-
-/* Calculate Stats */
-
-function calculate_stats(stats_items, stats_date) {
-  const stats = stats_items.map(doc => {
-    const identifier =          doc.querySelector("str[name='identifier']").textContent;
-    const title      =          doc.querySelector("str[name='title']"     ).textContent;
-    const item_size  = parseInt(doc.querySelector("str[name='item_size']" ).textContent, 10);
-    const mediatype  =          doc.querySelector("str[name='mediatype']" ).textContent;
-    const publicdate = new Date(doc.querySelector("str[name='publicdate']").textContent);
-    const downloads  = parseInt(doc.querySelector("str[name='downloads']" ).textContent, 10);
-    const month      = parseInt(doc.querySelector("str[name='month']"     ).textContent, 10);
-    const week       = parseInt(doc.querySelector("str[name='week']"      ).textContent, 10);
-
-    const calc_date  = new Date(stats_date + "T11:59:59.999Z"); // To count a day for published on day before
-
-    const days_all   = Math.round((calc_date - publicdate) / (24 * 60 * 60 * 1000));
-    const views_all  = downloads;
-    const ratio_all  = parseFloat((views_all / days_all).toFixed(3));
-
-    const days_old   = days_all - 30; // Always valid
-    const views_old  = views_all - month;
-    const ratio_old  = parseFloat((views_old / days_old).toFixed(3));
-
-    // Get collections and count favorites
-    const collection_node = doc.querySelector("arr[name='collection']");
-    let   favorites       = 0;
-    
-    if (collection_node) {
-      if (collection_node.tagName.toLowerCase() === "arr") {
-        // Handle array of collections
-        const collections = Array.from(collection_node.querySelectorAll("str")).map(n => n.textContent);
-        favorites = collections.filter(c => c.toLowerCase().startsWith("fav-")).length;
-      } else {
-        // Handle single collection
-        const collection = collection_node.textContent;
-        favorites = collection.toLowerCase().startsWith("fav-") ? 1 : 0;
-      }
-    }
-
-    return {
-      identifier,
-      title     ,
-      item_size ,
-      mediatype ,
-      days_all  ,
-      views_all ,
-      ratio_all ,
-      days_old  ,
-      views_old ,
-      ratio_old ,
-      views_30  :              month,
-      views_23  :              month - week,
-      ratio_23  : parseFloat(((month - week) / 23).toFixed(3)),
-      views_7   :                      week,
-      ratio_7   : parseFloat(         (week  /  7).toFixed(3)),
-      favorites
-    };
-  });
-  return stats;
-}
-
-/* Filter Views */
-
-// Filtering by views count: from min to max
-// *_str are: number / ""
-function filter_views(items_prev, items_curr,
-  downloads_min_str, downloads_max_str, month_min_str, month_max_str, week_min_str, week_max_str) {
-  if (!downloads_min_str && !downloads_max_str &&
-      !month_min_str     && !month_max_str     &&
-      !week_min_str      && !week_max_str) return { done: false };
-
-  const downloads_min_cnt = downloads_min_str ? parseInt(downloads_min_str, 10) : 0;
-  const downloads_max_cnt = downloads_max_str ? parseInt(downloads_max_str, 10) : Infinity;
-
-  const month_min_cnt = month_min_str ? parseInt(month_min_str, 10) : 0;
-  const month_max_cnt = month_max_str ? parseInt(month_max_str, 10) : Infinity;
-
-  const week_min_cnt = week_min_str ? parseInt(week_min_str, 10) : 0;
-  const week_max_cnt = week_max_str ? parseInt(week_max_str, 10) : Infinity;
-
-  const results_prev = items_prev.filter(item => {
-    return ((item.views_all >= downloads_min_cnt) && (item.views_all <= downloads_max_cnt)) &&
-           ((item.views_30  >= month_min_cnt    ) && (item.views_30  <= month_max_cnt    )) &&
-           ((item.views_7   >= week_min_cnt     ) && (item.views_7   <= week_max_cnt     ));
-  });
-
-  const results_curr = items_curr.filter(item => {
-    return ((item.views_all >= downloads_min_cnt) && (item.views_all <= downloads_max_cnt)) &&
-           ((item.views_30  >= month_min_cnt    ) && (item.views_30  <= month_max_cnt    )) &&
-           ((item.views_7   >= week_min_cnt     ) && (item.views_7   <= week_max_cnt     ));
-  });
-
-  return { done: true, prev: results_prev, curr: results_curr };
-}
-
-/* Filter Favs */
-
-// Get favs_map: { identifier: item }
-// favs_str is: "" / "diff" if is_diff_exp true, or number if is_diff_exp false
-function get_favs_map(items, is_diff_exp, favs_str) {
-  const favs_map = {};
-
-  if (is_diff_exp) { // Include all items
-    for (const item of items) {
-      favs_map[item.identifier] = item;
-    }
-  } else { // Include only items with favorites === cnt
-    const favs_cnt = parseInt(favs_str, 10);
-    for (const item of items) {
-      if (item.favorites === favs_cnt) {
-        favs_map[item.identifier] = item;
-      }
-    }
-  }
-  return favs_map;
-}
-
-// Usage: favs_min_str as favs_prev_str, favs_max_str as favs_curr_str
-// *_str are: number / "" / "diff"
-function filter_favs_diff(items_prev, items_curr, favs_prev_str, favs_curr_str) {
-  const is_prev_diff = (favs_prev_str === "diff");
-  const is_curr_diff = (favs_curr_str === "diff");
-
-  if (!is_prev_diff && !is_curr_diff) return { done: false };
-
-  const is_prev_diff_exp = is_prev_diff || (favs_prev_str === "");
-  const is_curr_diff_exp = is_curr_diff || (favs_curr_str === "");
-
-  const favs_prev = get_favs_map(items_prev, is_prev_diff_exp, favs_prev_str);
-  const favs_curr = get_favs_map(items_curr, is_curr_diff_exp, favs_curr_str);
-
-  // Find common items in both favs_prev and favs_curr, and apply diff logic
-  const results_prev = [];
-  const results_curr = [];
-
-  const [outer, inner] = is_prev_diff
-    ? [favs_curr, favs_prev]  // Curr may be smaller
-    : [favs_prev, favs_curr]; // Prev may be smaller
-
-  for (const identifier in outer) {
-    if (inner[identifier]) {
-      const item_prev = favs_prev[identifier];
-      const item_curr = favs_curr[identifier];
-
-      if (item_prev.favorites !== item_curr.favorites) {
-        results_prev.push(item_prev);
-        results_curr.push(item_curr);
-      }
-    }
-  }
-  return { done: true, prev: results_prev, curr: results_curr };
-}
-
-// Filtering by favorites count: from min to max, or by diff logic
-// *_str are: number / "" / "diff"
-function filter_favs(items_prev, items_curr, favs_min_str, favs_max_str) {
-  if (!favs_min_str && !favs_max_str) return { done: false };
-
-  const favs_diff = filter_favs_diff(items_prev, items_curr, favs_min_str, favs_max_str);
-
-  if (favs_diff.done) return favs_diff;
-
-  const favs_min_cnt = favs_min_str ? parseInt(favs_min_str, 10) : 0;
-  const favs_max_cnt = favs_max_str ? parseInt(favs_max_str, 10) : Infinity;
-
-  const results_prev = items_prev.filter(item => {
-    return (item.favorites >= favs_min_cnt) && (item.favorites <= favs_max_cnt);
-  });
-
-  const results_curr = items_curr.filter(item => {
-    return (item.favorites >= favs_min_cnt) && (item.favorites <= favs_max_cnt);
-  });
-
-  return { done: true, prev: results_prev, curr: results_curr };
-}
-
 /* Subjects Processing */
 
-//... need
+function wait_subjects(subjects_items, subjects_query) {
+  if (!subjects_query)              return false; // No    filter for subjects
+  if  (subjects_query.length === 0) return false; // Empty filter for subjects
 
-//... load
+  if (subjects_items)               return false; // Subjects already   loaded
+  if (subjects_items === undefined) return false; // Subjects cannot be loaded
 
-function filter_subjects(items_prev, items_curr, subjects_items, subjects_query) {
-  return { done: false };
+  if (subjects_items !== null) return false; // Some error
+
+  load_subjects();
+
+  return true; // Wait for subjects to load
 }
 
-/* Controls */
+function load_subjects() {
+  if (stat_subjects !== null) return;
+  stat_subjects = undefined;
 
-function init_controls() {
-  // 1. Add Enter key to all text inputs
-  [  "collections",      "creators",    "subjects",       "title",
-   "downloads-min", "downloads-max",   "month-min",   "month-max", "week-min", "week-max",
-    "archived-min",  "archived-max", "created-min", "created-max", "favs-min", "favs-max"]
-  .forEach(id => {
-    const input = document.getElementById(id);
-    if   (input) {
-      input.onkeyup = function(event) {
-        if (event.key === 'Enter') {
-          process_filter();
-        }
-      };
-    }
-  });
+  const time_0    = performance.now();
+  const container = document.getElementById("results");
+  const xml_tmplt = container.getAttribute("data-subjects");
+  const xml_regex = /#/;
+  const xml_url   = xml_tmplt.replace(xml_regex, "2025-10-19");
 
-  // 2. Add click to button
-  const button = document.getElementById("process-filter");
-  if   (button) {
-    button.onclick = process_filter;
-  }
+  fetch(xml_url)
+    .then(response => {
+      if (!response.ok) { throw new Error("Subjects XML file not found"); }
+      return response.text();
+    })
+    .then(text => {
+      const time_1 = performance.now();
+      const parser = new DOMParser();
+      const xml    = parser.parseFromString(text, "text/xml");
+
+      if (xml.querySelector("parsererror")) { throw new Error("Subjects XML file invalid format"); }
+      const xml_doc = [...xml.querySelectorAll("doc")];
+
+      // Create subjects lookup map: id >> subjects
+      stat_subjects = new Map();
+      for (const doc of xml_doc) {
+        const node_i = doc.querySelector('str[name="identifier"]');
+        if  (!node_i) continue;
+        const identifier = node_i.textContent;
+
+        const node_s = doc.querySelector('arr[name="subject"], str[name="subject"]');
+        const subjects = node_s
+          ? node_s.tagName.toLowerCase() === "arr"
+            ? Array.from(node_s.querySelectorAll("str")).map(n => n.textContent)
+            : [node_s.textContent]
+          : [];
+        stat_subjects.set(identifier, subjects);
+      }
+      const time_2 = performance.now();
+
+      du_load  += (time_1 - time_0);
+      du_parse += (time_2 - time_1);
+    })
+    .catch(() => {
+      stat_subjects = undefined;
+    })
+    .finally(() => {
+      process_filter();
+    });
+}
+
+function filter_subjects(items_prev, items_curr, subjects_items, subjects_query) {
+  if (!subjects_query)              return { done: false }; // No    filter for subjects
+  if  (subjects_query.length === 0) return { done: false }; // Empty filter for subjects
+
+  if (!subjects_items) return { error: true };
+
+  // Helper: does a subjects match the query?
+  const matches_subjects = (subjects) => {
+    return subjects_query.some(term => {
+      return evaluate_term(term, subjects,
+        (value, term) => value.toLowerCase().includes(term.toLowerCase())
+      );
+    });
+  };
+
+  // Filter prev/curr: keep only items whose identifier is in subjects_map and matches query
+  const filter_by_subjects = (items) => {
+    return items.filter(item => {
+      const subjects = subjects_items.get(item.identifier);
+      return subjects && matches_subjects(subjects);
+    });
+  };
+
+  const results_prev = filter_by_subjects(items_prev);
+  const results_curr = filter_by_subjects(items_curr);
+
+  return { done: true, prev: results_prev, curr: results_curr };
 }
 
 /* Filter */
@@ -397,7 +136,7 @@ function get_date_range(date_str) {
     return {
       min: new Date(Date.UTC(year, 01-1, 01, 00, 00, 00, 000)), // Year beg day
       max: new Date(Date.UTC(year, 12-1, 31, 23, 59, 59, 999))  // Year end day
-    }
+    };
   }
   if (parts.length === 2) { // Year-Month
     const [year, month] = parts;
@@ -406,7 +145,7 @@ function get_date_range(date_str) {
     return {
       min: new Date(Date.UTC(year, month - 1, 1,      00, 00, 00, 000)), // Month beg day
       max: new Date(Date.UTC(year, month - 1, e_mday, 23, 59, 59, 999))  // Month end day
-    }
+    };
   }
   if (parts.length === 3) { // Year-Month-Day
     const [year, month, day] = parts;
@@ -414,7 +153,7 @@ function get_date_range(date_str) {
     return {
       min: new Date(Date.UTC(year, month - 1, day, 00, 00, 00, 000)), // Day beg
       max: new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999))  // Day end
-    }
+    };
   }
   return null; // Invalid format
 }
@@ -530,6 +269,9 @@ function process_filter() {
     err_end;
   const err_favs_range =
     err_beg + 'Min favorites count must be less than or equal to max favorites count' +
+    err_end;
+  const err_subjects =
+    err_beg + 'Subjects XML file cannot be loaded or loading error occurred' +
     err_end;
 
   // Archived Range
@@ -662,6 +404,9 @@ function process_filter() {
     }
   }
 
+  // Subjects Check
+  if (wait_subjects(stat_subjects, subjects)) return; // Wait for stat_subjects to load
+
   // Process
   const filtered_curr_items = filter_items(
     stat_curr_items, archived_min, archived_max, created_min, created_max,
@@ -693,6 +438,10 @@ function process_filter() {
     results_curr = filtered_subjects.curr;
     results_prev = filtered_subjects.prev;
   }
+  else if (filtered_subjects.error) {
+    container.innerHTML = err_subjects;
+    return;
+  }
   const time_3 = performance.now();
 
   if (!render_results(results_curr, stat_curr_date, results_prev, stat_prev_date)) {
@@ -714,6 +463,7 @@ function process_filter() {
 
 /* Date Change */
 
+// Uses global: stat_file_dates
 function date_change_menu(event, what) {
   const menu_old = document.getElementById('date-change-menu');
   if   (menu_old) { menu_old.remove_ex(); }
@@ -757,11 +507,11 @@ function date_change_menu(event, what) {
     menu.remove();
 
     if (menu_caller && document.body.contains(menu_caller)) { menu_caller.focus(); }
-  }
+  };
 
   menu.outside_click = (e) => {
     if (!menu.contains(e.target)) { menu.remove_ex(); }
-  }
+  };
 
   // Defer adding until all currently pending event handlers (menu creation click) have finished
   setTimeout(() => {
@@ -837,6 +587,7 @@ function date_change_menu(event, what) {
 
 /* Dates */
 
+// Uses global: stat_file_dates
 function init_dates() {
   const container = document.getElementById("results");
   const dates_url = container.getAttribute("data-dates");
