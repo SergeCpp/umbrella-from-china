@@ -60,15 +60,16 @@ function load_subjects() {
         const node_s = doc.querySelector('arr[name="subject"], str[name="subject"]');
         const subjects = node_s
           ? node_s.tagName.toLowerCase() === "arr"
-            ? Array.from(node_s.querySelectorAll("str")).map(n => n.textContent)
-            : [node_s.textContent]
+            ? Array.from(node_s.querySelectorAll("str"), n => n.textContent.toLowerCase())
+            : [node_s.textContent.toLowerCase()]
           : [];
         stat_subjects.set(identifier, subjects);
       }
       const time_2 = performance.now();
 
-      du_load  += (time_1 - time_0);
-      du_parse += (time_2 - time_1);
+      // Reset to new values
+      du_load  = (time_1 - time_0);
+      du_parse = (time_2 - time_1);
     })
     .catch(() => {
       stat_subjects = undefined;
@@ -82,25 +83,24 @@ function filter_subjects(items_prev, items_curr, subjects_items, subjects_terms)
   if (!subjects_terms || (subjects_terms.length === 0)) return { done: false };
   if (!subjects_items) return { error: true };
 
-  // Does a subjects match the query terms?
-  const filter_matches_subjects = (subjects) => {
-    return subjects_terms.some(term => {
-      return evaluate_term(term, subjects,
-        (value, term) => value.toLowerCase().includes(term.toLowerCase())
-      );
-    });
-  };
+  const identifiers = {}; // Collect all identifiers
+  for (const item of items_prev) identifiers[item.identifier] = null;
+  for (const item of items_curr) identifiers[item.identifier] = null;
 
-  // Keep only items whose identifier is in subjects_items and matches query terms
-  const filter_by_subjects = (items) => {
-    return items.filter(item => {
-      const subjects = subjects_items.get(item.identifier);
-      return subjects && filter_matches_subjects(subjects);
-    });
-  };
+  // Cache match results for items
+  for (const identifier in identifiers) {
+    const subjects = subjects_items.get(identifier);
+    if  (!subjects) continue;
 
-  const results_prev = filter_by_subjects(items_prev);
-  const results_curr = filter_by_subjects(items_curr);
+    const match_result = subjects_terms.some(term =>
+      evaluate_term(term, subjects, (e_value, e_term) => e_value.includes(e_term))
+    );
+    identifiers[identifier] = match_result;
+  }
+
+  // Use cached results
+  const results_prev = items_prev.filter(item => identifiers[item.identifier]);
+  const results_curr = items_curr.filter(item => identifiers[item.identifier]);
 
   return { done: true, prev: results_prev, curr: results_curr };
 }
@@ -209,8 +209,8 @@ function parse_term(term) {
   // Plain text term (OR behavior of comma-separated terms)
   else {
     return {
-      type: "TEXT",
-      text: term.replace(/['"]/g, "") // Quote allows leading/trailing space, also ' ' possible for term
+      type: "TEXT", // Quote allows leading/trailing space, also ' ' possible for term
+      text: term.replace(/['"]/g, "").toLowerCase()
     };
   }
 }
