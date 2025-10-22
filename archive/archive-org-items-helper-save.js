@@ -210,13 +210,143 @@ function calculate_stats(stats_items, stats_date) {
 
 /* Filter Views */
 
-// Filtering by views count: from min to max
-// *_str are: number / ""
+function get_views_map(items, is_key_exp, views_str, get_views) {
+  const views_map = {};
+
+  if (is_key_exp) { // Include all views
+    for (const item of items) {
+      views_map[item.identifier] = get_views(item);
+    }
+  } else { // Include only views === cnt
+    const views_cnt = parseInt(views_str, 10);
+    for (const item of items) {
+      if (get_views(item) === views_cnt) {
+        views_map[item.identifier] = get_views(item);
+      }
+    }
+  }
+  return views_map;
+}
+
+function filter_views_span_keys(items_prev, items_curr, prev_str, curr_str, get_views) {
+  const is_key_exp = (s) => ["grow", "fall", "same", "diff", ""].includes(s);
+
+  const views_prev = get_views_map(items_prev, is_key_exp(prev_str), prev_str, get_views);
+  const views_curr = get_views_map(items_curr, is_key_exp(curr_str), curr_str, get_views);
+
+  const is_prev_grow = (prev_str === "grow");
+  const is_curr_grow = (curr_str === "grow");
+  const is_prev_fall = (prev_str === "fall");
+  const is_curr_fall = (curr_str === "fall");
+  const is_prev_same = (prev_str === "same");
+  const is_curr_same = (curr_str === "same");
+  const is_prev_diff = (prev_str === "diff");
+  const is_curr_diff = (curr_str === "diff");
+
+  const res = {};
+
+  for (const identifier in views_prev) {
+    if (views_curr[identifier] === undefined) continue;
+
+    const ivp = views_prev[identifier];
+    const ivc = views_curr[identifier];
+
+    let pass_prev = true;
+    let pass_curr = true;
+
+    if      (is_prev_grow) pass_prev = (ivp >   ivc);
+    else if (is_prev_fall) pass_prev = (ivp <   ivc);
+    else if (is_prev_same) pass_prev = (ivp === ivc);
+    else if (is_prev_diff) pass_prev = (ivp !== ivc);
+
+    if      (is_curr_grow) pass_curr = (ivc >   ivp);
+    else if (is_curr_fall) pass_curr = (ivc <   ivp);
+    else if (is_curr_same) pass_curr = (ivc === ivp);
+    else if (is_curr_diff) pass_curr = (ivc !== ivp);
+
+    if (pass_prev && pass_curr) {
+      res[identifier] = true;
+    }
+  }
+
+  return res;
+}
+
+function filter_views_span_range(items_prev, items_curr, min_str, max_str, get_views) {
+  const min = min_str ? parseInt(min_str, 10) : 0;
+  const max = max_str ? parseInt(max_str, 10) : Infinity;
+
+  const views_prev = {};
+  const views_curr = {};
+
+  for (const item of items_prev) views_prev[item.identifier] = get_views(item);
+  for (const item of items_curr) views_curr[item.identifier] = get_views(item);
+
+  const res = {};
+
+  for (const identifier in views_prev) {
+    if (views_curr[identifier] === undefined) continue;
+
+    const ivp = views_prev[identifier];
+    const ivc = views_curr[identifier];
+
+    if (((ivp >= min) && (ivp <= max)) && ((ivc >= min) && (ivc <= max))) {
+      res[identifier] = true;
+    }
+  }
+
+  return res;
+}
+
+// Usage: *_min_str as *_prev_str, *_max_str as *_curr_str
+// *_str are: number / "" / keys: grow, fall, same, diff
+function filter_views_keys(items_prev, items_curr,
+  dl_prev_str, dl_curr_str, mo_prev_str, mo_curr_str, wk_prev_str, wk_curr_str) {
+  const is_key = (s) => ["grow", "fall", "same", "diff"].includes(s);
+
+  const is_dl_key = is_key(dl_prev_str) || is_key(dl_curr_str);
+  const is_mo_key = is_key(mo_prev_str) || is_key(mo_curr_str);
+  const is_wk_key = is_key(wk_prev_str) || is_key(wk_curr_str);
+
+  if (!is_dl_key && !is_mo_key && !is_wk_key) return { done: false };
+
+  const dl_res = is_dl_key
+    ? filter_views_span_keys (items_prev, items_curr, dl_prev_str, dl_curr_str, item => item.views_all)
+    : filter_views_span_range(items_prev, items_curr, dl_prev_str, dl_curr_str, item => item.views_all);
+
+  const mo_res = is_mo_key
+    ? filter_views_span_keys (items_prev, items_curr, mo_prev_str, mo_curr_str, item => item.views_30)
+    : filter_views_span_range(items_prev, items_curr, mo_prev_str, mo_curr_str, item => item.views_30);
+
+  const wk_res = is_wk_key
+    ? filter_views_span_keys (items_prev, items_curr, wk_prev_str, wk_curr_str, item => item.views_7)
+    : filter_views_span_range(items_prev, items_curr, wk_prev_str, wk_curr_str, item => item.views_7);
+
+  const all_res = {}; // Intersect all three res
+  for (const identifier in dl_res) {
+    if (mo_res[identifier] && wk_res[identifier]) {
+      all_res[identifier] = true;
+    }
+  }
+
+  const results_prev = items_prev.filter(item => all_res[item.identifier]);
+  const results_curr = items_curr.filter(item => all_res[item.identifier]);
+
+  return { done: true, prev: results_prev, curr: results_curr };
+}
+
+// Filtering by views count: from min to max, or by keys logic
+// *_str are: number / "" / keys
 function filter_views(items_prev, items_curr,
   downloads_min_str, downloads_max_str, month_min_str, month_max_str, week_min_str, week_max_str) {
   if (!downloads_min_str && !downloads_max_str &&
       !month_min_str     && !month_max_str     &&
       !week_min_str      && !week_max_str) return { done: false };
+
+  const views_keys = filter_views_keys(items_prev, items_curr,
+    downloads_min_str, downloads_max_str, month_min_str, month_max_str, week_min_str, week_max_str);
+
+  if (views_keys.done) return views_keys;
 
   const downloads_min_cnt = downloads_min_str ? parseInt(downloads_min_str, 10) : 0;
   const downloads_max_cnt = downloads_max_str ? parseInt(downloads_max_str, 10) : Infinity;

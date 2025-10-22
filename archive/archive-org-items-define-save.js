@@ -229,7 +229,9 @@ function input_allowed_chars(input) {
 }
 
 function input_allowed_views(input) {
-  return (input === "") || /^\d{1,10}$/.test(input);
+  return (input === "") || (input === "grow") || (input === "fall") ||
+                           (input === "same") || (input === "diff") ||
+                                                 /^\d{1,8}$/.test(input);
 }
 
 function input_allowed_favs(input) {
@@ -255,13 +257,13 @@ function process_filter() {
     err_beg + 'Allowed characters are: a-z, 0-9, underscore, dash, period, comma, quote, and space' +
     err_end;
   const err_views =
-    err_beg + 'Allowed are non-negative numbers only' +
+    err_beg + 'Allowed are non-negative numbers, and words: grow, fall, same, diff' +
     err_end;
   const err_views_range =
     err_beg + 'Min views count must be less than or equal to max views count' +
     err_end;
   const err_favs =
-    err_beg + 'Allowed are numbers: 0 to 9999, ' + "and 'diff'" +
+    err_beg + 'Allowed are numbers: 0 to 9999, and word: diff' +
     err_end;
   const err_favs_range =
     err_beg + 'Min favorites count must be less than or equal to max favorites count' +
@@ -330,12 +332,12 @@ function process_filter() {
   const title       = input_clean_parse(title_str      );
 
   // Views
-  const downloads_min_str = document.getElementById("downloads-min").value.trim();
-  const downloads_max_str = document.getElementById("downloads-max").value.trim();
-  const month_min_str     = document.getElementById("month-min"    ).value.trim();
-  const month_max_str     = document.getElementById("month-max"    ).value.trim();
-  const week_min_str      = document.getElementById("week-min"     ).value.trim();
-  const week_max_str      = document.getElementById("week-max"     ).value.trim();
+  const downloads_min_str = document.getElementById("downloads-min").value.trim().toLowerCase();
+  const downloads_max_str = document.getElementById("downloads-max").value.trim().toLowerCase();
+  const month_min_str     = document.getElementById("month-min"    ).value.trim().toLowerCase();
+  const month_max_str     = document.getElementById("month-max"    ).value.trim().toLowerCase();
+  const week_min_str      = document.getElementById("week-min"     ).value.trim().toLowerCase();
+  const week_max_str      = document.getElementById("week-max"     ).value.trim().toLowerCase();
 
   if (!input_allowed_views(downloads_min_str) || !input_allowed_views(downloads_max_str) ||
       !input_allowed_views(month_min_str    ) || !input_allowed_views(month_max_str    ) ||
@@ -344,34 +346,30 @@ function process_filter() {
     return;
   }
 
-  const is_downloads_not_cnt = (downloads_min_str === "") || (downloads_max_str === "");
-  const is_month_not_cnt     = (month_min_str     === "") || (month_max_str     === "");
-  const is_week_not_cnt      = (week_min_str      === "") || (week_max_str      === "");
+  const downloads_min_cnt = parseInt(downloads_min_str, 10);
+  const downloads_max_cnt = parseInt(downloads_max_str, 10);
 
-  if (!is_downloads_not_cnt) {
-    const downloads_min_cnt = parseInt(downloads_min_str, 10);
-    const downloads_max_cnt = parseInt(downloads_max_str, 10);
-
+  if (!isNaN(downloads_min_cnt) && !isNaN(downloads_max_cnt)) {
     if (downloads_min_cnt > downloads_max_cnt) {
       container.innerHTML = err_views_range;
       return;
     }
   }
 
-  if (!is_month_not_cnt) {
-    const month_min_cnt = parseInt(month_min_str, 10);
-    const month_max_cnt = parseInt(month_max_str, 10);
+  const month_min_cnt = parseInt(month_min_str, 10);
+  const month_max_cnt = parseInt(month_max_str, 10);
 
+  if (!isNaN(month_min_cnt) && !isNaN(month_max_cnt)) {
     if (month_min_cnt > month_max_cnt) {
       container.innerHTML = err_views_range;
       return;
     }
   }
 
-  if (!is_week_not_cnt) {
-    const week_min_cnt = parseInt(week_min_str, 10);
-    const week_max_cnt = parseInt(week_max_str, 10);
+  const week_min_cnt = parseInt(week_min_str, 10);
+  const week_max_cnt = parseInt(week_max_str, 10);
 
+  if (!isNaN(week_min_cnt) && !isNaN(week_max_cnt)) {
     if (week_min_cnt > week_max_cnt) {
       container.innerHTML = err_views_range;
       return;
