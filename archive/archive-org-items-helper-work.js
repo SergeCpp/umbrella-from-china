@@ -210,29 +210,40 @@ function calculate_stats(stats_items, stats_date) {
 
 /* Filter Views */
 
-function get_views_map(items, is_key_exp, views_str, get_views) {
+function get_views_map(items, is_key_exp, views_cnt, get_views, is_other_grow, is_other_fall) {
   const views_map = {};
 
   if (is_key_exp) { // Include all views
     for (const item of items) {
       views_map[item.identifier] = get_views(item);
     }
-  } else { // Include only views === cnt
-    const views_cnt = parseInt(views_str, 10);
-    for (const item of items) {
-      if (get_views(item) === views_cnt) {
-        views_map[item.identifier] = get_views(item);
+  } else { // Include only cnt-related views
+    if (is_other_grow) {
+      for (const item of items) {
+        if (get_views(item) <= views_cnt) {
+          views_map[item.identifier] = get_views(item);
+        }
+      }
+    } else if (is_other_fall) {
+      for (const item of items) {
+        if (get_views(item) >= views_cnt) {
+          views_map[item.identifier] = get_views(item);
+        }
+      }
+    } else { // Other keys
+      for (const item of items) {
+        if (get_views(item) === views_cnt) {
+          views_map[item.identifier] = get_views(item);
+        }
       }
     }
   }
+
   return views_map;
 }
 
 function filter_views_span_keys(items_prev, items_curr, prev_str, curr_str, get_views) {
   const is_key_exp = (s) => ["grow", "fall", "same", "diff", ""].includes(s);
-
-  const views_prev = get_views_map(items_prev, is_key_exp(prev_str), prev_str, get_views);
-  const views_curr = get_views_map(items_curr, is_key_exp(curr_str), curr_str, get_views);
 
   const is_prev_grow = (prev_str === "grow");
   const is_curr_grow = (curr_str === "grow");
@@ -242,6 +253,12 @@ function filter_views_span_keys(items_prev, items_curr, prev_str, curr_str, get_
   const is_curr_same = (curr_str === "same");
   const is_prev_diff = (prev_str === "diff");
   const is_curr_diff = (curr_str === "diff");
+
+  const vp = parseInt(prev_str, 10); // NaN for key_exp
+  const vc = parseInt(curr_str, 10); // NaN for key_exp
+
+  const views_prev = get_views_map(items_prev, is_key_exp(prev_str), vp, get_views, is_curr_grow, is_curr_fall);
+  const views_curr = get_views_map(items_curr, is_key_exp(curr_str), vc, get_views, is_prev_grow, is_prev_fall);
 
   const res = {};
 
@@ -254,15 +271,15 @@ function filter_views_span_keys(items_prev, items_curr, prev_str, curr_str, get_
     let pass_prev = true;
     let pass_curr = true;
 
-    if      (is_prev_grow) pass_prev = (ivp >   ivc);
-    else if (is_prev_fall) pass_prev = (ivp <   ivc);
-    else if (is_prev_same) pass_prev = (ivp === ivc);
-    else if (is_prev_diff) pass_prev = (ivp !== ivc);
+    if      (is_prev_grow) pass_prev = isNaN(vc) ? (ivp >   ivc) : (ivp > vc);
+    else if (is_prev_fall) pass_prev = isNaN(vc) ? (ivp <   ivc) : (ivp < vc);
+    else if (is_prev_same) pass_prev =             (ivp === ivc);
+    else if (is_prev_diff) pass_prev =             (ivp !== ivc);
 
-    if      (is_curr_grow) pass_curr = (ivc >   ivp);
-    else if (is_curr_fall) pass_curr = (ivc <   ivp);
-    else if (is_curr_same) pass_curr = (ivc === ivp);
-    else if (is_curr_diff) pass_curr = (ivc !== ivp);
+    if      (is_curr_grow) pass_curr = isNaN(vp) ? (ivc >   ivp) : (ivc > vp);
+    else if (is_curr_fall) pass_curr = isNaN(vp) ? (ivc <   ivp) : (ivc < vp);
+    else if (is_curr_same) pass_curr =             (ivc === ivp);
+    else if (is_curr_diff) pass_curr =             (ivc !== ivp);
 
     if (pass_prev && pass_curr) {
       res[identifier] = true;
@@ -391,6 +408,7 @@ function get_favs_map(items, is_diff_exp, favs_str) {
       }
     }
   }
+
   return favs_map;
 }
 
