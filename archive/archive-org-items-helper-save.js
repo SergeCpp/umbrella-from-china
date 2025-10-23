@@ -318,7 +318,7 @@ function filter_views_span_range(items_prev, items_curr, min_str, max_str, get_v
 // Usage: *_min_str as *_prev_str, *_max_str as *_curr_str
 // *_str are: number / "" / keys: grow, fall, same, diff
 function filter_views_keys(items_prev, items_curr,
-  dl_prev_str, dl_curr_str, mo_prev_str, mo_curr_str, wk_prev_str, wk_curr_str) {
+  dl_prev_str, dl_curr_str, get_dl, mo_prev_str, mo_curr_str, get_mo, wk_prev_str, wk_curr_str) {
   const is_key = (s) => ["grow", "fall", "same", "diff"].includes(s);
 
   const is_dl_key = is_key(dl_prev_str) || is_key(dl_curr_str);
@@ -328,12 +328,12 @@ function filter_views_keys(items_prev, items_curr,
   if (!is_dl_key && !is_mo_key && !is_wk_key) return { done: false };
 
   const dl_res = is_dl_key
-    ? filter_views_span_keys (items_prev, items_curr, dl_prev_str, dl_curr_str, item => item.views_all)
-    : filter_views_span_range(items_prev, items_curr, dl_prev_str, dl_curr_str, item => item.views_all);
+    ? filter_views_span_keys (items_prev, items_curr, dl_prev_str, dl_curr_str, get_dl)
+    : filter_views_span_range(items_prev, items_curr, dl_prev_str, dl_curr_str, get_dl);
 
   const mo_res = is_mo_key
-    ? filter_views_span_keys (items_prev, items_curr, mo_prev_str, mo_curr_str, item => item.views_30)
-    : filter_views_span_range(items_prev, items_curr, mo_prev_str, mo_curr_str, item => item.views_30);
+    ? filter_views_span_keys (items_prev, items_curr, mo_prev_str, mo_curr_str, get_mo)
+    : filter_views_span_range(items_prev, items_curr, mo_prev_str, mo_curr_str, get_mo);
 
   const wk_res = is_wk_key
     ? filter_views_span_keys (items_prev, items_curr, wk_prev_str, wk_curr_str, item => item.views_7)
@@ -355,36 +355,40 @@ function filter_views_keys(items_prev, items_curr,
 // Filtering by views count: from min to max, or by keys logic
 // *_str are: number / "" / keys
 function filter_views(items_prev, items_curr,
-  downloads_min_str, downloads_max_str, month_min_str, month_max_str, week_min_str, week_max_str) {
-  if (!downloads_min_str && !downloads_max_str &&
-      !month_min_str     && !month_max_str     &&
-      !week_min_str      && !week_max_str) return { done: false };
+  dl_min_str, dl_max_str, is_dl_old, mo_min_str, mo_max_str, is_mo_23, wk_min_str, wk_max_str) {
+  if (!dl_min_str && !dl_max_str &&
+      !mo_min_str && !mo_max_str &&
+      !wk_min_str && !wk_max_str) return { done: false };
+
+  const get_dl = is_dl_old ? (item => item.views_old) : (item => item.views_all);
+  const get_mo = is_mo_23  ? (item => item.views_23 ) : (item => item.views_30 );
 
   const views_keys = filter_views_keys(items_prev, items_curr,
-    downloads_min_str, downloads_max_str, month_min_str, month_max_str, week_min_str, week_max_str);
+    dl_min_str, dl_max_str, get_dl, mo_min_str, mo_max_str, get_mo, wk_min_str, wk_max_str);
 
   if (views_keys.done) return views_keys;
 
-  const downloads_min_cnt = downloads_min_str ? parseInt(downloads_min_str, 10) : 0;
-  const downloads_max_cnt = downloads_max_str ? parseInt(downloads_max_str, 10) : Infinity;
+  const dl_min_cnt = dl_min_str ? parseInt(dl_min_str, 10) : 0;
+  const dl_max_cnt = dl_max_str ? parseInt(dl_max_str, 10) : Infinity;
 
-  const month_min_cnt = month_min_str ? parseInt(month_min_str, 10) : 0;
-  const month_max_cnt = month_max_str ? parseInt(month_max_str, 10) : Infinity;
+  const mo_min_cnt = mo_min_str ? parseInt(mo_min_str, 10) : 0;
+  const mo_max_cnt = mo_max_str ? parseInt(mo_max_str, 10) : Infinity;
 
-  const week_min_cnt = week_min_str ? parseInt(week_min_str, 10) : 0;
-  const week_max_cnt = week_max_str ? parseInt(week_max_str, 10) : Infinity;
+  const wk_min_cnt = wk_min_str ? parseInt(wk_min_str, 10) : 0;
+  const wk_max_cnt = wk_max_str ? parseInt(wk_max_str, 10) : Infinity;
 
-  const results_prev = items_prev.filter(item => {
-    return ((item.views_all >= downloads_min_cnt) && (item.views_all <= downloads_max_cnt)) &&
-           ((item.views_30  >= month_min_cnt    ) && (item.views_30  <= month_max_cnt    )) &&
-           ((item.views_7   >= week_min_cnt     ) && (item.views_7   <= week_max_cnt     ));
-  });
+  const pass = (item) => {
+    const dl_views = get_dl(item);
+    const mo_views = get_mo(item);
+    const wk_views = item.views_7;
 
-  const results_curr = items_curr.filter(item => {
-    return ((item.views_all >= downloads_min_cnt) && (item.views_all <= downloads_max_cnt)) &&
-           ((item.views_30  >= month_min_cnt    ) && (item.views_30  <= month_max_cnt    )) &&
-           ((item.views_7   >= week_min_cnt     ) && (item.views_7   <= week_max_cnt     ));
-  });
+    return ((dl_views >= dl_min_cnt) && (dl_views <= dl_max_cnt)) &&
+           ((mo_views >= mo_min_cnt) && (mo_views <= mo_max_cnt)) &&
+           ((wk_views >= wk_min_cnt) && (wk_views <= wk_max_cnt));
+  };
+
+  const results_prev = items_prev.filter(pass);
+  const results_curr = items_curr.filter(pass);
 
   return { done: true, prev: results_prev, curr: results_curr };
 }

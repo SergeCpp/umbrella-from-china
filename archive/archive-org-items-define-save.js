@@ -154,6 +154,16 @@ function get_date_range(date_str) {
   return null; // Invalid format
 }
 
+function get_views_prefix(min_str, max_str) {
+  const is_min_prefix = min_str.startsWith('^');
+  const is_max_prefix = max_str.startsWith('^');
+
+  if (is_min_prefix) min_str = min_str.slice(1).trimStart();
+  if (is_max_prefix) max_str = max_str.slice(1).trimStart();
+
+  return [ is_min_prefix || is_max_prefix, min_str, max_str ];
+}
+
 function parse_term(term) {
   term = term.trim();
 
@@ -257,7 +267,7 @@ function process_filter() {
     err_beg + 'Allowed characters are: a-z, 0-9, underscore, dash, period, comma, quote, and space' +
     err_end;
   const err_views =
-    err_beg + 'Allowed are non-negative numbers, and words: grow, fall, same, diff' +
+    err_beg + 'Allowed are non-negative numbers, and words: grow, fall, same, diff / prefix: ^' +
     err_end;
   const err_views_range =
     err_beg + 'Min views count must be less than or equal to max views count' +
@@ -332,45 +342,53 @@ function process_filter() {
   const title       = input_clean_parse(title_str      );
 
   // Views
-  const downloads_min_str = document.getElementById("downloads-min").value.trim().toLowerCase();
-  const downloads_max_str = document.getElementById("downloads-max").value.trim().toLowerCase();
-  const month_min_str     = document.getElementById("month-min"    ).value.trim().toLowerCase();
-  const month_max_str     = document.getElementById("month-max"    ).value.trim().toLowerCase();
-  const week_min_str      = document.getElementById("week-min"     ).value.trim().toLowerCase();
-  const week_max_str      = document.getElementById("week-max"     ).value.trim().toLowerCase();
+  let dl_min_str = document.getElementById("downloads-min").value.trim().toLowerCase();
+  let dl_max_str = document.getElementById("downloads-max").value.trim().toLowerCase();
+  let mo_min_str = document.getElementById("month-min"    ).value.trim().toLowerCase();
+  let mo_max_str = document.getElementById("month-max"    ).value.trim().toLowerCase();
+  let wk_min_str = document.getElementById("week-min"     ).value.trim().toLowerCase();
+  let wk_max_str = document.getElementById("week-max"     ).value.trim().toLowerCase();
 
-  if (!input_allowed_views(downloads_min_str) || !input_allowed_views(downloads_max_str) ||
-      !input_allowed_views(month_min_str    ) || !input_allowed_views(month_max_str    ) ||
-      !input_allowed_views(week_min_str     ) || !input_allowed_views(week_max_str     )) {
+  let is_dl_old  = false; // Use old instead dl, old = dl without last month
+  let is_mo_23   = false; // Use 23 days instead month, 23 days = month withoul last week
+  let is_wk_7    = false; // This flag will not be used, week === 7 days
+
+  [is_dl_old, dl_min_str, dl_max_str] = get_views_prefix(dl_min_str, dl_max_str);
+  [is_mo_23,  mo_min_str, mo_max_str] = get_views_prefix(mo_min_str, mo_max_str);
+  [is_wk_7,   wk_min_str, wk_max_str] = get_views_prefix(wk_min_str, wk_max_str);
+
+  if (!input_allowed_views(dl_min_str) || !input_allowed_views(dl_max_str) ||
+      !input_allowed_views(mo_min_str) || !input_allowed_views(mo_max_str) ||
+      !input_allowed_views(wk_min_str) || !input_allowed_views(wk_max_str)) {
     container.innerHTML = err_views;
     return;
   }
 
-  const downloads_min_cnt = parseInt(downloads_min_str, 10);
-  const downloads_max_cnt = parseInt(downloads_max_str, 10);
+  const dl_min_cnt = parseInt(dl_min_str, 10);
+  const dl_max_cnt = parseInt(dl_max_str, 10);
 
-  if (!isNaN(downloads_min_cnt) && !isNaN(downloads_max_cnt)) {
-    if (downloads_min_cnt > downloads_max_cnt) {
+  if (!isNaN(dl_min_cnt) && !isNaN(dl_max_cnt)) {
+    if (dl_min_cnt > dl_max_cnt) {
       container.innerHTML = err_views_range;
       return;
     }
   }
 
-  const month_min_cnt = parseInt(month_min_str, 10);
-  const month_max_cnt = parseInt(month_max_str, 10);
+  const mo_min_cnt = parseInt(mo_min_str, 10);
+  const mo_max_cnt = parseInt(mo_max_str, 10);
 
-  if (!isNaN(month_min_cnt) && !isNaN(month_max_cnt)) {
-    if (month_min_cnt > month_max_cnt) {
+  if (!isNaN(mo_min_cnt) && !isNaN(mo_max_cnt)) {
+    if (mo_min_cnt > mo_max_cnt) {
       container.innerHTML = err_views_range;
       return;
     }
   }
 
-  const week_min_cnt = parseInt(week_min_str, 10);
-  const week_max_cnt = parseInt(week_max_str, 10);
+  const wk_min_cnt = parseInt(wk_min_str, 10);
+  const wk_max_cnt = parseInt(wk_max_str, 10);
 
-  if (!isNaN(week_min_cnt) && !isNaN(week_max_cnt)) {
-    if (week_min_cnt > week_max_cnt) {
+  if (!isNaN(wk_min_cnt) && !isNaN(wk_max_cnt)) {
+    if (wk_min_cnt > wk_max_cnt) {
       container.innerHTML = err_views_range;
       return;
     }
@@ -415,7 +433,7 @@ function process_filter() {
   const time_2       = performance.now();
 
   const filtered_views = filter_views(results_prev, results_curr,
-    downloads_min_str, downloads_max_str, month_min_str, month_max_str, week_min_str, week_max_str);
+    dl_min_str, dl_max_str, is_dl_old, mo_min_str, mo_max_str, is_mo_23, wk_min_str, wk_max_str);
   if (filtered_views.done) {
     results_curr = filtered_views.curr;
     results_prev = filtered_views.prev;
