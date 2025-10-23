@@ -70,6 +70,33 @@ function filter_matches(doc, field, terms, matcher) {
   return terms.some(term => evaluate_term(term, values, matcher)); // Check if any term matches
 }
 
+function filter_date(date, min, max) {
+  if (min.base === "year") return (date >= min.min) && (date <= max.max);
+
+  // Month-based
+  const date_month = date.getUTCMonth() + 1;
+  const date_day   = date.getUTCDate();
+
+  const date_ge_md = () => (date_month > min.month) || ((date_month === min.month) && (date_day >= min.day));
+  const date_le_md = () => (date_month < max.month) || ((date_month === max.month) && (date_day <= max.day));
+
+  if (min.day && max.day) {
+    if (min.month <= max.month) return date_ge_md() && date_le_md();
+    return                             date_ge_md() || date_le_md();
+  }
+  if (min.day) {
+    if (min.month <= max.month) return date_ge_md() && (date_month <= max.month);
+    return                             date_ge_md() || (date_month <= max.month);
+  }
+  if (max.day) {
+    if (min.month <= max.month) return (date_month >= min.month) && date_le_md();
+    return                             (date_month >= min.month) || date_le_md();
+  }
+  // Month only
+  if (min.month <= max.month) return (date_month >= min.month) && (date_month <= max.month);
+  return                             (date_month >= min.month) || (date_month <= max.month);
+}
+
 function filter_items(
   items, archived_min, archived_max, created_min, created_max,
   collections, creators, title) {
@@ -111,12 +138,12 @@ function filter_items(
       }
     }
 
-    if ((date < created_min) || (date > created_max)) return false;
+    if (filter_date(date, created_min, created_max) === false) return false;
 
     // Archived
     const publicdate = new Date(publicdate_str);
     if (isNaN(publicdate.getTime())) return false;
-    if ((publicdate < archived_min) || (publicdate > archived_max)) return false;
+    if (filter_date(publicdate, archived_min, archived_max) === false) return false;
 
     // Views
     const downloads = parseInt(downloads_str, 10);

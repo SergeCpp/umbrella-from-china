@@ -119,37 +119,64 @@ function get_date_range(date_str) {
   if (!date_str) return null;
 
   // Catch empty parts like "2022-", "2022--", "2022-08-", "2022--08"
-  const parts_str = date_str.trim().split('-');
+  const parts_str = date_str.split('-');
+  if   (parts_str.length === 0) return null;
   if   (parts_str.some(part => (part === ""))) return null;
 
-  // Now convert to numbers
+  const first_str = parts_str[0];
+  const first_len = first_str.length;
+  if  ((first_len !== 4) && (first_len !== 2) && (first_len !== 1)) return null;
+
   const parts = parts_str.map(Number);
   if   (parts.some(isNaN)) return null;
 
-  // And get range from them
-  if (parts.length === 1) { // Year
-    const year = parts[0];
-    return {
-      min: new Date(Date.UTC(year, 01-1, 01, 00, 00, 00, 000)), // Year beg day
-      max: new Date(Date.UTC(year, 12-1, 31, 23, 59, 59, 999))  // Year end day
-    };
+  if (first_len === 4) { // Year-based format
+    const base = "year";
+
+    if (parts.length === 1) { // Year
+      const year = parts[0];
+      if (!is_date_valid(year, 1, 1)) return null;
+      return {
+        base,
+        min: new Date(Date.UTC(year, 01-1, 01, 00, 00, 00, 000)), // Year beg
+        max: new Date(Date.UTC(year, 12-1, 31, 23, 59, 59, 999))  // Year end
+      };
+    }
+    if (parts.length === 2) { // Year-Month
+      const [year, month] = parts;
+      if (!is_date_valid(year, month, 1)) return null;
+      const e_mday = new Date(Date.UTC(year, month, 0)).getUTCDate();
+      return {
+        base,
+        min: new Date(Date.UTC(year, month - 1, 1,      00, 00, 00, 000)), // Month beg
+        max: new Date(Date.UTC(year, month - 1, e_mday, 23, 59, 59, 999))  // Month end
+      };
+    }
+    if (parts.length === 3) { // Year-Month-Day
+      const [year, month, day] = parts;
+      if (!is_date_valid(year, month, day)) return null;
+      return {
+        base,
+        min: new Date(Date.UTC(year, month - 1, day, 00, 00, 00, 000)), // Day beg
+        max: new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999))  // Day end
+      };
+    }
+    return null; // Invalid format
   }
-  if (parts.length === 2) { // Year-Month
-    const [year, month] = parts;
-    if (!is_date_valid(year, month, 1)) return null;
-    const e_mday = new Date(year, month, 0).getDate();
-    return {
-      min: new Date(Date.UTC(year, month - 1, 1,      00, 00, 00, 000)), // Month beg day
-      max: new Date(Date.UTC(year, month - 1, e_mday, 23, 59, 59, 999))  // Month end day
-    };
-  }
-  if (parts.length === 3) { // Year-Month-Day
-    const [year, month, day] = parts;
-    if (!is_date_valid(year, month, day)) return null;
-    return {
-      min: new Date(Date.UTC(year, month - 1, day, 00, 00, 00, 000)), // Day beg
-      max: new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999))  // Day end
-    };
+
+  // Month-based format
+
+  const base  = "month";
+
+  const month = parts[0];
+  if  ((month < 1) || (month > 12)) return null;
+
+  if (parts.length === 1) return { base, month };
+
+  if (parts.length === 2) {
+    const day = parts[1];
+    if (!is_date_valid(2024, month, day)) return null; // Allow 29 days for February
+    return { base, month, day };
   }
   return null; // Invalid format
 }
@@ -258,7 +285,10 @@ function process_filter() {
   const err_end  = '</div>';
 
   const err_date =
-    err_beg + 'Valid dates are: YYYY / YYYY-MM / YYYY-MM-DD' +
+    err_beg + 'Valid dates are: YYYY-MM-DD / YYYY-MM / YYYY / MM-DD / MM' +
+    err_end;
+  const err_date_base =
+    err_beg + 'Range must be equally based: year first or month first' +
     err_end;
   const err_date_range =
     err_beg + 'Min date of range must be before or at max date of range' +
@@ -294,12 +324,19 @@ function process_filter() {
     return;
   }
 
-  const archived_min = archived_min_range.min;
-  const archived_max = archived_max_range.max;
-
-  if (archived_min > archived_max) {
-    container.innerHTML = err_date_range;
+  if (archived_min_range.base !== archived_max_range.base) {
+    container.innerHTML = err_date_base;
     return;
+  }
+
+  if (archived_min_range.base === "year") {
+    const archived_min = archived_min_range.min;
+    const archived_max = archived_max_range.max;
+
+    if (archived_min > archived_max) {
+      container.innerHTML = err_date_range;
+      return;
+    }
   }
 
   // Created Range
@@ -314,12 +351,19 @@ function process_filter() {
     return;
   }
 
-  const created_min = created_min_range.min;
-  const created_max = created_max_range.max;
-
-  if (created_min > created_max) {
-    container.innerHTML = err_date_range;
+  if (created_min_range.base !== created_max_range.base) {
+    container.innerHTML = err_date_base;
     return;
+  }
+
+  if (created_min_range.base === "year") {
+    const created_min = created_min_range.min;
+    const created_max = created_max_range.max;
+
+    if (created_min > created_max) {
+      container.innerHTML = err_date_range;
+      return;
+    }
   }
 
   // Collections, Creators, Subjects, and Title
@@ -420,11 +464,11 @@ function process_filter() {
   if (wait_subjects(stat_subjects, subjects)) return; // Wait for stat_subjects to load
 
   // Process
-  const filtered_curr_items = filter_items(
-    stat_curr_items, archived_min, archived_max, created_min, created_max,
+  const filtered_curr_items = filter_items(stat_curr_items,
+    archived_min_range, archived_max_range, created_min_range, created_max_range,
     collections, creators, title);
-  const filtered_prev_items = filter_items(
-    stat_prev_items, archived_min, archived_max, created_min, created_max,
+  const filtered_prev_items = filter_items(stat_prev_items,
+    archived_min_range, archived_max_range, created_min_range, created_max_range,
     collections, creators, title);
 
   const time_1       = performance.now();
