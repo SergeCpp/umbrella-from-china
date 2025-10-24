@@ -92,9 +92,7 @@ function filter_subjects(items_prev, items_curr, subjects_items, subjects_terms)
     const subjects = subjects_items.get(identifier);
     if  (!subjects) continue;
 
-    const match_result = subjects_terms.some(term =>
-      evaluate_term(term, subjects, (e_value, e_term) => e_value.includes(e_term))
-    );
+    const match_result = subjects_terms.some(term => evaluate_term(term, subjects));
     identifiers[identifier] = match_result;
   }
 
@@ -119,16 +117,13 @@ function get_date_range(date_str) {
   if (!date_str) return null;
 
   // Catch empty parts like "2022-", "2022--", "2022-08-", "2022--08"
-  const parts_str = date_str.split('-');
-  if   (parts_str.length === 0) return null;
-  if   (parts_str.some(part => (part === ""))) return null;
+  const parts_str = date_str.split('-').map(part => part.trim());
+  if   (parts_str.some(part => !/^\d{1,4}$/.test(part))) return null;
 
   const first_str = parts_str[0];
   const first_len = first_str.length;
-  if  ((first_len !== 4) && (first_len !== 2) && (first_len !== 1)) return null;
 
-  const parts = parts_str.map(Number);
-  if   (parts.some(isNaN)) return null;
+  const parts = parts_str.map(Number); // Ok with check above
 
   if (first_len === 4) { // Year-based format
     const base = "year";
@@ -166,7 +161,12 @@ function get_date_range(date_str) {
 
   // Month-based format
 
-  const base  = "month";
+  const base = "month";
+
+  if (first_len === 3) {
+    if (first_str === "520") return { base, month: 5, day: 20 }; // Happy 520 Day!
+    return null;
+  }
 
   const month = parts[0];
   if  ((month < 1) || (month > 12)) return null;

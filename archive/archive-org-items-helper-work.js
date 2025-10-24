@@ -31,43 +31,39 @@ function get_doc_str(doc, name) {
 
 /* Filter Items */
 
-function evaluate_term(term, values, matcher) {
+function evaluate_term(term, values) {
   switch(term.type) {
     case "AND":
-      return term.terms.every(part => 
-        evaluate_term(part, values, matcher));
+      return term.terms.every(part => evaluate_term(part, values));
 
     case "OR":
-      return term.terms.some(part => 
-        evaluate_term(part, values, matcher));
+      return term.terms.some(part => evaluate_term(part, values));
 
     case "NOT":
     case "NOTANY":
       //  NOTANY: Exclude if any value matches term.excl
-      const any_match = evaluate_term(term.excl, values, matcher);
-      return (!term.incl || evaluate_term(term.incl, values, matcher)) && !any_match;
+      const any_match = evaluate_term(term.excl, values);
+      return (!term.incl || evaluate_term(term.incl, values)) && !any_match;
 
     case "NOTALL":
       //  NOTALL: Exclude if all values matches term.excl
-      const all_match = values.every(value => {
-        return evaluate_term(term.excl, [value], matcher);
-      });
-      return (!term.incl || evaluate_term(term.incl, values, matcher)) && !all_match;
+      const all_match = values.every(value => evaluate_term(term.excl, [value]));
+      return (!term.incl || evaluate_term(term.incl, values)) && !all_match;
 
     case "TEXT":
-      return values.some(value => matcher(value, term.text));
+      return values.some(value => value.includes(term.text));
 
     default:
       return false; // Unknown type
   }
 }
 
-function filter_matches(doc, field, terms, matcher) {
+function filter_matches(doc, field, terms) {
   if (!terms || (terms.length === 0)) return true; // No or empty filter = match all
 
   const values = get_doc_arr(doc, field);
 
-  return terms.some(term => evaluate_term(term, values, matcher)); // Check if any term matches
+  return terms.some(term => evaluate_term(term, values)); // Check if any term matches
 }
 
 function filter_date(date, min, max) {
@@ -155,31 +151,16 @@ function filter_items(
     if ((downloads < month) || (month < week)) return false;
 
     // Collections
-    const matches_collections = filter_matches(
-      doc,
-     "collection",
-      collections,
-      (value, term) => value.includes(term)
-    );
-    if (!matches_collections) return false;
+    const matches_collections = filter_matches(doc, "collection", collections);
+    if  (!matches_collections) return false;
 
     // Creators
-    const matches_creators = filter_matches(
-      doc,
-     "creator",
-      creators,
-      (value, term) => value.includes(term)
-    );
-    if (!matches_creators) return false;
+    const matches_creators = filter_matches(doc, "creator", creators);
+    if  (!matches_creators) return false;
 
     // Title
-    const matches_title = filter_matches(
-      doc,
-     "title",
-      title,
-      (value, term) => value.includes(term)
-    );
-    if (!matches_title) return false;
+    const matches_title = filter_matches(doc, "title", title);
+    if  (!matches_title) return false;
 
     // Item passed filter
     return true;
