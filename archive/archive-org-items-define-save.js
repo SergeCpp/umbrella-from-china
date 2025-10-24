@@ -498,6 +498,15 @@ function process_filter() {
     container.innerHTML = err_subjects;
     return;
   }
+
+  const prev_only = document.getElementById("prev-only").checked;
+  const curr_only = document.getElementById("curr-only").checked;
+
+  const filtered_sets = filter_sets(results_prev, results_curr, prev_only, curr_only);
+  if   (filtered_sets.done) {
+    results_curr = filtered_sets.curr;
+    results_prev = filtered_sets.prev;
+  }
   const time_3 = performance.now();
 
   if (!render_results(results_curr, stat_curr_date, results_prev, stat_prev_date)) {
