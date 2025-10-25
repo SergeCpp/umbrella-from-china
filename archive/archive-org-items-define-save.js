@@ -265,14 +265,16 @@ function input_allowed_chars(input) {
   return !/[^a-zA-Z0-9._\-'" ,]/.test(input);
 }
 
+function input_allowed_keys(input) {
+  return ["grow", "fall", "same", "diff"].includes(input);
+}
+
 function input_allowed_views(input) {
-  return (input === "") || (input === "grow") || (input === "fall") ||
-                           (input === "same") || (input === "diff") ||
-                                                 /^\d{1,8}$/.test(input);
+  return (input === "") || input_allowed_keys(input) || /^\d{1,8}$/.test(input);
 }
 
 function input_allowed_favs(input) {
-  return (input === "") || (input === "diff") || /^\d{1,4}$/.test(input);
+  return (input === "") || input_allowed_keys(input) || /^\d{1,4}$/.test(input);
 }
 
 function process_filter() {
@@ -303,7 +305,7 @@ function process_filter() {
     err_beg + 'Min views count must be less than or equal to max views count' +
     err_end;
   const err_favs =
-    err_beg + 'Allowed are numbers: 0 to 9999, and word: diff' +
+    err_beg + 'Allowed are numbers: 0 to 9999, and words: grow, fall, same, diff' +
     err_end;
   const err_favs_range =
     err_beg + 'Min favorites count must be less than or equal to max favorites count' +
@@ -447,13 +449,10 @@ function process_filter() {
     return;
   }
 
-  const is_min_diff_exp = (favs_min_str === "diff") || (favs_min_str === "");
-  const is_max_diff_exp = (favs_max_str === "diff") || (favs_max_str === "");
+  const favs_min_cnt = parseInt(favs_min_str, 10);
+  const favs_max_cnt = parseInt(favs_max_str, 10);
 
-  if (!is_min_diff_exp && !is_max_diff_exp) {
-    const favs_min_cnt = parseInt(favs_min_str, 10);
-    const favs_max_cnt = parseInt(favs_max_str, 10);
-
+  if (!isNaN(favs_min_cnt) && !isNaN(favs_max_cnt)) {
     if (favs_min_cnt > favs_max_cnt) {
       container.innerHTML = err_favs_range;
       return;

@@ -216,41 +216,46 @@ function calculate_stats(stats_items, stats_date) {
   return stats;
 }
 
-/* Filter Views */
+/* Filter Count */
 
-function get_views_map(items, is_key_exp, views_cnt, get_views, is_other_grow, is_other_fall) {
-  const views_map = {};
+function get_count_map(items, is_key_exp, count, get_count, is_other_grow, is_other_fall) {
+  const count_map = {};
 
-  if (is_key_exp) { // Include all views
+  if (is_key_exp) { // Key or "": Include all count values
     for (const item of items) {
-      views_map[item.identifier] = get_views(item);
+      count_map[item.identifier] = get_count(item);
     }
-  } else { // Include only cnt-related views
+  } else { // Number: Include only other-related values
     if (is_other_grow) {
       for (const item of items) {
-        if (get_views(item) <= views_cnt) {
-          views_map[item.identifier] = get_views(item);
+        const item_count = get_count(item);
+        if   (item_count <= count) {
+          count_map[item.identifier] = item_count;
         }
       }
     } else if (is_other_fall) {
       for (const item of items) {
-        if (get_views(item) >= views_cnt) {
-          views_map[item.identifier] = get_views(item);
+        const item_count = get_count(item);
+        if   (item_count >= count) {
+          count_map[item.identifier] = item_count;
         }
       }
-    } else { // Other keys
+    } else { // Other: same / diff, cannot be ""
       for (const item of items) {
-        if (get_views(item) === views_cnt) {
-          views_map[item.identifier] = get_views(item);
+        const item_count = get_count(item);
+        if   (item_count === count) {
+          count_map[item.identifier] = item_count;
         }
       }
     }
   }
 
-  return views_map;
+  return count_map;
 }
 
-function filter_views_span_keys(items_prev, items_curr, prev_str, curr_str, get_views) {
+// Usage: At least one of *_str must be a key
+function filter_count_keys(items_prev, items_curr, prev_str, curr_str, get_count) {
+  const is_key     = (s) => ["grow", "fall", "same", "diff"    ].includes(s);
   const is_key_exp = (s) => ["grow", "fall", "same", "diff", ""].includes(s);
 
   const is_prev_grow = (prev_str === "grow");
@@ -262,32 +267,39 @@ function filter_views_span_keys(items_prev, items_curr, prev_str, curr_str, get_
   const is_prev_diff = (prev_str === "diff");
   const is_curr_diff = (curr_str === "diff");
 
-  const vp = parseInt(prev_str, 10); // NaN for key_exp
-  const vc = parseInt(curr_str, 10); // NaN for key_exp
+  const cp = parseInt(prev_str, 10); // NaN for key_exp
+  const cc = parseInt(curr_str, 10); // NaN for key_exp
 
-  const views_prev = get_views_map(items_prev, is_key_exp(prev_str), vp, get_views, is_curr_grow, is_curr_fall);
-  const views_curr = get_views_map(items_curr, is_key_exp(curr_str), vc, get_views, is_prev_grow, is_prev_fall);
+  const ncp = isNaN(cp);
+  const ncc = isNaN(cc);
+
+  const count_prev = get_count_map(items_prev, is_key_exp(prev_str), cp, get_count, is_curr_grow, is_curr_fall);
+  const count_curr = get_count_map(items_curr, is_key_exp(curr_str), cc, get_count, is_prev_grow, is_prev_fall);
 
   const res = {};
 
-  for (const identifier in views_prev) {
-    if (views_curr[identifier] === undefined) continue;
+  const [outer, inner] = is_key(prev_str)
+    ? [count_curr, count_prev]  // Curr may be smaller
+    : [count_prev, count_curr]; // Prev may be smaller
 
-    const ivp = views_prev[identifier];
-    const ivc = views_curr[identifier];
+  for (const identifier in outer) {
+    if (inner[identifier] === undefined) continue;
+
+    const icp = count_prev[identifier];
+    const icc = count_curr[identifier];
 
     let pass_prev = true;
     let pass_curr = true;
 
-    if      (is_prev_grow) pass_prev = isNaN(vc) ? (ivp >   ivc) : (ivp > vc);
-    else if (is_prev_fall) pass_prev = isNaN(vc) ? (ivp <   ivc) : (ivp < vc);
-    else if (is_prev_same) pass_prev =             (ivp === ivc);
-    else if (is_prev_diff) pass_prev =             (ivp !== ivc);
+    if      (is_prev_grow) pass_prev = ncc ? (icp >   icc) : (icp > cc);
+    else if (is_prev_fall) pass_prev = ncc ? (icp <   icc) : (icp < cc);
+    else if (is_prev_same) pass_prev =       (icp === icc);
+    else if (is_prev_diff) pass_prev =       (icp !== icc);
 
-    if      (is_curr_grow) pass_curr = isNaN(vp) ? (ivc >   ivp) : (ivc > vp);
-    else if (is_curr_fall) pass_curr = isNaN(vp) ? (ivc <   ivp) : (ivc < vp);
-    else if (is_curr_same) pass_curr =             (ivc === ivp);
-    else if (is_curr_diff) pass_curr =             (ivc !== ivp);
+    if      (is_curr_grow) pass_curr = ncp ? (icc >   icp) : (icc > cp);
+    else if (is_curr_fall) pass_curr = ncp ? (icc <   icp) : (icc < cp);
+    else if (is_curr_same) pass_curr =       (icc === icp);
+    else if (is_curr_diff) pass_curr =       (icc !== icp);
 
     if (pass_prev && pass_curr) {
       res[identifier] = true;
@@ -297,31 +309,33 @@ function filter_views_span_keys(items_prev, items_curr, prev_str, curr_str, get_
   return res;
 }
 
-function filter_views_span_range(items_prev, items_curr, min_str, max_str, get_views) {
+function filter_count_range(items_prev, items_curr, min_str, max_str, get_count) {
   const min = min_str ? parseInt(min_str, 10) : 0;
   const max = max_str ? parseInt(max_str, 10) : Infinity;
 
-  const views_prev = {};
-  const views_curr = {};
+  const count_prev = {};
+  const count_curr = {};
 
-  for (const item of items_prev) views_prev[item.identifier] = get_views(item);
-  for (const item of items_curr) views_curr[item.identifier] = get_views(item);
+  for (const item of items_prev) count_prev[item.identifier] = get_count(item);
+  for (const item of items_curr) count_curr[item.identifier] = get_count(item);
 
   const res = {};
 
-  for (const identifier in views_prev) {
-    if (views_curr[identifier] === undefined) continue;
+  for (const identifier in count_prev) {
+    if (count_curr[identifier] === undefined) continue;
 
-    const ivp = views_prev[identifier];
-    const ivc = views_curr[identifier];
+    const icp = count_prev[identifier];
+    const icc = count_curr[identifier];
 
-    if (((ivp >= min) && (ivp <= max)) && ((ivc >= min) && (ivc <= max))) {
+    if (((icp >= min) && (icp <= max)) && ((icc >= min) && (icc <= max))) {
       res[identifier] = true;
     }
   }
 
   return res;
 }
+
+/* Filter Views */
 
 // Usage: *_min_str as *_prev_str, *_max_str as *_curr_str
 // *_str are: number / "" / keys: grow, fall, same, diff
@@ -336,16 +350,16 @@ function filter_views_keys(items_prev, items_curr,
   if (!is_dl_key && !is_mo_key && !is_wk_key) return { done: false };
 
   const dl_res = is_dl_key
-    ? filter_views_span_keys (items_prev, items_curr, dl_prev_str, dl_curr_str, get_dl)
-    : filter_views_span_range(items_prev, items_curr, dl_prev_str, dl_curr_str, get_dl);
+    ? filter_count_keys (items_prev, items_curr, dl_prev_str, dl_curr_str, get_dl)
+    : filter_count_range(items_prev, items_curr, dl_prev_str, dl_curr_str, get_dl);
 
   const mo_res = is_mo_key
-    ? filter_views_span_keys (items_prev, items_curr, mo_prev_str, mo_curr_str, get_mo)
-    : filter_views_span_range(items_prev, items_curr, mo_prev_str, mo_curr_str, get_mo);
+    ? filter_count_keys (items_prev, items_curr, mo_prev_str, mo_curr_str, get_mo)
+    : filter_count_range(items_prev, items_curr, mo_prev_str, mo_curr_str, get_mo);
 
   const wk_res = is_wk_key
-    ? filter_views_span_keys (items_prev, items_curr, wk_prev_str, wk_curr_str, item => item.views_7)
-    : filter_views_span_range(items_prev, items_curr, wk_prev_str, wk_curr_str, item => item.views_7);
+    ? filter_count_keys (items_prev, items_curr, wk_prev_str, wk_curr_str, item => item.views_7)
+    : filter_count_range(items_prev, items_curr, wk_prev_str, wk_curr_str, item => item.views_7);
 
   const all_res = {}; // Intersect all three res
   for (const identifier in dl_res) {
@@ -403,82 +417,37 @@ function filter_views(items_prev, items_curr,
 
 /* Filter Favs */
 
-// Get favs_map: { identifier: item }
-// favs_str is: "" / "diff" if is_diff_exp true, or number if is_diff_exp false
-function get_favs_map(items, is_diff_exp, favs_str) {
-  const favs_map = {};
-
-  if (is_diff_exp) { // Include all items
-    for (const item of items) {
-      favs_map[item.identifier] = item;
-    }
-  } else { // Include only items with favorites === cnt
-    const favs_cnt = parseInt(favs_str, 10);
-    for (const item of items) {
-      if (item.favorites === favs_cnt) {
-        favs_map[item.identifier] = item;
-      }
-    }
-  }
-
-  return favs_map;
-}
-
 // Usage: favs_min_str as favs_prev_str, favs_max_str as favs_curr_str
-// *_str are: number / "" / "diff"
-function filter_favs_diff(items_prev, items_curr, favs_prev_str, favs_curr_str) {
-  const is_prev_diff = (favs_prev_str === "diff");
-  const is_curr_diff = (favs_curr_str === "diff");
+// *_str are: number / "" / keys: grow, fall, same, diff
+function filter_favs_keys(items_prev, items_curr, favs_prev_str, favs_curr_str) {
+  const is_key = (s) => ["grow", "fall", "same", "diff"].includes(s);
 
-  if (!is_prev_diff && !is_curr_diff) return { done: false };
+  if (!is_key(favs_prev_str) && !is_key(favs_curr_str)) return { done: false };
 
-  const is_prev_diff_exp = is_prev_diff || (favs_prev_str === "");
-  const is_curr_diff_exp = is_curr_diff || (favs_curr_str === "");
+  const favs_res = filter_count_keys(items_prev, items_curr, favs_prev_str, favs_curr_str, item => item.favorites);
 
-  const favs_prev = get_favs_map(items_prev, is_prev_diff_exp, favs_prev_str);
-  const favs_curr = get_favs_map(items_curr, is_curr_diff_exp, favs_curr_str);
+  const results_prev = items_prev.filter(item => favs_res[item.identifier]);
+  const results_curr = items_curr.filter(item => favs_res[item.identifier]);
 
-  // Find common items in both favs_prev and favs_curr, and apply diff logic
-  const results_prev = [];
-  const results_curr = [];
-
-  const [outer, inner] = is_prev_diff
-    ? [favs_curr, favs_prev]  // Curr may be smaller
-    : [favs_prev, favs_curr]; // Prev may be smaller
-
-  for (const identifier in outer) {
-    if (inner[identifier]) {
-      const item_prev = favs_prev[identifier];
-      const item_curr = favs_curr[identifier];
-
-      if (item_prev.favorites !== item_curr.favorites) {
-        results_prev.push(item_prev);
-        results_curr.push(item_curr);
-      }
-    }
-  }
   return { done: true, prev: results_prev, curr: results_curr };
 }
 
-// Filtering by favorites count: from min to max, or by diff logic
-// *_str are: number / "" / "diff"
+// Filtering by favorites count: from min to max, or by keys logic
+// *_str are: number / "" / keys
 function filter_favs(items_prev, items_curr, favs_min_str, favs_max_str) {
   if (!favs_min_str && !favs_max_str) return { done: false };
 
-  const favs_diff = filter_favs_diff(items_prev, items_curr, favs_min_str, favs_max_str);
+  const favs_keys = filter_favs_keys(items_prev, items_curr, favs_min_str, favs_max_str);
 
-  if (favs_diff.done) return favs_diff;
+  if (favs_keys.done) return favs_keys;
 
   const favs_min_cnt = favs_min_str ? parseInt(favs_min_str, 10) : 0;
   const favs_max_cnt = favs_max_str ? parseInt(favs_max_str, 10) : Infinity;
 
-  const results_prev = items_prev.filter(item => {
-    return (item.favorites >= favs_min_cnt) && (item.favorites <= favs_max_cnt);
-  });
+  const pass = (item) => (item.favorites >= favs_min_cnt) && (item.favorites <= favs_max_cnt);
 
-  const results_curr = items_curr.filter(item => {
-    return (item.favorites >= favs_min_cnt) && (item.favorites <= favs_max_cnt);
-  });
+  const results_prev = items_prev.filter(pass);
+  const results_curr = items_curr.filter(pass);
 
   return { done: true, prev: results_prev, curr: results_curr };
 }
