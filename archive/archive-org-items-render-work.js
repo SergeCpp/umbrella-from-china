@@ -150,6 +150,10 @@ function format_bytes(bytes) {
   return value.toFixed(fract) + ' ' + units[index];
 }
 
+function format_num_str(num, str) {
+  return num + ' ' + str + (num === 1 ? "" : 's');
+}
+
 function sort_results(results) {
   results.sort((a, b) => { // Descending for ratios
     if (a.ratio_old !== b.ratio_old) { return b.ratio_old - a.ratio_old; }
@@ -297,14 +301,15 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   const curr_exp_totals  = get_totals(results_curr_exp);
   const curr_exp_total   = curr_exp_totals.audio + curr_exp_totals.video;
   const totals_div       = document.createElement("div");
-  totals_div.className   = "subtitle text-center text-normal";
-  totals_div.textContent = curr_exp_total            + ' Items '  +
-                '('      + curr_exp_totals.audio     + ' Audio '  +
-                '/ '     + curr_exp_totals.video     + ' Video) ' +
-              format_bytes(curr_exp_totals.bytes)    + ' '        +
-                '/ '     + curr_exp_totals.views     + ' Views '  +
-                '/ '     + curr_exp_totals.favorites + ' Favs '   +
-                '('      + curr_exp_totals.favorited + ' Items)';
+  totals_div.className   ="subtitle text-center text-normal";
+  totals_div.textContent =
+            format_num_str(curr_exp_total,            'Item')  +
+    ' ('  +                curr_exp_totals.audio  +  ' Audio'  +
+    ' / ' +                curr_exp_totals.video  +  ' Video)' +
+    ' '   + format_bytes  (curr_exp_totals.bytes) +
+    ' / ' + format_num_str(curr_exp_totals.views,     'View')  +
+    ' / ' + format_num_str(curr_exp_totals.favorites, 'Fav' )  +
+    ' ('  + format_num_str(curr_exp_totals.favorited, 'Item')  + ')';
   container.appendChild(totals_div);
 
   // 8. Both stats displaying
