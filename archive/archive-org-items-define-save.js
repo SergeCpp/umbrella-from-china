@@ -194,6 +194,39 @@ function get_views_prefix(min_str, max_str) {
   return [ is_min_prefix || is_max_prefix, min_str, max_str ];
 }
 
+// Syntax: grow or / | fall or \ | same or = | diff or ! [integer [%] ]
+function get_key(str) {
+  let sl    = 0;
+  let name  = null;
+  let value = null;
+
+  if      (str.startsWith("grow")) { sl = 4; name = "grow"; value = 1; }
+  else if (str.startsWith('/'   )) { sl = 1; name = "grow"; value = 1; }
+  else if (str.startsWith("fall")) { sl = 4; name = "fall"; value = 1; }
+  else if (str.startsWith('\\'  )) { sl = 1; name = "fall"; value = 1; }
+  else if (str.startsWith("same")) { sl = 4; name = "same"; value = 0; }
+  else if (str.startsWith('='   )) { sl = 1; name = "same"; value = 0; }
+  else if (str.startsWith("diff")) { sl = 4; name = "diff"; value = 0; }
+  else if (str.startsWith('!'   )) { sl = 1; name = "diff"; value = 0; }
+  else return [ str, null ];
+
+  let   s = str.slice(sl).trimStart();
+  const p = s.endsWith('%');
+
+  if (p) {
+    s = s.slice(0, -1).trimEnd();
+    if (s === "") return [ str, null ]; // For % must be a value
+  }
+
+  if (s !== "") {
+    const v = parseInt(s, 10);
+    if (isNaN(v) || (v < 0)) return [ str, null ];
+    value = v;
+  }
+
+  return [ name, { value, is_percent: p } ];
+}
+
 function parse_term(term) {
   term = term.trim();
 
@@ -406,6 +439,20 @@ function process_filter() {
   [is_mo_23,  mo_min_str, mo_max_str] = get_views_prefix(mo_min_str, mo_max_str);
   [is_wk_7,   wk_min_str, wk_max_str] = get_views_prefix(wk_min_str, wk_max_str);
 
+  let dl_min_kv = null;
+  let dl_max_kv = null;
+  let mo_min_kv = null;
+  let mo_max_kv = null;
+  let wk_min_kv = null;
+  let wk_max_kv = null;
+
+  [dl_min_str, dl_min_kv] = get_key(dl_min_str);
+  [dl_max_str, dl_max_kv] = get_key(dl_max_str);
+  [mo_min_str, mo_min_kv] = get_key(mo_min_str);
+  [mo_max_str, mo_max_kv] = get_key(mo_max_str);
+  [wk_min_str, wk_min_kv] = get_key(wk_min_str);
+  [wk_max_str, wk_max_kv] = get_key(wk_max_str);
+
   if (!input_allowed_views(dl_min_str) || !input_allowed_views(dl_max_str) ||
       !input_allowed_views(mo_min_str) || !input_allowed_views(mo_max_str) ||
       !input_allowed_views(wk_min_str) || !input_allowed_views(wk_max_str)) {
@@ -444,8 +491,14 @@ function process_filter() {
   }
 
   // Favs
-  const favs_min_str = document.getElementById("favs-min").value.trim().toLowerCase();
-  const favs_max_str = document.getElementById("favs-max").value.trim().toLowerCase();
+  let favs_min_str = document.getElementById("favs-min").value.trim().toLowerCase();
+  let favs_max_str = document.getElementById("favs-max").value.trim().toLowerCase();
+
+  let favs_min_kv  = null;
+  let favs_max_kv  = null;
+
+  [favs_min_str, favs_min_kv] = get_key(favs_min_str);
+  [favs_max_str, favs_max_kv] = get_key(favs_max_str);
 
   if (!input_allowed_favs(favs_min_str) || !input_allowed_favs(favs_max_str)) {
     container.innerHTML = err_favs;

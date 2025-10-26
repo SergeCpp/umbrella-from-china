@@ -218,6 +218,48 @@ function calculate_stats(stats_items, stats_date) {
 
 /* Filter Count */
 
+// Whether a > b by at least k.v
+// a and b are non-negative integers
+// k.v: n means           a >= (b + n)
+// k.v: 2 means           a >= (b + 2)
+// k.v: 1 means a >  b // a >= (b + 1)
+// k.v: 0 means a >= b
+// k.v is non-negative integer or percent
+function is_grow(a, b, k) {
+  if (k.is_percent) return (b !== 0) ?
+        (a >= (b * (1 + k.value / 100))) : (k.value !== 0) ? (a > 0) : true;
+  return a >= (b      + k.value);
+}
+
+// Whether a < b by at least k.v
+// a and b are non-negative integers
+// k.v: n means           a <= (b - n)
+// k.v: 2 means           a <= (b - 2)
+// k.v: 1 means a <  b // a <= (b - 1)
+// k.v: 0 means a <= b
+// k.v is non-negative integer or percent
+function is_fall(a, b, k) {
+  if (k.is_percent) return (b !== 0) ?
+        (a <= (b * (1 - k.value / 100))) : (k.value !== 0) ? false : (a === 0);
+  return a <= (b      - k.value);
+}
+
+// Whether a === b with tolerance k.v
+// a and b are non-negative integers
+// k.v is non-negative integer or percent
+function is_same(a, b, k) {
+  if (k.is_percent) return (b !== 0) ?
+        (Math.abs(a - b) <= (b * k.value / 100)) : (a === 0);
+  return Math.abs(a - b) <=      k.value;
+}
+
+// Whether a !== b by more than k.v
+// a and b are non-negative integers
+// k.v is non-negative integer or percent
+function  is_diff(a, b, k) {
+  return !is_same(a, b, k);
+}
+
 function get_count_map(items, is_key_exp, count, get_count, is_other_grow, is_other_fall) {
   const count_map = {};
 
@@ -258,6 +300,9 @@ function filter_count_keys(items_prev, items_curr, prev_str, curr_str, get_count
   const is_key     = (s) => ["grow", "fall", "same", "diff"    ].includes(s);
   const is_key_exp = (s) => ["grow", "fall", "same", "diff", ""].includes(s);
 
+  const prev_kv = { value: 1, is_percent: false }; // Testing only
+  const curr_kv = { value: 1, is_percent: false }; // Testing only
+
   const is_prev_grow = (prev_str === "grow");
   const is_curr_grow = (curr_str === "grow");
   const is_prev_fall = (prev_str === "fall");
@@ -293,13 +338,13 @@ function filter_count_keys(items_prev, items_curr, prev_str, curr_str, get_count
 
     if      (is_prev_grow) pass_prev = ncc ? (icp >   icc) : (icp > cc);
     else if (is_prev_fall) pass_prev = ncc ? (icp <   icc) : (icp < cc);
-    else if (is_prev_same) pass_prev =       (icp === icc);
-    else if (is_prev_diff) pass_prev =       (icp !== icc);
+    else if (is_prev_same) pass_prev = is_same(icp, icc, prev_kv);
+    else if (is_prev_diff) pass_prev = is_diff(icp, icc, prev_kv);
 
     if      (is_curr_grow) pass_curr = ncp ? (icc >   icp) : (icc > cp);
     else if (is_curr_fall) pass_curr = ncp ? (icc <   icp) : (icc < cp);
-    else if (is_curr_same) pass_curr =       (icc === icp);
-    else if (is_curr_diff) pass_curr =       (icc !== icp);
+    else if (is_curr_same) pass_curr = is_same(icc, icp, curr_kv);
+    else if (is_curr_diff) pass_curr = is_diff(icc, icp, curr_kv);
 
     if (pass_prev && pass_curr) {
       res[identifier] = true;
