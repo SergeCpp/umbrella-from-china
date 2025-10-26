@@ -151,7 +151,7 @@ function format_bytes(bytes) {
 }
 
 function format_num_str(num, str) {
-  return num + ' ' + str + (num === 1 ? "" : 's');
+  return num + ' ' + str + ((num === 1) ? "" : 's');
 }
 
 function sort_results(results) {
@@ -219,41 +219,38 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   }
 
   // 3.1. Lookup helper for create curr expanded results array
-  const results_curr_ids = {};
-  results_curr.forEach(item => {
-    results_curr_ids[item.identifier] = true;
-  });
-
   // 3.2 Create curr expanded results array
-  const results_curr_exp = results_curr.map(item => ({ ...item,
-    is_prev: false, no_prev: null, index_prev: null, rank_change: 0 }));
+  const results_curr_ids = {};
+  const results_curr_exp = [];
+  for (const item of results_curr) {
+    results_curr_ids[item.identifier] = true;
+    results_curr_exp.push({ ...item,
+      is_prev: false, no_prev: null, index_prev: null, rank_change: 0 });
+  }
 
-  // 3.3. Add items from results_prev that absent in results_curr
-  results_prev.forEach(item => {
+  // 3.3. Add items from  results_prev that absent in results_curr
+  // 4.1. Create a map of results_prev by identifier
+  const map_prev = {};
+  for (const item of results_prev) {
     if (!results_curr_ids[item.identifier]) {
       results_curr_exp.push({ ...item,
         is_prev: true, no_prev: null, index_prev: null, rank_change: 0 });
     }
-  });
-
-  // 3.4. Sort curr expanded
-  sort_results(results_curr_exp);
-
-  // 4.1. Create a map of prev results by identifier
-  const map_prev = {};
-  results_prev.forEach(item => {
     map_prev[item.identifier] = item;
-  });
+  }
 
   // 4.2. Create prev expanded results array
   const results_prev_exp = [...results_prev]; // Make copy
 
   // 4.3. Add items from results_curr that absent in results_prev
-  results_curr.forEach(item => {
+  for (const item of results_curr) {
     if (!map_prev[item.identifier]) {
       results_prev_exp.push({ ...item });
     }
-  });
+  }
+
+  // 3.4. Sort curr expanded
+  sort_results(results_curr_exp);
 
   // 4.4. Sort prev expanded
   sort_results(results_prev_exp);
@@ -261,10 +258,10 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   // 5.1. Create a map of curr expanded results by identifier
   // 5.2. Set no_prev actual values in curr expanded results
   const map_curr_exp = {};
-  results_curr_exp.forEach(item => {
+  for (const item of results_curr_exp) {
     map_curr_exp[item.identifier] = item;
     item.no_prev = !map_prev[item.identifier];
-  });
+  }
 
   // 5.3. Traverse prev expanded and set index_prev in curr expanded
   results_prev_exp.forEach((item, index) => {

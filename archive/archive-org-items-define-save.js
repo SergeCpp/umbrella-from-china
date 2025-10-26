@@ -8,7 +8,7 @@ let   stat_curr_items = [];
 let   stat_prev_date  = null; //  "YYYY-MM-DD"
 let   stat_prev_items = [];
 
-let   stat_subjects   = null; // null / Map / undefined
+let   stat_subjects   = null; // null / {} / undefined
 
 let   du_load         = 0;    // Duration of load
 let   du_parse        = 0;    // Duration of parse
@@ -51,7 +51,8 @@ function load_subjects() {
       const xml_doc = [...xml.querySelectorAll("doc")];
 
       // Create subjects lookup map for id: subjects
-      stat_subjects = new Map();
+//    stat_subjects = new Map(); // Slower
+      stat_subjects =        {}; // Faster
       for (const doc of xml_doc) {
         const node_i = doc.querySelector('str[name="identifier"]');
         if  (!node_i) continue;
@@ -63,7 +64,8 @@ function load_subjects() {
             ? Array.from(node_s.querySelectorAll("str"), n => n.textContent.toLowerCase())
             : [node_s.textContent.toLowerCase()]
           : [];
-        stat_subjects.set(identifier, subjects);
+      //stat_subjects.set(identifier,   subjects); // Slower
+        stat_subjects    [identifier] = subjects;  // Faster
       }
       const time_2 = performance.now();
 
@@ -89,7 +91,8 @@ function filter_subjects(items_prev, items_curr, subjects_items, subjects_terms)
 
   // Cache match results for items
   for (const identifier in identifiers) {
-    const subjects = subjects_items.get(identifier);
+  //const subjects = subjects_items.get(identifier); // Slower
+    const subjects = subjects_items    [identifier]; // Faster
     if  (!subjects) continue;
 
     const match_result = subjects_terms.some(term => evaluate_term(term, subjects));
