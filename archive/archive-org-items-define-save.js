@@ -321,6 +321,9 @@ function process_filter() {
         timings.textContent = "";
 
   const err_beg  = '<div class="text-center text-comment">';
+  const err_bds  = '<details><summary class="text-ellipsis" style="width: fit-content; margin: 0 auto;">';
+  const err_es   = '</summary><p>';
+  const err_ed   = '</p></details>';
   const err_end  = '</div>';
 
   const err_date =
@@ -336,7 +339,16 @@ function process_filter() {
     err_beg + 'Allowed characters are: a-z, 0-9, underscore, dash, period, comma, quote, and space' +
     err_end;
   const err_views =
-    err_beg + 'Allowed are non-negative numbers, and words: grow, fall, same, diff / prefix: ^' +
+    err_beg +
+    err_bds + 'Allowed are non-negative numbers, and words: grow, fall, same, diff. Prefix: ^' +
+    err_es  +
+    'Prefix ^ switches Downloads fields to Old = Downloads &minus; Month. Old is displayed in the table<br />' +
+    'Prefix ^ switches Month fields to 23 = Month &minus; Week. 23 is displayed in the table<br />' +
+    'Prefix ^ does nothing to Week fields. Week is always 7 days. Week is displayed in the table' +
+    '</p><p>' +
+    'Words: grow, fall, same, diff (aliases: / \\ = !) switch min/max logic to prev/curr logic<br />' +
+    'Word allows number after it, and percent sign % after number' +
+    err_ed  +
     err_end;
   const err_views_range =
     err_beg + 'Min views count must be less than or equal to max views count' +
@@ -519,7 +531,7 @@ function process_filter() {
   // Subjects Check
   if (wait_subjects(stat_subjects, subjects)) return; // Wait for stat_subjects to load
 
-  // Process
+  // Checking and Initial Filters
   const filtered_curr_items = filter_items(stat_curr_items,
     archived_min_range, archived_max_range, created_min_range, created_max_range,
     collections, creators, title);
@@ -527,11 +539,13 @@ function process_filter() {
     archived_min_range, archived_max_range, created_min_range, created_max_range,
     collections, creators, title);
 
+  // Stats
   const time_1       = performance.now();
   let   results_curr = calculate_stats(filtered_curr_items, stat_curr_date);
   let   results_prev = calculate_stats(filtered_prev_items, stat_prev_date);
   const time_2       = performance.now();
 
+  // Views
   const filtered_views = filter_views(results_prev, results_curr,
     dl_min_str, dl_min_kv, dl_max_str, dl_max_kv, is_dl_old,
     mo_min_str, mo_min_kv, mo_max_str, mo_max_kv, is_mo_23,
@@ -541,6 +555,7 @@ function process_filter() {
     results_prev = filtered_views.prev;
   }
 
+  // Favs
   const filtered_favs = filter_favs(results_prev, results_curr,
     favs_min_str, favs_min_kv, favs_max_str, favs_max_kv);
   if   (filtered_favs.done) {
@@ -548,6 +563,7 @@ function process_filter() {
     results_prev = filtered_favs.prev;
   }
 
+  // Subjects
   const filtered_subjects = filter_subjects(results_prev, results_curr, stat_subjects, subjects);
   if   (filtered_subjects.done) {
     results_curr = filtered_subjects.curr;
@@ -558,6 +574,7 @@ function process_filter() {
     return;
   }
 
+  // Sets. Must be the last filter
   const prev_only = document.getElementById("prev-only").checked;
   const curr_only = document.getElementById("curr-only").checked;
 
@@ -568,6 +585,7 @@ function process_filter() {
   }
   const time_3 = performance.now();
 
+  // Render
   if (!render_results(results_curr, stat_curr_date, results_prev, stat_prev_date)) {
     return;
   }
