@@ -226,8 +226,8 @@ function calculate_stats(stats_items, stats_date) {
 // k.v: 0 means a >= b
 // k.v is non-negative integer or percent
 function is_grow(a, b, k) {
-  if (k.is_percent) return (b !== 0) ?
-        (a >= (b * (1 + k.value / 100))) : (k.value !== 0) ? (a > 0) : true;
+  if (k.is_percent) return (b !== 0) ? // Or (a > 0) can be returned for !0 percents from 0
+        (a >= (b * (1 + k.value / 100))) : (k.value !== 0) ? false : true;
   return a >= (b      + k.value);
 }
 
@@ -296,12 +296,12 @@ function get_count_map(items, is_key_exp, count, get_count, is_other_grow, is_ot
 }
 
 // Usage: At least one of *_str must be a key
-function filter_count_keys(items_prev, items_curr, prev_str, curr_str, get_count) {
+function filter_count_keys(items_prev, items_curr, prev_str, prev_kv, curr_str, curr_kv, get_count) {
   const is_key     = (s) => ["grow", "fall", "same", "diff"    ].includes(s);
   const is_key_exp = (s) => ["grow", "fall", "same", "diff", ""].includes(s);
 
-  const prev_kv = { value: 1, is_percent: false }; // Testing only
-  const curr_kv = { value: 1, is_percent: false }; // Testing only
+//prev_kv = { value: 1, is_percent: false }; // For testing
+//curr_kv = { value: 1, is_percent: false }; // For testing
 
   const is_prev_grow = (prev_str === "grow");
   const is_curr_grow = (curr_str === "grow");
@@ -336,15 +336,15 @@ function filter_count_keys(items_prev, items_curr, prev_str, curr_str, get_count
     let pass_prev = true;
     let pass_curr = true;
 
-    if      (is_prev_grow) pass_prev = ncc ? (icp >   icc) : (icp > cc);
-    else if (is_prev_fall) pass_prev = ncc ? (icp <   icc) : (icp < cc);
-    else if (is_prev_same) pass_prev = is_same(icp, icc, prev_kv);
-    else if (is_prev_diff) pass_prev = is_diff(icp, icc, prev_kv);
+    if      (is_prev_grow) pass_prev = ncc ? is_grow(icp, icc, prev_kv) : is_grow(icp, cc, prev_kv);
+    else if (is_prev_fall) pass_prev = ncc ? is_fall(icp, icc, prev_kv) : is_fall(icp, cc, prev_kv);
+    else if (is_prev_same) pass_prev =       is_same(icp, icc, prev_kv);
+    else if (is_prev_diff) pass_prev =       is_diff(icp, icc, prev_kv);
 
-    if      (is_curr_grow) pass_curr = ncp ? (icc >   icp) : (icc > cp);
-    else if (is_curr_fall) pass_curr = ncp ? (icc <   icp) : (icc < cp);
-    else if (is_curr_same) pass_curr = is_same(icc, icp, curr_kv);
-    else if (is_curr_diff) pass_curr = is_diff(icc, icp, curr_kv);
+    if      (is_curr_grow) pass_curr = ncp ? is_grow(icc, icp, curr_kv) : is_grow(icc, cp, curr_kv);
+    else if (is_curr_fall) pass_curr = ncp ? is_fall(icc, icp, curr_kv) : is_fall(icc, cp, curr_kv);
+    else if (is_curr_same) pass_curr =       is_same(icc, icp, curr_kv);
+    else if (is_curr_diff) pass_curr =       is_diff(icc, icp, curr_kv);
 
     if (pass_prev && pass_curr) {
       res[identifier] = true;
@@ -385,7 +385,9 @@ function filter_count_range(items_prev, items_curr, min_str, max_str, get_count)
 // Usage: *_min_str as *_prev_str, *_max_str as *_curr_str
 // *_str are: number / "" / keys: grow, fall, same, diff
 function filter_views_keys(items_prev, items_curr,
-  dl_prev_str, dl_curr_str, get_dl, mo_prev_str, mo_curr_str, get_mo, wk_prev_str, wk_curr_str) {
+  dl_prev_str, dl_prev_kv, dl_curr_str, dl_curr_kv, get_dl,
+  mo_prev_str, mo_prev_kv, mo_curr_str, mo_curr_kv, get_mo,
+  wk_prev_str, wk_prev_kv, wk_curr_str, wk_curr_kv) {
   const is_key = (s) => ["grow", "fall", "same", "diff"].includes(s);
 
   const is_dl_key = is_key(dl_prev_str) || is_key(dl_curr_str);
@@ -395,16 +397,34 @@ function filter_views_keys(items_prev, items_curr,
   if (!is_dl_key && !is_mo_key && !is_wk_key) return { done: false };
 
   const dl_res = is_dl_key
-    ? filter_count_keys (items_prev, items_curr, dl_prev_str, dl_curr_str, get_dl)
-    : filter_count_range(items_prev, items_curr, dl_prev_str, dl_curr_str, get_dl);
+? filter_count_keys(
+    items_prev,
+      items_curr,
+        dl_prev_str, dl_prev_kv, dl_curr_str, dl_curr_kv, get_dl)
+: filter_count_range(
+    items_prev,
+      items_curr,
+        dl_prev_str,             dl_curr_str,             get_dl);
 
   const mo_res = is_mo_key
-    ? filter_count_keys (items_prev, items_curr, mo_prev_str, mo_curr_str, get_mo)
-    : filter_count_range(items_prev, items_curr, mo_prev_str, mo_curr_str, get_mo);
+? filter_count_keys(
+    items_prev,
+      items_curr,
+        mo_prev_str, mo_prev_kv, mo_curr_str, mo_curr_kv, get_mo)
+: filter_count_range(
+    items_prev,
+      items_curr,
+        mo_prev_str,             mo_curr_str,             get_mo);
 
   const wk_res = is_wk_key
-    ? filter_count_keys (items_prev, items_curr, wk_prev_str, wk_curr_str, item => item.views_7)
-    : filter_count_range(items_prev, items_curr, wk_prev_str, wk_curr_str, item => item.views_7);
+? filter_count_keys(
+    items_prev,
+      items_curr,
+        wk_prev_str, wk_prev_kv, wk_curr_str, wk_curr_kv, item => item.views_7)
+: filter_count_range(
+    items_prev,
+      items_curr,
+        wk_prev_str,             wk_curr_str,             item => item.views_7);
 
   const all_res = {}; // Intersect all three res
   for (const identifier in dl_res) {
@@ -422,7 +442,9 @@ function filter_views_keys(items_prev, items_curr,
 // Filtering by views count: from min to max, or by keys logic
 // *_str are: number / "" / keys
 function filter_views(items_prev, items_curr,
-  dl_min_str, dl_max_str, is_dl_old, mo_min_str, mo_max_str, is_mo_23, wk_min_str, wk_max_str) {
+  dl_min_str, dl_min_kv, dl_max_str, dl_max_kv, is_dl_old,
+  mo_min_str, mo_min_kv, mo_max_str, mo_max_kv, is_mo_23,
+  wk_min_str, wk_min_kv, wk_max_str, wk_max_kv) {
   if (!dl_min_str && !dl_max_str &&
       !mo_min_str && !mo_max_str &&
       !wk_min_str && !wk_max_str) return { done: false };
@@ -431,7 +453,9 @@ function filter_views(items_prev, items_curr,
   const get_mo = is_mo_23  ? (item => item.views_23 ) : (item => item.views_30 );
 
   const views_keys = filter_views_keys(items_prev, items_curr,
-    dl_min_str, dl_max_str, get_dl, mo_min_str, mo_max_str, get_mo, wk_min_str, wk_max_str);
+    dl_min_str, dl_min_kv, dl_max_str, dl_max_kv, get_dl,
+    mo_min_str, mo_min_kv, mo_max_str, mo_max_kv, get_mo,
+    wk_min_str, wk_min_kv, wk_max_str, wk_max_kv);
 
   if (views_keys.done) return views_keys;
 
@@ -464,12 +488,14 @@ function filter_views(items_prev, items_curr,
 
 // Usage: favs_min_str as favs_prev_str, favs_max_str as favs_curr_str
 // *_str are: number / "" / keys: grow, fall, same, diff
-function filter_favs_keys(items_prev, items_curr, favs_prev_str, favs_curr_str) {
+function filter_favs_keys(items_prev, items_curr,
+  favs_prev_str, favs_prev_kv, favs_curr_str, favs_curr_kv) {
   const is_key = (s) => ["grow", "fall", "same", "diff"].includes(s);
 
   if (!is_key(favs_prev_str) && !is_key(favs_curr_str)) return { done: false };
 
-  const favs_res = filter_count_keys(items_prev, items_curr, favs_prev_str, favs_curr_str, item => item.favorites);
+  const favs_res = filter_count_keys(items_prev, items_curr,
+    favs_prev_str, favs_prev_kv, favs_curr_str, favs_curr_kv, item => item.favorites);
 
   const results_prev = items_prev.filter(item => favs_res[item.identifier]);
   const results_curr = items_curr.filter(item => favs_res[item.identifier]);
@@ -479,10 +505,12 @@ function filter_favs_keys(items_prev, items_curr, favs_prev_str, favs_curr_str) 
 
 // Filtering by favorites count: from min to max, or by keys logic
 // *_str are: number / "" / keys
-function filter_favs(items_prev, items_curr, favs_min_str, favs_max_str) {
+function filter_favs(items_prev, items_curr,
+  favs_min_str, favs_min_kv, favs_max_str, favs_max_kv) {
   if (!favs_min_str && !favs_max_str) return { done: false };
 
-  const favs_keys = filter_favs_keys(items_prev, items_curr, favs_min_str, favs_max_str);
+  const favs_keys = filter_favs_keys(items_prev, items_curr,
+    favs_min_str, favs_min_kv, favs_max_str, favs_max_kv);
 
   if (favs_keys.done) return favs_keys;
 

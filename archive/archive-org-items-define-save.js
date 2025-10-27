@@ -219,8 +219,9 @@ function get_key(str) {
   }
 
   if (s !== "") {
+    if (!/^\d{1,8}$/.test(s)) return [ str, null ];
     const v = parseInt(s, 10);
-    if (isNaN(v) || (v < 0)) return [ str, null ];
+    if (isNaN(v) || (v < 0))  return [ str, null ];
     value = v;
   }
 
@@ -532,13 +533,16 @@ function process_filter() {
   const time_2       = performance.now();
 
   const filtered_views = filter_views(results_prev, results_curr,
-    dl_min_str, dl_max_str, is_dl_old, mo_min_str, mo_max_str, is_mo_23, wk_min_str, wk_max_str);
+    dl_min_str, dl_min_kv, dl_max_str, dl_max_kv, is_dl_old,
+    mo_min_str, mo_min_kv, mo_max_str, mo_max_kv, is_mo_23,
+    wk_min_str, wk_min_kv, wk_max_str, wk_max_kv);
   if (filtered_views.done) {
     results_curr = filtered_views.curr;
     results_prev = filtered_views.prev;
   }
 
-  const filtered_favs = filter_favs(results_prev, results_curr, favs_min_str, favs_max_str);
+  const filtered_favs = filter_favs(results_prev, results_curr,
+    favs_min_str, favs_min_kv, favs_max_str, favs_max_kv);
   if   (filtered_favs.done) {
     results_curr = filtered_favs.curr;
     results_prev = filtered_favs.prev;
