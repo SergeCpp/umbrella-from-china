@@ -347,7 +347,7 @@ function process_filter() {
     'Prefix ^ does nothing to Week fields. Week is always 7 days. Week is displayed in the table' +
     '</p><p>' +
     'Words: grow, fall, same, diff (aliases: / \\ = !) switch min/max logic to prev/curr logic<br />' +
-    'Word allows number after it, and percent sign % after number' +
+    'Word allows number after it, and percent sign % can be after number' +
     err_ed  +
     err_end;
   const err_views_range =

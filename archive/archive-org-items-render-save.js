@@ -218,6 +218,11 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     return false;
   }
 
+  // Sets
+  let only_curr = 0;
+  let only_prev = 0;
+  let only_both = 0;
+
   // 3.1. Lookup helper for create curr expanded results array
   // 3.2 Create curr expanded results array
   const results_curr_ids = {};
@@ -233,6 +238,7 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   const map_prev = {};
   for (const item of results_prev) {
     if (!results_curr_ids[item.identifier]) {
+      only_prev++;
       results_curr_exp.push({ ...item,
         is_prev: true, no_prev: null, index_prev: null, rank_change: 0 });
     }
@@ -245,14 +251,16 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   // 4.3. Add items from results_curr that absent in results_prev
   for (const item of results_curr) {
     if (!map_prev[item.identifier]) {
+      only_curr++;
       results_prev_exp.push({ ...item });
     }
   }
 
-  // 3.4. Sort curr expanded
-  sort_results(results_curr_exp);
+  // Sets
+  only_both = results_curr_exp.length - only_curr - only_prev;
 
-  // 4.4. Sort prev expanded
+  // Sort expanded arrays for rank changes calculations
+  sort_results(results_curr_exp);
   sort_results(results_prev_exp);
 
   // 5.1. Create a map of curr expanded results by identifier
@@ -312,6 +320,20 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   // 8. Both stats displaying
   render_stats(results_prev, date_prev, "prev", container); // Also sorts results_prev
   render_stats(results_curr, date_curr, "curr", container); // Also sorts results_curr
+
+  // Sets displaying
+  const sets_div = document.createElement("div");
+  sets_div.className = "text-center text-comment";
+
+  if ((only_curr === 0) && (only_prev === 0)) {
+    sets_div.textContent = 'All Items are present in both ' + date_prev + ' and ' + date_curr;
+  } else {
+    sets_div.textContent = only_prev + ' in ' + date_prev + ' only, ' +
+                           only_curr + ' in ' + date_curr + ' only, ' +
+                           only_both + ' in ' +     'both'+      '. ' +
+                           'Checkboxes above to select';
+  }
+  container.appendChild(sets_div);
 
   // 9. Spacing
   container.lastElementChild.style.marginBottom = "1em"; // Add space before item list
