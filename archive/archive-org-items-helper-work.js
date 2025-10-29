@@ -1,14 +1,15 @@
 /* Doc Cache */
 
 function get_doc_arr(doc, name) {
+  if (!(doc instanceof Element)) return doc[name + "_arr"] ?? [];
+
   if (!doc.arr_cache) doc.arr_cache = {};
   let arr = doc.arr_cache[name];
   if (arr !== undefined) return arr;
 
-  // Get all values for this field, handles both <arr> and <str>
   const node = doc.querySelector('arr[name="' + name + '"], str[name="' + name + '"]');
   arr = node
-    ? node.tagName.toLowerCase() === "arr"
+    ? node.tagName === "arr"
       ? Array.from(node.querySelectorAll("str"), n => n.textContent.toLowerCase())
       : [node.textContent.toLowerCase()]
     : [];
@@ -18,6 +19,8 @@ function get_doc_arr(doc, name) {
 }
 
 function get_doc_str(doc, name) {
+  if (!(doc instanceof Element)) return doc[name] ?? null;
+
   if (!doc.str_cache) doc.str_cache = {};
   let str = doc.str_cache[name];
   if (str !== undefined) return str;
@@ -107,9 +110,9 @@ function filter_items(
     const month_str      = get_doc_str(doc, 'month'     );
     const week_str       = get_doc_str(doc, 'week'      );
 
-    if ((identifier_str === null) || (title_str      === null) || (item_size_str === null) ||
-        (mediatype_str  === null) || (publicdate_str === null) ||
-        (downloads_str  === null) || (month_str      === null) || (week_str === null)) {
+    if ((identifier_str === null) || (title_str === null) || (item_size_str  === null) ||
+        (mediatype_str  === null)   /*date_str  can null*/|| (publicdate_str === null) ||
+        (downloads_str  === null) || (month_str === null) || (week_str       === null)) {
       return false;
     }
 

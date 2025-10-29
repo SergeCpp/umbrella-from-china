@@ -1,6 +1,7 @@
 /* Global Variables */
 
 const stat_file_dates = [];   // ["YYYY-MM-DD"]
+const stat_file_cache = {};   // ["YYYY-MM-DD"] = []
 
 let   stat_curr_date  = null; //  "YYYY-MM-DD"
 let   stat_curr_items = [];
@@ -48,19 +49,19 @@ function load_subjects() {
       const xml    = parser.parseFromString(text, "text/xml");
 
       if (xml.querySelector("parsererror")) { throw new Error("Subjects XML file invalid format"); }
-      const xml_doc = [...xml.querySelectorAll("doc")];
+      const docs = xml.querySelectorAll("doc");
 
       // Create subjects lookup map for id: subjects
 //    stat_subjects = new Map(); // Slower
       stat_subjects =        {}; // Faster
-      for (const doc of xml_doc) {
+      for (const doc of docs) {
         const node_i = doc.querySelector('str[name="identifier"]');
         if  (!node_i) continue;
         const identifier = node_i.textContent;
 
         const node_s = doc.querySelector('arr[name="subject"], str[name="subject"]');
         const subjects = node_s
-          ? node_s.tagName.toLowerCase() === "arr"
+          ? node_s.tagName === "arr"
             ? Array.from(node_s.querySelectorAll("str"), n => n.textContent.toLowerCase())
             : [node_s.textContent.toLowerCase()]
           : [];
@@ -718,7 +719,7 @@ function date_change_menu(event, what) {
 
     date_opt.onclick = function() {
       menu.remove_ex();
-      load_stat(date, what);
+      setTimeout(load_stat, 3, date, what);
     };
     menu.appendChild(date_opt);
   }
@@ -759,7 +760,55 @@ function init_dates() {
 
 /* Main */
 
+function get_stat_arr(doc, name) {
+  const node = doc.querySelector('arr[name="' + name + '"], str[name="' + name + '"]');
+  const arr  = node
+    ? node.tagName === "arr"
+      ? Array.from(node.querySelectorAll("str"), n => n.textContent.toLowerCase())
+      : [node.textContent.toLowerCase()]
+    : [];
+
+  return arr;
+}
+
+function conv_stat_docs(docs) {
+  const stats = docs.map(doc => {
+    const identifier = doc.querySelector('str[name="identifier"]')?.textContent;
+    const title      = doc.querySelector('str[name="title"]'     )?.textContent;
+    const item_size  = doc.querySelector('str[name="item_size"]' )?.textContent;
+    const mediatype  = doc.querySelector('str[name="mediatype"]' )?.textContent;
+    const date       = doc.querySelector('str[name="date"]'      )?.textContent;
+    const publicdate = doc.querySelector('str[name="publicdate"]')?.textContent;
+    const downloads  = doc.querySelector('str[name="downloads"]' )?.textContent;
+    const month      = doc.querySelector('str[name="month"]'     )?.textContent;
+    const week       = doc.querySelector('str[name="week"]'      )?.textContent;
+
+    const collection_arr = get_stat_arr(doc, "collection");
+    const creator_arr    = get_stat_arr(doc, "creator"   );
+    const title_arr      = title ? [title.toLowerCase()] : []; // Doubled as array for filtering
+
+    return {
+      identifier,
+      title     ,
+      item_size ,
+      mediatype ,
+      date      ,
+      publicdate,
+      downloads ,
+      month     ,
+      week      ,
+      collection_arr,
+      creator_arr,
+      title_arr
+    };
+  });
+  return stats;
+}
+
 function load_stat_file(date) {
+  const cached = stat_file_cache[date];
+  if   (cached) return new Promise(resolve => setTimeout(resolve, 3, cached));
+
   const time_0    = performance.now();
   const container = document.getElementById("results");
   const xml_tmplt = container.getAttribute("data-stats");
@@ -775,13 +824,23 @@ function load_stat_file(date) {
       const time_1 = performance.now();
       const parser = new DOMParser();
       const xml    = parser.parseFromString(text, "text/xml");
+
+      if (xml.querySelector("parsererror")) { throw new Error(date + " &mdash; Invalid XML format"); }
+      const docs   = [...xml.querySelectorAll("doc")];
+//    const stats  = conv_stat_docs(docs);
       const time_2 = performance.now();
 
+      // Accumulate
       du_load  += (time_1 - time_0);
       du_parse += (time_2 - time_1);
 
-      if (xml.querySelector("parsererror")) { throw new Error(date + " &mdash; Invalid XML format"); }
-      return [...xml.querySelectorAll("doc")];
+      const cache_dates = Object.keys      (stat_file_cache);
+      if   (cache_dates.length >= 7) delete stat_file_cache[cache_dates[0]];
+
+      stat_file_cache[date] = docs;
+      return docs;
+//    stat_file_cache[date] = stats;
+//    return stats;
     });
 }
 
