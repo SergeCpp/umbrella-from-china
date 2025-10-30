@@ -640,7 +640,6 @@ function date_change_menu(event, what) {
   menu.remove_ex = function() {
     document.removeEventListener('click', menu.outside_click);
     menu.remove();
-
     if (menu_caller && document.body.contains(menu_caller)) { menu_caller.focus(); }
   };
 
@@ -710,9 +709,11 @@ function date_change_menu(event, what) {
     init_opt(date_opt, date);
 
     date_opt.onclick = function() {
-//    setTimeout(load_stat, 5, date, what);
-      requestIdleCallback(() => load_stat(date, what), { timeout: 5 });
       menu.remove_ex();
+//    load_stat(date, what); // Menu closing delay when cache is used
+//    setTimeout(load_stat, 5, date, what); // Mostly solved
+//    requestIdleCallback(() => load_stat(date, what), { timeout: 5 }); // Almost solved
+      requestAnimationFrame(() => setTimeout(load_stat, 0, date, what)); // Solved
     };
     menu.appendChild(date_opt);
   }
@@ -805,7 +806,8 @@ function conv_stat_docs(docs) {
 
 function load_stat_file(date) {
   const cached = stat_file_cache[date];
-  if   (cached) return new Promise(resolve => setTimeout(resolve, 5, cached));
+  if   (cached) return Promise.resolve(cached);
+//if   (cached) return new Promise(resolve => setTimeout(resolve, 5, cached)); // For menu closing (solved there)
 
   const time_0    = performance.now();
   const container = document.getElementById("results");
@@ -832,8 +834,15 @@ function load_stat_file(date) {
       du_load  += (time_1 - time_0);
       du_parse += (time_2 - time_1);
 
-      const cache_dates = Object.keys      (stat_file_cache);
-      if   (cache_dates.length >= 7) delete stat_file_cache[cache_dates[0]];
+      const cache_dates = Object.keys(stat_file_cache);
+      if   (cache_dates.length >= 7) {
+        for (const cd of cache_dates) {
+          if ((cd !== stat_curr_date) && (cd !== stat_prev_date)) {
+            delete stat_file_cache[cd];
+            break;
+          }
+        }
+      }
 
       stat_file_cache[date] = docs;
       return docs;
