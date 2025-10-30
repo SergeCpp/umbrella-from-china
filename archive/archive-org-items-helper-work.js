@@ -96,10 +96,16 @@ function filter_date(date, min, max) {
   return                             (date_month >= min.month) || (date_month <= max.month);
 }
 
-function filter_items(
-  items, archived_min, archived_max, created_min, created_max,
+function filter_items(stats_items, stats_date,
+  archived_min, archived_max, created_min, created_max,
   collections, creators, title) {
-  const filtered_items = items.filter(doc => {
+  const filtered_items = [];
+
+  for (let i = 0; i < stats_items.length; i++) {
+    const doc = stats_items[i];
+
+    /* Checking and Initial Filters */
+
     const identifier_str = get_doc_str(doc, 'identifier');
     const title_str      = get_doc_str(doc, 'title'     );
     const item_size_str  = get_doc_str(doc, 'item_size' );
@@ -113,95 +119,80 @@ function filter_items(
     if ((identifier_str === null) || (title_str === null) || (item_size_str  === null) ||
         (mediatype_str  === null)   /*date_str  can null*/|| (publicdate_str === null) ||
         (downloads_str  === null) || (month_str === null) || (week_str       === null)) {
-      return false;
+      continue;
     }
 
     // Item Size
     const item_size = parseInt(item_size_str, 10);
-    if (isNaN(item_size) || (item_size < 0)) return false;
+    if (isNaN(item_size) || (item_size < 0)) continue;
 
     // Mediatype
-    if ((mediatype_str !== "movies") && (mediatype_str !== "audio")) return false;
+    if ((mediatype_str !== "movies") && (mediatype_str !== "audio")) continue;
 
     // Created
     let date = null;
 
     if (date_str !== null) {
       date = new Date(date_str);
-      if (isNaN(date.getTime())) return false;
+      if (isNaN(date.getTime())) continue;
     } else { // No date set for item
       if (mediatype_str === "audio") { // Set default date to audio item only
         date = new Date("2012-01-01T00:00:00Z"); // UTC date, earliest for entire thematic stat
       } else {
-        return false;
+        continue;
       }
     }
 
-    if (filter_date(date, created_min, created_max) === false) return false;
+    if (!filter_date(date, created_min, created_max)) continue;
 
     // Archived
     const publicdate = new Date(publicdate_str);
-    if (isNaN(publicdate.getTime())) return false;
-    if (filter_date(publicdate, archived_min, archived_max) === false) return false;
+    if (isNaN(publicdate.getTime())) continue;
+    if (!filter_date(publicdate, archived_min, archived_max)) continue;
 
     // Views
     const downloads = parseInt(downloads_str, 10);
     const month     = parseInt(month_str,     10);
     const week      = parseInt(week_str,      10);
 
-    if (isNaN(downloads) || isNaN(month) || isNaN(week)) return false;
-    if ((downloads < 0) || (month < 0) || (week < 0)) return false;
-    if ((downloads < month) || (month < week)) return false;
+    if (isNaN(downloads) || isNaN(month) || isNaN(week)) continue;
+    if ((downloads < 0) || (month < 0) || (week < 0)) continue;
+    if ((downloads < month) || (month < week)) continue;
 
     // Collections
     const matches_collections = filter_matches(doc, "collection", collections);
-    if  (!matches_collections) return false;
+    if  (!matches_collections) continue;
 
     // Creators
     const matches_creators = filter_matches(doc, "creator", creators);
-    if  (!matches_creators) return false;
+    if  (!matches_creators) continue;
 
     // Title
     const matches_title = filter_matches(doc, "title", title);
-    if  (!matches_title) return false;
+    if  (!matches_title) continue;
 
     // Item passed filter
-    return true;
-  });
-  return filtered_items;
-}
 
-/* Calculate Stats */
+    /* Calculating Stats */
 
-function calculate_stats(stats_items, stats_date) {
-  const stats = stats_items.map(doc => {
-    const identifier  =          get_doc_str(doc, 'identifier');
-    const title       =          get_doc_str(doc, 'title'     );
-    const item_size   = parseInt(get_doc_str(doc, 'item_size' ), 10);
-    const mediatype   =          get_doc_str(doc, 'mediatype' );
-    const publicdate  = new Date(get_doc_str(doc, 'publicdate'));
-    const downloads   = parseInt(get_doc_str(doc, 'downloads' ), 10);
-    const month       = parseInt(get_doc_str(doc, 'month'     ), 10);
-    const week        = parseInt(get_doc_str(doc, 'week'      ), 10);
+    const calc_date = new Date(stats_date + "T11:59:59.999Z"); // To count a day for published on day before
 
-    const calc_date   = new Date(stats_date + "T11:59:59.999Z"); // To count a day for published on day before
+    const days_all  = Math.round((calc_date - publicdate) / (24 * 60 * 60 * 1000));
+    const views_all = downloads;
+    const ratio_all = parseFloat((views_all / days_all).toFixed(3));
 
-    const days_all    = Math.round((calc_date - publicdate) / (24 * 60 * 60 * 1000));
-    const views_all   = downloads;
-    const ratio_all   = parseFloat((views_all / days_all).toFixed(3));
+    const days_old  = days_all - 30; // Always valid
+    const views_old = views_all - month;
+    const ratio_old = parseFloat((views_old / days_old).toFixed(3));
 
-    const days_old    = days_all - 30; // Always valid
-    const views_old   = views_all - month;
-    const ratio_old   = parseFloat((views_old / days_old).toFixed(3));
+    const colls_arr = get_doc_arr(doc, 'collection');
+    const favorites = colls_arr.filter(c => c.startsWith("fav-")).length;
 
-    const collections = get_doc_arr(doc, 'collection');
-    const favorites   = collections.filter(c => c.startsWith("fav-")).length;
-
-    return {
-      identifier,
-      title     ,
+    filtered_items.push({
+      identifier: identifier_str,
+      title     : title_str,
       item_size ,
-      mediatype ,
+      mediatype : mediatype_str,
       days_all  ,
       views_all ,
       ratio_all ,
@@ -214,9 +205,10 @@ function calculate_stats(stats_items, stats_date) {
       views_7   :                      week,
       ratio_7   : parseFloat(         (week  /  7).toFixed(3)),
       favorites
-    };
-  });
-  return stats;
+    });
+  }
+
+  return filtered_items;
 }
 
 /* Filter Count */

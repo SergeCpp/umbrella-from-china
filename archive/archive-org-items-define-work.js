@@ -4,10 +4,10 @@ const stat_file_dates = [];   // ["YYYY-MM-DD"]
 const stat_file_cache = {};   // ["YYYY-MM-DD"] = []
 
 let   stat_curr_date  = null; //  "YYYY-MM-DD"
-let   stat_curr_items = [];
+let   stat_curr_items = null; // Array / NodeList
 
 let   stat_prev_date  = null; //  "YYYY-MM-DD"
-let   stat_prev_items = [];
+let   stat_prev_items = null; // Array / NodeList
 
 let   stat_subjects   = null; // null / {} / undefined
 
@@ -65,7 +65,7 @@ function load_subjects() {
             ? Array.from(node_s.querySelectorAll("str"), n => n.textContent.toLowerCase())
             : [node_s.textContent.toLowerCase()]
           : [];
-      //stat_subjects.set(identifier,   subjects); // Slower
+//      stat_subjects.set(identifier,   subjects); // Slower
         stat_subjects    [identifier] = subjects;  // Faster
       }
       const time_2 = performance.now();
@@ -92,7 +92,7 @@ function filter_subjects(items_prev, items_curr, subjects_items, subjects_terms)
 
   // Cache match results for items
   for (const identifier in identifiers) {
-  //const subjects = subjects_items.get(identifier); // Slower
+//  const subjects = subjects_items.get(identifier); // Slower
     const subjects = subjects_items    [identifier]; // Faster
     if  (!subjects) continue;
 
@@ -532,19 +532,13 @@ function process_filter() {
   // Subjects Check
   if (wait_subjects(stat_subjects, subjects)) return; // Wait for stat_subjects to load
 
-  // Checking and Initial Filters
-  const filtered_curr_items = filter_items(stat_curr_items,
+  // Checking and Initial Filters, and Calculating Stats
+  let results_curr = filter_items(stat_curr_items, stat_curr_date,
     archived_min_range, archived_max_range, created_min_range, created_max_range,
     collections, creators, title);
-  const filtered_prev_items = filter_items(stat_prev_items,
+  let results_prev = filter_items(stat_prev_items, stat_prev_date,
     archived_min_range, archived_max_range, created_min_range, created_max_range,
     collections, creators, title);
-
-  // Stats
-  const time_1       = performance.now();
-  let   results_curr = calculate_stats(filtered_curr_items, stat_curr_date);
-  let   results_prev = calculate_stats(filtered_prev_items, stat_prev_date);
-  const time_2       = performance.now();
 
   // Views
   const filtered_views = filter_views(results_prev, results_curr,
@@ -584,23 +578,21 @@ function process_filter() {
     results_curr = filtered_sets.curr;
     results_prev = filtered_sets.prev;
   }
-  const time_3 = performance.now();
+  const time_1 = performance.now();
 
   // Render
   if (!render_results(results_curr, stat_curr_date, results_prev, stat_prev_date)) {
     return;
   }
-  const time_4 = performance.now();
+  const time_2 = performance.now();
 
   // Timings
-  const du_filter = (time_1 - time_0) + (time_3 - time_2);
-  const du_calc   =  time_2 - time_1;
-  const du_render =  time_4 - time_3;
+  const du_filter = time_1 - time_0;
+  const du_render = time_2 - time_1;
 
   timings.textContent = 'Load '   + du_load  .toFixed(1) + ' ms / ' +
                         'Parse '  + du_parse .toFixed(1) + ' ms / ' +
                         'Filter ' + du_filter.toFixed(1) + ' ms / ' +
-                        'Calc '   + du_calc  .toFixed(1) + ' ms / ' +
                         'Render ' + du_render.toFixed(1) + ' ms';
 }
 
@@ -718,8 +710,9 @@ function date_change_menu(event, what) {
     init_opt(date_opt, date);
 
     date_opt.onclick = function() {
+//    setTimeout(load_stat, 5, date, what);
+      requestIdleCallback(() => load_stat(date, what), { timeout: 5 });
       menu.remove_ex();
-      setTimeout(load_stat, 3, date, what);
     };
     menu.appendChild(date_opt);
   }
@@ -772,7 +765,11 @@ function get_stat_arr(doc, name) {
 }
 
 function conv_stat_docs(docs) {
-  const stats = docs.map(doc => {
+  const stats = [];
+
+  for (let i = 0; i < docs.length; i++) {
+    const doc = docs[i];
+
     const identifier = doc.querySelector('str[name="identifier"]')?.textContent;
     const title      = doc.querySelector('str[name="title"]'     )?.textContent;
     const item_size  = doc.querySelector('str[name="item_size"]' )?.textContent;
@@ -787,7 +784,7 @@ function conv_stat_docs(docs) {
     const creator_arr    = get_stat_arr(doc, "creator"   );
     const title_arr      = title ? [title.toLowerCase()] : []; // Doubled as array for filtering
 
-    return {
+    stats.push({
       identifier,
       title     ,
       item_size ,
@@ -800,14 +797,15 @@ function conv_stat_docs(docs) {
       collection_arr,
       creator_arr,
       title_arr
-    };
-  });
+    });
+  }
+
   return stats;
 }
 
 function load_stat_file(date) {
   const cached = stat_file_cache[date];
-  if   (cached) return new Promise(resolve => setTimeout(resolve, 3, cached));
+  if   (cached) return new Promise(resolve => setTimeout(resolve, 5, cached));
 
   const time_0    = performance.now();
   const container = document.getElementById("results");
@@ -826,7 +824,7 @@ function load_stat_file(date) {
       const xml    = parser.parseFromString(text, "text/xml");
 
       if (xml.querySelector("parsererror")) { throw new Error(date + " &mdash; Invalid XML format"); }
-      const docs   = [...xml.querySelectorAll("doc")];
+      const docs   = xml.querySelectorAll("doc");
 //    const stats  = conv_stat_docs(docs);
       const time_2 = performance.now();
 
