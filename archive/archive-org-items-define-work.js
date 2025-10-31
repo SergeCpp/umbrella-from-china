@@ -4,10 +4,10 @@ const stat_file_dates = [];   // ["YYYY-MM-DD"]
 const stat_file_cache = {};   // ["YYYY-MM-DD"] = []
 
 let   stat_curr_date  = null; //  "YYYY-MM-DD"
-let   stat_curr_items = null; // Array / NodeList
+let   stat_curr_items = null; // NodeList / []
 
 let   stat_prev_date  = null; //  "YYYY-MM-DD"
-let   stat_prev_items = null; // Array / NodeList
+let   stat_prev_items = null; // NodeList / []
 
 let   stat_subjects   = null; // null / {} / undefined
 
@@ -195,7 +195,37 @@ function get_views_prefix(min_str, max_str) {
   return [ is_min_prefix || is_max_prefix, min_str, max_str ];
 }
 
-// Syntax: grow or / | fall or \ | same or = | diff or ! [integer [%] ]
+// Syntax: [[ae for >= | a for > | be for <= | b for < | e for == | ne for !=] non-negative integer]
+function get_num(str, key_other) {
+  if (!str) return [ "", null ]; // Any number on this side
+
+  let sl = 0;
+  let op = null;
+
+  if      (str.startsWith("ae")) { sl = 2; op = "ae"; }
+  else if (str.startsWith('a' )) { sl = 1; op = 'a' ; }
+  else if (str.startsWith("be")) { sl = 2; op = "be"; }
+  else if (str.startsWith('b' )) { sl = 1; op = 'b' ; }
+  else if (str.startsWith( 'e')) { sl = 1; op =  'e'; }
+  else if (str.startsWith("ne")) { sl = 2; op = "ne"; }
+
+  let s = sl ? str.slice(sl).trimStart() : str;
+  if (!/^\d{1,8}$/.test(s))    return [ str, null ];
+  const num = parseInt(s, 10);
+  if (isNaN(num) || (num < 0)) return [ str, null ];
+
+  if (!op) { // Defaults
+    if      (key_other === "grow") op = "be"; // This side must be <= num to check other for grow from num
+    else if (key_other === "fall") op = "ae"; // This side must be >= num to check other for fall from num
+    else if (key_other === "same") op =  'e'; // This side must be == num to check other for same to   num
+    else if (key_other === "diff") op =  'e'; // This side must be == num to check other for diff from num
+    else return [ str, null ];
+  }
+
+  return [ s, op ];
+}
+
+// Syntax: (grow or / | fall or \ | same or = | diff or !) [non-negative integer [%]]
 function get_key(str) {
   let sl    = 0;
   let name  = null;
@@ -467,6 +497,20 @@ function process_filter() {
   [wk_min_str, wk_min_kv] = get_key(wk_min_str);
   [wk_max_str, wk_max_kv] = get_key(wk_max_str);
 
+  let dl_min_no = null;
+  let dl_max_no = null;
+  let mo_min_no = null;
+  let mo_max_no = null;
+  let wk_min_no = null;
+  let wk_max_no = null;
+
+  if (input_allowed_keys(dl_min_str)) [dl_max_str, dl_max_no] = get_num(dl_max_str, dl_min_str);
+  if (input_allowed_keys(dl_max_str)) [dl_min_str, dl_min_no] = get_num(dl_min_str, dl_max_str);
+  if (input_allowed_keys(mo_min_str)) [mo_max_str, mo_max_no] = get_num(mo_max_str, mo_min_str);
+  if (input_allowed_keys(mo_max_str)) [mo_min_str, mo_min_no] = get_num(mo_min_str, mo_max_str);
+  if (input_allowed_keys(wk_min_str)) [wk_max_str, wk_max_no] = get_num(wk_max_str, wk_min_str);
+  if (input_allowed_keys(wk_max_str)) [wk_min_str, wk_min_no] = get_num(wk_min_str, wk_max_str);
+
   if (!input_allowed_views(dl_min_str) || !input_allowed_views(dl_max_str) ||
       !input_allowed_views(mo_min_str) || !input_allowed_views(mo_max_str) ||
       !input_allowed_views(wk_min_str) || !input_allowed_views(wk_max_str)) {
@@ -514,6 +558,12 @@ function process_filter() {
   [favs_min_str, favs_min_kv] = get_key(favs_min_str);
   [favs_max_str, favs_max_kv] = get_key(favs_max_str);
 
+  let favs_min_no  = null;
+  let favs_max_no  = null;
+
+  if (input_allowed_keys(favs_min_str)) [favs_max_str, favs_max_no] = get_num(favs_max_str, favs_min_str);
+  if (input_allowed_keys(favs_max_str)) [favs_min_str, favs_min_no] = get_num(favs_min_str, favs_max_str);
+
   if (!input_allowed_favs(favs_min_str) || !input_allowed_favs(favs_max_str)) {
     container.innerHTML = err_favs;
     return;
@@ -542,9 +592,9 @@ function process_filter() {
 
   // Views
   const filtered_views = filter_views(results_prev, results_curr,
-    dl_min_str, dl_min_kv, dl_max_str, dl_max_kv, is_dl_old,
-    mo_min_str, mo_min_kv, mo_max_str, mo_max_kv, is_mo_23,
-    wk_min_str, wk_min_kv, wk_max_str, wk_max_kv);
+    dl_min_str, dl_min_kv, dl_min_no, dl_max_str, dl_max_kv, dl_max_no, is_dl_old,
+    mo_min_str, mo_min_kv, mo_min_no, mo_max_str, mo_max_kv, mo_max_no, is_mo_23,
+    wk_min_str, wk_min_kv, wk_min_no, wk_max_str, wk_max_kv, wk_max_no);
   if (filtered_views.done) {
     results_curr = filtered_views.curr;
     results_prev = filtered_views.prev;
@@ -552,8 +602,8 @@ function process_filter() {
 
   // Favs
   const filtered_favs = filter_favs(results_prev, results_curr,
-    favs_min_str, favs_min_kv, favs_max_str, favs_max_kv);
-  if   (filtered_favs.done) {
+    favs_min_str, favs_min_kv, favs_min_no, favs_max_str, favs_max_kv, favs_max_no);
+  if (filtered_favs.done) {
     results_curr = filtered_favs.curr;
     results_prev = filtered_favs.prev;
   }
