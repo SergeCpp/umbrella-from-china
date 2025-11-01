@@ -34,6 +34,67 @@ function get_doc_str(doc, name) {
 
 /* Filter Items */
 
+function parse_term(term) {
+  term = term.trim();
+
+  // Check for AND first (higher precedence)
+  if (term.includes(" AND ")) {
+    const terms = term.split(" AND ").map(part => parse_term(part));
+    return {
+      type: "AND",
+      terms: terms
+    };
+  }
+  // Check for NOT next
+  else if (term.includes("NOT ")) {
+    const index = term.indexOf("NOT ");
+    const incl  = term.substring(0, index    ); // Left
+    const excl  = term.substring(   index + 4); // Right
+    return {
+      type: "NOT",
+      incl: incl ? parse_term(incl) : null,
+      excl:        parse_term(excl)
+    };
+  }
+  // Check for NOTANY next
+  else if (term.includes("NOTANY ")) {
+    const index = term.indexOf("NOTANY ");
+    const incl  = term.substring(0, index    ); // Left
+    const excl  = term.substring(   index + 7); // Right
+    return {
+      type: "NOTANY",
+      incl: incl ? parse_term(incl) : null,
+      excl:        parse_term(excl)
+    };
+  }
+  // Check for NOTALL next
+  else if (term.includes("NOTALL ")) {
+    const index = term.indexOf("NOTALL ");
+    const incl  = term.substring(0, index    ); // Left
+    const excl  = term.substring(   index + 7); // Right
+    return {
+      type: "NOTALL",
+      incl: incl ? parse_term(incl) : null,
+      excl:        parse_term(excl)
+    };
+  }
+  // Check for OR next
+  else if (term.includes(" OR ")) {
+    const terms = term.split(" OR ").map(part => parse_term(part));
+    return {
+      type: "OR",
+      terms: terms
+    };
+  }
+  // Plain text term (OR behavior of comma-separated terms)
+  else {
+    return {
+      type: "TEXT", // Quote allows leading/trailing space, also ' ' possible for term
+      text: term.replace(/['"]/g, "").toLowerCase()
+    };
+  }
+}
+
 function evaluate_term(term, values) {
   switch(term.type) {
     case "AND":
@@ -494,13 +555,15 @@ function filter_views(items_prev, items_curr,
 // Usage: favs_min_str as favs_prev_str, favs_max_str as favs_curr_str
 // *_str are: number / "" / keys: grow, fall, same, diff
 function filter_favs_keys(items_prev, items_curr,
-  favs_prev_str, favs_prev_kv, favs_prev_no, favs_curr_str, favs_curr_kv, favs_curr_no) {
+  favs_prev_str, favs_prev_kv, favs_prev_no,
+  favs_curr_str, favs_curr_kv, favs_curr_no) {
   const is_key = (s) => ["grow", "fall", "same", "diff"].includes(s);
 
   if (!is_key(favs_prev_str) && !is_key(favs_curr_str)) return { done: false };
 
   const favs_res = filter_count_keys(items_prev, items_curr,
-    favs_prev_str, favs_prev_kv, favs_prev_no, favs_curr_str, favs_curr_kv, favs_cur_no, item => item.favorites);
+    favs_prev_str, favs_prev_kv, favs_prev_no,
+    favs_curr_str, favs_curr_kv, favs_curr_no, item => item.favorites);
 
   const results_prev = items_prev.filter(item => favs_res[item.identifier]);
   const results_curr = items_curr.filter(item => favs_res[item.identifier]);
@@ -511,11 +574,13 @@ function filter_favs_keys(items_prev, items_curr,
 // Filtering by favorites count: from min to max, or by keys logic
 // *_str are: number / "" / keys
 function filter_favs(items_prev, items_curr,
-  favs_min_str, favs_min_kv, favs_min_no, favs_max_str, favs_max_kv, favs_max_no) {
+  favs_min_str, favs_min_kv, favs_min_no,
+  favs_max_str, favs_max_kv, favs_max_no) {
   if (!favs_min_str && !favs_max_str) return { done: false };
 
   const favs_keys = filter_favs_keys(items_prev, items_curr,
-    favs_min_str, favs_min_kv, favs_min_no, favs_max_str, favs_max_kv, favs_max_no);
+    favs_min_str, favs_min_kv, favs_min_no,
+    favs_max_str, favs_max_kv, favs_max_no);
 
   if (favs_keys.done) return favs_keys;
 

@@ -1,7 +1,10 @@
 /* Global Variables */
 
 const stat_file_dates = [];   // ["YYYY-MM-DD"]
-const stat_file_cache = {};   // ["YYYY-MM-DD"] = []
+const stat_file_cache = {};   // ["YYYY-MM-DD"] = { data: NodeList / [], usage: counter }
+
+let   sf_cache_hits   = 0;
+let   sf_cache_misses = 0;
 
 let   stat_curr_date  = null; //  "YYYY-MM-DD"
 let   stat_curr_items = null; // NodeList / []
@@ -259,67 +262,6 @@ function get_key(str) {
   return [ name, { value, is_percent: p } ];
 }
 
-function parse_term(term) {
-  term = term.trim();
-
-  // Check for AND first (higher precedence)
-  if (term.includes(" AND ")) {
-    const terms = term.split(" AND ").map(part => parse_term(part));
-    return {
-      type: "AND",
-      terms: terms
-    };
-  }
-  // Check for NOT next
-  else if (term.includes("NOT ")) {
-    const index = term.indexOf("NOT ");
-    const incl  = term.substring(0, index    ); // Left
-    const excl  = term.substring(   index + 4); // Right
-    return {
-      type: "NOT",
-      incl: incl ? parse_term(incl) : null,
-      excl:        parse_term(excl)
-    };
-  }
-  // Check for NOTANY next
-  else if (term.includes("NOTANY ")) {
-    const index = term.indexOf("NOTANY ");
-    const incl  = term.substring(0, index    ); // Left
-    const excl  = term.substring(   index + 7); // Right
-    return {
-      type: "NOTANY",
-      incl: incl ? parse_term(incl) : null,
-      excl:        parse_term(excl)
-    };
-  }
-  // Check for NOTALL next
-  else if (term.includes("NOTALL ")) {
-    const index = term.indexOf("NOTALL ");
-    const incl  = term.substring(0, index    ); // Left
-    const excl  = term.substring(   index + 7); // Right
-    return {
-      type: "NOTALL",
-      incl: incl ? parse_term(incl) : null,
-      excl:        parse_term(excl)
-    };
-  }
-  // Check for OR next
-  else if (term.includes(" OR ")) {
-    const terms = term.split(" OR ").map(part => parse_term(part));
-    return {
-      type: "OR",
-      terms: terms
-    };
-  }
-  // Plain text term (OR behavior of comma-separated terms)
-  else {
-    return {
-      type: "TEXT", // Quote allows leading/trailing space, also ' ' possible for term
-      text: term.replace(/['"]/g, "").toLowerCase()
-    };
-  }
-}
-
 function input_clean_parse(input) {
   return input
     .replace(/  +/g, ' ')
@@ -350,6 +292,7 @@ function process_filter() {
   const container = document.getElementById("results");
   const timings   = document.getElementById("timings");
         timings.textContent = "";
+  try {
 
   const err_beg  = '<div class="text-center text-comment">';
   const err_bds  = '<details><summary class="text-ellipsis" style="width: fit-content; margin: 0 auto;">';
@@ -371,21 +314,34 @@ function process_filter() {
     err_end;
   const err_views =
     err_beg +
-    err_bds + 'Allowed are non-negative numbers, and words: grow, fall, same, diff. Prefix: ^' +
+    err_bds + 'Allowed are non-negative numbers, and keys: grow, fall, same, diff. Prefix: ^' +
     err_es  +
     'Prefix ^ switches Downloads fields to Old = Downloads &minus; Month. Old is displayed in the table<br />' +
     'Prefix ^ switches Month fields to 23 = Month &minus; Week. 23 is displayed in the table<br />' +
     'Prefix ^ does nothing to Week fields. Week is always 7 days. Week is displayed in the table' +
     '</p><p>' +
-    'Words: grow, fall, same, diff (aliases: / \\ = !) switch min/max logic to prev/curr logic<br />' +
-    'Word allows number after it, and percent sign % can be after number' +
+    'Keys: grow, fall, same, diff (aliases: / \\ = !) switch min/max logic to prev/curr logic<br />' +
+    'Key allows number after it, and percent sign % can be after number' +
+    '</p><p>' +
+    'Number in prev/curr logic (alone, not after key) allows prefix: a, ae, b, be, e, ne' +
     err_ed  +
     err_end;
   const err_views_range =
     err_beg + 'Min views count must be less than or equal to max views count' +
     err_end;
   const err_favs =
-    err_beg + 'Allowed are numbers: 0 to 9999, and words: grow, fall, same, diff' +
+    err_beg +
+    err_bds + 'Allowed are numbers: 0 to 9999, and keys: grow, fall, same, diff' +
+    err_es  +
+    'Keys have aliases: / \\ = ! that allow number after them<br />' +
+    'For / and \\ number is distance, for = and ! number is tolerance<br />' +
+    'Defaults: / is /1, \\ is \\1, = is =0, ! is !0' +
+    '</p><p>' +
+    'Number alone (not after alias) allows prefix: a, ae, b, be, e, ne<br />' +
+    'Meaning: above, above or equal, below, below or equal, equal, not equal' +
+    '</p><p>' +
+    'Examples: /3, \\2, =1, !1, a1, be2, e3' +
+    err_ed  +
     err_end;
   const err_favs_range =
     err_beg + 'Min favorites count must be less than or equal to max favorites count' +
@@ -602,7 +558,8 @@ function process_filter() {
 
   // Favs
   const filtered_favs = filter_favs(results_prev, results_curr,
-    favs_min_str, favs_min_kv, favs_min_no, favs_max_str, favs_max_kv, favs_max_no);
+    favs_min_str, favs_min_kv, favs_min_no,
+    favs_max_str, favs_max_kv, favs_max_no);
   if (filtered_favs.done) {
     results_curr = filtered_favs.curr;
     results_prev = filtered_favs.prev;
@@ -640,10 +597,20 @@ function process_filter() {
   const du_filter = time_1 - time_0;
   const du_render = time_2 - time_1;
 
-  timings.textContent = 'Load '   + du_load  .toFixed(1) + ' ms / ' +
+  // Cache
+  const sf_cache_size = Object.keys(stat_file_cache).length;
+
+  timings.textContent = 'Cache '  + sf_cache_size   +
+                             ' (' + sf_cache_hits   + '/'  +
+                                    sf_cache_misses + ') ' +
+
+                        'Load '   + du_load  .toFixed(1) + ' ms / ' +
                         'Parse '  + du_parse .toFixed(1) + ' ms / ' +
                         'Filter ' + du_filter.toFixed(1) + ' ms / ' +
                         'Render ' + du_render.toFixed(1) + ' ms';
+  } catch (err) {
+    container.innerHTML = '<div class="text-center text-comment">Error: ' + err.message + '</div>';
+  }
 }
 
 /* Date Change */
@@ -856,8 +823,13 @@ function conv_stat_docs(docs) {
 
 function load_stat_file(date) {
   const cached = stat_file_cache[date];
-  if   (cached) return Promise.resolve(cached);
-//if   (cached) return new Promise(resolve => setTimeout(resolve, 5, cached)); // For menu closing (solved there)
+  if   (cached) {
+    sf_cache_hits++;       cached.usage++;
+    return Promise.resolve(cached.data);
+  }
+  sf_cache_misses++;
+
+// return new Promise(resolve => setTimeout(resolve, 5, cached)); // For menu closing (solved there)
 
   const time_0    = performance.now();
   const container = document.getElementById("results");
@@ -886,17 +858,22 @@ function load_stat_file(date) {
 
       const cache_dates = Object.keys(stat_file_cache);
       if   (cache_dates.length >= 7) {
+        let min_usage = Infinity;
+        let min_entry = null;
         for (const cd of cache_dates) {
-          if ((cd !== stat_curr_date) && (cd !== stat_prev_date)) {
-            delete stat_file_cache[cd];
-            break;
+          if ((cd === stat_curr_date) || (cd === stat_prev_date)) continue;
+          const usage = stat_file_cache[cd].usage;
+          if (min_usage > usage) {
+              min_usage = usage;
+              min_entry = cd;
           }
         }
+        if (min_entry) delete stat_file_cache[min_entry];
       }
 
-      stat_file_cache[date] = docs;
+      stat_file_cache[date] = { data: docs,  usage: 1 };
       return docs;
-//    stat_file_cache[date] = stats;
+//    stat_file_cache[date] = { data: stats, usage: 1 };
 //    return stats;
     });
 }

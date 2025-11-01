@@ -110,17 +110,19 @@ function get_marks(rel, cnt, mid) {
 
 function get_totals(results) {
   const totals = { audio: 0, video: 0, bytes: 0, views: 0, favorites: 0, favorited: 0,
-                   max_favorites: 0, max_ratio_old: 0, max_ratio_all: 0
-  };
-  results.forEach(item => {
-    if (item.mediatype === "audio" ) totals.audio++;
-    if (item.mediatype === "movies") totals.video++;
+                   max_favorites: 0, max_ratio_old: 0, max_ratio_all: 0 };
+
+  for (let i = 0; i < results.length; i++) {
+    const item = results[i];
+
+    if      (item.mediatype === "movies") totals.video++; // Most frequent type
+    else if (item.mediatype === "audio" ) totals.audio++;
 
     totals.bytes += item.item_size;
     totals.views += item.views_all;
 
     totals.favorites +=  item.favorites;
-    totals.favorited += (item.favorites != 0);
+    totals.favorited += (item.favorites > 0);
 
     if (totals.max_favorites < item.favorites) {
         totals.max_favorites = item.favorites; }
@@ -130,7 +132,8 @@ function get_totals(results) {
 
     if (totals.max_ratio_all < item.ratio_all) {
         totals.max_ratio_all = item.ratio_all; }
-  });
+  }
+
   return totals;
 }
 
@@ -272,9 +275,10 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   }
 
   // 5.3. Traverse prev expanded and set index_prev in curr expanded
-  results_prev_exp.forEach((item, index) => {
+  for (let index = 0; index < results_prev_exp.length; index++) {
+    const item = results_prev_exp[index];
     map_curr_exp[item.identifier].index_prev = index;
-  });
+  }
 
   // 6. Mark rank changes
   const rank_base  = Math.log(results_curr_exp.length); // For length === 1 is checked below
@@ -343,7 +347,8 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   const horz_curr_prev = [];
   const vert_all_old   = [];
 
-  results_curr_exp.forEach(item => {
+  for (let i = 0; i < results_curr_exp.length; i++) {
+    const item      = results_curr_exp[i];
     const item_prev = map_prev[item.identifier];
     if   (item_prev) {
       horz_curr_prev.push(item.ratio_old / item_prev.ratio_old);
@@ -355,7 +360,7 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     } else {
       vert_all_old.push(1); // Item is non-markable
     }
-  });
+  }
 
   // 3:0, 4:1, 10:1, 20:3, 50:5, 100:7, 200:11, 500:16, 800:21, 826:21
   const horz_marks_cnt = Math.round(Math.floor(Math.sqrt(horz_curr_prev.length * 0.33)) * 1.33);
@@ -382,7 +387,9 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   }
 
   // 12. Show item list with flex alignment
-  results_curr_exp.forEach((item, index) => {
+  for (let index = 0; index < results_curr_exp.length; index++) {
+    const item = results_curr_exp[index];
+
     // 0. Get matching prev item
     const item_prev = map_prev[item.identifier];
 
@@ -600,7 +607,8 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     // 8. Wrap and add item to the page
     item_wrapper.appendChild(item_inner  );
     container   .appendChild(item_wrapper);
-  });
+  }
+
   return true;
 }
 
