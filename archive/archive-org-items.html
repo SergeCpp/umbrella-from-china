@@ -11,6 +11,58 @@
   <script defer src="archive-org-items-helper-work.js"></script>
   <script defer src="archive-org-items-render-work.js"></script>
   <script defer src="archive-org-items-runner-work.js"></script>
+
+<style>
+.in-grid {
+  display: grid;
+  font-family: monospace;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  margin: 0.3em auto 0.8em;
+  max-width: 102ch;
+  gap: 0.3em 1ch;
+}
+
+.in-flex {
+  align-items: center;
+  display: flex;
+}
+.in-l {
+  flex: 0 0 auto;
+}
+.in-m {
+  flex: 1 1 auto;
+}
+.in-r {
+  flex: 0 0 auto;
+}
+.in-m.in-flex {
+  justify-content: center;
+}
+
+.label-mid {
+  cursor: pointer;
+  display: block;
+  text-align: center;
+}
+
+.mono {
+  font-family: monospace;
+}
+
+.btn {
+  cursor: pointer;
+  font-family: monospace;
+  margin: 0 0.3em;
+  padding: 1px 1.5em;
+}
+.check {
+  accent-color: #b5b5b5;
+  cursor: pointer;
+  font-family: monospace;
+  vertical-align: -3.75px;
+}
+</style>
 </head>
 
 <body>
@@ -101,6 +153,7 @@ href="https://archive.org/advancedsearch.php
      maxlength  ="98"
      placeholder="Title: Flowers and the Moon, Ronin Pipa / AND OR NOT NOTANY NOTALL / a-z, 0-9, ._-, ' '"></div>
 
+<!--
 <div class      ="text-center"
      style      ="font-family: monospace; margin: 0.3em 0;"><input
      id         ="downloads-min"
@@ -145,7 +198,67 @@ href="https://archive.org/advancedsearch.php
      size       ="10"
      maxlength  ="10"
      placeholder="Max"></div>
+-->
 
+<div class="in-grid">
+  <div class="in-flex">
+    <div class="in-l">
+      <input id="downloads-min" class="mono" type="text" size="10" maxlength="10" placeholder="Min"></div>
+    <div class="in-m">
+      <label class="label-mid" for="downloads-min">Downloads</label></div>
+    <div class="in-r">
+      <input id="downloads-max" class="mono" type="text" size="10" maxlength="10" placeholder="Max"></div>
+  </div>
+
+  <div class="in-flex">
+    <div class="in-l">
+      <input id="month-min" class="mono" type="text" size="10" maxlength="10" placeholder="Min"></div>
+    <div class="in-m">
+      <label class="label-mid" for="month-min">Month</label></div>
+    <div class="in-r">
+      <input id="month-max" class="mono" type="text" size="10" maxlength="10" placeholder="Max"></div>
+  </div>
+
+  <div class="in-flex">
+    <div class="in-l">
+      <input id="week-min" class="mono" type="text" size="10" maxlength="10" placeholder="Min"></div>
+    <div class="in-m">
+      <label class="label-mid" for="week-min">Week</label></div>
+    <div class="in-r">
+      <input id="week-max" class="mono" type="text" size="10" maxlength="10" placeholder="Max"></div>
+  </div>
+
+  <div class="in-flex">
+    <div class="in-l">
+      <input id="created-min" class="mono" type="text" size="10" maxlength="10" placeholder="Min" value="2012-01-01"></div>
+    <div class="in-m">
+      <label class="label-mid" for="created-min">Created</label></div>
+    <div class="in-r">
+      <input id="created-max" class="mono" type="text" size="10" maxlength="10" placeholder="Max" value="2024-10-19"></div>
+  </div>
+
+  <div class="in-flex">
+    <div class="in-l">
+      <input id="favs-min" class="mono" type="text" size="5" maxlength="5" placeholder="Favs"></div>
+    <div class="in-m in-flex">
+      <input id="prev-only" class="check" type="checkbox">
+      <button id="process-filter" class="btn">Filter</button>
+      <input id="curr-only" class="check" type="checkbox"></div>
+    <div class="in-r">
+      <input id="favs-max" class="mono" type="text" size="5" maxlength="5" placeholder="Favs"></div>
+  </div>
+
+  <div class="in-flex">
+    <div class="in-l">
+      <input id="archived-min" class="mono" type="text" size="10" maxlength="10" placeholder="Min" value="2022-05-06"></div>
+    <div class="in-m">
+      <label class="label-mid" for="archived-min">Archived</label></div>
+    <div class="in-r">
+      <input id="archived-max" class="mono" type="text" size="10" maxlength="10" placeholder="Max" value="2025-03-08"></div>
+  </div>
+</div>
+
+<!--
 <div class      ="text-center"
      style      ="font-family: monospace; margin: 0.3em 0 0.8em;"><input
      id         ="created-min"
@@ -201,6 +314,7 @@ href="https://archive.org/advancedsearch.php
      maxlength  ="10"
      placeholder="Max"
      value      ="2025-03-08"></div>
+-->
 
 <div id           ="results"
      data-dates   ="/archive/stats/archive-dates.txt"
