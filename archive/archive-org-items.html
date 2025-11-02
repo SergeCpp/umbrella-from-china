@@ -13,54 +13,74 @@
   <script defer src="archive-org-items-runner-work.js"></script>
 
 <style>
+.header > a { /* For emoji hover area to take the full height of multiline header */
+  align-items: center;
+  align-self: stretch;
+  display: flex;
+}
+
+.in-wrap {
+  font-family: monospace;
+  margin: 0.3em auto;
+  max-width: 105ch;
+}
+.in-wide {
+  box-sizing: border-box;
+  font-family: monospace;
+  width: 100%
+}
+
 .in-grid {
   display: grid;
   font-family: monospace;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  margin: 0.3em auto 0.8em;
-  max-width: 102ch;
   gap: 0.3em 1ch;
+  grid-template-columns: repeat(auto-fit, minmax(33ch, 1fr));
+  margin: 0.3em auto 0.8em;
+  max-width: 105ch;
 }
 
 .in-flex {
   align-items: center;
   display: flex;
 }
-.in-l {
-  flex: 0 0 auto;
-}
 .in-m {
-  flex: 1 1 auto;
-}
-.in-r {
-  flex: 0 0 auto;
+  flex: 1;
 }
 .in-m.in-flex {
-  justify-content: center;
+  flex: 0;
+}
+.in-s {
+  flex: 0;
+}
+.in-sf {
+  display: flex;
+  flex: 1;
 }
 
-.label-mid {
+.label-m {
   cursor: pointer;
   display: block;
   text-align: center;
+}
+.label-s {
+  cursor: pointer;
+  flex: 1;
 }
 
 .mono {
   font-family: monospace;
 }
 
+.check {
+  accent-color: #b5b5b5; /* Gray71 */
+  cursor: pointer;
+  font-family: monospace;
+}
 .btn {
   cursor: pointer;
   font-family: monospace;
   margin: 0 0.3em;
   padding: 1px 1.5em;
-}
-.check {
-  accent-color: #b5b5b5;
-  cursor: pointer;
-  font-family: monospace;
-  vertical-align: -3.75px;
 }
 </style>
 </head>
@@ -117,204 +137,89 @@ href="https://archive.org/advancedsearch.php
 
 -->
 
-<div class      ="text-center"
-     style      ="font-family: monospace; margin: 0.8em 0 0.3em;"><input
-     id         ="collections"
-     style      ="font-family: monospace;"
+<div class      ="in-wrap" style="margin-top: 0.8em;"><input id="collections"
+     class      ="in-wide"
      type       ="text"
-     size       ="98"
-     maxlength  ="98"
+     maxlength  ="100"
      placeholder="Collections: audio, beauty, clothing, dance, xiaodan, ziyan"></div>
 
-<div class      ="text-center"
-     style      ="font-family: monospace; margin: 0.3em 0;"><input
-     id         ="creators"
-     style      ="font-family: monospace;"
+<div class      ="in-wrap"><input id="creators"
+     class      ="in-wide"
      type       ="text"
-     size       ="98"
-     maxlength  ="98"
+     maxlength  ="100"
      placeholder="Creators: Ziyan, Xiaodan, Qisan, Xiao Wu, Zi Jiaer"></div>
 
-<div class      ="text-center"
-     style      ="font-family: monospace; margin: 0.3em 0;"><input
-     id         ="subjects"
-     style      ="font-family: monospace;"
+<div class      ="in-wrap"><input id="subjects"
+     class      ="in-wide"
      type       ="text"
-     size       ="98"
-     maxlength  ="98"
+     maxlength  ="100"
      placeholder="Subjects: Ancient Style, Hanfu, Fan Dance"></div>
 
-<div class      ="text-center"
-     style      ="font-family: monospace; margin: 0.3em 0;"><input
-     id         ="title"
-     style      ="font-family: monospace;"
+<div class      ="in-wrap"><input id="title"
+     class      ="in-wide"
      type       ="text"
-     size       ="98"
-     maxlength  ="98"
+     maxlength  ="100"
      placeholder="Title: Flowers and the Moon, Ronin Pipa / AND OR NOT NOTANY NOTALL / a-z, 0-9, ._-, ' '"></div>
-
-<!--
-<div class      ="text-center"
-     style      ="font-family: monospace; margin: 0.3em 0;"><input
-     id         ="downloads-min"
-     style      ="font-family: monospace;"
-     type       ="text"
-     size       ="10"
-     maxlength  ="10"
-     placeholder="Min"><label
-     for        ="downloads-min"
-     style      ="cursor: pointer;">&nbsp;Downloads&nbsp;</label><input
-     id         ="downloads-max"
-     style      ="font-family: monospace;"
-     type       ="text"
-     size       ="10"
-     maxlength  ="10"
-     placeholder="Max">&nbsp;<input
-     id         ="month-min"
-     style      ="font-family: monospace; margin-left: 2.5px; margin-right: 5.5px;"
-     type       ="text"
-     size       ="10"
-     maxlength  ="10"
-     placeholder="Min"><label
-     for        ="month-min"
-     style      ="cursor: pointer;">&nbsp;Month&nbsp;</label><input
-     id         ="month-max"
-     style      ="font-family: monospace; margin-left: 5.0px; margin-right: 2.5px"
-     type       ="text"
-     size       ="10"
-     maxlength  ="10"
-     placeholder="Max">&nbsp;<input
-     id         ="week-min"
-     style      ="font-family: monospace; margin-right: 0.5px;"
-     type       ="text"
-     size       ="10"
-     maxlength  ="10"
-     placeholder="Min"><label
-     for        ="week-min"
-     style      ="cursor: pointer;">&nbsp;&nbsp;&nbsp;Week&nbsp;&nbsp;&nbsp;</label><input
-     id         ="week-max"
-     style      ="font-family: monospace;"
-     type       ="text"
-     size       ="10"
-     maxlength  ="10"
-     placeholder="Max"></div>
--->
 
 <div class="in-grid">
   <div class="in-flex">
-    <div class="in-l">
-      <input id="downloads-min" class="mono" type="text" size="10" maxlength="10" placeholder="Min"></div>
+    <div class="in-s">
+      <input id="downloads-min" class="mono" type="text" size="10" maxlength="10" placeholder="Min / Prev"></div>
     <div class="in-m">
-      <label class="label-mid" for="downloads-min">Downloads</label></div>
-    <div class="in-r">
-      <input id="downloads-max" class="mono" type="text" size="10" maxlength="10" placeholder="Max"></div>
+      <label class="label-m" for="downloads-min">Downloads</label></div>
+    <div class="in-s">
+      <input id="downloads-max" class="mono" type="text" size="10" maxlength="10" placeholder="Max / Curr"></div>
   </div>
 
   <div class="in-flex">
-    <div class="in-l">
-      <input id="month-min" class="mono" type="text" size="10" maxlength="10" placeholder="Min"></div>
+    <div class="in-s">
+      <input id="month-min" class="mono" type="text" size="10" maxlength="10" placeholder="Min / Prev"></div>
     <div class="in-m">
-      <label class="label-mid" for="month-min">Month</label></div>
-    <div class="in-r">
-      <input id="month-max" class="mono" type="text" size="10" maxlength="10" placeholder="Max"></div>
+      <label class="label-m" for="month-min">Month</label></div>
+    <div class="in-s">
+      <input id="month-max" class="mono" type="text" size="10" maxlength="10" placeholder="Max / Curr"></div>
   </div>
 
   <div class="in-flex">
-    <div class="in-l">
-      <input id="week-min" class="mono" type="text" size="10" maxlength="10" placeholder="Min"></div>
+    <div class="in-s">
+      <input id="week-min" class="mono" type="text" size="10" maxlength="10" placeholder="Min / Prev"></div>
     <div class="in-m">
-      <label class="label-mid" for="week-min">Week</label></div>
-    <div class="in-r">
-      <input id="week-max" class="mono" type="text" size="10" maxlength="10" placeholder="Max"></div>
+      <label class="label-m" for="week-min">Week</label></div>
+    <div class="in-s">
+      <input id="week-max" class="mono" type="text" size="10" maxlength="10" placeholder="Max / Curr"></div>
   </div>
 
   <div class="in-flex">
-    <div class="in-l">
+    <div class="in-s">
       <input id="created-min" class="mono" type="text" size="10" maxlength="10" placeholder="Min" value="2012-01-01"></div>
     <div class="in-m">
-      <label class="label-mid" for="created-min">Created</label></div>
-    <div class="in-r">
+      <label class="label-m" for="created-min">Created</label></div>
+    <div class="in-s">
       <input id="created-max" class="mono" type="text" size="10" maxlength="10" placeholder="Max" value="2024-10-19"></div>
   </div>
 
   <div class="in-flex">
-    <div class="in-l">
-      <input id="favs-min" class="mono" type="text" size="5" maxlength="5" placeholder="Favs"></div>
+    <div class="in-sf">
+      <input id="favs-min" class="mono" type="text" size="5" maxlength="5" placeholder="Favs">
+      <label for="favs-min" class="label-s"></label></div>
     <div class="in-m in-flex">
       <input id="prev-only" class="check" type="checkbox">
       <button id="process-filter" class="btn">Filter</button>
       <input id="curr-only" class="check" type="checkbox"></div>
-    <div class="in-r">
+    <div class="in-sf">
+      <label for="favs-max" class="label-s"></label>
       <input id="favs-max" class="mono" type="text" size="5" maxlength="5" placeholder="Favs"></div>
   </div>
 
   <div class="in-flex">
-    <div class="in-l">
+    <div class="in-s">
       <input id="archived-min" class="mono" type="text" size="10" maxlength="10" placeholder="Min" value="2022-05-06"></div>
     <div class="in-m">
-      <label class="label-mid" for="archived-min">Archived</label></div>
-    <div class="in-r">
+      <label class="label-m" for="archived-min">Archived</label></div>
+    <div class="in-s">
       <input id="archived-max" class="mono" type="text" size="10" maxlength="10" placeholder="Max" value="2025-03-08"></div>
   </div>
 </div>
-
-<!--
-<div class      ="text-center"
-     style      ="font-family: monospace; margin: 0.3em 0 0.8em;"><input
-     id         ="created-min"
-     style      ="font-family: monospace;"
-     type       ="text"
-     size       ="10"
-     maxlength  ="10"
-     placeholder="Min"
-     value      ="2012-01-01"><label
-     for        ="created-min"
-     style      ="cursor: pointer;">&nbsp;&nbsp;Created&nbsp;&nbsp;</label><input
-     id         ="created-max"
-     style      ="font-family: monospace;"
-     type       ="text"
-     size       ="10"
-     maxlength  ="10"
-     placeholder="Max"
-     value      ="2024-10-19">&nbsp;<input
-     id         ="favs-min"
-     style      ="font-family: monospace; margin-left: 2.5px;"
-     type       ="text"
-     size       ="4"
-     maxlength  ="4"
-     placeholder="Favs">&nbsp;<input
-     id         ="prev-only"
-     style      ="font-family: monospace; cursor: pointer; vertical-align: -3.75px; accent-color: #b5b5b5;"
-     type       ="checkbox"><button
-     id         ="process-filter"
-     style      ="font-family: monospace; cursor: pointer; padding: 1px 1.5em; margin: 0 0.3em"
-     >Filter</button><input
-     id         ="curr-only"
-     style      ="font-family: monospace; cursor: pointer; vertical-align: -3.75px; accent-color: #b5b5b5;"
-     type       ="checkbox">&nbsp;<input
-     id         ="favs-max"
-     style      ="font-family: monospace; margin-right: 2.5px;"
-     type       ="text"
-     size       ="4"
-     maxlength  ="4"
-     placeholder="Favs">&nbsp;<input
-     id         ="archived-min"
-     style      ="font-family: monospace;"
-     type       ="text"
-     size       ="10"
-     maxlength  ="10"
-     placeholder="Min"
-     value      ="2022-05-06"><label
-     for        ="archived-min"
-     style      ="cursor: pointer;">&nbsp;Archived&nbsp;</label><input
-     id         ="archived-max"
-     style      ="font-family: monospace;"
-     type       ="text"
-     size       ="10"
-     maxlength  ="10"
-     placeholder="Max"
-     value      ="2025-03-08"></div>
--->
 
 <div id           ="results"
      data-dates   ="/archive/stats/archive-dates.txt"
