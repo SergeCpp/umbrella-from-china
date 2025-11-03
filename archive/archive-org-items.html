@@ -13,12 +13,6 @@
   <script defer src="archive-org-items-runner-work.js"></script>
 
 <style>
-.header > a { /* For emoji hover area to take the full height of multiline header */
-  align-items: center;
-  align-self: stretch;
-  display: flex;
-}
-
 .in-wrap {
   font-family: monospace;
   margin: 0.3em auto;
@@ -38,49 +32,47 @@
   margin: 0.3em auto 0.8em;
   max-width: 105ch;
 }
+.in-grid :is(button, input) {
+  font-family: monospace;
+}
 
 .in-flex {
   align-items: center;
   display: flex;
 }
-.in-m {
+.in-mid {
   flex: 1;
 }
-.in-m.in-flex {
+.in-mid-flex {
+  display: flex;
   flex: 0;
 }
-.in-s {
+.in-side {
   flex: 0;
 }
-.in-sf {
+.in-side-flex {
   display: flex;
   flex: 1;
 }
 
-.label-m {
+.label-mid {
   cursor: pointer;
   display: block;
   text-align: center;
 }
-.label-s {
+.label-side {
   cursor: pointer;
   flex: 1;
 }
 
-.mono {
-  font-family: monospace;
-}
-
-.check {
+.chk {
   accent-color: #b5b5b5; /* Gray71 */
   cursor: pointer;
-  font-family: monospace;
 }
 .btn {
   cursor: pointer;
-  font-family: monospace;
   margin: 0 0.3em;
-  padding: 1px 1.5em;
+  padding: 0 2.5ch;
 }
 </style>
 </head>
@@ -163,61 +155,61 @@ href="https://archive.org/advancedsearch.php
 
 <div class="in-grid">
   <div class="in-flex">
-    <div class="in-s">
-      <input id="downloads-min" class="mono" type="text" size="10" maxlength="10" placeholder="Min / Prev"></div>
-    <div class="in-m">
-      <label class="label-m" for="downloads-min">Downloads</label></div>
-    <div class="in-s">
-      <input id="downloads-max" class="mono" type="text" size="10" maxlength="10" placeholder="Max / Curr"></div>
+    <div class="in-side">
+      <input id="downloads-min" type="text" size="10" maxlength="10" placeholder="Min / Prev"></div>
+    <div class="in-mid">
+      <label class="label-mid" for="downloads-min">Downloads</label></div>
+    <div class="in-side">
+      <input id="downloads-max" type="text" size="10" maxlength="10" placeholder="Max / Curr"></div>
   </div>
 
   <div class="in-flex">
-    <div class="in-s">
-      <input id="month-min" class="mono" type="text" size="10" maxlength="10" placeholder="Min / Prev"></div>
-    <div class="in-m">
-      <label class="label-m" for="month-min">Month</label></div>
-    <div class="in-s">
-      <input id="month-max" class="mono" type="text" size="10" maxlength="10" placeholder="Max / Curr"></div>
+    <div class="in-side">
+      <input id="month-min" type="text" size="10" maxlength="10" placeholder="Min / Prev"></div>
+    <div class="in-mid">
+      <label class="label-mid" for="month-min">Month</label></div>
+    <div class="in-side">
+      <input id="month-max" type="text" size="10" maxlength="10" placeholder="Max / Curr"></div>
   </div>
 
   <div class="in-flex">
-    <div class="in-s">
-      <input id="week-min" class="mono" type="text" size="10" maxlength="10" placeholder="Min / Prev"></div>
-    <div class="in-m">
-      <label class="label-m" for="week-min">Week</label></div>
-    <div class="in-s">
-      <input id="week-max" class="mono" type="text" size="10" maxlength="10" placeholder="Max / Curr"></div>
+    <div class="in-side">
+      <input id="week-min" type="text" size="10" maxlength="10" placeholder="Min / Prev"></div>
+    <div class="in-mid">
+      <label class="label-mid" for="week-min">Week</label></div>
+    <div class="in-side">
+      <input id="week-max" type="text" size="10" maxlength="10" placeholder="Max / Curr"></div>
   </div>
 
   <div class="in-flex">
-    <div class="in-s">
-      <input id="created-min" class="mono" type="text" size="10" maxlength="10" placeholder="Min" value="2012-01-01"></div>
-    <div class="in-m">
-      <label class="label-m" for="created-min">Created</label></div>
-    <div class="in-s">
-      <input id="created-max" class="mono" type="text" size="10" maxlength="10" placeholder="Max" value="2024-10-19"></div>
+    <div class="in-side">
+      <input id="created-min" type="text" size="10" maxlength="10" placeholder="Min" value="2012-01-01"></div>
+    <div class="in-mid">
+      <label class="label-mid" for="created-min">Created</label></div>
+    <div class="in-side">
+      <input id="created-max" type="text" size="10" maxlength="10" placeholder="Max" value="2024-10-19"></div>
   </div>
 
   <div class="in-flex">
-    <div class="in-sf">
-      <input id="favs-min" class="mono" type="text" size="5" maxlength="5" placeholder="Favs">
-      <label for="favs-min" class="label-s"></label></div>
-    <div class="in-m in-flex">
-      <input id="prev-only" class="check" type="checkbox">
+    <div class="in-side-flex">
+      <input id="favs-min" type="text" size="5" maxlength="5" placeholder="Favs">
+      <label for="favs-min" class="label-side"></label></div>
+    <div class="in-mid-flex">
+      <input id="prev-only" class="chk" type="checkbox">
       <button id="process-filter" class="btn">Filter</button>
-      <input id="curr-only" class="check" type="checkbox"></div>
-    <div class="in-sf">
-      <label for="favs-max" class="label-s"></label>
-      <input id="favs-max" class="mono" type="text" size="5" maxlength="5" placeholder="Favs"></div>
+      <input id="curr-only" class="chk" type="checkbox"></div>
+    <div class="in-side-flex">
+      <label for="favs-max" class="label-side"></label>
+      <input id="favs-max" type="text" size="5" maxlength="5" placeholder="Favs"></div>
   </div>
 
   <div class="in-flex">
-    <div class="in-s">
-      <input id="archived-min" class="mono" type="text" size="10" maxlength="10" placeholder="Min" value="2022-05-06"></div>
-    <div class="in-m">
-      <label class="label-m" for="archived-min">Archived</label></div>
-    <div class="in-s">
-      <input id="archived-max" class="mono" type="text" size="10" maxlength="10" placeholder="Max" value="2025-03-08"></div>
+    <div class="in-side">
+      <input id="archived-min" type="text" size="10" maxlength="10" placeholder="Min" value="2022-05-06"></div>
+    <div class="in-mid">
+      <label class="label-mid" for="archived-min">Archived</label></div>
+    <div class="in-side">
+      <input id="archived-max" type="text" size="10" maxlength="10" placeholder="Max" value="2025-03-08"></div>
   </div>
 </div>
 

@@ -287,68 +287,72 @@ function input_allowed_favs(input) {
   return (input === "") || input_allowed_keys(input) || /^\d{1,4}$/.test(input);
 }
 
+const err_beg = '<div class="text-center text-comment">';
+const err_bds = '<details><summary class="text-ellipsis" style="width: fit-content; margin: 0 auto;">';
+const err_es  = '</summary><p>';
+const err_ed  = '</p></details>';
+const err_end = '</div>';
+
+const err_chars =
+  err_beg + 'Allowed characters are: a-z, 0-9, underscore, dash, period, comma, quote, and space' +
+  err_end;
+
+const err_date =
+  err_beg + 'Valid dates are: YYYY-MM-DD / YYYY-MM / YYYY / MM-DD / MM' +
+  err_end;
+const err_date_base =
+  err_beg + 'Range must be equally based: year first or month first' +
+  err_end;
+const err_date_range =
+  err_beg + 'Min date of range must be before or at max date of range' +
+  err_end;
+
+const err_views =
+  err_beg +
+  err_bds + 'Allowed are non-negative numbers, and keys: grow, fall, same, diff. Prefix: ^' +
+  err_es  +
+  'Prefix ^ switches Downloads fields to Old = Downloads &minus; Month. Old is displayed in the table<br />' +
+  'Prefix ^ switches Month fields to 23 = Month &minus; Week. 23 is displayed in the table<br />' +
+  'Prefix ^ does nothing to Week fields. Week is always 7 days. Week is displayed in the table' +
+  '</p><p>' +
+  'Keys: grow, fall, same, diff (aliases: / \\ = !) switch min/max logic to prev/curr logic<br />' +
+  'Key allows number after it, and percent sign % can be after number' +
+  '</p><p>' +
+  'Number in prev/curr logic (alone, not after key) allows prefix: a, ae, b, be, e, ne' +
+  err_ed  +
+  err_end;
+const err_views_range =
+  err_beg + 'Min views count must be less than or equal to max views count' +
+  err_end;
+
+const err_favs =
+  err_beg +
+  err_bds + 'Allowed are numbers: 0 to 9999, and keys: grow, fall, same, diff' +
+  err_es  +
+  'Keys have aliases: / \\ = ! that allow number after them<br />' +
+  'For / and \\ number is distance, for = and ! number is tolerance<br />' +
+  'Defaults: / is /1, \\ is \\1, = is =0, ! is !0' +
+  '</p><p>' +
+  'Number alone (not after key) allows prefix: a, ae, b, be, e, ne<br />' +
+  'Meaning: above, above or equal, below, below or equal, equal, not equal' +
+  '</p><p>' +
+  'Examples: /3, \\2, =1, !1, a1, be2, e3' +
+  err_ed  +
+  err_end;
+const err_favs_range =
+  err_beg + 'Min favorites count must be less than or equal to max favorites count' +
+  err_end;
+
+const err_subjects =
+  err_beg + 'Subjects XML file cannot be loaded or loading error occurred' +
+  err_end;
+
 function process_filter() {
   const time_0    = performance.now();
   const container = document.getElementById("results");
   const timings   = document.getElementById("timings");
         timings.textContent = "";
   try {
-
-  const err_beg  = '<div class="text-center text-comment">';
-  const err_bds  = '<details><summary class="text-ellipsis" style="width: fit-content; margin: 0 auto;">';
-  const err_es   = '</summary><p>';
-  const err_ed   = '</p></details>';
-  const err_end  = '</div>';
-
-  const err_date =
-    err_beg + 'Valid dates are: YYYY-MM-DD / YYYY-MM / YYYY / MM-DD / MM' +
-    err_end;
-  const err_date_base =
-    err_beg + 'Range must be equally based: year first or month first' +
-    err_end;
-  const err_date_range =
-    err_beg + 'Min date of range must be before or at max date of range' +
-    err_end;
-  const err_chars =
-    err_beg + 'Allowed characters are: a-z, 0-9, underscore, dash, period, comma, quote, and space' +
-    err_end;
-  const err_views =
-    err_beg +
-    err_bds + 'Allowed are non-negative numbers, and keys: grow, fall, same, diff. Prefix: ^' +
-    err_es  +
-    'Prefix ^ switches Downloads fields to Old = Downloads &minus; Month. Old is displayed in the table<br />' +
-    'Prefix ^ switches Month fields to 23 = Month &minus; Week. 23 is displayed in the table<br />' +
-    'Prefix ^ does nothing to Week fields. Week is always 7 days. Week is displayed in the table' +
-    '</p><p>' +
-    'Keys: grow, fall, same, diff (aliases: / \\ = !) switch min/max logic to prev/curr logic<br />' +
-    'Key allows number after it, and percent sign % can be after number' +
-    '</p><p>' +
-    'Number in prev/curr logic (alone, not after key) allows prefix: a, ae, b, be, e, ne' +
-    err_ed  +
-    err_end;
-  const err_views_range =
-    err_beg + 'Min views count must be less than or equal to max views count' +
-    err_end;
-  const err_favs =
-    err_beg +
-    err_bds + 'Allowed are numbers: 0 to 9999, and keys: grow, fall, same, diff' +
-    err_es  +
-    'Keys have aliases: / \\ = ! that allow number after them<br />' +
-    'For / and \\ number is distance, for = and ! number is tolerance<br />' +
-    'Defaults: / is /1, \\ is \\1, = is =0, ! is !0' +
-    '</p><p>' +
-    'Number alone (not after alias) allows prefix: a, ae, b, be, e, ne<br />' +
-    'Meaning: above, above or equal, below, below or equal, equal, not equal' +
-    '</p><p>' +
-    'Examples: /3, \\2, =1, !1, a1, be2, e3' +
-    err_ed  +
-    err_end;
-  const err_favs_range =
-    err_beg + 'Min favorites count must be less than or equal to max favorites count' +
-    err_end;
-  const err_subjects =
-    err_beg + 'Subjects XML file cannot be loaded or loading error occurred' +
-    err_end;
 
   // Archived Range
   const archived_min_str = document.getElementById("archived-min").value.trim();
