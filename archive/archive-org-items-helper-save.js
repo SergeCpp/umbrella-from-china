@@ -32,7 +32,7 @@ function get_doc_str(doc, name) {
   return str;
 }
 
-/* Filter Items */
+/* Filter by Query */
 
 function parse_term(term) {
   term = term.trim();
@@ -130,6 +130,84 @@ function filter_matches(doc, field, terms) {
   return terms.some(term => evaluate_term(term, values)); // Check if any term matches
 }
 
+/* Filter by Date */
+
+function is_date_valid(year, month, day) {
+  // Create date and check if it "corrects" the input
+  const  date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && 
+         date.getUTCMonth() === (month - 1) && 
+         date.getUTCDate() === day;
+}
+
+function get_date_range(date_str) {
+  if (!date_str) return null;
+
+  // Catch empty parts like "2022-", "2022--", "2022-08-", "2022--08"
+  const parts_str = date_str.split('-').map(part => part.trim());
+  if   (parts_str.some(part => !/^\d{1,4}$/.test(part))) return null;
+
+  const first_str = parts_str[0];
+  const first_len = first_str.length;
+
+  const parts = parts_str.map(Number); // Ok with check above
+
+  if (first_len === 4) { // Year-based format
+    const base = "year";
+
+    if (parts.length === 1) { // Year
+      const year = parts[0];
+      if (!is_date_valid(year, 1, 1)) return null;
+      return {
+        base,
+        min: new Date(Date.UTC(year, 01-1, 01, 00, 00, 00, 000)), // Year beg
+        max: new Date(Date.UTC(year, 12-1, 31, 23, 59, 59, 999))  // Year end
+      };
+    }
+    if (parts.length === 2) { // Year-Month
+      const [year, month] = parts;
+      if (!is_date_valid(year, month, 1)) return null;
+      const e_mday = new Date(Date.UTC(year, month, 0)).getUTCDate();
+      return {
+        base,
+        min: new Date(Date.UTC(year, month - 1, 1,      00, 00, 00, 000)), // Month beg
+        max: new Date(Date.UTC(year, month - 1, e_mday, 23, 59, 59, 999))  // Month end
+      };
+    }
+    if (parts.length === 3) { // Year-Month-Day
+      const [year, month, day] = parts;
+      if (!is_date_valid(year, month, day)) return null;
+      return {
+        base,
+        min: new Date(Date.UTC(year, month - 1, day, 00, 00, 00, 000)), // Day beg
+        max: new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999))  // Day end
+      };
+    }
+    return null; // Invalid format
+  }
+
+  // Month-based format
+
+  const base = "month";
+
+  if (first_len === 3) {
+    if (first_str === "520") return { base, month: 5, day: 20 }; // Happy 520 Day!
+    return null;
+  }
+
+  const month = parts[0];
+  if  ((month < 1) || (month > 12)) return null;
+
+  if (parts.length === 1) return { base, month };
+
+  if (parts.length === 2) {
+    const day = parts[1];
+    if (!is_date_valid(2024, month, day)) return null; // Allow 29 days for February
+    return { base, month, day };
+  }
+  return null; // Invalid format
+}
+
 function filter_date(date, min, max) {
   if (min.base === "year") return (date >= min.min) && (date <= max.max);
 
@@ -156,6 +234,8 @@ function filter_date(date, min, max) {
   if (min.month <= max.month) return (date_month >= min.month) && (date_month <= max.month);
   return                             (date_month >= min.month) || (date_month <= max.month);
 }
+
+/* Check and Filter Items */
 
 function filter_items(stats_items, stats_date,
   archived_min, archived_max, created_min, created_max,
@@ -420,6 +500,48 @@ function filter_count_keys(items_prev, items_curr,
   return res;
 }
 
+function agg_value(prev, curr, agg) {
+  if (agg === "min") return Math.min(prev, curr);
+  if (agg === "avg") return (prev + curr) / 2;
+  if (agg === "max") return Math.max(prev, curr);
+
+  return 0;
+}
+
+// Usage: At least one of *_agg must be of: min, avg, max
+// If one of *_agg is not set, then this side uses agg of other side
+function filter_count_agg(items_prev, items_curr, min_str, min_agg, max_str, max_agg, get_count) {
+  const min = min_str ? parseInt(min_str, 10) : 0;
+  const max = max_str ? parseInt(max_str, 10) : Infinity;
+
+  if (!min_agg) min_agg = max_agg;
+  if (!max_agg) max_agg = min_agg;
+
+  const count_prev = {};
+  const count_curr = {};
+
+  for (const item of items_prev) count_prev[item.identifier] = get_count(item);
+  for (const item of items_curr) count_curr[item.identifier] = get_count(item);
+
+  const res = {};
+
+  for (const identifier in count_prev) {
+    if (count_curr[identifier] === undefined) continue;
+
+    const icp = count_prev[identifier];
+    const icc = count_curr[identifier];
+
+    const ic_agg_min = agg_value(icp, icc, min_agg);
+    const ic_agg_max = agg_value(icp, icc, max_agg);
+
+    if ((ic_agg_min >= min) && (ic_agg_max <= max)) {
+      res[identifier] = true;
+    }
+  }
+
+  return res;
+}
+
 function filter_count_range(items_prev, items_curr, min_str, max_str, get_count) {
   const min = min_str ? parseInt(min_str, 10) : 0;
   const max = max_str ? parseInt(max_str, 10) : Infinity;
@@ -451,9 +573,12 @@ function filter_count_range(items_prev, items_curr, min_str, max_str, get_count)
 // Usage: *_min_str as *_prev_str, *_max_str as *_curr_str
 // *_str are: number / "" / keys: grow, fall, same, diff
 function filter_views_keys(items_prev, items_curr,
-  dl_prev_str, dl_prev_kv, dl_prev_no, dl_curr_str, dl_curr_kv, dl_curr_no, get_dl,
-  mo_prev_str, mo_prev_kv, mo_prev_no, mo_curr_str, mo_curr_kv, mo_curr_no, get_mo,
-  wk_prev_str, wk_prev_kv, wk_prev_no, wk_curr_str, wk_curr_kv, wk_curr_no) {
+  dl_prev_str, dl_prev_kv, dl_prev_no,
+  dl_curr_str, dl_curr_kv, dl_curr_no, get_dl,
+  mo_prev_str, mo_prev_kv, mo_prev_no,
+  mo_curr_str, mo_curr_kv, mo_curr_no, get_mo,
+  wk_prev_str, wk_prev_kv, wk_prev_no,
+  wk_curr_str, wk_curr_kv, wk_curr_no) {
   const is_key = (s) => ["grow", "fall", "same", "diff"].includes(s);
 
   const is_dl_key = is_key(dl_prev_str) || is_key(dl_curr_str);
@@ -508,9 +633,12 @@ function filter_views_keys(items_prev, items_curr,
 // Filtering by views count: from min to max, or by keys logic
 // *_str are: number / "" / keys
 function filter_views(items_prev, items_curr,
-  dl_min_str, dl_min_kv, dl_min_no, dl_max_str, dl_max_kv, dl_max_no, is_dl_old,
-  mo_min_str, mo_min_kv, mo_min_no, mo_max_str, mo_max_kv, mo_max_no, is_mo_23,
-  wk_min_str, wk_min_kv, wk_min_no, wk_max_str, wk_max_kv, wk_max_no) {
+  dl_min_str, dl_min_kv, dl_min_no, dl_min_agg,
+  dl_max_str, dl_max_kv, dl_max_no, dl_max_agg, is_dl_old,
+  mo_min_str, mo_min_kv, mo_min_no, mo_min_agg,
+  mo_max_str, mo_max_kv, mo_max_no, mo_max_agg, is_mo_23,
+  wk_min_str, wk_min_kv, wk_min_no, wk_min_agg,
+  wk_max_str, wk_max_kv, wk_max_no, wk_max_agg) {
   if (!dl_min_str && !dl_max_str &&
       !mo_min_str && !mo_max_str &&
       !wk_min_str && !wk_max_str) return { done: false };
@@ -519,11 +647,16 @@ function filter_views(items_prev, items_curr,
   const get_mo = is_mo_23  ? (item => item.views_23 ) : (item => item.views_30 );
 
   const views_keys = filter_views_keys(items_prev, items_curr,
-    dl_min_str, dl_min_kv, dl_min_no, dl_max_str, dl_max_kv, dl_max_no, get_dl,
-    mo_min_str, mo_min_kv, mo_min_no, mo_max_str, mo_max_kv, mo_max_no, get_mo,
-    wk_min_str, wk_min_kv, wk_min_no, wk_max_str, wk_max_kv, wk_max_no);
+    dl_min_str, dl_min_kv, dl_min_no,
+    dl_max_str, dl_max_kv, dl_max_no, get_dl,
+    mo_min_str, mo_min_kv, mo_min_no,
+    mo_max_str, mo_max_kv, mo_max_no, get_mo,
+    wk_min_str, wk_min_kv, wk_min_no,
+    wk_max_str, wk_max_kv, wk_max_no);
 
   if (views_keys.done) return views_keys;
+
+  // Range
 
   const dl_min_cnt = dl_min_str ? parseInt(dl_min_str, 10) : 0;
   const dl_max_cnt = dl_max_str ? parseInt(dl_max_str, 10) : Infinity;
@@ -571,11 +704,27 @@ function filter_favs_keys(items_prev, items_curr,
   return { done: true, prev: results_prev, curr: results_curr };
 }
 
+function filter_favs_agg(items_prev, items_curr,
+  favs_min_str, favs_min_agg,
+  favs_max_str, favs_max_agg) {
+
+  if (!favs_min_agg && !favs_max_agg) return { done: false };
+
+  const favs_res = filter_count_agg(items_prev, items_curr,
+    favs_min_str, favs_min_agg,
+    favs_max_str, favs_max_agg, item => item.favorites);
+
+  const results_prev = items_prev.filter(item => favs_res[item.identifier]);
+  const results_curr = items_curr.filter(item => favs_res[item.identifier]);
+
+  return { done: true, prev: results_prev, curr: results_curr };
+}
+
 // Filtering by favorites count: from min to max, or by keys logic
 // *_str are: number / "" / keys
 function filter_favs(items_prev, items_curr,
-  favs_min_str, favs_min_kv, favs_min_no,
-  favs_max_str, favs_max_kv, favs_max_no) {
+  favs_min_str, favs_min_kv, favs_min_no, favs_min_agg,
+  favs_max_str, favs_max_kv, favs_max_no, favs_max_agg) {
   if (!favs_min_str && !favs_max_str) return { done: false };
 
   const favs_keys = filter_favs_keys(items_prev, items_curr,
@@ -583,6 +732,14 @@ function filter_favs(items_prev, items_curr,
     favs_max_str, favs_max_kv, favs_max_no);
 
   if (favs_keys.done) return favs_keys;
+
+  const favs_agg = filter_favs_agg(items_prev, items_curr,
+    favs_min_str, favs_min_agg,
+    favs_max_str, favs_max_agg);
+
+  if (favs_agg.done) return favs_agg;
+
+  // Range
 
   const favs_min_cnt = favs_min_str ? parseInt(favs_min_str, 10) : 0;
   const favs_max_cnt = favs_max_str ? parseInt(favs_max_str, 10) : Infinity;

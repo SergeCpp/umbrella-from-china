@@ -112,82 +112,6 @@ function filter_subjects(items_prev, items_curr, subjects_items, subjects_terms)
 
 /* Filter */
 
-function is_date_valid(year, month, day) {
-  // Create date and check if it "corrects" the input
-  const  date = new Date(Date.UTC(year, month - 1, day));
-  return date.getUTCFullYear() === year && 
-         date.getUTCMonth() === (month - 1) && 
-         date.getUTCDate() === day;
-}
-
-function get_date_range(date_str) {
-  if (!date_str) return null;
-
-  // Catch empty parts like "2022-", "2022--", "2022-08-", "2022--08"
-  const parts_str = date_str.split('-').map(part => part.trim());
-  if   (parts_str.some(part => !/^\d{1,4}$/.test(part))) return null;
-
-  const first_str = parts_str[0];
-  const first_len = first_str.length;
-
-  const parts = parts_str.map(Number); // Ok with check above
-
-  if (first_len === 4) { // Year-based format
-    const base = "year";
-
-    if (parts.length === 1) { // Year
-      const year = parts[0];
-      if (!is_date_valid(year, 1, 1)) return null;
-      return {
-        base,
-        min: new Date(Date.UTC(year, 01-1, 01, 00, 00, 00, 000)), // Year beg
-        max: new Date(Date.UTC(year, 12-1, 31, 23, 59, 59, 999))  // Year end
-      };
-    }
-    if (parts.length === 2) { // Year-Month
-      const [year, month] = parts;
-      if (!is_date_valid(year, month, 1)) return null;
-      const e_mday = new Date(Date.UTC(year, month, 0)).getUTCDate();
-      return {
-        base,
-        min: new Date(Date.UTC(year, month - 1, 1,      00, 00, 00, 000)), // Month beg
-        max: new Date(Date.UTC(year, month - 1, e_mday, 23, 59, 59, 999))  // Month end
-      };
-    }
-    if (parts.length === 3) { // Year-Month-Day
-      const [year, month, day] = parts;
-      if (!is_date_valid(year, month, day)) return null;
-      return {
-        base,
-        min: new Date(Date.UTC(year, month - 1, day, 00, 00, 00, 000)), // Day beg
-        max: new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999))  // Day end
-      };
-    }
-    return null; // Invalid format
-  }
-
-  // Month-based format
-
-  const base = "month";
-
-  if (first_len === 3) {
-    if (first_str === "520") return { base, month: 5, day: 20 }; // Happy 520 Day!
-    return null;
-  }
-
-  const month = parts[0];
-  if  ((month < 1) || (month > 12)) return null;
-
-  if (parts.length === 1) return { base, month };
-
-  if (parts.length === 2) {
-    const day = parts[1];
-    if (!is_date_valid(2024, month, day)) return null; // Allow 29 days for February
-    return { base, month, day };
-  }
-  return null; // Invalid format
-}
-
 function get_views_prefix(min_str, max_str) {
   const is_min_prefix = min_str.startsWith('^');
   const is_max_prefix = max_str.startsWith('^');
@@ -196,6 +120,25 @@ function get_views_prefix(min_str, max_str) {
   if (is_max_prefix) max_str = max_str.slice(1).trimStart();
 
   return [ is_min_prefix || is_max_prefix, min_str, max_str ];
+}
+
+// Syntax: [[min | avg | max] non-negative integer]
+function get_agg(str) {
+  if (!str) return [ "", null ]; // Any number on this side
+
+  let sl  = 0;
+  let agg = null;
+
+  if      (str.startsWith("min")) { sl = 3; agg = "min"; }
+  else if (str.startsWith("avg")) { sl = 3; agg = "avg"; }
+  else if (str.startsWith("max")) { sl = 3; agg = "max"; }
+
+  let s = sl ? str.slice(sl).trimStart() : str;
+  if (!/^\d{1,8}$/.test(s))    return [ str, null ];
+  const num = parseInt(s, 10);
+  if (isNaN(num) || (num < 0)) return [ str, null ];
+
+  return [ s, agg ];
 }
 
 // Syntax: [[ae for >= | a for > | be for <= | b for < | e for == | ne for !=] non-negative integer]
@@ -471,6 +414,28 @@ function process_filter() {
   if (input_allowed_keys(wk_min_str)) [wk_max_str, wk_max_no] = get_num(wk_max_str, wk_min_str);
   if (input_allowed_keys(wk_max_str)) [wk_min_str, wk_min_no] = get_num(wk_min_str, wk_max_str);
 
+  let dl_min_agg = null;
+  let dl_max_agg = null;
+  let mo_min_agg = null;
+  let mo_max_agg = null;
+  let wk_min_agg = null;
+  let wk_max_agg = null;
+
+  if (!input_allowed_keys(dl_min_str) && !input_allowed_keys(dl_max_str)) {
+    [dl_min_str, dl_min_agg] = get_agg(dl_min_str);
+    [dl_max_str, dl_max_agg] = get_agg(dl_max_str);
+  }
+
+  if (!input_allowed_keys(mo_min_str) && !input_allowed_keys(mo_max_str)) {
+    [mo_min_str, mo_min_agg] = get_agg(mo_min_str);
+    [mo_max_str, mo_max_agg] = get_agg(mo_max_str);
+  }
+
+  if (!input_allowed_keys(wk_min_str) && !input_allowed_keys(wk_max_str)) {
+    [wk_min_str, wk_min_agg] = get_agg(wk_min_str);
+    [wk_max_str, wk_max_agg] = get_agg(wk_max_str);
+  }
+
   if (!input_allowed_views(dl_min_str) || !input_allowed_views(dl_max_str) ||
       !input_allowed_views(mo_min_str) || !input_allowed_views(mo_max_str) ||
       !input_allowed_views(wk_min_str) || !input_allowed_views(wk_max_str)) {
@@ -524,6 +489,14 @@ function process_filter() {
   if (input_allowed_keys(favs_min_str)) [favs_max_str, favs_max_no] = get_num(favs_max_str, favs_min_str);
   if (input_allowed_keys(favs_max_str)) [favs_min_str, favs_min_no] = get_num(favs_min_str, favs_max_str);
 
+  let favs_min_agg = null;
+  let favs_max_agg = null;
+
+  if (!input_allowed_keys(favs_min_str) && !input_allowed_keys(favs_max_str)) {
+    [favs_min_str, favs_min_agg] = get_agg(favs_min_str);
+    [favs_max_str, favs_max_agg] = get_agg(favs_max_str);
+  }
+
   if (!input_allowed_favs(favs_min_str) || !input_allowed_favs(favs_max_str)) {
     container.innerHTML = err_favs;
     return;
@@ -552,9 +525,12 @@ function process_filter() {
 
   // Views
   const filtered_views = filter_views(results_prev, results_curr,
-    dl_min_str, dl_min_kv, dl_min_no, dl_max_str, dl_max_kv, dl_max_no, is_dl_old,
-    mo_min_str, mo_min_kv, mo_min_no, mo_max_str, mo_max_kv, mo_max_no, is_mo_23,
-    wk_min_str, wk_min_kv, wk_min_no, wk_max_str, wk_max_kv, wk_max_no);
+    dl_min_str, dl_min_kv, dl_min_no, dl_min_agg,
+    dl_max_str, dl_max_kv, dl_max_no, dl_max_agg, is_dl_old,
+    mo_min_str, mo_min_kv, mo_min_no, mo_min_agg,
+    mo_max_str, mo_max_kv, mo_max_no, mo_max_agg, is_mo_23,
+    wk_min_str, wk_min_kv, wk_min_no, wk_min_agg,
+    wk_max_str, wk_max_kv, wk_max_no, wk_max_agg);
   if (filtered_views.done) {
     results_curr = filtered_views.curr;
     results_prev = filtered_views.prev;
@@ -562,8 +538,8 @@ function process_filter() {
 
   // Favs
   const filtered_favs = filter_favs(results_prev, results_curr,
-    favs_min_str, favs_min_kv, favs_min_no,
-    favs_max_str, favs_max_kv, favs_max_no);
+    favs_min_str, favs_min_kv, favs_min_no, favs_min_agg,
+    favs_max_str, favs_max_kv, favs_max_no, favs_max_agg);
   if (filtered_favs.done) {
     results_curr = filtered_favs.curr;
     results_prev = filtered_favs.prev;
