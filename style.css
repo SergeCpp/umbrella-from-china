@@ -19,6 +19,11 @@ html { /* Need html to work, not body */
   padding: 0.5em 0.5em;
   text-decoration: none;
 }
+.header > a { /* For emoji hover area to take the full height of multiline header */
+  align-items: center;
+  align-self: stretch;
+  display: flex;
+}
 .header > a:first-child { /* First emoji only, no nav's first */
   padding-right: 2.5em;
 }
