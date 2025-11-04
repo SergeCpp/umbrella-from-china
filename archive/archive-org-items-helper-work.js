@@ -500,18 +500,24 @@ function filter_count_keys(items_prev, items_curr,
   return res;
 }
 
+const agg_fn = {
+  min : (prev, curr) => Math.min(prev,  curr),
+  avg : (prev, curr) =>         (prev + curr) / 2,
+  max : (prev, curr) => Math.max(prev,  curr),
+
+  add : (prev, curr) =>          prev + curr,
+  sub : (prev, curr) => Math.abs(prev - curr),
+
+  prev: (prev, curr) => prev,
+  curr: (prev, curr) => curr
+};
+
 function agg_value(prev, curr, agg) {
-  if (agg === "min") return Math.min(prev, curr);
-  if (agg === "avg") return (prev + curr) / 2;
-  if (agg === "max") return Math.max(prev, curr);
-
-  if (agg === "prev") return prev;
-  if (agg === "curr") return curr;
-
-  return 0;
+  const  fn = agg_fn[agg];
+  return fn ? fn(prev, curr) : 0;
 }
 
-// Usage: At least one of *_agg must be of: min, avg, max, prev, curr
+// Usage: At least one of *_agg must be of: min, avg, max, add, sub, prev, curr
 // If one of *_agg is not set, then this side uses agg of other side
 function filter_count_range_agg(items_prev, items_curr, min_str, min_agg, max_str, max_agg, get_count) {
   const min = min_str ? parseInt(min_str, 10) : 0;
@@ -575,7 +581,7 @@ function filter_count_range_val(items_prev, items_curr, min_str, max_str, get_co
 
 // Usage: *_min_str as *_prev_str, *_max_str as *_curr_str
 // *_str are: number / "" / keys: grow, fall, same, diff
-// *_agg are: min / avg / max / prev / curr, and null is allowed for one of *_agg
+// *_agg are: min / avg / max / add / sub / prev / curr, and null is allowed for one of *_agg
 function filter_views_keys_agg(items_prev, items_curr,
   dl_prev_str, dl_prev_kv, dl_prev_no, dl_prev_agg,
   dl_curr_str, dl_curr_kv, dl_curr_no, dl_curr_agg, get_dl,
@@ -732,7 +738,7 @@ function filter_favs_keys(items_prev, items_curr,
 }
 
 // *_str are: number / ""
-// *_agg are: min / avg / max / prev / curr, and null is allowed for one of *_agg
+// *_agg are: min / avg / max / add / sub / prev / curr, and null is allowed for one of *_agg
 function filter_favs_agg(items_prev, items_curr,
   favs_min_str, favs_min_agg,
   favs_max_str, favs_max_agg) {

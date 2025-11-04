@@ -3,8 +3,8 @@
 const stat_file_dates = [];   // ["YYYY-MM-DD"]
 const stat_file_cache = {};   // ["YYYY-MM-DD"] = { data: NodeList / [], usage: counter }
 
-let   sf_cache_hits   = 0;
-let   sf_cache_misses = 0;
+let   sf_cache_hits   = 0;    // Non-negative integer
+let   sf_cache_misses = 0;    // Non-negative integer
 
 let   stat_curr_date  = null; //  "YYYY-MM-DD"
 let   stat_curr_items = null; // NodeList / []
@@ -122,7 +122,7 @@ function get_views_prefix(min_str, max_str) {
   return [ is_min_prefix || is_max_prefix, min_str, max_str ];
 }
 
-// Syntax: [[min | avg | max | prev | curr] non-negative integer]
+// Syntax: [[min | avg | max | add | sub | prev | curr] non-negative integer]
 function get_agg(str) {
   if (!str) return [ "", null ]; // Any number on this side
 
@@ -132,6 +132,8 @@ function get_agg(str) {
   if      (str.startsWith("min" )) { sl = 3; agg = "min" ; }
   else if (str.startsWith("avg" )) { sl = 3; agg = "avg" ; }
   else if (str.startsWith("max" )) { sl = 3; agg = "max" ; }
+  else if (str.startsWith("add" )) { sl = 3; agg = "add" ; }
+  else if (str.startsWith("sub" )) { sl = 3; agg = "sub" ; }
   else if (str.startsWith("prev")) { sl = 4; agg = "prev"; }
   else if (str.startsWith("curr")) { sl = 4; agg = "curr"; }
 
@@ -259,6 +261,11 @@ const err_views =
   'Prefix ^ switches Downloads fields to Old = Downloads &minus; Month. Old is displayed in the table<br />' +
   'Prefix ^ switches Month fields to 23 = Month &minus; Week. 23 is displayed in the table<br />' +
   'Prefix ^ does nothing to Week fields. Week is always 7 days. Week is displayed in the table' +
+  '</p><p>' +
+  'Range min/max values can be numbers, with empty field as no-limit value<br />' +
+  'Aggregate range uses aggregate function in any field (or in both fields) of min/max pair<br />' +
+  'Examples: min 10 / 20, min 10 / avg 30, also: max 20 / min 10 ("reversed" aggregate range)<br />' +
+  'Aggregate functions are: min, avg, max, add, sub, prev, curr' +
   '</p><p>' +
   'Keys: grow, fall, same, diff (aliases: / \\ = !) switch min/max logic to prev/curr logic<br />' +
   'Key allows number after it, and percent sign % can be after number' +
