@@ -122,16 +122,18 @@ function get_views_prefix(min_str, max_str) {
   return [ is_min_prefix || is_max_prefix, min_str, max_str ];
 }
 
-// Syntax: [[min | avg | max] non-negative integer]
+// Syntax: [[min | avg | max | prev | curr] non-negative integer]
 function get_agg(str) {
   if (!str) return [ "", null ]; // Any number on this side
 
   let sl  = 0;
   let agg = null;
 
-  if      (str.startsWith("min")) { sl = 3; agg = "min"; }
-  else if (str.startsWith("avg")) { sl = 3; agg = "avg"; }
-  else if (str.startsWith("max")) { sl = 3; agg = "max"; }
+  if      (str.startsWith("min" )) { sl = 3; agg = "min" ; }
+  else if (str.startsWith("avg" )) { sl = 3; agg = "avg" ; }
+  else if (str.startsWith("max" )) { sl = 3; agg = "max" ; }
+  else if (str.startsWith("prev")) { sl = 4; agg = "prev"; }
+  else if (str.startsWith("curr")) { sl = 4; agg = "curr"; }
 
   let s = sl ? str.slice(sl).trimStart() : str;
   if (!/^\d{1,8}$/.test(s))    return [ str, null ];
@@ -443,33 +445,39 @@ function process_filter() {
     return;
   }
 
-  const dl_min_cnt = parseInt(dl_min_str, 10);
-  const dl_max_cnt = parseInt(dl_max_str, 10);
+  if (!dl_min_agg && !dl_max_agg) { // For agg min > max is allowed
+    const dl_min_cnt = parseInt(dl_min_str, 10);
+    const dl_max_cnt = parseInt(dl_max_str, 10);
 
-  if (!isNaN(dl_min_cnt) && !isNaN(dl_max_cnt)) {
-    if (dl_min_cnt > dl_max_cnt) {
-      container.innerHTML = err_views_range;
-      return;
+    if (!isNaN(dl_min_cnt) && !isNaN(dl_max_cnt)) {
+      if (dl_min_cnt > dl_max_cnt) {
+        container.innerHTML = err_views_range;
+        return;
+      }
     }
   }
 
-  const mo_min_cnt = parseInt(mo_min_str, 10);
-  const mo_max_cnt = parseInt(mo_max_str, 10);
+  if (!mo_min_agg && !mo_max_agg) { // For agg min > max is allowed
+    const mo_min_cnt = parseInt(mo_min_str, 10);
+    const mo_max_cnt = parseInt(mo_max_str, 10);
 
-  if (!isNaN(mo_min_cnt) && !isNaN(mo_max_cnt)) {
-    if (mo_min_cnt > mo_max_cnt) {
-      container.innerHTML = err_views_range;
-      return;
+    if (!isNaN(mo_min_cnt) && !isNaN(mo_max_cnt)) {
+      if (mo_min_cnt > mo_max_cnt) {
+        container.innerHTML = err_views_range;
+        return;
+      }
     }
   }
 
-  const wk_min_cnt = parseInt(wk_min_str, 10);
-  const wk_max_cnt = parseInt(wk_max_str, 10);
+  if (!wk_min_agg && !wk_max_agg) { // For agg min > max is allowed
+    const wk_min_cnt = parseInt(wk_min_str, 10);
+    const wk_max_cnt = parseInt(wk_max_str, 10);
 
-  if (!isNaN(wk_min_cnt) && !isNaN(wk_max_cnt)) {
-    if (wk_min_cnt > wk_max_cnt) {
-      container.innerHTML = err_views_range;
-      return;
+    if (!isNaN(wk_min_cnt) && !isNaN(wk_max_cnt)) {
+      if (wk_min_cnt > wk_max_cnt) {
+        container.innerHTML = err_views_range;
+        return;
+      }
     }
   }
 
@@ -502,13 +510,15 @@ function process_filter() {
     return;
   }
 
-  const favs_min_cnt = parseInt(favs_min_str, 10);
-  const favs_max_cnt = parseInt(favs_max_str, 10);
+  if (!favs_min_agg && !favs_max_agg) { // For agg min > max is allowed
+    const favs_min_cnt = parseInt(favs_min_str, 10);
+    const favs_max_cnt = parseInt(favs_max_str, 10);
 
-  if (!isNaN(favs_min_cnt) && !isNaN(favs_max_cnt)) {
-    if (favs_min_cnt > favs_max_cnt) {
-      container.innerHTML = err_favs_range;
-      return;
+    if (!isNaN(favs_min_cnt) && !isNaN(favs_max_cnt)) {
+      if (favs_min_cnt > favs_max_cnt) {
+        container.innerHTML = err_favs_range;
+        return;
+      }
     }
   }
 
