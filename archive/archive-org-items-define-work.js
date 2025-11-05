@@ -295,6 +295,13 @@ const err_favs_range =
   err_beg + 'Min favorites count must be less than or equal to max favorites count' +
   err_end;
 
+const err_keys_agg =
+  err_beg + 'Aggregate functions are not allowed with keys' +
+  err_end;
+const err_keys_no =
+  err_beg + 'Number prefixes are allowed only with keys' +
+  err_end;
+
 const err_subjects =
   err_beg + 'Subjects XML file cannot be loaded or loading error occurred' +
   err_end;
@@ -387,14 +394,23 @@ function process_filter() {
   let wk_min_str = document.getElementById("week-min"     ).value.trim().toLowerCase();
   let wk_max_str = document.getElementById("week-max"     ).value.trim().toLowerCase();
 
-  let is_dl_old  = false; // Use old instead dl, old = dl without last month
-  let is_mo_23   = false; // Use 23 days instead month, 23 days = month withoul last week
-  let is_wk_7    = false; // This flag will not be used, week === 7 days
+  let dl_min_str_t = null;
+  let dl_max_str_t = null;
+  let mo_min_str_t = null;
+  let mo_max_str_t = null;
+  let wk_min_str_t = null;
+  let wk_max_str_t = null;
+
+  // Views: field prefixes
+  let is_dl_old = false; // Use old instead dl, old = dl without last month
+  let is_mo_23  = false; // Use 23 days instead month, 23 days = month withoul last week
+  let is_wk_7   = false; // This flag will not be used, week === 7 days
 
   [is_dl_old, dl_min_str, dl_max_str] = get_views_prefix(dl_min_str, dl_max_str);
   [is_mo_23,  mo_min_str, mo_max_str] = get_views_prefix(mo_min_str, mo_max_str);
   [is_wk_7,   wk_min_str, wk_max_str] = get_views_prefix(wk_min_str, wk_max_str);
 
+  // Views: keys
   let dl_min_kv = null;
   let dl_max_kv = null;
   let mo_min_kv = null;
@@ -409,6 +425,7 @@ function process_filter() {
   [wk_min_str, wk_min_kv] = get_key(wk_min_str);
   [wk_max_str, wk_max_kv] = get_key(wk_max_str);
 
+  // Views: number prefixes
   let dl_min_no = null;
   let dl_max_no = null;
   let mo_min_no = null;
@@ -416,13 +433,38 @@ function process_filter() {
   let wk_min_no = null;
   let wk_max_no = null;
 
-  if (input_allowed_keys(dl_min_str)) [dl_max_str, dl_max_no] = get_num(dl_max_str, dl_min_str);
-  if (input_allowed_keys(dl_max_str)) [dl_min_str, dl_min_no] = get_num(dl_min_str, dl_max_str);
-  if (input_allowed_keys(mo_min_str)) [mo_max_str, mo_max_no] = get_num(mo_max_str, mo_min_str);
-  if (input_allowed_keys(mo_max_str)) [mo_min_str, mo_min_no] = get_num(mo_min_str, mo_max_str);
-  if (input_allowed_keys(wk_min_str)) [wk_max_str, wk_max_no] = get_num(wk_max_str, wk_min_str);
-  if (input_allowed_keys(wk_max_str)) [wk_min_str, wk_min_no] = get_num(wk_min_str, wk_max_str);
+  let dl_min_no_t = null;
+  let dl_max_no_t = null;
+  let mo_min_no_t = null;
+  let mo_max_no_t = null;
+  let wk_min_no_t = null;
+  let wk_max_no_t = null;
 
+  [dl_min_str_t, dl_min_no_t] = get_num(dl_min_str, dl_max_str);
+  [dl_max_str_t, dl_max_no_t] = get_num(dl_max_str, dl_min_str);
+  [mo_min_str_t, mo_min_no_t] = get_num(mo_min_str, mo_max_str);
+  [mo_max_str_t, mo_max_no_t] = get_num(mo_max_str, mo_min_str);
+  [wk_min_str_t, wk_min_no_t] = get_num(wk_min_str, wk_max_str);
+  [wk_max_str_t, wk_max_no_t] = get_num(wk_max_str, wk_min_str);
+
+  if (input_allowed_keys(dl_min_str)) [dl_max_str, dl_max_no] = [dl_max_str_t, dl_max_no_t];
+  if (input_allowed_keys(dl_max_str)) [dl_min_str, dl_min_no] = [dl_min_str_t, dl_min_no_t];
+  if (input_allowed_keys(mo_min_str)) [mo_max_str, mo_max_no] = [mo_max_str_t, mo_max_no_t];
+  if (input_allowed_keys(mo_max_str)) [mo_min_str, mo_min_no] = [mo_min_str_t, mo_min_no_t];
+  if (input_allowed_keys(wk_min_str)) [wk_max_str, wk_max_no] = [wk_max_str_t, wk_max_no_t];
+  if (input_allowed_keys(wk_max_str)) [wk_min_str, wk_min_no] = [wk_min_str_t, wk_min_no_t];
+
+  if ((!input_allowed_keys(dl_min_str_t) && dl_max_no_t) ||
+      (!input_allowed_keys(dl_max_str_t) && dl_min_no_t) ||
+      (!input_allowed_keys(mo_min_str_t) && mo_max_no_t) ||
+      (!input_allowed_keys(mo_max_str_t) && mo_min_no_t) ||
+      (!input_allowed_keys(wk_min_str_t) && wk_max_no_t) ||
+      (!input_allowed_keys(wk_max_str_t) && wk_min_no_t)) {
+    container.innerHTML = err_keys_no;
+    return;
+  }
+
+  // Views: aggregate functions
   let dl_min_agg = null;
   let dl_max_agg = null;
   let mo_min_agg = null;
@@ -430,21 +472,46 @@ function process_filter() {
   let wk_min_agg = null;
   let wk_max_agg = null;
 
+  let dl_min_agg_t = null;
+  let dl_max_agg_t = null;
+  let mo_min_agg_t = null;
+  let mo_max_agg_t = null;
+  let wk_min_agg_t = null;
+  let wk_max_agg_t = null;
+
+  [dl_min_str_t, dl_min_agg_t] = get_agg(dl_min_str);
+  [dl_max_str_t, dl_max_agg_t] = get_agg(dl_max_str);
+  [mo_min_str_t, mo_min_agg_t] = get_agg(mo_min_str);
+  [mo_max_str_t, mo_max_agg_t] = get_agg(mo_max_str);
+  [wk_min_str_t, wk_min_agg_t] = get_agg(wk_min_str);
+  [wk_max_str_t, wk_max_agg_t] = get_agg(wk_max_str);
+
   if (!input_allowed_keys(dl_min_str) && !input_allowed_keys(dl_max_str)) {
-    [dl_min_str, dl_min_agg] = get_agg(dl_min_str);
-    [dl_max_str, dl_max_agg] = get_agg(dl_max_str);
+    [dl_min_str, dl_min_agg] = [dl_min_str_t, dl_min_agg_t];
+    [dl_max_str, dl_max_agg] = [dl_max_str_t, dl_max_agg_t];
   }
 
   if (!input_allowed_keys(mo_min_str) && !input_allowed_keys(mo_max_str)) {
-    [mo_min_str, mo_min_agg] = get_agg(mo_min_str);
-    [mo_max_str, mo_max_agg] = get_agg(mo_max_str);
+    [mo_min_str, mo_min_agg] = [mo_min_str_t, mo_min_agg_t];
+    [mo_max_str, mo_max_agg] = [mo_max_str_t, mo_max_agg_t];
   }
 
   if (!input_allowed_keys(wk_min_str) && !input_allowed_keys(wk_max_str)) {
-    [wk_min_str, wk_min_agg] = get_agg(wk_min_str);
-    [wk_max_str, wk_max_agg] = get_agg(wk_max_str);
+    [wk_min_str, wk_min_agg] = [wk_min_str_t, wk_min_agg_t];
+    [wk_max_str, wk_max_agg] = [wk_max_str_t, wk_max_agg_t];
   }
 
+  if ((input_allowed_keys(dl_min_str_t) && dl_max_agg_t) ||
+      (input_allowed_keys(dl_max_str_t) && dl_min_agg_t) ||
+      (input_allowed_keys(mo_min_str_t) && mo_max_agg_t) ||
+      (input_allowed_keys(mo_max_str_t) && mo_min_agg_t) ||
+      (input_allowed_keys(wk_min_str_t) && wk_max_agg_t) ||
+      (input_allowed_keys(wk_max_str_t) && wk_min_agg_t)) {
+    container.innerHTML = err_keys_agg;
+    return;
+  }
+
+  // Views: chars
   if (!input_allowed_views(dl_min_str) || !input_allowed_views(dl_max_str) ||
       !input_allowed_views(mo_min_str) || !input_allowed_views(mo_max_str) ||
       !input_allowed_views(wk_min_str) || !input_allowed_views(wk_max_str)) {
@@ -452,6 +519,7 @@ function process_filter() {
     return;
   }
 
+  // Views: values
   if (!dl_min_agg && !dl_max_agg) { // For agg min > max is allowed
     const dl_min_cnt = parseInt(dl_min_str, 10);
     const dl_max_cnt = parseInt(dl_max_str, 10);
@@ -492,31 +560,63 @@ function process_filter() {
   let favs_min_str = document.getElementById("favs-min").value.trim().toLowerCase();
   let favs_max_str = document.getElementById("favs-max").value.trim().toLowerCase();
 
-  let favs_min_kv  = null;
-  let favs_max_kv  = null;
+  let favs_min_str_t = null;
+  let favs_max_str_t = null;
+
+  // Favs: keys
+  let favs_min_kv = null;
+  let favs_max_kv = null;
 
   [favs_min_str, favs_min_kv] = get_key(favs_min_str);
   [favs_max_str, favs_max_kv] = get_key(favs_max_str);
 
-  let favs_min_no  = null;
-  let favs_max_no  = null;
+  // Favs: number prefixes
+  let favs_min_no = null;
+  let favs_max_no = null;
 
-  if (input_allowed_keys(favs_min_str)) [favs_max_str, favs_max_no] = get_num(favs_max_str, favs_min_str);
-  if (input_allowed_keys(favs_max_str)) [favs_min_str, favs_min_no] = get_num(favs_min_str, favs_max_str);
+  let favs_min_no_t = null;
+  let favs_max_no_t = null;
 
+  [favs_min_str_t, favs_min_no_t] = get_num(favs_min_str, favs_max_str);
+  [favs_max_str_t, favs_max_no_t] = get_num(favs_max_str, favs_min_str);
+
+  if (input_allowed_keys(favs_min_str)) [favs_max_str, favs_max_no] = [favs_max_str_t, favs_max_no_t];
+  if (input_allowed_keys(favs_max_str)) [favs_min_str, favs_min_no] = [favs_min_str_t, favs_min_no_t];
+
+  if ((!input_allowed_keys(favs_min_str_t) && favs_max_no_t) ||
+      (!input_allowed_keys(favs_max_str_t) && favs_min_no_t)) {
+    container.innerHTML = err_keys_no;
+    return;
+  }
+
+  // Favs: aggregate functions
   let favs_min_agg = null;
   let favs_max_agg = null;
 
+  let favs_min_agg_t = null;
+  let favs_max_agg_t = null;
+
+  [favs_min_str_t, favs_min_agg_t] = get_agg(favs_min_str);
+  [favs_max_str_t, favs_max_agg_t] = get_agg(favs_max_str);
+
   if (!input_allowed_keys(favs_min_str) && !input_allowed_keys(favs_max_str)) {
-    [favs_min_str, favs_min_agg] = get_agg(favs_min_str);
-    [favs_max_str, favs_max_agg] = get_agg(favs_max_str);
+    [favs_min_str, favs_min_agg] = [favs_min_str_t, favs_min_agg_t];
+    [favs_max_str, favs_max_agg] = [favs_max_str_t, favs_max_agg_t];
   }
 
+  if ((input_allowed_keys(favs_min_str_t) && favs_max_agg_t) ||
+      (input_allowed_keys(favs_max_str_t) && favs_min_agg_t)) {
+    container.innerHTML = err_keys_agg;
+    return;
+  }
+
+  // Favs: chars
   if (!input_allowed_favs(favs_min_str) || !input_allowed_favs(favs_max_str)) {
     container.innerHTML = err_favs;
     return;
   }
 
+  // Favs: values
   if (!favs_min_agg && !favs_max_agg) { // For agg min > max is allowed
     const favs_min_cnt = parseInt(favs_min_str, 10);
     const favs_max_cnt = parseInt(favs_max_str, 10);
