@@ -352,6 +352,106 @@ function filter_items(stats_items, stats_date,
   return filtered_items;
 }
 
+/* Filter Count Input Processing */
+
+// Syntax: [^] [input]
+function get_views_prefix(min_str, max_str) {
+  const is_min_prefix = min_str.startsWith('^');
+  const is_max_prefix = max_str.startsWith('^');
+
+  if (is_min_prefix) min_str = min_str.slice(1).trimStart();
+  if (is_max_prefix) max_str = max_str.slice(1).trimStart();
+
+  return [ is_min_prefix || is_max_prefix, min_str, max_str ];
+}
+
+// Syntax: (grow or / | fall or \ | same or = | diff or !) [non-negative integer [%]]
+function get_key(str) {
+  let sl    = 0;
+  let name  = null;
+  let value = null;
+
+  if      (str.startsWith("grow")) { sl = 4; name = "grow"; value = 1; }
+  else if (str.startsWith('/'   )) { sl = 1; name = "grow"; value = 1; }
+  else if (str.startsWith("fall")) { sl = 4; name = "fall"; value = 1; }
+  else if (str.startsWith('\\'  )) { sl = 1; name = "fall"; value = 1; }
+  else if (str.startsWith("same")) { sl = 4; name = "same"; value = 0; }
+  else if (str.startsWith('='   )) { sl = 1; name = "same"; value = 0; }
+  else if (str.startsWith("diff")) { sl = 4; name = "diff"; value = 0; }
+  else if (str.startsWith('!'   )) { sl = 1; name = "diff"; value = 0; }
+  else return [ str, null ];
+
+  let   s = str.slice(sl).trimStart();
+  const p = s.endsWith('%');
+
+  if (p) {
+    s = s.slice(0, -1).trimEnd();
+    if (s === "") return [ str, null ]; // For % must be a value
+  }
+
+  if (s !== "") {
+    if (!/^\d{1,8}$/.test(s)) return [ str, null ];
+    const v = parseInt(s, 10);
+    if (isNaN(v) || (v < 0))  return [ str, null ];
+    value = v;
+  }
+
+  return [ name, { value, is_percent: p } ];
+}
+
+// Syntax: [[ae for >= | a for > | be for <= | b for < | e for == | ne for !=] non-negative integer]
+function get_num(str, key_other) {
+  if (!str) return [ "", null ]; // Any number on this side
+
+  let sl = 0;
+  let op = null;
+
+  if      (str.startsWith("ae")) { sl = 2; op = "ae"; }
+  else if (str.startsWith('a' )) { sl = 1; op = 'a' ; }
+  else if (str.startsWith("be")) { sl = 2; op = "be"; }
+  else if (str.startsWith('b' )) { sl = 1; op = 'b' ; }
+  else if (str.startsWith( 'e')) { sl = 1; op =  'e'; }
+  else if (str.startsWith("ne")) { sl = 2; op = "ne"; }
+
+  let s = sl ? str.slice(sl).trimStart() : str;
+  if (!/^\d{1,8}$/.test(s))    return [ str, null ];
+  const num = parseInt(s, 10);
+  if (isNaN(num) || (num < 0)) return [ str, null ];
+
+  if (!op) { // Defaults
+    if      (key_other === "grow") op = "be"; // This side must be <= num to check other for grow from num
+    else if (key_other === "fall") op = "ae"; // This side must be >= num to check other for fall from num
+    else if (key_other === "same") op =  'e'; // This side must be == num to check other for same to   num
+    else if (key_other === "diff") op =  'e'; // This side must be == num to check other for diff from num
+    else return [ str, null ];
+  }
+
+  return [ s, op ];
+}
+
+// Syntax: [[min | avg | max | add | sub | prev | curr] non-negative integer]
+function get_agg(str) {
+  if (!str) return [ "", null ]; // Any number on this side
+
+  let sl  = 0;
+  let agg = null;
+
+  if      (str.startsWith("min" )) { sl = 3; agg = "min" ; }
+  else if (str.startsWith("avg" )) { sl = 3; agg = "avg" ; }
+  else if (str.startsWith("max" )) { sl = 3; agg = "max" ; }
+  else if (str.startsWith("add" )) { sl = 3; agg = "add" ; }
+  else if (str.startsWith("sub" )) { sl = 3; agg = "sub" ; }
+  else if (str.startsWith("prev")) { sl = 4; agg = "prev"; }
+  else if (str.startsWith("curr")) { sl = 4; agg = "curr"; }
+
+  let s = sl ? str.slice(sl).trimStart() : str;
+  if (!/^\d{1,8}$/.test(s))    return [ str, null ];
+  const num = parseInt(s, 10);
+  if (isNaN(num) || (num < 0)) return [ str, null ];
+
+  return [ s, agg ];
+}
+
 /* Filter Count */
 
 // Whether a > b by at least k.v

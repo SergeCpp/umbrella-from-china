@@ -1,21 +1,22 @@
 /* Global Variables */
 
-const stat_file_dates = [];   // ["YYYY-MM-DD"]
-const stat_file_cache = {};   // ["YYYY-MM-DD"] = { data: NodeList / [], usage: counter }
+const stat_file_dates     = [];           // ["YYYY-MM-DD"]
+const stat_file_cache     = {};           // ["YYYY-MM-DD"] = { data: NodeList / [], usage: counter }
 
-let   sf_cache_hits   = 0;    // Non-negative integer
-let   sf_cache_misses = 0;    // Non-negative integer
+let   sf_cache_hits       = 0;            // Non-negative integer
+let   sf_cache_misses     = 0;            // Non-negative integer
 
-let   stat_curr_date  = null; //  "YYYY-MM-DD"
-let   stat_curr_items = null; // NodeList / []
+let   stat_curr_date      = null;         // "YYYY-MM-DD"
+let   stat_curr_items     = null;         // NodeList / []
 
-let   stat_prev_date  = null; //  "YYYY-MM-DD"
-let   stat_prev_items = null; // NodeList / []
+let   stat_prev_date      = null;         // "YYYY-MM-DD"
+let   stat_prev_items     = null;         // NodeList / []
 
-let   stat_subjects   = null; // null / {} / undefined
+const stat_subjects_date  = "2025-10-19"; // Subjects is the constant part of the stat
+let   stat_subjects_items = null;         // null / {} / undefined
 
-let   du_load         = 0;    // Duration of load
-let   du_parse        = 0;    // Duration of parse
+let   du_load             = 0;            // Duration of load
+let   du_parse            = 0;            // Duration of parse
 
 /* Subjects Processing */
 
@@ -32,14 +33,14 @@ function wait_subjects(subjects_items, subjects_terms) {
 }
 
 function load_subjects() {
-  if (stat_subjects !== null) return;
-  stat_subjects = undefined;
+  if (stat_subjects_items !== null) return;
+  stat_subjects_items = undefined;
 
   const time_0    = performance.now();
   const container = document.getElementById("results");
   const xml_tmplt = container.getAttribute("data-subjects");
   const xml_regex = /#/;
-  const xml_url   = xml_tmplt.replace(xml_regex, "2025-10-19");
+  const xml_url   = xml_tmplt.replace(xml_regex, stat_subjects_date);
 
   fetch(xml_url)
     .then(response => {
@@ -55,8 +56,8 @@ function load_subjects() {
       const docs = xml.querySelectorAll("doc");
 
       // Create subjects lookup map for id: subjects
-//    stat_subjects = new Map(); // Slower
-      stat_subjects =        {}; // Faster
+//    stat_subjects_items = new Map(); // Slower
+      stat_subjects_items =        {}; // Faster
       for (const doc of docs) {
         const node_i = doc.querySelector('str[name="identifier"]');
         if  (!node_i) continue;
@@ -68,8 +69,8 @@ function load_subjects() {
             ? Array.from(node_s.querySelectorAll("str"), n => n.textContent.toLowerCase())
             : [node_s.textContent.toLowerCase()]
           : [];
-//      stat_subjects.set(identifier,   subjects); // Slower
-        stat_subjects    [identifier] = subjects;  // Faster
+//      stat_subjects_items.set(identifier,   subjects); // Slower
+        stat_subjects_items    [identifier] = subjects;  // Faster
       }
       const time_2 = performance.now();
 
@@ -78,7 +79,7 @@ function load_subjects() {
       du_parse = (time_2 - time_1);
     })
     .catch(() => {
-      stat_subjects = undefined;
+      stat_subjects_items = undefined;
     })
     .finally(() => {
       process_filter();
@@ -111,103 +112,6 @@ function filter_subjects(items_prev, items_curr, subjects_items, subjects_terms)
 }
 
 /* Filter */
-
-function get_views_prefix(min_str, max_str) {
-  const is_min_prefix = min_str.startsWith('^');
-  const is_max_prefix = max_str.startsWith('^');
-
-  if (is_min_prefix) min_str = min_str.slice(1).trimStart();
-  if (is_max_prefix) max_str = max_str.slice(1).trimStart();
-
-  return [ is_min_prefix || is_max_prefix, min_str, max_str ];
-}
-
-// Syntax: [[min | avg | max | add | sub | prev | curr] non-negative integer]
-function get_agg(str) {
-  if (!str) return [ "", null ]; // Any number on this side
-
-  let sl  = 0;
-  let agg = null;
-
-  if      (str.startsWith("min" )) { sl = 3; agg = "min" ; }
-  else if (str.startsWith("avg" )) { sl = 3; agg = "avg" ; }
-  else if (str.startsWith("max" )) { sl = 3; agg = "max" ; }
-  else if (str.startsWith("add" )) { sl = 3; agg = "add" ; }
-  else if (str.startsWith("sub" )) { sl = 3; agg = "sub" ; }
-  else if (str.startsWith("prev")) { sl = 4; agg = "prev"; }
-  else if (str.startsWith("curr")) { sl = 4; agg = "curr"; }
-
-  let s = sl ? str.slice(sl).trimStart() : str;
-  if (!/^\d{1,8}$/.test(s))    return [ str, null ];
-  const num = parseInt(s, 10);
-  if (isNaN(num) || (num < 0)) return [ str, null ];
-
-  return [ s, agg ];
-}
-
-// Syntax: [[ae for >= | a for > | be for <= | b for < | e for == | ne for !=] non-negative integer]
-function get_num(str, key_other) {
-  if (!str) return [ "", null ]; // Any number on this side
-
-  let sl = 0;
-  let op = null;
-
-  if      (str.startsWith("ae")) { sl = 2; op = "ae"; }
-  else if (str.startsWith('a' )) { sl = 1; op = 'a' ; }
-  else if (str.startsWith("be")) { sl = 2; op = "be"; }
-  else if (str.startsWith('b' )) { sl = 1; op = 'b' ; }
-  else if (str.startsWith( 'e')) { sl = 1; op =  'e'; }
-  else if (str.startsWith("ne")) { sl = 2; op = "ne"; }
-
-  let s = sl ? str.slice(sl).trimStart() : str;
-  if (!/^\d{1,8}$/.test(s))    return [ str, null ];
-  const num = parseInt(s, 10);
-  if (isNaN(num) || (num < 0)) return [ str, null ];
-
-  if (!op) { // Defaults
-    if      (key_other === "grow") op = "be"; // This side must be <= num to check other for grow from num
-    else if (key_other === "fall") op = "ae"; // This side must be >= num to check other for fall from num
-    else if (key_other === "same") op =  'e'; // This side must be == num to check other for same to   num
-    else if (key_other === "diff") op =  'e'; // This side must be == num to check other for diff from num
-    else return [ str, null ];
-  }
-
-  return [ s, op ];
-}
-
-// Syntax: (grow or / | fall or \ | same or = | diff or !) [non-negative integer [%]]
-function get_key(str) {
-  let sl    = 0;
-  let name  = null;
-  let value = null;
-
-  if      (str.startsWith("grow")) { sl = 4; name = "grow"; value = 1; }
-  else if (str.startsWith('/'   )) { sl = 1; name = "grow"; value = 1; }
-  else if (str.startsWith("fall")) { sl = 4; name = "fall"; value = 1; }
-  else if (str.startsWith('\\'  )) { sl = 1; name = "fall"; value = 1; }
-  else if (str.startsWith("same")) { sl = 4; name = "same"; value = 0; }
-  else if (str.startsWith('='   )) { sl = 1; name = "same"; value = 0; }
-  else if (str.startsWith("diff")) { sl = 4; name = "diff"; value = 0; }
-  else if (str.startsWith('!'   )) { sl = 1; name = "diff"; value = 0; }
-  else return [ str, null ];
-
-  let   s = str.slice(sl).trimStart();
-  const p = s.endsWith('%');
-
-  if (p) {
-    s = s.slice(0, -1).trimEnd();
-    if (s === "") return [ str, null ]; // For % must be a value
-  }
-
-  if (s !== "") {
-    if (!/^\d{1,8}$/.test(s)) return [ str, null ];
-    const v = parseInt(s, 10);
-    if (isNaN(v) || (v < 0))  return [ str, null ];
-    value = v;
-  }
-
-  return [ name, { value, is_percent: p } ];
-}
 
 function input_clean_parse(input) {
   return input
@@ -265,6 +169,7 @@ const err_views =
   'Range min/max values can be numbers, with empty field as no-limit value<br />' +
   'Aggregate range uses aggregate function in any field (or in both fields) of min/max pair<br />' +
   'Examples: min 10 / 20, min 10 / avg 30, also: max 20 / min 10 ("reversed" aggregate range)<br />' +
+  'Note: min 10 / 20, and 10 / min 20 aggregate ranges both are mean min 10 / min 20<br />' +
   'Aggregate functions are: min, avg, max, add, sub, prev, curr' +
   '</p><p>' +
   'Keys: grow, fall, same, diff (aliases: / \\ = !) switch min/max logic to prev/curr logic<br />' +
@@ -630,7 +535,7 @@ function process_filter() {
   }
 
   // Subjects Check
-  if (wait_subjects(stat_subjects, subjects)) return; // Wait for stat_subjects to load
+  if (wait_subjects(stat_subjects_items, subjects)) return; // Wait for stat_subjects_items to load
 
   // Checking and Initial Filters, and Calculating Stats
   let results_curr = filter_items(stat_curr_items, stat_curr_date,
@@ -663,7 +568,7 @@ function process_filter() {
   }
 
   // Subjects
-  const filtered_subjects = filter_subjects(results_prev, results_curr, stat_subjects, subjects);
+  const filtered_subjects = filter_subjects(results_prev, results_curr, stat_subjects_items, subjects);
   if   (filtered_subjects.done) {
     results_curr = filtered_subjects.curr;
     results_prev = filtered_subjects.prev;
@@ -682,29 +587,29 @@ function process_filter() {
     results_curr = filtered_sets.curr;
     results_prev = filtered_sets.prev;
   }
-  const time_1 = performance.now();
+
+  // Filtering Duration
+  const du_filter = performance.now() - time_0;
 
   // Render
-  if (!render_results(results_curr, stat_curr_date, results_prev, stat_prev_date)) {
+  const du_render = render_results(results_curr, stat_curr_date, results_prev, stat_prev_date);
+  if  (!du_render) {
     return;
   }
-  const time_2 = performance.now();
-
-  // Timings
-  const du_filter = time_1 - time_0;
-  const du_render = time_2 - time_1;
 
   // Cache
   const sf_cache_size = Object.keys(stat_file_cache).length;
 
+  // Performance
   timings.textContent = 'Cache '  + sf_cache_size   +
                              ' (' + sf_cache_hits   + '/'  +
                                     sf_cache_misses + ') ' +
 
-                        'Load '   + du_load  .toFixed(1) + ' ms / ' +
-                        'Parse '  + du_parse .toFixed(1) + ' ms / ' +
-                        'Filter ' + du_filter.toFixed(1) + ' ms / ' +
-                        'Render ' + du_render.toFixed(1) + ' ms';
+                        'Load '   + du_load      .toFixed(1) + ' ms / ' +
+                        'Parse '  + du_parse     .toFixed(1) + ' ms / ' +
+                        'Filter ' + du_filter    .toFixed(1) + ' ms / ' +
+                        'Render ' + du_render.pre.toFixed(1) +     '/'  +
+                                    du_render.dom.toFixed(1) + ' ms';
   } catch (err) {
     container.innerHTML = '<div class="text-center text-comment">Error: ' + err.message + '</div>';
   }
@@ -734,7 +639,7 @@ function date_change_menu(event, what) {
 
   const d_count  = i_end - i_beg + 1;
   const rect     = event.target.getBoundingClientRect();
-  let   menu_top = rect.top    + window.scrollY - (9 + 32 * d_count);
+  let   menu_top = rect.top    + window.scrollY - (11 + 32 * d_count);
   if   (menu_top <               window.scrollY)     {
         menu_top = rect.bottom + window.scrollY + 2; }
 
@@ -742,13 +647,13 @@ function date_change_menu(event, what) {
   const menu        = document.createElement('div');
   menu.id                    = 'date-change-menu';
   menu.style.position        = 'absolute';
-  menu.style.left            = (rect.left + window.scrollX) + 'px';
-  menu.style.top             =  menu_top                    + 'px';
+  menu.style.left            = (rect.left + window.scrollX - 2) + 'px';
+  menu.style.top             =  menu_top                        + 'px';
   menu.style.backgroundColor = '#fafafa'; // Gray98
   menu.style.color           = '#696969'; // DimGray, L41
-  menu.style.border          = '#ebebeb solid 2px'; // Gray92
-  menu.style.borderRadius    = '4px';
-  menu.style.boxShadow       = '2px 2px 4px rgb(0 0 0 / 0.2)';
+  menu.style.border          = '#ebebeb solid 3px'; // Gray92
+  menu.style.borderRadius    = '6px';
+  menu.style.boxShadow       = '3px 3px 6px rgb(0 0 0 / 0.3)';
   menu.setAttribute           ('role', 'menu');
 
   menu.remove_ex = function() {
@@ -771,7 +676,7 @@ function date_change_menu(event, what) {
   };
 
   const init_opt = (opt, text) => {
-    opt.style.borderRadius = '4px';
+    opt.style.borderRadius = '6px';
     opt.style.padding      = '4px 8px';
     opt.style.cursor       = 'pointer';
     opt.style.textAlign    = 'center';

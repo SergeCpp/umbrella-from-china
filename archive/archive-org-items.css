@@ -110,17 +110,17 @@
 }
 
 .item-stat-curr-old {
-  border-radius: 0.5rem 0 0 0.5rem;
+  border-radius: 0.5rem 0.5rem 0.5rem 0.5rem;
   color: black;
   padding-right: 0.5rem; /* Matches left and right spacings of item */
 }
 .item-stat-curr-23 {
-  border-radius: 0.5rem 0 0 0;
+  border-radius: 0.5rem 0.5rem 0 0;
   color: #696969; /* DimGray. L41 */
   padding-right: 0.5rem; /* Matches left and right spacings of item */
 }
 .item-stat-curr-7 {
-  border-radius: 0 0 0 0.5rem;
+  border-radius: 0 0 0.5rem 0.5rem;
   color: #696969; /* DimGray. L41 */
   padding-right: 0.5rem; /* Matches left and right spacings of item */
 }
@@ -135,19 +135,19 @@
 }
 
 .item-grow-old {
-  border-radius: 0 0.5rem 0.5rem 0;
+  border-radius: 0.5rem 0.5rem 0 0;
   color: black;
-  padding-right: 0.5rem; /* Matches left padding of item-title a, and header */
+  padding: 0 0.5rem; /* Matches left padding of item-title a, and header */
 }
 .item-grow-23 {
-  border-radius: 0 0.5rem 0 0;
+  border-radius: 0 0 0 0;
   color: #696969; /* DimGray. L41 */
-  padding-right: 0.5rem; /* Matches left padding of item-title a, and header */
+  padding: 0 0.5rem; /* Matches left padding of item-title a, and header */
 }
 .item-grow-7 {
-  border-radius: 0 0 0.5rem 0;
+  border-radius: 0 0 0.5rem 0.5rem;
   color: #696969; /* DimGray. L41 */
-  padding-right: 0.5rem; /* Matches left padding of item-title a, and header */
+  padding: 0 0.5rem; /* Matches left padding of item-title a, and header */
 }
 
 .item-inner:hover .item-stat-prev-23,
