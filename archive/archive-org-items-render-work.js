@@ -94,29 +94,32 @@ function get_grow_mood(grow_old, grow_23, grow_7) {
   const v_23  = get_grow_value(grow_23 );
   const v_7   = get_grow_value(grow_7  );
 
-  if ((v_old >= 0) && (v_23 >= 0) && (v_7 >= 0)) {
-    if ((v_old + v_23 + v_7) >= 3) return 1;
-    else return 0;
-  }
-
-  if ((v_old < 0) && (v_23 < 0) && (v_7 < 0)) {
-    if ((v_old + v_23 + v_7) <= -6) return -1;
-    else return 0;
-  }
+  if ((v_old >= 0) && (v_23 >= 0) && (v_7 >= 0)) return v_old + v_23 + v_7;
+  if ((v_old <  0) && (v_23 <  0) && (v_7 <  0)) return v_old + v_23 + v_7;
 
   return 0;
 }
 
 // Substantial changes marking
 function get_marks(rel, cnt, mid) {
-  if (cnt <= 0) return { above: +Infinity, below: -Infinity };
-
+  if   (cnt <= 0)      return { above: +Infinity, below: -Infinity };
+  const rel_len = rel.length;
+  if   (rel_len === 0) return { above: +Infinity, below: -Infinity };
+  if   (rel_len === 1) {
+    const val = rel[0];
+    if   (val > mid)   return { above:  val,      below: -Infinity };
+    if   (val < mid)   return { above: +Infinity, below:  val      };
+                       return { above: +Infinity, below: -Infinity };
+  }
+  if ((cnt + cnt) > rel_len) {
+    cnt = Math.floor(rel_len / 2);
+  }
   rel.sort((above, below) => above - below); // Ascending
 
   let above_cnt = cnt;
   let below_cnt = cnt;
-  let above_idx = rel.length - cnt;
-  let below_idx = cnt - 1;
+  let above_idx = rel_len - cnt;
+  let below_idx = cnt     -   1;
   let above_val = rel[above_idx];
   let below_val = rel[below_idx];
 
@@ -275,7 +278,7 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   for (const item of results_curr) {
     results_curr_ids[item.identifier] = true;
     results_curr_exp.push({ ...item,
-      is_prev: false, no_prev: null, index_prev: null, rank_change: 0 });
+      is_prev: false, no_prev: null, index_prev: null, rank_change: 0, grow: null });
   }
 
   // 3.3. Add items from  results_prev that absent in results_curr
@@ -285,7 +288,7 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     if (!results_curr_ids[item.identifier]) {
       only_prev++;
       results_curr_exp.push({ ...item,
-        is_prev: true, no_prev: null, index_prev: null, rank_change: 0 });
+        is_prev: true, no_prev: null, index_prev: null, rank_change: 0, grow: null });
     }
     map_prev[item.identifier] = item;
   }
@@ -322,31 +325,73 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     map_curr_exp[item.identifier].index_prev = index;
   }
 
-  // 6. Mark rank changes
-  const rank_base  = Math.log(results_curr_exp.length); // For length === 1 is checked below
+  // 6.1. Mark rank changes
+  // 6.2. Mark mood changes
+  const curr_base = Math.log(results_curr_exp.length); // For length === 1 is checked below, 0 was checked above
+
   const rank_decay = 29; // For scale from top: 1 to bottom: 1/30
   const rank_steep =  3; // To more prioritize top items
+  const rank_up_dn = [];
 
-  const rank_up_dn = results_curr_exp.map((item, index_curr) => {
-    const diff = item.index_prev - index_curr; // No abs
-    if   (diff === 0) return 0; // Also if length === 1 then index_prev === index_curr
+  const mood_decay   = 9; // For scale from top: 1 to bottom: 1/10
+  const mood_steep   = 2; // To more prioritize top items
+  const mood_pos_neg = [];
 
-    if (item.is_prev || item.no_prev) return 0; // Item is non-markable
+  for (let index_curr = 0; index_curr < results_curr_exp.length; index_curr++) {
+    const item = results_curr_exp[index_curr];
 
-    const scale  = 1 + (rank_decay * Math.pow(Math.log(index_curr + 1) / rank_base, rank_steep));
-    const change = diff / scale;
-    item.rank_change = change;
-    return change;
-  });
+    // Rank
+    let   rank_change = 0;
+    const rank_diff = item.index_prev - index_curr; // No abs
+    if   (rank_diff !== 0) { // Also if length === 1 then index_prev === index_curr
+      if (!item.is_prev && !item.no_prev) { // Item is markable
+        const rank_scale = 1 + (rank_decay * Math.pow(Math.log(index_curr + 1) / curr_base, rank_steep));
+        rank_change      = rank_diff / rank_scale;
+        item.rank_change = rank_change;
+      }
+    }
+    rank_up_dn.push(rank_change);
 
-  // 3:1, 4:1, 10:2, 20:2, 50:3, 100:5, 200:6, 500:10, 800:12, 826:12
-  // Math.ceil(Math.sqrt(results_curr_exp.length) / 2.4);
+    // Mood
+    let   _mood = 0;
+    const _grow = { _old: "   ", _23: "   ", _7: "   ", _mood: 0 };
 
-  // 3:0, 4:1, 10:1, 20:3, 50:5, 100:7, 200:11, 500:16, 800:21, 826:21
+    if (!item.is_prev && !item.no_prev) { // Item is markable
+      const item_prev = map_prev[item.identifier];
+
+      const grow_old = get_grow_ratio(item.ratio_old, item_prev.ratio_old);
+      const grow_23  = get_grow_fixed(item.views_23 , item_prev.views_23 );
+      const grow_7   = get_grow_fixed(item.views_7  , item_prev.views_7  );
+
+      _grow._old = grow_old;
+      _grow._23  = grow_23;
+      _grow._7   = grow_7;
+
+      const grow_mood = get_grow_mood(grow_old, grow_23, grow_7);
+      if   (grow_mood !== 0) {
+        const mood_scale = 1 +
+          (curr_base
+           ? (mood_decay * Math.pow(Math.log(index_curr + 1) / curr_base, mood_steep))
+           : 0);
+        _mood = grow_mood / mood_scale;
+        _grow._mood = _mood;
+      }
+    }
+    item.grow = _grow;
+    mood_pos_neg.push(_mood);
+  }
+
+  // 1:0, 3:0, 4:1, 10:1, 20:3, 50:5, 100:7, 200:11, 500:16, 800:21, 826:21
   const rank_marks_cnt = Math.round(Math.floor(Math.sqrt(rank_up_dn.length * 0.33)) * 1.33);
   const rank_marks     = get_marks(rank_up_dn, rank_marks_cnt, 0);
   const mark_rank_up   = rank_marks.above;
   const mark_rank_dn   = rank_marks.below;
+
+  // 1:1, 3:1, 4:1, 10:2, 20:2, 50:3, 100:5, 200:6, 500:10, 800:12, 826:12
+  const mood_marks_cnt = Math.ceil(Math.sqrt(mood_pos_neg.length) / 2.4);
+  const mood_marks     = get_marks(mood_pos_neg, mood_marks_cnt, 0);
+  const mark_mood_pos  = mood_marks.above;
+  const mark_mood_neg  = mood_marks.below;
 
   // 7. Total counts displaying (for expanded results)
   const curr_exp_totals  = get_totals(results_curr_exp);
@@ -404,13 +449,13 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     }
   }
 
-  // 3:0, 4:1, 10:1, 20:3, 50:5, 100:7, 200:11, 500:16, 800:21, 826:21
+  // 1:0, 3:0, 4:1, 10:1, 20:3, 50:5, 100:7, 200:11, 500:16, 800:21, 826:21
   const horz_marks_cnt = Math.round(Math.floor(Math.sqrt(horz_curr_prev.length * 0.33)) * 1.33);
   const horz_marks     = get_marks(horz_curr_prev, horz_marks_cnt, 1);
   const mark_grow_old  = horz_marks.above;
   const mark_fall_old  = horz_marks.below;
 
-  // 3:0, 4:1, 10:1, 20:2, 50:3, 100:5, 200:7, 500:11, 800:14, 826:14
+  // 1:0, 3:0, 4:1, 10:1, 20:2, 50:3, 100:5, 200:7, 500:11, 800:14, 826:14
   const vert_marks_cnt = Math.floor(Math.sqrt(vert_all_old.length * 0.25));
   const vert_marks     = get_marks(vert_all_old, vert_marks_cnt, 1);
   const mark_grow_23_7 = vert_marks.above;
@@ -613,33 +658,26 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     // 6.2. Grow: old
     const stat_grow_old = document.createElement("div");
     stat_grow_old.className ="item-grow-old";
-
-    const grow_old = item_prev ? get_grow_ratio(item.ratio_old, item_prev.ratio_old) : "   ";
-    stat_grow_old.textContent = grow_old;
+    stat_grow_old.textContent = item.grow._old;
 
     // 6.3. Grow: 23
     const stat_grow_23 = document.createElement("div");
     stat_grow_23.className ="item-grow-23";
-
-    const grow_23 = item_prev ? get_grow_fixed(item.views_23, item_prev.views_23) : "   ";
-    stat_grow_23.textContent = grow_23;
+    stat_grow_23.textContent = item.grow._23;
 
     // 6.4. Grow: 7
     const stat_grow_7 = document.createElement("div");
     stat_grow_7.className ="item-grow-7";
-
-    const grow_7 = item_prev ? get_grow_fixed(item.views_7, item_prev.views_7) : "   ";
-    stat_grow_7.textContent = grow_7;
+    stat_grow_7.textContent = item.grow._7;
 
     // Grow mood marking: positive and negative
     if (item_prev && !item.is_prev) {
-      const grow_mood = get_grow_mood(grow_old, grow_23, grow_7);
-      if      (grow_mood > 0) {
+      if      (item.grow._mood >= mark_mood_pos) {
         stat_grow_old.classList.add("item-mark-grow");
         stat_grow_23 .classList.add("item-mark-grow");
         stat_grow_7  .classList.add("item-mark-grow");
       }
-      else if (grow_mood < 0) {
+      else if (item.grow._mood <= mark_mood_neg) {
         stat_grow_old.classList.add("item-mark-fall");
         stat_grow_23 .classList.add("item-mark-fall");
         stat_grow_7  .classList.add("item-mark-fall");
