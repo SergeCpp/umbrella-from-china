@@ -1,3 +1,12 @@
+/* Constants */
+
+const length_views = 6; // 123456
+const length_days  = 5; // 12345
+const length_ratio = 7; // 123.567
+
+const length_stat  = length_views + 2 + length_days + 2 + length_ratio; // Used in CSS as 22ch, once
+const empty_stat   = "".padStart(length_stat);
+
 /* Display */
 
 //    07-21  07-23  07-31  08-07 > 07-21
@@ -278,7 +287,7 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   for (const item of results_curr) {
     results_curr_ids[item.identifier] = true;
     results_curr_exp.push({ ...item,
-      is_prev: false, no_prev: null, index_prev: null, rank_change: 0, grow: null });
+      is_prev: false, no_prev: null, index_prev: null, rank_change: 0, prev: null, curr: null, grow: null });
   }
 
   // 3.3. Add items from  results_prev that absent in results_curr
@@ -288,7 +297,7 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     if (!results_curr_ids[item.identifier]) {
       only_prev++;
       results_curr_exp.push({ ...item,
-        is_prev: true, no_prev: null, index_prev: null, rank_change: 0, grow: null });
+        is_prev: true, no_prev: null, index_prev: null, rank_change: 0, prev: null, curr: null, grow: null });
     }
     map_prev[item.identifier] = item;
   }
@@ -325,6 +334,7 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     map_curr_exp[item.identifier].index_prev = index;
   }
 
+  // 6.0. Compose prev, curr, grow
   // 6.1. Mark rank changes
   // 6.2. Mark mood changes
   const curr_base = Math.log(results_curr_exp.length); // For length === 1 is checked below, 0 was checked above
@@ -339,6 +349,43 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
 
   for (let index_curr = 0; index_curr < results_curr_exp.length; index_curr++) {
     const item = results_curr_exp[index_curr];
+    const item_prev = map_prev[item.identifier];
+
+    // Prev
+    const _prev = {}; // _old, _23, _7
+    if (item_prev) {
+      _prev._old = item_prev.views_old.toString().padStart(length_views) + " /"        +
+                   item_prev.days_old .toString().padStart(length_days ) +        " =" +
+                   item_prev.ratio_old.toFixed(3).padStart(length_ratio);
+      _prev._23  = item_prev.views_23 .toString().padStart(length_views) + " /   23 =" +
+                   item_prev.ratio_23 .toFixed(3).padStart(length_ratio);
+      _prev._7   = item_prev.views_7  .toString().padStart(length_views) + " /    7 =" +
+                   item_prev.ratio_7  .toFixed(3).padStart(length_ratio);
+    }
+    else {
+      _prev._old = empty_stat;
+      _prev._23  = empty_stat;
+      _prev._7   = empty_stat;
+    }
+    item.prev = _prev;
+
+    // Curr
+    const _curr = {}; // _old, _23, _7
+    if (!item.is_prev) {
+      _curr._old = item.views_old.toString().padStart(length_views) + " /"        +
+                   item.days_old .toString().padStart(length_days ) +        " =" +
+                   item.ratio_old.toFixed(3).padStart(length_ratio);
+      _curr._23  = item.views_23 .toString().padStart(length_views) + " /   23 =" +
+                   item.ratio_23 .toFixed(3).padStart(length_ratio);
+      _curr._7   = item.views_7  .toString().padStart(length_views) + " /    7 =" +
+                   item.ratio_7  .toFixed(3).padStart(length_ratio);
+    }
+    else {
+      _curr._old = empty_stat;
+      _curr._23  = empty_stat;
+      _curr._7   = empty_stat;
+    }
+    item.curr = _curr;
 
     // Rank
     let   rank_change = 0;
@@ -352,13 +399,11 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     }
     rank_up_dn.push(rank_change);
 
-    // Mood
+    // Grow and Mood
     let   _mood = 0;
-    const _grow = { _old: "   ", _23: "   ", _7: "   ", _mood: 0 };
+    const _grow = {}; // _old, _23, _7, _mood
 
     if (!item.is_prev && !item.no_prev) { // Item is markable
-      const item_prev = map_prev[item.identifier];
-
       const grow_old = get_grow_ratio(item.ratio_old, item_prev.ratio_old);
       const grow_23  = get_grow_fixed(item.views_23 , item_prev.views_23 );
       const grow_7   = get_grow_fixed(item.views_7  , item_prev.views_7  );
@@ -374,10 +419,15 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
            ? (mood_decay * Math.pow(Math.log(index_curr + 1) / curr_base, mood_steep))
            : 0);
         _mood = grow_mood / mood_scale;
-        _grow._mood = _mood;
       }
     }
-    item.grow = _grow;
+    else {
+      _grow._old = "   ";
+      _grow._23  = "   ";
+      _grow._7   = "   ";
+    }
+    _grow._mood = _mood;
+    item.grow   = _grow;
     mood_pos_neg.push(_mood);
   }
 
@@ -553,28 +603,18 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
 
     // 4.2. Prev: old stat line
     const stat_prev_old = document.createElement("div");
-    stat_prev_old.className   ="item-stat-prev-old";
-    stat_prev_old.textContent = item_prev
-                              ? item_prev.views_old.toString().padStart( 6) + " /" +
-                                item_prev.days_old .toString().padStart( 5) + " =" +
-                                item_prev.ratio_old.toFixed(3).padStart( 7)
-                              :                             "".padStart(22);
+    stat_prev_old.className = "item-stat-prev-old";
+    stat_prev_old.textContent = item.prev._old;
 
     // 4.3. Prev: 23-day stat line
     const stat_prev_23 = document.createElement("div");
-    stat_prev_23.className   ="item-stat-prev-23";
-    stat_prev_23.textContent = item_prev
-                             ? item_prev.views_23.toString().padStart( 6) + " /   23 =" +
-                               item_prev.ratio_23.toFixed(3).padStart( 7)
-                             :                            "".padStart(22);
+    stat_prev_23.className = "item-stat-prev-23";
+    stat_prev_23.textContent = item.prev._23;
 
     // 4.4. Prev: 7-day stat line
     const stat_prev_7 = document.createElement("div");
-    stat_prev_7.className   ="item-stat-prev-7";
-    stat_prev_7.textContent = item_prev
-                            ? item_prev.views_7.toString().padStart( 6) + " /    7 =" +
-                              item_prev.ratio_7.toFixed(3).padStart( 7)
-                            :                           "".padStart(22);
+    stat_prev_7.className = "item-stat-prev-7";
+    stat_prev_7.textContent = item.prev._7;
 
     // Rank changes marking
     if (item_prev && !item.is_prev) {
@@ -601,28 +641,18 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
 
     // 5.2. Curr: old stat line
     const stat_curr_old = document.createElement("div");
-    stat_curr_old.className   ="item-stat-curr-old";
-    stat_curr_old.textContent = item.is_prev
-                              ?                        "".padStart(22)
-                              : item.views_old.toString().padStart( 6) + " /" +
-                                item.days_old .toString().padStart( 5) + " =" +
-                                item.ratio_old.toFixed(3).padStart( 7);
+    stat_curr_old.className = "item-stat-curr-old";
+    stat_curr_old.textContent = item.curr._old;
 
     // 5.3. Curr: 23-day stat line
     const stat_curr_23 = document.createElement("div");
-    stat_curr_23.className   ="item-stat-curr-23";
-    stat_curr_23.textContent = item.is_prev
-                             ?                       "".padStart(22)
-                             : item.views_23.toString().padStart( 6) + " /   23 =" +
-                               item.ratio_23.toFixed(3).padStart( 7);
+    stat_curr_23.className = "item-stat-curr-23";
+    stat_curr_23.textContent = item.curr._23;
 
     // 5.4. Curr: 7-day stat line
     const stat_curr_7 = document.createElement("div");
-    stat_curr_7.className   ="item-stat-curr-7";
-    stat_curr_7.textContent = item.is_prev
-                            ?                      "".padStart(22)
-                            : item.views_7.toString().padStart( 6) + " /    7 =" +
-                              item.ratio_7.toFixed(3).padStart( 7);
+    stat_curr_7.className = "item-stat-curr-7";
+    stat_curr_7.textContent = item.curr._7;
 
     // Substantial changes marking: horizontal impact of old from prev to curr
     if (item_prev && !item.is_prev) {
@@ -657,17 +687,17 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
 
     // 6.2. Grow: old
     const stat_grow_old = document.createElement("div");
-    stat_grow_old.className ="item-grow-old";
+    stat_grow_old.className = "item-grow-old";
     stat_grow_old.textContent = item.grow._old;
 
     // 6.3. Grow: 23
     const stat_grow_23 = document.createElement("div");
-    stat_grow_23.className ="item-grow-23";
+    stat_grow_23.className = "item-grow-23";
     stat_grow_23.textContent = item.grow._23;
 
     // 6.4. Grow: 7
     const stat_grow_7 = document.createElement("div");
-    stat_grow_7.className ="item-grow-7";
+    stat_grow_7.className = "item-grow-7";
     stat_grow_7.textContent = item.grow._7;
 
     // Grow mood marking: positive and negative
