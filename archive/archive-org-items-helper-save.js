@@ -924,9 +924,10 @@ function filter_sets(items_prev, items_curr, prev_only, curr_only) {
 
 function init_controls() {
   // 1. Add Enter key to all text inputs
-  [  'collections',      'creators',    'subjects',       'title', 'prev-only', 'curr-only',
-   'downloads-min', 'downloads-max',   'month-min',   'month-max', 'week-min',  'week-max',
-    'archived-min',  'archived-max', 'created-min', 'created-max', 'favs-min',  'favs-max']
+  [  'collections',      'creators',    'subjects', 'description',    'title',
+   'downloads-min', 'downloads-max',   'month-min',   'month-max', 'week-min', 'week-max',
+    'archived-min',  'archived-max', 'created-min', 'created-max', 'favs-min', 'favs-max',
+       'prev-only',     'curr-only']
   .forEach(id => {
     const input = document.getElementById(id);
     if   (input) {

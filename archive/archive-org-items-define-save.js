@@ -1,50 +1,67 @@
 /* Global Variables */
 
-const stat_file_dates     = [];           // ["YYYY-MM-DD"]
-const stat_file_cache     = {};           // ["YYYY-MM-DD"] = { data: NodeList / [], usage: counter }
+const stat_file_dates   = [];    // ["YYYY-MM-DD"]
+const stat_file_cache   = {};    // ["YYYY-MM-DD"] = { data: NodeList / [], usage: counter }
 
-let   sf_cache_hits       = 0;            // Non-negative integer
-let   sf_cache_misses     = 0;            // Non-negative integer
+let   sf_cache_hits     = 0;     // Non-negative integer
+let   sf_cache_misses   = 0;     // Non-negative integer
 
-let   stat_curr_date      = null;         // "YYYY-MM-DD"
-let   stat_curr_items     = null;         // NodeList / []
+let   stat_curr_date    = null;  // "YYYY-MM-DD"
+let   stat_curr_items   = null;  // NodeList / []
 
-let   stat_prev_date      = null;         // "YYYY-MM-DD"
-let   stat_prev_items     = null;         // NodeList / []
+let   stat_prev_date    = null;  // "YYYY-MM-DD"
+let   stat_prev_items   = null;  // NodeList / []
 
-const stat_subjects_date  = "2025-10-19"; // Subjects is the constant part of the stat
-let   stat_subjects_items = null;         // null / {} / undefined
+const stat_subjects     = {      // Section
+  date      : "2025-10-19",      // Subjects is the constant part of the stat
+  file      : "data-subjects",   // Template with # for date
+  name_data : "subject",         // Name for arr/str data node
+  name_error: "Subjects",        // Name for error messages
+  items     : null,              // null / {} / undefined
+  du_load   : 0,
+  du_parse  : 0
+};
 
-let   du_load             = 0;            // Duration of load
-let   du_parse            = 0;            // Duration of parse
+const stat_descriptions = {      // Section
+  date      : "2025-11-07",
+  file      : "data-descriptions",
+  name_data : "description",
+  name_error: "Descriptions",
+  items     : null,
+  du_load   : 0,
+  du_parse  : 0
+};
 
-/* Subjects Processing */
+let   du_load           = 0;     // Duration of load
+let   du_parse          = 0;     // Duration of parse
 
-function wait_subjects(subjects_items, subjects_terms) {
-  if (!subjects_terms || (subjects_terms.length === 0)) return false; // No or empty filter for subjects
+/* Section: Subjects and Descriptions Processing */
 
-  if (subjects_items)               return false; // Subjects already   loaded
-  if (subjects_items === undefined) return false; // Subjects cannot be loaded
-  if (subjects_items !== null)      return false; // Error, must be null here
+function wait_section(section, section_terms) {
+  if (!section_terms || !section_terms.length) return false; // No or empty filter for section
 
-  load_subjects();
+  if (section.items)               return false; // Section is already loaded
+  if (section.items === undefined) return false; // Section cannot be  loaded
+  if (section.items !== null)      return false; // Error, must be null here
 
-  return true; // Wait for subjects to load
+  load_section(section);
+
+  return true; // Wait for section to load
 }
 
-function load_subjects() {
-  if (stat_subjects_items !== null) return;
-  stat_subjects_items = undefined;
+function load_section(section) {
+  if (section.items !== null) return;
+      section.items = undefined;
 
   const time_0    = performance.now();
   const container = document.getElementById("results");
-  const xml_tmplt = container.getAttribute("data-subjects");
+  const xml_tmplt = container.getAttribute(section.file);
   const xml_regex = /#/;
-  const xml_url   = xml_tmplt.replace(xml_regex, stat_subjects_date);
+  const xml_url   = xml_tmplt.replace(xml_regex, section.date);
 
   fetch(xml_url)
     .then(response => {
-      if (!response.ok) { throw new Error("Subjects XML file not found"); }
+      if (!response.ok) { throw new Error(section.name_error + " XML file not found"); }
       return response.text();
     })
     .then(text => {
@@ -52,43 +69,44 @@ function load_subjects() {
       const parser = new DOMParser();
       const xml    = parser.parseFromString(text, "text/xml");
 
-      if (xml.querySelector("parsererror")) { throw new Error("Subjects XML file invalid format"); }
+      if (xml.querySelector("parsererror")) { throw new Error(section.name_error + " XML file invalid format"); }
       const docs = xml.querySelectorAll("doc");
 
-      // Create subjects lookup map for id: subjects
-//    stat_subjects_items = new Map(); // Slower
-      stat_subjects_items =        {}; // Faster
+      // Create data lookup map for id: data
+//    section.items = new Map(); // Slower
+      section.items =        {}; // Faster
+      const data_selector = 'arr[name="' + section.name_data + '"], ' +
+                            'str[name="' + section.name_data + '"]';
       for (const doc of docs) {
         const node_i = doc.querySelector('str[name="identifier"]');
         if  (!node_i) continue;
         const identifier = node_i.textContent;
 
-        const node_s = doc.querySelector('arr[name="subject"], str[name="subject"]');
-        const subjects = node_s
-          ? node_s.tagName === "arr"
-            ? Array.from(node_s.querySelectorAll("str"), n => n.textContent.toLowerCase())
-            : [node_s.textContent.toLowerCase()]
+        const node_d = doc.querySelector(data_selector);
+        const data   = node_d
+          ? node_d.tagName === "arr"
+            ? Array.from(node_d.querySelectorAll("str"), n => n.textContent.toLowerCase())
+            : [node_d.textContent.toLowerCase()]
           : [];
-//      stat_subjects_items.set(identifier,   subjects); // Slower
-        stat_subjects_items    [identifier] = subjects;  // Faster
+//      section.items.set(identifier,   data); // Slower
+        section.items    [identifier] = data;  // Faster
       }
       const time_2 = performance.now();
 
-      // Reset to new values
-      du_load  = (time_1 - time_0);
-      du_parse = (time_2 - time_1);
+      section.du_load  = (time_1 - time_0);
+      section.du_parse = (time_2 - time_1);
     })
     .catch(() => {
-      stat_subjects_items = undefined;
+      section.items = undefined;
     })
     .finally(() => {
       process_filter();
     });
 }
 
-function filter_subjects(items_prev, items_curr, subjects_items, subjects_terms) {
-  if (!subjects_terms || (subjects_terms.length === 0)) return { done: false };
-  if (!subjects_items) return { error: true };
+function filter_section(items_prev, items_curr, section_items, section_terms) {
+  if (!section_terms || !section_terms.length) return { done: false };
+  if (!section_items) return { error: true };
 
   const identifiers = {}; // Collect all identifiers
   for (const item of items_prev) identifiers[item.identifier] = null;
@@ -96,11 +114,11 @@ function filter_subjects(items_prev, items_curr, subjects_items, subjects_terms)
 
   // Cache match results for items
   for (const identifier in identifiers) {
-//  const subjects = subjects_items.get(identifier); // Slower
-    const subjects = subjects_items    [identifier]; // Faster
-    if  (!subjects) continue;
+//  const values = section_items.get(identifier); // Slower
+    const values = section_items    [identifier]; // Faster
+    if  (!values) continue;
 
-    const match_result = subjects_terms.some(term => evaluate_term(term, subjects));
+    const match_result = section_terms.some(term => evaluate_term(term, values));
     identifiers[identifier] = match_result;
   }
 
@@ -207,8 +225,14 @@ const err_keys_no =
   err_beg + 'Number prefixes are allowed only with keys' +
   err_end;
 
+const err_xml = ' XML file cannot be loaded or loading error occurred';
 const err_subjects =
-  err_beg + 'Subjects XML file cannot be loaded or loading error occurred' +
+  err_beg + 'Subjects' +
+  err_xml +
+  err_end;
+const err_descriptions =
+  err_beg + 'Descriptions' +
+  err_xml +
   err_end;
 
 function process_filter() {
@@ -272,15 +296,17 @@ function process_filter() {
     }
   }
 
-  // Collections, Creators, Subjects, and Title
+  // Collections, Creators, Subjects, Description and Title
   const collections_str = document.getElementById("collections").value;
   const creators_str    = document.getElementById("creators"   ).value;
   const subjects_str    = document.getElementById("subjects"   ).value;
+  const description_str = document.getElementById("description").value;
   const title_str       = document.getElementById("title"      ).value;
 
   if (!input_allowed_chars(collections_str) ||
       !input_allowed_chars(creators_str   ) ||
       !input_allowed_chars(subjects_str   ) ||
+      !input_allowed_chars(description_str) ||
       !input_allowed_chars(title_str      )) {
     container.innerHTML = err_chars;
     return;
@@ -289,6 +315,7 @@ function process_filter() {
   const collections = input_clean_parse(collections_str);
   const creators    = input_clean_parse(creators_str   );
   const subjects    = input_clean_parse(subjects_str   );
+  const description = input_clean_parse(description_str);
   const title       = input_clean_parse(title_str      );
 
   // Views
@@ -535,7 +562,10 @@ function process_filter() {
   }
 
   // Subjects Check
-  if (wait_subjects(stat_subjects_items, subjects)) return; // Wait for stat_subjects_items to load
+  if (wait_section(stat_subjects, subjects)) return; // Wait for stat_subjects.items to load
+
+  // Descriptions Check
+  if (wait_section(stat_descriptions, description)) return; // Wait for stat_descriptions.items to load
 
   // Checking and Initial Filters, and Calculating Stats
   let results_curr = filter_items(stat_curr_items, stat_curr_date,
@@ -568,13 +598,24 @@ function process_filter() {
   }
 
   // Subjects
-  const filtered_subjects = filter_subjects(results_prev, results_curr, stat_subjects_items, subjects);
+  const filtered_subjects = filter_section(results_prev, results_curr, stat_subjects.items, subjects);
   if   (filtered_subjects.done) {
     results_curr = filtered_subjects.curr;
     results_prev = filtered_subjects.prev;
   }
   else if (filtered_subjects.error) {
     container.innerHTML = err_subjects;
+    return;
+  }
+
+  // Descriptions
+  const filtered_descriptions = filter_section(results_prev, results_curr, stat_descriptions.items, description);
+  if   (filtered_descriptions.done) {
+    results_curr = filtered_descriptions.curr;
+    results_prev = filtered_descriptions.prev;
+  }
+  else if (filtered_descriptions.error) {
+    container.innerHTML = err_descriptions;
     return;
   }
 
@@ -605,8 +646,12 @@ function process_filter() {
                              ' (' + sf_cache_hits   + '/'  +
                                     sf_cache_misses + ') ' +
 
-                        'Load '   + du_load      .toFixed(1) + ' ms / ' +
-                        'Parse '  + du_parse     .toFixed(1) + ' ms / ' +
+                        'Load '   + du_load      .toFixed(1) +     '/'  +
+                  stat_subjects    .du_load      .toFixed(1) +     '/'  +
+                  stat_descriptions.du_load      .toFixed(1) + ' ms / ' +
+                        'Parse '  + du_parse     .toFixed(1) +     '/'  +
+                  stat_subjects    .du_parse     .toFixed(1) +     '/'  +
+                  stat_descriptions.du_parse     .toFixed(1) + ' ms / ' +
                         'Filter ' + du_filter    .toFixed(1) + ' ms / ' +
                         'Render ' + du_render.pre.toFixed(1) +     '/'  +
                                     du_render.dom.toFixed(1) + ' ms';
