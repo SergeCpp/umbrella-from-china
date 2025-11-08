@@ -17,6 +17,7 @@ const stat_subjects     = {      // Section
   file      : "data-subjects",   // Template with # for date
   name_data : "subject",         // Name for arr/str data node
   name_error: "Subjects",        // Name for error messages
+  text_error: null,              // Error message
   items     : null,              // null / {} / undefined
   du_load   : 0,
   du_parse  : 0
@@ -27,6 +28,7 @@ const stat_descriptions = {      // Section
   file      : "data-descriptions",
   name_data : "description",
   name_error: "Descriptions",
+  text_error: null,
   items     : null,
   du_load   : 0,
   du_parse  : 0
@@ -61,7 +63,10 @@ function load_section(section) {
 
   fetch(xml_url)
     .then(response => {
-      if (!response.ok) { throw new Error(section.name_error + " XML file not found"); }
+      if (!response.ok) {
+        section.text_error = section.name_error + " &mdash; XML file not found";
+        throw new Error(section.text_error);
+      }
       return response.text();
     })
     .then(text => {
@@ -69,7 +74,10 @@ function load_section(section) {
       const parser = new DOMParser();
       const xml    = parser.parseFromString(text, "text/xml");
 
-      if (xml.querySelector("parsererror")) { throw new Error(section.name_error + " XML file invalid format"); }
+      if (xml.querySelector("parsererror")) {
+        section.text_error = section.name_error + " &mdash; XML file invalid format";
+        throw new Error(section.text_error);
+      }
       const docs = xml.querySelectorAll("doc");
 
       // Create data lookup map for id: data
@@ -225,7 +233,7 @@ const err_keys_no =
   err_beg + 'Number prefixes are allowed only with keys' +
   err_end;
 
-const err_xml = ' XML file cannot be loaded or loading error occurred';
+const err_xml = ' &mdash; XML file cannot be loaded or loading error occurred';
 const err_subjects =
   err_beg + 'Subjects' +
   err_xml +
@@ -296,18 +304,18 @@ function process_filter() {
     }
   }
 
-  // Collections, Creators, Subjects, Description and Title
+  // Collections, Creators, Subjects, Title and Description
   const collections_str = document.getElementById("collections").value;
   const creators_str    = document.getElementById("creators"   ).value;
   const subjects_str    = document.getElementById("subjects"   ).value;
-  const description_str = document.getElementById("description").value;
   const title_str       = document.getElementById("title"      ).value;
+  const description_str = document.getElementById("description").value;
 
   if (!input_allowed_chars(collections_str) ||
       !input_allowed_chars(creators_str   ) ||
       !input_allowed_chars(subjects_str   ) ||
-      !input_allowed_chars(description_str) ||
-      !input_allowed_chars(title_str      )) {
+      !input_allowed_chars(title_str      ) ||
+      !input_allowed_chars(description_str)) {
     container.innerHTML = err_chars;
     return;
   }
@@ -315,8 +323,8 @@ function process_filter() {
   const collections = input_clean_parse(collections_str);
   const creators    = input_clean_parse(creators_str   );
   const subjects    = input_clean_parse(subjects_str   );
-  const description = input_clean_parse(description_str);
   const title       = input_clean_parse(title_str      );
+  const description = input_clean_parse(description_str);
 
   // Views
   let dl_min_str = document.getElementById("downloads-min").value.trim().toLowerCase();
@@ -604,7 +612,9 @@ function process_filter() {
     results_prev = filtered_subjects.prev;
   }
   else if (filtered_subjects.error) {
-    container.innerHTML = err_subjects;
+    container.innerHTML =            stat_subjects.text_error
+                        ? (err_beg + stat_subjects.text_error + err_end)
+                        :  err_subjects; // Generic
     return;
   }
 
@@ -615,7 +625,9 @@ function process_filter() {
     results_prev = filtered_descriptions.prev;
   }
   else if (filtered_descriptions.error) {
-    container.innerHTML = err_descriptions;
+    container.innerHTML =            stat_descriptions.text_error
+                        ? (err_beg + stat_descriptions.text_error + err_end)
+                        :  err_descriptions; // Generic
     return;
   }
 
@@ -642,18 +654,18 @@ function process_filter() {
   const sf_cache_size = Object.keys(stat_file_cache).length;
 
   // Performance
-  timings.textContent = 'Cache '  + sf_cache_size   +
-                             ' (' + sf_cache_hits   + '/'  +
-                                    sf_cache_misses + ') ' +
+  timings.textContent = 'Cache: ' + sf_cache_size   + ' / ' +
+                                    sf_cache_hits   + ' / ' +
+                                    sf_cache_misses +  ', ' +
 
-                        'Load '   + du_load      .toFixed(1) +     '/'  +
-                  stat_subjects    .du_load      .toFixed(1) +     '/'  +
-                  stat_descriptions.du_load      .toFixed(1) + ' ms / ' +
-                        'Parse '  + du_parse     .toFixed(1) +     '/'  +
-                  stat_subjects    .du_parse     .toFixed(1) +     '/'  +
-                  stat_descriptions.du_parse     .toFixed(1) + ' ms / ' +
-                        'Filter ' + du_filter    .toFixed(1) + ' ms / ' +
-                        'Render ' + du_render.pre.toFixed(1) +     '/'  +
+                        'Load: '  + du_load      .toFixed(1) +   ' / ' +
+                  stat_subjects    .du_load      .toFixed(1) +   ' / ' +
+                  stat_descriptions.du_load      .toFixed(1) + ' ms, ' +
+                        'Parse '  + du_parse     .toFixed(1) +   ' / ' +
+                  stat_subjects    .du_parse     .toFixed(1) +   ' / ' +
+                  stat_descriptions.du_parse     .toFixed(1) + ' ms, ' +
+                        'Filter ' + du_filter    .toFixed(1) + ' ms, ' +
+                        'Render ' + du_render.pre.toFixed(1) +   ' / ' +
                                     du_render.dom.toFixed(1) + ' ms';
   } catch (err) {
     container.innerHTML = '<div class="text-center text-comment">Error: ' + err.message + '</div>';

@@ -262,50 +262,62 @@ function render_stats(results, date, what, container) {
 }
 
 function render_results(results_curr, date_curr, results_prev, date_prev) {
-  const time_0 = performance.now();
-
-  // 1. Container initializing
+  const time_0    = performance.now();
   const container = document.getElementById("results");
         container.innerHTML = "";
 
-  // 2. Checking for no results
-  if ((results_curr.length === 0) && (results_prev.length === 0)) {
+  if (!results_curr.length && !results_prev.length) {
     container.innerHTML =
       '<div class="text-center text-comment">No items matched the filters</div>';
     return false;
   }
 
+  ///////
   // Sets
   let only_curr = 0;
   let only_prev = 0;
   let only_both = 0;
 
-  // 3.1. Lookup helper for create curr expanded results array
-  // 3.2 Create curr expanded results array
+  // Lookup helper for create curr expanded results array
+  // Create curr expanded results array
   const results_curr_ids = {};
   const results_curr_exp = [];
   for (const item of results_curr) {
     results_curr_ids[item.identifier] = true;
     results_curr_exp.push({ ...item,
-      is_prev: false, no_prev: null, index_prev: null, rank_change: 0, prev: null, curr: null, grow: null });
+      is_prev    : false,
+      no_prev    : null,
+      prev       : null,
+      curr       : null,
+      index_prev : null,
+      rank_change: 0,
+      grow       : null,
+      gauges     : null });
   }
 
-  // 3.3. Add items from  results_prev that absent in results_curr
-  // 4.1. Create a map of results_prev by identifier
+  // Add items from  results_prev that absent in results_curr
+  // Create a map of results_prev by identifier
   const map_prev = {};
   for (const item of results_prev) {
     if (!results_curr_ids[item.identifier]) {
       only_prev++;
       results_curr_exp.push({ ...item,
-        is_prev: true, no_prev: null, index_prev: null, rank_change: 0, prev: null, curr: null, grow: null });
+        is_prev    : true,
+        no_prev    : null,
+        prev       : null,
+        curr       : null,
+        index_prev : null,
+        rank_change: 0,
+        grow       : null,
+        gauges     : null });
     }
     map_prev[item.identifier] = item;
   }
 
-  // 4.2. Create prev expanded results array
+  // Create prev expanded results array
   const results_prev_exp = [...results_prev]; // Make copy
 
-  // 4.3. Add items from results_curr that absent in results_prev
+  // Add items from results_curr that absent in results_prev
   for (const item of results_curr) {
     if (!map_prev[item.identifier]) {
       only_curr++;
@@ -320,32 +332,91 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   sort_results(results_curr_exp);
   sort_results(results_prev_exp);
 
-  // 5.1. Create a map of curr expanded results by identifier
-  // 5.2. Set no_prev actual values in curr expanded results
+  // Create a map of curr expanded results by identifier
+  // Set no_prev actual values in curr expanded results
   const map_curr_exp = {};
   for (const item of results_curr_exp) {
     map_curr_exp[item.identifier] = item;
     item.no_prev = !map_prev[item.identifier];
   }
 
-  // 5.3. Traverse prev expanded and set index_prev in curr expanded
+  // Traverse prev expanded and set index_prev in curr expanded
   for (let index = 0; index < results_prev_exp.length; index++) {
     const item = results_prev_exp[index];
     map_curr_exp[item.identifier].index_prev = index;
   }
 
-  // 6.0. Compose prev, curr, grow
-  // 6.1. Mark rank changes
-  // 6.2. Mark mood changes
-  const curr_base = Math.log(results_curr_exp.length); // For length === 1 is checked below, 0 was checked above
+  ///////////////////////////////////////////////
+  // Total counts displaying for expanded results
+  const curr_exp_totals  = get_totals(results_curr_exp);
+  const curr_exp_total   = curr_exp_totals.audio + curr_exp_totals.video;
+  const totals_div       = document.createElement("div");
+  totals_div.className   ="subtitle text-center text-normal";
+  totals_div.textContent =
+            format_num_str(curr_exp_total,            'Item')  +
+    ' ('  +                curr_exp_totals.audio  +  ' Audio'  +
+    ' / ' +                curr_exp_totals.video  +  ' Video)' +
+    ' '   + format_bytes  (curr_exp_totals.bytes) +
+    ' / ' + format_num_str(curr_exp_totals.views,     'View')  +
+    ' / ' + format_num_str(curr_exp_totals.favorites, 'Fav' )  +
+    ' ('  + format_num_str(curr_exp_totals.favorited, 'Item')  + ')';
+  container.appendChild(totals_div);
 
+  // Both stats displaying
+  render_stats(results_prev, date_prev, "prev", container); // Also sorts results_prev
+  render_stats(results_curr, date_curr, "curr", container); // Also sorts results_curr
+
+  // Sets displaying
+  const sets_div = document.createElement("div");
+  sets_div.className = "text-center text-comment";
+
+  if ((only_curr === 0) && (only_prev === 0)) {
+    sets_div.textContent = 'All Items are present in both ' + date_prev + ' and ' + date_curr;
+  } else {
+    sets_div.textContent = only_prev + ' in ' + date_prev + ' only, ' +
+                           only_curr + ' in ' + date_curr + ' only, ' +
+                           only_both + ' in ' +     'both'+      '. ' +
+                           'Checkboxes above to select';
+  }
+  container.appendChild(sets_div);
+
+  // Spacing
+  container.lastElementChild.style.marginBottom = "1em"; // Add space before item list
+
+  //////////////
+  // Log scaling
+  const max_ratio     = Math.max(curr_exp_totals.max_ratio_old, curr_exp_totals.max_ratio_all);
+  const max_favorites = curr_exp_totals.max_favorites;
+
+  const base_ratio     = 100 / Math.log(max_ratio     + 1);
+  const base_favorites = 100 / Math.log(max_favorites + 1);
+
+  function get_percentage(value, max, base) {
+    return (value <=   0) ?   0 :
+           (value >= max) ? 100 : Math.log(value + 1) * base;
+  }
+
+  ///////////////////////////
+  // Compose prev, curr, grow
+  //
+  // Substantial changes marking: horizontal impact of old      from prev to     curr
+  // Substantial changes marking: vertical   impact of 23 and 7 into all  within curr
+  const horz_curr_prev = [];
+  const vert_all_old   = [];
+  //
+  // Mark rank changes
+  // Mark mood changes
+  const curr_base = Math.log(results_curr_exp.length); // For length === 1 is checked below, 0 was checked above
+  //
   const rank_decay = 29; // For scale from top: 1 to bottom: 1/30
   const rank_steep =  3; // To more prioritize top items
   const rank_up_dn = [];
-
+  //
   const mood_decay   = 9; // For scale from top: 1 to bottom: 1/10
   const mood_steep   = 2; // To more prioritize top items
   const mood_pos_neg = [];
+  //
+  // Gauges
 
   for (let index_curr = 0; index_curr < results_curr_exp.length; index_curr++) {
     const item = results_curr_exp[index_curr];
@@ -387,6 +458,18 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     }
     item.curr = _curr;
 
+    // Substantial changes
+    if(item_prev) {
+      horz_curr_prev.push(item.ratio_old / item_prev.ratio_old);
+    } else {
+      horz_curr_prev.push(1); // Item is non-markable
+    }
+    if (!item.is_prev) {
+      vert_all_old.push(item.ratio_all / item.ratio_old);
+    } else {
+      vert_all_old.push(1); // Item is non-markable
+    }
+
     // Rank
     let   rank_change = 0;
     const rank_diff = item.index_prev - index_curr; // No abs
@@ -401,9 +484,9 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
 
     // Grow and Mood
     let   _mood = 0;
-    const _grow = {}; // _old, _23, _7, _mood
+    const _grow = {}; // _old, _23, _7 [, _mood]
 
-    if (!item.is_prev && !item.no_prev) { // Item is markable
+    if (!item.no_prev && !item.is_prev) { // Item is markable
       const grow_old = get_grow_ratio(item.ratio_old, item_prev.ratio_old);
       const grow_23  = get_grow_fixed(item.views_23 , item_prev.views_23 );
       const grow_7   = get_grow_fixed(item.views_7  , item_prev.views_7  );
@@ -420,82 +503,32 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
            : 0);
         _mood = grow_mood / mood_scale;
       }
+      _grow._mood = _mood; // Needed in item only here
     }
     else {
       _grow._old = "   ";
       _grow._23  = "   ";
       _grow._7   = "   ";
     }
-    _grow._mood = _mood;
-    item.grow   = _grow;
-    mood_pos_neg.push(_mood);
-  }
+    item.grow = _grow;
+    mood_pos_neg.push(_mood); // Needed in array anyway
 
-  // 1:0, 3:0, 4:1, 10:1, 20:3, 50:5, 100:7, 200:11, 500:16, 800:21, 826:21
-  const rank_marks_cnt = Math.round(Math.floor(Math.sqrt(rank_up_dn.length * 0.33)) * 1.33);
-  const rank_marks     = get_marks(rank_up_dn, rank_marks_cnt, 0);
-  const mark_rank_up   = rank_marks.above;
-  const mark_rank_dn   = rank_marks.below;
-
-  // 1:1, 3:1, 4:1, 10:2, 20:2, 50:3, 100:5, 200:6, 500:10, 800:12, 826:12
-  const mood_marks_cnt = Math.ceil(Math.sqrt(mood_pos_neg.length) / 2.4);
-  const mood_marks     = get_marks(mood_pos_neg, mood_marks_cnt, 0);
-  const mark_mood_pos  = mood_marks.above;
-  const mark_mood_neg  = mood_marks.below;
-
-  // 7. Total counts displaying (for expanded results)
-  const curr_exp_totals  = get_totals(results_curr_exp);
-  const curr_exp_total   = curr_exp_totals.audio + curr_exp_totals.video;
-  const totals_div       = document.createElement("div");
-  totals_div.className   ="subtitle text-center text-normal";
-  totals_div.textContent =
-            format_num_str(curr_exp_total,            'Item')  +
-    ' ('  +                curr_exp_totals.audio  +  ' Audio'  +
-    ' / ' +                curr_exp_totals.video  +  ' Video)' +
-    ' '   + format_bytes  (curr_exp_totals.bytes) +
-    ' / ' + format_num_str(curr_exp_totals.views,     'View')  +
-    ' / ' + format_num_str(curr_exp_totals.favorites, 'Fav' )  +
-    ' ('  + format_num_str(curr_exp_totals.favorited, 'Item')  + ')';
-  container.appendChild(totals_div);
-
-  // 8. Both stats displaying
-  render_stats(results_prev, date_prev, "prev", container); // Also sorts results_prev
-  render_stats(results_curr, date_curr, "curr", container); // Also sorts results_curr
-
-  // Sets displaying
-  const sets_div = document.createElement("div");
-  sets_div.className = "text-center text-comment";
-
-  if ((only_curr === 0) && (only_prev === 0)) {
-    sets_div.textContent = 'All Items are present in both ' + date_prev + ' and ' + date_curr;
-  } else {
-    sets_div.textContent = only_prev + ' in ' + date_prev + ' only, ' +
-                           only_curr + ' in ' + date_curr + ' only, ' +
-                           only_both + ' in ' +     'both'+      '. ' +
-                           'Checkboxes above to select';
-  }
-  container.appendChild(sets_div);
-
-  // 9. Spacing
-  container.lastElementChild.style.marginBottom = "1em"; // Add space before item list
-
-  // 10.1. Substantial changes marking: horizontal impact of old      from prev to     curr
-  // 10.2. Substantial changes marking: vertical   impact of 23 and 7 into all  within curr
-  const horz_curr_prev = [];
-  const vert_all_old   = [];
-
-  for (let i = 0; i < results_curr_exp.length; i++) {
-    const item      = results_curr_exp[i];
-    const item_prev = map_prev[item.identifier];
-    if   (item_prev) {
-      horz_curr_prev.push(item.ratio_old / item_prev.ratio_old);
-    } else {
-      horz_curr_prev.push(1); // Item is non-markable
+    // Gauges
+    const _gauges = {};
+    let   _gauges_set = false;
+    if (item_prev) {
+      _gauges.below_a_w = get_percentage(item_prev.favorites, max_favorites, base_favorites) + '%';
+      _gauges_set = true;
     }
     if (!item.is_prev) {
-      vert_all_old.push(item.ratio_all / item.ratio_old);
-    } else {
-      vert_all_old.push(1); // Item is non-markable
+      _gauges.below_b_w = get_percentage(item.favorites, max_favorites, base_favorites) + '%';
+
+      _gauges.above_a_w = get_percentage(item.ratio_old, max_ratio, base_ratio) + '%';
+      _gauges.above_b_w = get_percentage(item.ratio_all, max_ratio, base_ratio) + '%';
+      _gauges_set = true;
+    }
+    if (_gauges_set) {
+      item.gauges = _gauges;
     }
   }
 
@@ -511,21 +544,23 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   const mark_grow_23_7 = vert_marks.above;
   const mark_fall_23_7 = vert_marks.below;
 
-  // 11. Log scaling
-  const max_ratio     = Math.max(curr_exp_totals.max_ratio_old, curr_exp_totals.max_ratio_all);
-  const max_favorites = curr_exp_totals.max_favorites;
+  // 1:0, 3:0, 4:1, 10:1, 20:3, 50:5, 100:7, 200:11, 500:16, 800:21, 826:21
+  const rank_marks_cnt = Math.round(Math.floor(Math.sqrt(rank_up_dn.length * 0.33)) * 1.33);
+  const rank_marks     = get_marks(rank_up_dn, rank_marks_cnt, 0);
+  const mark_rank_up   = rank_marks.above;
+  const mark_rank_dn   = rank_marks.below;
 
-  const base_ratio     = 100 / Math.log(max_ratio     + 1);
-  const base_favorites = 100 / Math.log(max_favorites + 1);
+  // 1:1, 3:1, 4:1, 10:2, 20:2, 50:3, 100:5, 200:6, 500:10, 800:12, 826:12
+  const mood_marks_cnt = Math.ceil(Math.sqrt(mood_pos_neg.length) / 2.4);
+  const mood_marks     = get_marks(mood_pos_neg, mood_marks_cnt, 0);
+  const mark_mood_pos  = mood_marks.above;
+  const mark_mood_neg  = mood_marks.below;
 
-  function get_percentage(value, max, base) {
-    return (value <=   0) ?   0 :
-           (value >= max) ? 100 : Math.log(value + 1) * base;
-  }
-
+  /////////////////////////////////////
+  // Show item list with flex alignment
+  //
   const time_1 = performance.now();
-
-  // 12. Show item list with flex alignment
+  //
   for (let index = 0; index < results_curr_exp.length; index++) {
     const item = results_curr_exp[index];
 
@@ -553,11 +588,8 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
 
     // Display ratios old and all for curr on the above gauges
     if (!item.is_prev) {
-      const percentage_a_a = get_percentage(item.ratio_old, max_ratio, base_ratio);
-      item_gauge_above_a.style.width = percentage_a_a + "%";
-
-      const percentage_a_b = get_percentage(item.ratio_all, max_ratio, base_ratio);
-      item_gauge_above_b.style.width = percentage_a_b + "%";
+      item_gauge_above_a.style.width = item.gauges.above_a_w;
+      item_gauge_above_b.style.width = item.gauges.above_b_w;
     }
 
     // Link button
@@ -581,13 +613,11 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
 
     // Display favorites prev and curr counts on the below gauges
     if (item_prev) {
-      const percentage_b_a = get_percentage(item_prev.favorites, max_favorites, base_favorites);
-      item_gauge_below_a.style.width = percentage_b_a + "%";
+      item_gauge_below_a.style.width = item.gauges.below_a_w;
     }
 
     if (!item.is_prev) {
-      const percentage_b_b = get_percentage(item.favorites, max_favorites, base_favorites);
-      item_gauge_below_b.style.width = percentage_b_b + "%";
+      item_gauge_below_b.style.width = item.gauges.below_b_w;
     }
 
     // 3. Title: assemble the hierarchy
