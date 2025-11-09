@@ -290,6 +290,8 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
       prev       : null,
       curr       : null,
       index_prev : null,
+      horz_change: 0,
+      vert_change: 0,
       rank_change: 0,
       grow       : null,
       gauges     : null });
@@ -307,6 +309,8 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
         prev       : null,
         curr       : null,
         index_prev : null,
+        horz_change: 0,
+        vert_change: 0,
         rank_change: 0,
         grow       : null,
         gauges     : null });
@@ -383,14 +387,15 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   // Spacing
   container.lastElementChild.style.marginBottom = "1em"; // Add space before item list
 
-  //////////////
-  // Log scaling
+  ////////////////////////
+  // Log scaling of gauges
+  //
   const max_ratio     = Math.max(curr_exp_totals.max_ratio_old, curr_exp_totals.max_ratio_all);
   const max_favorites = curr_exp_totals.max_favorites;
-
+  //
   const base_ratio     = 100 / Math.log(max_ratio     + 1);
   const base_favorites = 100 / Math.log(max_favorites + 1);
-
+  //
   function get_percentage(value, max, base) {
     return (value <=   0) ?   0 :
            (value >= max) ? 100 : Math.log(value + 1) * base;
@@ -399,22 +404,31 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   ///////////////////////////
   // Compose prev, curr, grow
   //
+  // For log scaling of marks
+  //
+  const curr_base = Math.log(results_curr_exp.length); // For length === 1 is checked below, 0 was checked above
+  //
   // Substantial changes marking: horizontal impact of old      from prev to     curr
   // Substantial changes marking: vertical   impact of 23 and 7 into all  within curr
-  const horz_curr_prev = [];
+  //
+  const horz_decay     =  9; // For scale from top: 1 to bottom: 1/10
+  const horz_steep     =  1; // No steep here, just log
+  const horz_curr_prev = []; // Of results_curr_exp.length anyway
+  //
+  const vert_decay     =  9; // Scale divisor 1 to 10
+  const vert_steep     =  1; // No steep here, just log
   const vert_all_old   = [];
   //
   // Mark rank changes
   // Mark mood changes
-  const curr_base = Math.log(results_curr_exp.length); // For length === 1 is checked below, 0 was checked above
   //
-  const rank_decay = 29; // For scale from top: 1 to bottom: 1/30
-  const rank_steep =  3; // To more prioritize top items
-  const rank_up_dn = [];
+  const rank_decay     = 29; // Scale divisor 1 to 30
+  const rank_steep     =  3; // To more than log prioritize top items
+  const rank_up_dn     = [];
   //
-  const mood_decay   = 9; // For scale from top: 1 to bottom: 1/10
-  const mood_steep   = 2; // To more prioritize top items
-  const mood_pos_neg = [];
+  const mood_decay     =  9; // Scale divisor 1 to 10
+  const mood_steep     =  2; // To more than log prioritize top items
+  const mood_pos_neg   = [];
   //
   // Gauges
 
@@ -458,31 +472,53 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     }
     item.curr = _curr;
 
-    // Substantial changes
-    if(item_prev) {
-      horz_curr_prev.push(item.ratio_old / item_prev.ratio_old);
-    } else {
-      horz_curr_prev.push(1); // Item is non-markable
+    // Horz and Vert substantial changes, 0 is no change
+    //
+    let horz_change = 0;
+    if(item_prev && !item.is_prev) { // Item is markable
+      horz_change = (item.ratio_old && item_prev.ratio_old)
+        ? Math.log(item.ratio_old / item_prev.ratio_old)
+        : 0;
+      if   (horz_change !== 0) {
+        const horz_scale = 1 +
+          (curr_base
+           ? (horz_decay * Math.pow(Math.log(index_curr + 1) / curr_base, horz_steep))
+           : 0);
+        horz_change /= horz_scale;
+        item.horz_change = horz_change; // Needed in markable item only, and if not 0 only
+      }
     }
-    if (!item.is_prev) {
-      vert_all_old.push(item.ratio_all / item.ratio_old);
-    } else {
-      vert_all_old.push(1); // Item is non-markable
+    horz_curr_prev.push(horz_change); // Needed in array anyway
+    //
+    let vert_change = 0;
+    if (!item.is_prev) { // Item is markable
+      vert_change = (item.ratio_all && item.ratio_old)
+        ? Math.log(item.ratio_all / item.ratio_old)
+        : 0;
+      if   (vert_change !== 0) {
+        const vert_scale = 1 +
+          (curr_base
+           ? (vert_decay * Math.pow(Math.log(index_curr + 1) / curr_base, vert_steep))
+           : 0);
+        vert_change /= vert_scale;
+        item.vert_change = vert_change; // Needed in markable item only, and if not 0 only
+      }
     }
+    vert_all_old.push(vert_change); // Needed in array anyway
 
-    // Rank
+    // Rank change, 0 is no change
     let   rank_change = 0;
     const rank_diff = item.index_prev - index_curr; // No abs
     if   (rank_diff !== 0) { // Also if length === 1 then index_prev === index_curr
       if (!item.is_prev && !item.no_prev) { // Item is markable
         const rank_scale = 1 + (rank_decay * Math.pow(Math.log(index_curr + 1) / curr_base, rank_steep));
         rank_change      = rank_diff / rank_scale;
-        item.rank_change = rank_change;
+        item.rank_change = rank_change; // Needed in markable item only, and if rank_diff is not 0 only
       }
     }
-    rank_up_dn.push(rank_change);
+    rank_up_dn.push(rank_change); // Needed in array anyway
 
-    // Grow and Mood
+    // Grow and Mood, 0 is no Mood
     let   _mood = 0;
     const _grow = {}; // _old, _23, _7 [, _mood]
 
@@ -503,7 +539,7 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
            : 0);
         _mood = grow_mood / mood_scale;
       }
-      _grow._mood = _mood; // Needed in item only here
+      _grow._mood = _mood; // Needed in markable item only
     }
     else {
       _grow._old = "   ";
@@ -534,13 +570,13 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
 
   // 1:0, 3:0, 4:1, 10:1, 20:3, 50:5, 100:7, 200:11, 500:16, 800:21, 826:21
   const horz_marks_cnt = Math.round(Math.floor(Math.sqrt(horz_curr_prev.length * 0.33)) * 1.33);
-  const horz_marks     = get_marks(horz_curr_prev, horz_marks_cnt, 1);
+  const horz_marks     = get_marks(horz_curr_prev, horz_marks_cnt, 0);
   const mark_grow_old  = horz_marks.above;
   const mark_fall_old  = horz_marks.below;
 
   // 1:0, 3:0, 4:1, 10:1, 20:2, 50:3, 100:5, 200:7, 500:11, 800:14, 826:14
   const vert_marks_cnt = Math.floor(Math.sqrt(vert_all_old.length * 0.25));
-  const vert_marks     = get_marks(vert_all_old, vert_marks_cnt, 1);
+  const vert_marks     = get_marks(vert_all_old, vert_marks_cnt, 0);
   const mark_grow_23_7 = vert_marks.above;
   const mark_fall_23_7 = vert_marks.below;
 
@@ -563,8 +599,6 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   //
   for (let index = 0; index < results_curr_exp.length; index++) {
     const item = results_curr_exp[index];
-
-    // 0. Get matching prev item
     const item_prev = map_prev[item.identifier];
 
     // 1. Outer wrapper, for border/divider and spacing
@@ -575,6 +609,7 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     const item_inner = document.createElement("div");
     item_inner.className = "item-inner";
 
+    ///////////
     // 3. Title
     const item_title_container = document.createElement("div");
     item_title_container.className = "item-title-container";
@@ -627,6 +662,7 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     item_title_container.appendChild(item_gauge_below_a);
     item_title_container.appendChild(item_gauge_below_b);
 
+    /////////////////////////////////////
     // 4.1. Prev stat container (stacked)
     const stat_prev_container = document.createElement("div");
     stat_prev_container.className = "item-stat-container"; // flex: 0 0 22ch;
@@ -665,6 +701,7 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     stat_prev_container.appendChild(stat_prev_23 );
     stat_prev_container.appendChild(stat_prev_7  );
 
+    /////////////////////////////////////
     // 5.1. Curr stat container (stacked)
     const stat_curr_container = document.createElement("div");
     stat_curr_container.className = "item-stat-container"; // flex: 0 0 22ch;
@@ -686,21 +723,21 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
 
     // Substantial changes marking: horizontal impact of old from prev to curr
     if (item_prev && !item.is_prev) {
-      if      ((item.ratio_old / item_prev.ratio_old) >= mark_grow_old) {
+      if      (item.horz_change >= mark_grow_old) {
         stat_curr_old.classList.add("item-mark-grow");
       }
-      else if ((item.ratio_old / item_prev.ratio_old) <= mark_fall_old) {
+      else if (item.horz_change <= mark_fall_old) {
         stat_curr_old.classList.add("item-mark-fall");
       }
     }
 
     // Substantial changes marking: vertical impact of 23 and 7 into all within curr
     if (!item.is_prev) {
-      if      ((item.ratio_all / item.ratio_old) >= mark_grow_23_7) {
+      if      (item.vert_change >= mark_grow_23_7) {
         stat_curr_23.classList.add("item-mark-grow");
         stat_curr_7 .classList.add("item-mark-grow");
       }
-      else if ((item.ratio_all / item.ratio_old) <= mark_fall_23_7) {
+      else if (item.vert_change <= mark_fall_23_7) {
         stat_curr_23.classList.add("item-mark-fall");
         stat_curr_7 .classList.add("item-mark-fall");
       }
@@ -711,6 +748,7 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     stat_curr_container.appendChild(stat_curr_23 );
     stat_curr_container.appendChild(stat_curr_7  );
 
+    ////////////////////////////////
     // 6.1. Grow container (stacked)
     const stat_grow_container = document.createElement("div");
     stat_grow_container.className = "item-grow-container"; // flex: 0 0 3ch;
@@ -749,6 +787,7 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     stat_grow_container.appendChild(stat_grow_23 );
     stat_grow_container.appendChild(stat_grow_7  );
 
+    ///////////////////
     // 7. Add all parts
     item_inner.appendChild(item_title_container);
     item_inner.appendChild(stat_prev_container );
