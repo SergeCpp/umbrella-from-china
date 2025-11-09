@@ -247,38 +247,32 @@ function filter_items(stats_items, stats_date,
 
     /* Checking and Initial Filters */
 
+    // Identifier and Title
     const identifier_str = get_doc_str(doc, 'identifier');
     const title_str      = get_doc_str(doc, 'title'     );
-    const item_size_str  = get_doc_str(doc, 'item_size' );
-    const mediatype_str  = get_doc_str(doc, 'mediatype' );
-    const date_str       = get_doc_str(doc, 'date'      );
-    const publicdate_str = get_doc_str(doc, 'publicdate');
-    const downloads_str  = get_doc_str(doc, 'downloads' );
-    const month_str      = get_doc_str(doc, 'month'     );
-    const week_str       = get_doc_str(doc, 'week'      );
+    if (!identifier_str || !title_str) continue;
 
-    if ((identifier_str === null) || (title_str === null) || (item_size_str  === null) ||
-        (mediatype_str  === null)   /*date_str  can null*/|| (publicdate_str === null) ||
-        (downloads_str  === null) || (month_str === null) || (week_str       === null)) {
-      continue;
-    }
+    // Mediatype
+    const mediatype_str = get_doc_str(doc, 'mediatype');
+    if  ((mediatype_str !== "movies") && // Movies is the most frequent type
+         (mediatype_str !== "audio" )) continue;
 
     // Item Size
+    const item_size_str = get_doc_str(doc, 'item_size');
+    if  (!item_size_str) continue;
     const item_size = parseInt(item_size_str, 10);
     if (isNaN(item_size) || (item_size < 0)) continue;
 
-    // Mediatype
-    if ((mediatype_str !== "movies") && (mediatype_str !== "audio")) continue;
-
     // Created
-    let date = null;
+    const date_str = get_doc_str(doc, 'date'); // Can be not set for an item
+    let   date     = null;
 
-    if (date_str !== null) {
+    if (date_str) {
       date = new Date(date_str);
       if (isNaN(date.getTime())) continue;
-    } else { // No date set for item
+    } else { // No date is set for an item
       if (mediatype_str === "audio") { // Set default date to audio item only
-        date = new Date("2012-01-01T00:00:00Z"); // UTC date, earliest for entire thematic stat
+        date = new Date("2012-01-01T00:00:00Z"); // UTC date, is the earliest for entire thematic stat
       } else {
         continue;
       }
@@ -287,11 +281,19 @@ function filter_items(stats_items, stats_date,
     if (!filter_date(date, created_min, created_max)) continue;
 
     // Archived
+    const publicdate_str = get_doc_str(doc, 'publicdate');
+    if  (!publicdate_str) continue;
     const publicdate = new Date(publicdate_str);
     if (isNaN(publicdate.getTime())) continue;
     if (!filter_date(publicdate, archived_min, archived_max)) continue;
 
     // Views
+    const downloads_str = get_doc_str(doc, 'downloads');
+    const month_str     = get_doc_str(doc, 'month'    );
+    const week_str      = get_doc_str(doc, 'week'     );
+
+    if (!downloads_str || !month_str || !week_str) continue;
+
     const downloads = parseInt(downloads_str, 10);
     const month     = parseInt(month_str,     10);
     const week      = parseInt(week_str,      10);
@@ -312,6 +314,7 @@ function filter_items(stats_items, stats_date,
     const matches_title = filter_matches(doc, "title", title);
     if  (!matches_title) continue;
 
+    /////////////////////
     // Item passed filter
 
     /* Calculating Stats */
@@ -332,8 +335,8 @@ function filter_items(stats_items, stats_date,
     filtered_items.push({
       identifier: identifier_str,
       title     : title_str,
-      item_size ,
       mediatype : mediatype_str,
+      item_size ,
       days_all  ,
       views_all ,
       ratio_all ,
