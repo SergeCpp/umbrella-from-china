@@ -274,6 +274,7 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
 
   ///////
   // Sets
+  //
   let only_curr = 0;
   let only_prev = 0;
   let only_both = 0;
@@ -352,6 +353,7 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
 
   ///////////////////////////////////////////////
   // Total counts displaying for expanded results
+  //
   const curr_exp_totals  = get_totals(results_curr_exp);
   const curr_exp_total   = curr_exp_totals.audio + curr_exp_totals.video;
   const totals_div       = document.createElement("div");
@@ -397,8 +399,8 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   const base_favorites = 100 / Math.log(max_favorites + 1);
   //
   function get_percentage(value, max, base) {
-    return (value <=   0) ?   0 :
-           (value >= max) ? 100 : Math.log(value + 1) * base;
+    return (value <=   0) ?   '0%' :
+           (value >= max) ? '100%' : (Math.log(value + 1) * base).toFixed(3) + '%';
   }
 
   ///////////////////////////
@@ -431,12 +433,14 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   const mood_pos_neg   = [];
   //
   // Gauges
-
+  //
   for (let index_curr = 0; index_curr < results_curr_exp.length; index_curr++) {
     const item = results_curr_exp[index_curr];
     const item_prev = map_prev[item.identifier];
 
+    ///////
     // Prev
+    //
     const _prev = {}; // _old, _23, _7
     if (item_prev) {
       _prev._old = item_prev.views_old.toString().padStart(length_views) + " /"        +
@@ -454,7 +458,9 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     }
     item.prev = _prev;
 
+    ///////
     // Curr
+    //
     const _curr = {}; // _old, _23, _7
     if (!item.is_prev) {
       _curr._old = item.views_old.toString().padStart(length_views) + " /"        +
@@ -472,6 +478,7 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     }
     item.curr = _curr;
 
+    ////////////////////////////////////////////////////
     // Horz and Vert substantial changes, 0 is no change
     //
     let horz_change = 0;
@@ -506,7 +513,9 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     }
     vert_all_old.push(vert_change); // Needed in array anyway
 
+    //////////////////////////////
     // Rank change, 0 is no change
+    //
     let   rank_change = 0;
     const rank_diff = item.index_prev - index_curr; // No abs
     if   (rank_diff !== 0) { // Also if length === 1 then index_prev === index_curr
@@ -518,10 +527,12 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     }
     rank_up_dn.push(rank_change); // Needed in array anyway
 
+    //////////////////////////////
     // Grow and Mood, 0 is no Mood
+    //
     let   _mood = 0;
     const _grow = {}; // _old, _23, _7 [, _mood]
-
+    //
     if (!item.no_prev && !item.is_prev) { // Item is markable
       const grow_old = get_grow_ratio(item.ratio_old, item_prev.ratio_old);
       const grow_23  = get_grow_fixed(item.views_23 , item_prev.views_23 );
@@ -549,18 +560,20 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     item.grow = _grow;
     mood_pos_neg.push(_mood); // Needed in array anyway
 
+    /////////
     // Gauges
+    //
     const _gauges = {};
     let   _gauges_set = false;
     if (item_prev) {
-      _gauges.below_a_w = get_percentage(item_prev.favorites, max_favorites, base_favorites) + '%';
+      _gauges.below_a_w = get_percentage(item_prev.favorites, max_favorites, base_favorites);
       _gauges_set = true;
     }
     if (!item.is_prev) {
-      _gauges.below_b_w = get_percentage(item.favorites, max_favorites, base_favorites) + '%';
+      _gauges.below_b_w = get_percentage(item.favorites, max_favorites, base_favorites);
 
-      _gauges.above_a_w = get_percentage(item.ratio_old, max_ratio, base_ratio) + '%';
-      _gauges.above_b_w = get_percentage(item.ratio_all, max_ratio, base_ratio) + '%';
+      _gauges.above_a_w = get_percentage(item.ratio_old, max_ratio, base_ratio);
+      _gauges.above_b_w = get_percentage(item.ratio_all, max_ratio, base_ratio);
       _gauges_set = true;
     }
     if (_gauges_set) {
