@@ -4,7 +4,7 @@
 
 let   timer_tick_interval   = 2000;  // milliseconds
 
-// Collections
+// Coll
 
 const coll_keys             = [];    // "", '2', '3'
 const coll_data             = {};    // [coll_key] = {
@@ -33,17 +33,24 @@ const coll_data             = {};    // [coll_key] = {
 
 // Item
 
-let   item_present          = false; // possibly item_count in future
-let   item_type_name        = null;  // "Song" (default), "Dance", etc.
-let   item_song_list_file   = null;  // url
-let   item_song_root        = null;  // url
+const item_keys             = [];    // "", '2', '3'
+const item_data             = {};    // [item_key] = {
+                                     //  present,
+                                     //  type_name,
+                                     //  ...
+                                     // };
 
-let   item_player_load_time = 0;     //  milliseconds
-let   item_player_running   = false; //  true if started
-let   item_song_to_start    = null;  //  song_id to start at next timer tick
-const item_song_states      = {};    // [song_id]        = state: "played" / "paused", can be 0..1 states
-const item_song_file_names  = {};    // [song_id]        = song_file_name
-const item_file_name_songs  = {};    // [song_file_name] = song_id
+//    item_present          = false; // true if initialized
+//    item_type_name        = null;  // "Song" (default), "Dance", etc.
+//    item_song_list_file   = null;  // url
+//    item_song_root        = null;  // url
+
+//    item_player_load_time = 0;     //  milliseconds
+//    item_player_running   = false; //  true if started
+//    item_song_to_start    = null;  //  song_id to start at next timer tick
+//    item_song_states      = {};    // [song_id]        = state: "played" / "paused", can be 0..1 states
+//    item_song_file_names  = {};    // [song_id]        = song_file_name
+//    item_file_name_songs  = {};    // [song_file_name] = song_id
 
 /* Player Control */
 
@@ -61,17 +68,25 @@ function poster_to_show(player) {
 }
 
 function goto_song(song_id, pl) {
-  if(pl === undefined) // Item Player
+  if(!song_id) return;
+
+  if(pl === undefined) // Item Players
   {
-    const player = document.getElementById('item-song-player');
+    const item_match = song_id.match(/^item(.*?)-\d+$/); // song_id format: item?-#
+    if  (!item_match) return;
+
+    const item_key   = item_match[1];
+    const item_name  ="item" + item_key;
+    const play_name  = item_name + '-song-player';
+
+    const player = document.getElementById(play_name);
     if  (!player) return;
 
-    if  (!song_id) return;
-    const song_file_name = item_song_file_names[song_id];
+    const song_file_name = item_data[item_key].song_file_names[song_id];
     if  (!song_file_name) return;
 
     const player_src_cur = player.currentSrc;
-    const player_src_new = item_song_root + song_file_name;
+    const player_src_new = item_data[item_key].song_root + song_file_name;
 
     /*
     alert('[' + player_src_cur      + ']\n' +
@@ -88,11 +103,12 @@ function goto_song(song_id, pl) {
     // For preload="none" no actual load is performed in case of src change.
     // Calling load() performs metadata load for preload="none".
 
-    if(player_src_cur !== player_src_new)  // start a new src
+    if(player_src_cur !== player_src_new) // start a new src
     {
-       player.src       = player_src_new;  // loads with respect to preload value
-       item_player_load_time = Date.now();
-       item_song_to_start    = song_id;    // defer to next timer tick
+       player.src       = player_src_new; // loads with respect to preload value
+
+       item_data[item_key].player_load_time = Date.now();
+       item_data[item_key].song_to_start    = song_id; // defer to next timer tick
     }
     else // src is already set to song_id
     {
@@ -102,15 +118,15 @@ function goto_song(song_id, pl) {
         {
           scroll_to_view(player);
           player.play();
-          item_player_running = true;
+          item_data[item_key].player_running = true;
         }
       } else { // played
         player.pause();
-        item_player_running = false;
+        item_data[item_key].player_running = false;
       }
     }
   }
-  else // Collections Players
+  else // Coll Players
   {
     const coll_match = song_id.match(/^coll(.*?)-\d+$/); // song_id format: coll?-#
     if  (!coll_match) return;
@@ -238,13 +254,15 @@ function kbd(e)     { const k    = e.key; if(k === 'Enter' || k === ' ') { e.pre
 
 /* Initialization */
 
-function load_song_list() {
-  const song_list = document.getElementById("item-song-list");
+function item_load_song_list(item_key) {
+  const item_name = "item" + item_key;
+  const song_list = document.getElementById(item_name + "-song-list");
   if  (!song_list) return;
 
-  song_list.innerHTML = '<span class="text-comment">' + item_type_name + ' list loading...</span>';
+  const item_type_name = item_data[item_key].type_name;
+  song_list.innerHTML  = '<span class="text-comment">' + item_type_name + ' list loading...</span>';
 
-  fetch(item_song_list_file)
+  fetch(item_data[item_key].song_list_file)
     .then(response => {
       if (!response.ok) { throw new Error(item_type_name + " list not found"); }
       return response.text();
@@ -262,7 +280,7 @@ function load_song_list() {
         throw new Error(item_type_name + " list is too long");
       }
 
-      const song_id_len    = song_list_songs_cnt <=  9 ? 1
+      const song_num_len   = song_list_songs_cnt <=  9 ? 1
                            : song_list_songs_cnt <= 99 ? 2 : 3;
       const length_regex   = /^[0-9]{2,4}\.[0-9]{2}$/;
       let   total_seconds  = 0;
@@ -276,8 +294,9 @@ function load_song_list() {
                                 .replace(/  +/g, ' ');
         const song_seconds_str = song_list_lines[line_num + 2].trim();
         const song_seconds     = parseFloat(song_seconds_str);
-        const song_num         = String(Math.floor(line_num / lps) + 1).padStart(song_id_len, '0');
-        const song_id          = "item-" + song_num;
+        const song_num         = String(Math.floor(line_num / lps) + 1).padStart(song_num_len, '0');
+        const song_id          = item_name + '-' + song_num;
+        const data_name        = 'data-' + item_name;
 
         if(!song_title || !song_file_name) {
           break; // stop song list processing
@@ -302,7 +321,7 @@ function load_song_list() {
         let song_line_html = '<span class="song-line ';
         song_line_html += title_right ? 'line-flex' : 'text-ellipsis';
         song_line_html += '" ' +
-         'data-item ' +
+         data_name + ' ' +
          'id="' + song_id + '" ' +
          'role="button" style="cursor:pointer;" tabindex="0" ' +
          'onkeydown="kbd(event)" ' +
@@ -318,17 +337,20 @@ function load_song_list() {
         song_list_html += song_line_html;
 
         const song_file_name_conv = song_file_name.replace(/ /g, "%20");
-        if(item_file_name_songs[song_file_name_conv]) { // already present
+        if(item_data[item_key].file_name_songs[song_file_name_conv]) { // already present
           throw new Error(item_type_name + ' ' + song_num + " &mdash; Duplicate file name");
         }
-        item_song_file_names[song_id] = song_file_name_conv;
-        item_file_name_songs[song_file_name_conv] = song_id;
+        item_data[item_key].song_file_names[song_id] = song_file_name_conv;
+        item_data[item_key].file_name_songs[song_file_name_conv] = song_id;
 
         total_seconds += song_seconds;
       }
       song_list.innerHTML = song_list_html;
 
-      if(song_list.children.length === 0) {
+      if(song_list.children.length > 0) {
+        item_data[item_key].present = true;
+      }
+      else {
          song_list.innerHTML =
            '<span class="text-comment">No correct ' + item_type_name.toLowerCase() + ' entries found</span>';
       }
@@ -338,7 +360,7 @@ function load_song_list() {
     });
 }
 
-function set_song_list_lines(coll_key) {
+function coll_set_song_list_lines(coll_key) {
   const coll_name = "coll" + coll_key;
   const song_list = document.getElementById(coll_name + "-song-list");
   if  (!song_list) return;
@@ -364,7 +386,7 @@ function set_song_list_lines(coll_key) {
   song_list.innerHTML = song_lines_new.join('\n');
 }
 
-function set_song_list_buttons(coll_key) {
+function coll_set_song_list_buttons(coll_key) {
   if(           coll_key !== ""  ) return; // not implemented for others
   if(!coll_data[coll_key].buttons) return;
 
@@ -397,7 +419,7 @@ function set_song_list_buttons(coll_key) {
   coll_data[coll_key].buttons = were_buttons;
 }
 
-function set_song_begins(coll_key) {
+function coll_set_song_begins(coll_key) {
   const coll_name = "coll" + coll_key;
   document.querySelectorAll('span.song-line[data-' + coll_name + ']').forEach(song => {
     const song_id   = song.id;
@@ -407,7 +429,7 @@ function set_song_begins(coll_key) {
   });
 }
 
-function init_coll(coll_key) {
+function coll_init(coll_key) {
   const coll_name = "coll" + coll_key;
 
   const coll_list = document.getElementById(coll_name + "-song-list");
@@ -440,33 +462,50 @@ function init_coll(coll_key) {
   coll_data[coll_key].duration = duration;
   coll_data[coll_key].du_magic = du_magic;
 
-  set_song_list_lines  (coll_key);
-  set_song_list_buttons(coll_key);
-  set_song_begins      (coll_key);
+  coll_set_song_list_lines  (coll_key);
+  coll_set_song_list_buttons(coll_key);
+  coll_set_song_begins      (coll_key);
 
   coll_data[coll_key].present  = true;
 }
 
+function item_init(item_key) {
+  const item_name = "item" + item_key;
+  const song_list = document.getElementById(item_name + "-song-list");
+  if  (!song_list) return;
+
+  item_keys.push(item_key);
+  item_data     [item_key] = {
+    present         : false,
+    type_name       : null,
+    song_list_file  : null,
+    song_root       : null,
+
+    player_load_time: 0,
+    player_running  : false,
+    song_to_start   : null,
+    song_states     : {},
+    song_file_names : {},
+    file_name_songs : {}
+  };
+
+  const type_name                    = song_list.getAttribute("data-name");
+  item_data[item_key].type_name      = type_name ? type_name : "Song";
+
+  item_data[item_key].song_list_file = song_list.getAttribute("data-file");
+  item_data[item_key].song_root      = song_list.getAttribute("data-root");
+
+  item_load_song_list(item_key);
+}
+
 function init() {
-  document.querySelectorAll('pre[id]').forEach(coll_list => {
-    const coll_match = coll_list.id.match(/^coll(.*?)-song-list$/);
-    if   (coll_match) {
-      init_coll(coll_match[1]);
-    }
+  document.querySelectorAll('pre[id]').forEach(pre_list => {
+    const coll_match = pre_list.id.match(/^coll(.*?)-song-list$/);
+    if   (coll_match) coll_init(coll_match[1]);
+
+    const item_match = pre_list.id.match(/^item(.*?)-song-list$/);
+    if   (item_match) item_init(item_match[1]);
   });
-
-  const item_list = document.getElementById("item-song-list");
-  if   (item_list) {
-    const type_name     = item_list.getAttribute("data-name");
-    item_type_name      = type_name ? type_name : "Song";
-
-    item_song_list_file = item_list.getAttribute("data-file");
-    item_song_root      = item_list.getAttribute("data-root");
-
-    load_song_list();
-
-    item_present = true;
-  }
 }
 
 /* Songs x Times */
@@ -522,35 +561,41 @@ function is_time_in_song_test() {
     ok_0  + ' >1> ' + ok_1p + ' >2> ' + ok_2p + ' >3> ' + ok_3p + ' and ' + no + ' no');
 }
 
-function get_song_id_next(song_id, player_type, coll_key) {
+// key is coll_key or item_key
+function get_song_id_next(song_id, player_type, key) {
   if(!song_id) return null;
 
   if(player_type === "coll") {
+    const coll_key = key;
     const song_id_num = coll_data[coll_key].song_order.indexOf(song_id);
     if   (song_id_num === -1) return null;
 
     const song_id_num_next = song_id_num + 1;
-    if   (song_id_num_next < coll_data[coll_key].song_order.length) {
-      return                 coll_data[coll_key].song_order[song_id_num_next];
-    }
-    return null;
+    if   (song_id_num_next >= coll_data[coll_key].song_order.length) return null;
+
+    return coll_data[coll_key].song_order[song_id_num_next];
   }
   if(player_type === "item") {
-    const song_id_num      = song_id.substring(   5); // song_id format: item-#
+    const item_key = key;
+    const song_id_match = song_id.match(/^(item.*?-)(\d+)$/); // song_id format: item?-#
+    if  (!song_id_match) return null;
+
+    const song_id_num      = song_id_match[2];
     const song_id_num_next = String(parseInt(song_id_num) + 1).padStart(song_id_num.length, '0');
-    const song_id_next     = song_id.substring(0, 5) + song_id_num_next;
-    if   (item_song_file_names[song_id_next]) {
-      return song_id_next;
-    }
-    return null;
+    const song_id_next     = song_id_match[1] + song_id_num_next;
+    if  (!item_data[item_key].song_file_names[song_id_next]) return null;
+
+    return song_id_next;
   }
   return null;
 }
 
-function get_song_id_curr(player, player_type, coll_key) {
+// key is coll_key or item_key
+function get_song_id_curr(player, player_type, key) {
   if(!player) return null;
 
   if(player_type === "coll") {
+    const coll_key = key;
     const player_time = player.currentTime;
     const songs    = coll_data[coll_key].song_order.length;
     const divisor  = coll_data[coll_key].duration * coll_data[coll_key].du_magic; // for magic see above
@@ -565,14 +610,14 @@ function get_song_id_curr(player, player_type, coll_key) {
     // off == 1..2 is usually enough, see above
 
     for(let off = 1; ((song_num - off) >= 0) || ((song_num + off) <= (songs - 1)); off++) {
-      const lower  = song_num - off;
+      const lower = song_num - off;
       if   (lower >= 0) {
         if (is_time_in_song(player_time, coll_data[coll_key].song_order[lower], coll_key)) {
           return                         coll_data[coll_key].song_order[lower];
         }
       }
 
-      const upper  = song_num + off;
+      const upper = song_num + off;
       if   (upper <= (songs - 1)) {
         if (is_time_in_song(player_time, coll_data[coll_key].song_order[upper], coll_key)) {
           return                         coll_data[coll_key].song_order[upper];
@@ -582,11 +627,12 @@ function get_song_id_curr(player, player_type, coll_key) {
     return null;
   }
   if(player_type === "item") {
-    const  player_src     = player.currentSrc;
-    const  song_file_name = player_src.substring(item_song_root.length);
-    if   (!song_file_name) return null;
+    const item_key = key;
+    const player_src = player.currentSrc;
+    const song_file_name = player_src.substring(item_data[item_key].song_root.length);
+    if  (!song_file_name) return null;
 
-    const  song_id = item_file_name_songs[song_file_name];
+    const  song_id = item_data[item_key].file_name_songs[song_file_name];
     return song_id;
   }
   return null;
@@ -720,9 +766,9 @@ function traverse_song_states(song_states, song_states_curr) {
   }
 }
 
-/* Collections */
+/* Coll */
 
-function update_player_song_states(coll_key) {
+function coll_update_player_song_states(coll_key) {
   const coll_name ="coll" + coll_key;
   const play_base = coll_name + '-song-player-';
   const players   = ['v', 'a', 'b'].map(pl => document.getElementById(play_base + pl));
@@ -749,30 +795,35 @@ function update_player_song_states(coll_key) {
 
 /* Item */
 
-function update_song_states() {
-  const player = document.getElementById('item-song-player');
+function item_update_song_states(item_key) {
+  const item_name = "item" + item_key;
+  const player = document.getElementById(item_name + '-song-player');
   const item_song_states_curr = {};
 
   if(player) {
-    const song_id = get_song_id_curr(player, "item");
+    const song_id = get_song_id_curr(player, "item", item_key);
     if   (song_id) {
       item_song_states_curr[song_id] = player.paused ? "paused" : "played";
     }
   }
-  traverse_song_states(item_song_states, item_song_states_curr);
+  traverse_song_states(item_data[item_key].song_states, item_song_states_curr);
 }
 
-function update_song_cover() {
-  const cover = document.getElementById('item-song-cover');
+function item_update_song_cover(item_key) {
+  const item_name = "item" + item_key;
+  const cover = document.getElementById(item_name + '-song-cover');
   if  (!cover) return;
 
-  const player = document.getElementById('item-song-player');
+  const player = document.getElementById(item_name + '-song-player');
   if  (!player) return;
 
-  const song_id = get_song_id_curr(player, "item");
+  const song_id = get_song_id_curr(player, "item", item_key);
   if  (!song_id) return;
 
-  const song_id_num = song_id.substring(5); // song_id format: item-#
+  const song_id_match = song_id.match(/^(item.*?-)(\d+)$/); // song_id format: item?-#
+  if  (!song_id_match) return;
+
+  const song_id_num = song_id_match[2];
 
   const cover_tmplt = cover.getAttribute("data-cover");
   const cover_regex = /#/;
@@ -798,34 +849,35 @@ function update_song_cover() {
   }
 }
 
-function player_transitions() {
-  if(item_song_to_start) {
-     const song_id = item_song_to_start;
-     item_song_to_start = null;
+function item_player_transitions(item_key) {
+  if(item_data[item_key].song_to_start) {
+     const song_id = item_data[item_key].song_to_start;
+     item_data[item_key].song_to_start = null;
      goto_song(song_id);
      return;
   }
 
-  const player = document.getElementById('item-song-player');
+  const item_name = "item" + item_key;
+  const player = document.getElementById(item_name + '-song-player');
   if  (!player) return;
                             // HTMLMediaElement.NETWORK_NO_SOURCE // 3
   if (player.paused) {      // HTMLMediaElement.NETWORK_LOADING   // 2
     if(player.networkState === HTMLMediaElement.NETWORK_IDLE) {   // 1
-       item_player_running   = false;
+       item_data[item_key].player_running = false;
     }
   } else { // played
-    item_player_running = true;
+    item_data[item_key].player_running = true;
   }
 
-  const song_id = get_song_id_curr(player, "item");
+  const song_id = get_song_id_curr(player, "item", item_key);
   if  (!song_id) return;
-  if  ( item_song_states[song_id] !== "paused") return;
+  if  (item_data[item_key].song_states[song_id] !== "paused") return;
 
   if( player.ended ||
      (player.paused
       && (player.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) // 3
-      && item_player_running)) {
-    const       song_id_next = get_song_id_next(song_id, "item");
+      && item_data[item_key].player_running)) {
+    const       song_id_next = get_song_id_next(song_id, "item", item_key);
     if         (song_id_next) {
       goto_song(song_id_next);
     } else {
@@ -836,13 +888,22 @@ function player_transitions() {
 
 /* Timer */
 
-function timer_logic_coll(coll_key) {
-  if(coll_data[coll_key].present) {
-    update_player_song_states(coll_key);
-  }
+function coll_timer_logic(coll_key) {
+  if(!coll_data[coll_key].present) return;
+
+  coll_update_player_song_states(coll_key);
 }
 
-function timer_logic_sing() {
+function item_timer_logic(item_key) {
+  if(!item_data[item_key].present) return;
+  if((Date.now() - item_data[item_key].player_load_time) <= timer_tick_interval) return;
+
+  item_player_transitions(item_key);
+  item_update_song_states(item_key);
+  item_update_song_cover (item_key);
+}
+
+function sing_timer_logic() {
   const player = document.getElementById('sing-song-player');
   if  (!player) return;
   if  (!player.ended) return;
@@ -851,23 +912,19 @@ function timer_logic_sing() {
 }
 
 function timer_logic() {
-  for(let k = 0; k < coll_keys.length; k++) { // Collections
-    timer_logic_coll(coll_keys[k]);
+  for(let c = 0; c < coll_keys.length; c++) { // Coll Players
+    coll_timer_logic(coll_keys[c]);
   }
 
-  if(item_present) { // Item
-    player_transitions();
-    update_song_states();
-    update_song_cover ();
+  for(let i = 0; i < item_keys.length; i++) { // Item Players
+    item_timer_logic(item_keys[i]);
   }
 
-  timer_logic_sing(); // Single
+  sing_timer_logic(); // Sing Player
 }
 
 function timer_tick() {
-  if((Date.now() - item_player_load_time) > timer_tick_interval) {
-    timer_logic();
-  }
+  timer_logic();
   timer_defer();
 }
 
