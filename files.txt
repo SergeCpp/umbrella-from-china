@@ -74,8 +74,10 @@ https://umbrella-from-china.neocities.org/images/lan-youjin-600x375.jpg
 https://umbrella-from-china.neocities.org/images/lan-youjin-600x375.webp
 https://umbrella-from-china.neocities.org/images/lingyuan-yousa-2000x1250.jpg
 https://umbrella-from-china.neocities.org/images/lingyuan-yousa-960x600.avif
-https://umbrella-from-china.neocities.org/images/love-at-first-sight-3168x1980.jpg
+https://umbrella-from-china.neocities.org/images/lingyuan-yousa-unplugged-1648x1030.jpg
 -
+https://umbrella-from-china.neocities.org/images/lingyuan-yousa-unplugged-960x600.avif
+https://umbrella-from-china.neocities.org/images/love-at-first-sight-3168x1980.jpg
 https://umbrella-from-china.neocities.org/images/love-at-first-sight-600x375.avif
 https://umbrella-from-china.neocities.org/images/love-at-first-sight-600x375.jpg
 https://umbrella-from-china.neocities.org/images/love-at-first-sight-600x375.webp
@@ -84,9 +86,9 @@ https://umbrella-from-china.neocities.org/images/miao-pu-jiang-960x600.avif
 https://umbrella-from-china.neocities.org/images/qisan-3040x1900.jpg
 https://umbrella-from-china.neocities.org/images/qisan-960x600.avif
 https://umbrella-from-china.neocities.org/images/ren-ran-1280x720.jpg
+-
 https://umbrella-from-china.neocities.org/images/shi-yuan-jiang-3456x2160.jpg
 https://umbrella-from-china.neocities.org/images/shi-yuan-jiang-960x600.avif
--
 https://umbrella-from-china.neocities.org/images/tang-poetry-720x720.avif
 https://umbrella-from-china.neocities.org/images/tang-poetry-720x720.jpg
 https://umbrella-from-china.neocities.org/images/tang-shiyi-1728x1080.jpg
@@ -95,9 +97,9 @@ https://umbrella-from-china.neocities.org/images/tong-hua-nichole-3088x1930.jpg
 https://umbrella-from-china.neocities.org/images/tong-hua-nichole-600x375.avif
 https://umbrella-from-china.neocities.org/images/tong-hua-nichole-600x375.jpg
 https://umbrella-from-china.neocities.org/images/tong-hua-nichole-600x375.webp
+-
 https://umbrella-from-china.neocities.org/images/tong-hua-nichole-960x600.avif
 https://umbrella-from-china.neocities.org/images/wan-yi-3040x1900.jpg
--
 https://umbrella-from-china.neocities.org/images/wan-yi-600x375.avif
 https://umbrella-from-china.neocities.org/images/wan-yi-600x375.jpg
 https://umbrella-from-china.neocities.org/images/wan-yi-600x375.webp
@@ -106,9 +108,9 @@ https://umbrella-from-china.neocities.org/images/wang-ziyu-960x600.avif
 https://umbrella-from-china.neocities.org/images/wu-tong-1728x1080.jpg
 https://umbrella-from-china.neocities.org/images/wu-tong-960x600.avif
 https://umbrella-from-china.neocities.org/images/xiangcai-mao-bing-1920x1200.jpg
+-
 https://umbrella-from-china.neocities.org/images/xiangcai-mao-bing-960x600.avif
 https://umbrella-from-china.neocities.org/images/xiao-qian-teng-3584x2240.jpg
--
 https://umbrella-from-china.neocities.org/images/xiao-qian-teng-960x600.avif
 https://umbrella-from-china.neocities.org/images/xiao-wu-2016x1260.jpg
 https://umbrella-from-china.neocities.org/images/xiao-wu-960x600.avif
@@ -117,9 +119,9 @@ https://umbrella-from-china.neocities.org/images/xiaodan-960x600.avif
 https://umbrella-from-china.neocities.org/images/xiaoye-ting-3136x1960.jpg
 https://umbrella-from-china.neocities.org/images/xiaoye-ting-600x375.avif
 https://umbrella-from-china.neocities.org/images/xiaoye-ting-600x375.jpg
+-
 https://umbrella-from-china.neocities.org/images/xiaoye-ting-600x375.webp
 https://umbrella-from-china.neocities.org/images/xie-an-ran-1200x1800.avif
--
 https://umbrella-from-china.neocities.org/images/xie-an-ran-192x192.jpg
 https://umbrella-from-china.neocities.org/images/xie-an-ran-5000x5000.jpg
 https://umbrella-from-china.neocities.org/images/xie-an-ran-5504x8256.jpg
@@ -128,9 +130,9 @@ https://umbrella-from-china.neocities.org/images/xie-an-ran-600x900.jpg
 https://umbrella-from-china.neocities.org/images/xie-an-ran-600x900.webp
 https://umbrella-from-china.neocities.org/images/xisi-1616x1010.jpg
 https://umbrella-from-china.neocities.org/images/xisi-960x600.avif
+-
 https://umbrella-from-china.neocities.org/images/xue-ci-4096x2560.jpg
 https://umbrella-from-china.neocities.org/images/xue-ci-960x600.avif
--
 https://umbrella-from-china.neocities.org/images/xue-qiu-1192x745.jpg
 https://umbrella-from-china.neocities.org/images/xue-qiu-960x600.avif
 https://umbrella-from-china.neocities.org/images/zhao-fangjing-2880x1800.jpg
@@ -139,10 +141,11 @@ https://umbrella-from-china.neocities.org/images/zi-jiaer-1976x1235.jpg
 https://umbrella-from-china.neocities.org/images/zi-jiaer-960x600.avif
 https://umbrella-from-china.neocities.org/images/ziyan-3200x2000.jpg
 https://umbrella-from-china.neocities.org/images/ziyan-960x600.avif
+-
 https://umbrella-from-china.neocities.org/images/ziyan-zi-jiaer-xue-wei-luoxi-3072x1920.jpg
 https://umbrella-from-china.neocities.org/images/ziyan-zi-jiaer-xue-wei-luoxi-960x600.avif
 --------------------------------------
-36 avif + 51 jpg + 13 webp = 100 files
+37 avif + 52 jpg + 13 webp = 102 files
 
 https://umbrella-from-china.neocities.org/player/player-def-save.js // Not used, just copy of work
 https://umbrella-from-china.neocities.org/player/player-def-work.js
