@@ -6,7 +6,7 @@ let   timer_tick_interval   = 2000;  // milliseconds
 
 // Coll
 
-const coll_keys             = [];    // "", '2', '3'
+const coll_keys             = [];    // "", '2', '3', etc.
 const coll_data             = {};    // [coll_key] = {
                                      //  present,
                                      //  buttons,
@@ -33,7 +33,7 @@ const coll_data             = {};    // [coll_key] = {
 
 // Item
 
-const item_keys             = [];    // "", '2', '3'
+const item_keys             = [];    // "", '2', '3', etc.
 const item_data             = {};    // [item_key] = {
                                      //  present,
                                      //  type_name,
@@ -52,6 +52,10 @@ const item_data             = {};    // [item_key] = {
 //    item_song_file_names  = {};    // [song_id]        = song_file_name
 //    item_file_name_songs  = {};    // [song_file_name] = song_id
 
+// Sing
+
+const sing_keys             = [];    // "", '2', '3', etc.
+
 /* Player Control */
 
 function scroll_to_view(player) {
@@ -62,6 +66,7 @@ function scroll_to_view(player) {
 
 function poster_to_show(player) {
   if(player && (player.tagName.toLowerCase() === 'video') && player.poster) {
+     scroll_to_view(player);
      player.src = player.currentSrc; // reset video to show poster, with respect to preload="none"
    //player.load() alone also shows poster, but forces a load, so ignores preload="none"
   }
@@ -498,19 +503,28 @@ function item_init(item_key) {
   item_load_song_list(item_key);
 }
 
+function sing_init(sing_key) {
+  sing_keys.push(sing_key);
+}
+
 function init() {
   document.querySelectorAll('pre[id]').forEach(pre_list => {
     const coll_match = pre_list.id.match(/^coll(.*?)-song-list$/);
-    if   (coll_match) coll_init(coll_match[1]);
+    if   (coll_match) { coll_init(coll_match[1]); return; }
 
     const item_match = pre_list.id.match(/^item(.*?)-song-list$/);
-    if   (item_match) item_init(item_match[1]);
+    if   (item_match) { item_init(item_match[1]); return; }
+  });
+
+  document.querySelectorAll('[id^="sing"][id$="-song-player"]').forEach(sing_list => {
+    const sing_match = sing_list.id.match(/^sing(.*?)-song-player$/);
+    if   (sing_match) sing_init(sing_match[1]);
   });
 }
 
 /* Songs x Times */
 
-function is_time_in_song(time, song_id, coll_key) {
+function coll_is_time_in_song(time, song_id, coll_key) {
   const song_time = coll_data[coll_key].song_begins[song_id];
   if   (song_time === undefined) return false;
 
@@ -522,7 +536,7 @@ function is_time_in_song(time, song_id, coll_key) {
   return time_in_song;
 }
 
-function is_time_in_song_test() {
+function coll_is_time_in_song_test() {
   const coll_key  = ""; // "", '2', '3'
   const songs     = coll_data[coll_key].song_order.length;
   const magic     = 0.945; // cs:1.001 cs2:1.010 cs3:1.009 rr:1.004 ly:0.945
@@ -545,13 +559,13 @@ function is_time_in_song_test() {
     if (song_num > (songs - 1)) {
         song_num = (songs - 1); } // if beyond
 
-    if     (is_time_in_song(t, coll_data[coll_key].song_order[song_num    ], coll_key)) { ok_0++;  }
-    else if(is_time_in_song(t, coll_data[coll_key].song_order[song_num - 1], coll_key)) { ok_1m++; }
-    else if(is_time_in_song(t, coll_data[coll_key].song_order[song_num + 1], coll_key)) { ok_1p++; }
-    else if(is_time_in_song(t, coll_data[coll_key].song_order[song_num - 2], coll_key)) { ok_2m++; }
-    else if(is_time_in_song(t, coll_data[coll_key].song_order[song_num + 2], coll_key)) { ok_2p++; }
-    else if(is_time_in_song(t, coll_data[coll_key].song_order[song_num - 3], coll_key)) { ok_3m++; }
-    else if(is_time_in_song(t, coll_data[coll_key].song_order[song_num + 3], coll_key)) { ok_3p++; }
+    if     (coll_is_time_in_song(t, coll_data[coll_key].song_order[song_num    ], coll_key)) { ok_0++;  }
+    else if(coll_is_time_in_song(t, coll_data[coll_key].song_order[song_num - 1], coll_key)) { ok_1m++; }
+    else if(coll_is_time_in_song(t, coll_data[coll_key].song_order[song_num + 1], coll_key)) { ok_1p++; }
+    else if(coll_is_time_in_song(t, coll_data[coll_key].song_order[song_num - 2], coll_key)) { ok_2m++; }
+    else if(coll_is_time_in_song(t, coll_data[coll_key].song_order[song_num + 2], coll_key)) { ok_2p++; }
+    else if(coll_is_time_in_song(t, coll_data[coll_key].song_order[song_num - 3], coll_key)) { ok_3m++; }
+    else if(coll_is_time_in_song(t, coll_data[coll_key].song_order[song_num + 3], coll_key)) { ok_3p++; }
     else { no++; }
 
     tests++;
@@ -603,8 +617,9 @@ function get_song_id_curr(player, player_type, key) {
     if   (song_num > (songs - 1)) {
           song_num = (songs - 1); } // if beyond
 
-    if(is_time_in_song(player_time, coll_data[coll_key].song_order[song_num], coll_key)) {
-      return                        coll_data[coll_key].song_order[song_num];
+    if(coll_is_time_in_song(player_time,
+             coll_data[coll_key].song_order[song_num], coll_key)) {
+      return coll_data[coll_key].song_order[song_num];
     }
 
     // off == 1..2 is usually enough, see above
@@ -612,15 +627,17 @@ function get_song_id_curr(player, player_type, key) {
     for(let off = 1; ((song_num - off) >= 0) || ((song_num + off) <= (songs - 1)); off++) {
       const lower = song_num - off;
       if   (lower >= 0) {
-        if (is_time_in_song(player_time, coll_data[coll_key].song_order[lower], coll_key)) {
-          return                         coll_data[coll_key].song_order[lower];
+        if (coll_is_time_in_song(player_time,
+                 coll_data[coll_key].song_order[lower], coll_key)) {
+          return coll_data[coll_key].song_order[lower];
         }
       }
 
       const upper = song_num + off;
       if   (upper <= (songs - 1)) {
-        if (is_time_in_song(player_time, coll_data[coll_key].song_order[upper], coll_key)) {
-          return                         coll_data[coll_key].song_order[upper];
+        if (coll_is_time_in_song(player_time,
+                 coll_data[coll_key].song_order[upper], coll_key)) {
+          return coll_data[coll_key].song_order[upper];
         }
       }
     }
@@ -903,8 +920,8 @@ function item_timer_logic(item_key) {
   item_update_song_cover (item_key);
 }
 
-function sing_timer_logic() {
-  const player = document.getElementById('sing-song-player');
+function sing_timer_logic(sing_key) {
+  const player = document.getElementById('sing' + sing_key + '-song-player');
   if  (!player) return;
   if  (!player.ended) return;
 
@@ -920,7 +937,9 @@ function timer_logic() {
     item_timer_logic(item_keys[i]);
   }
 
-  sing_timer_logic(); // Sing Player
+  for(let s = 0; s < sing_keys.length; s++) { // Sing Players
+    sing_timer_logic(sing_keys[s]);
+  }
 }
 
 function timer_tick() {
@@ -936,7 +955,7 @@ function timer_defer() {
 
 function test() {
   /*
-  is_time_in_song_test();
+  coll_is_time_in_song_test();
   */
 }
 
