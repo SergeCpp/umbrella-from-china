@@ -4,7 +4,7 @@ const length_views = 6; // 123456
 const length_days  = 5; // 12345
 const length_ratio = 7; // 123.567
 
-const length_stat  = length_views + 2 + length_days + 2 + length_ratio; // Used in CSS as 22ch, once
+const length_stat  = length_views + 2 + length_days + 2 + length_ratio; // Used in CSS as 22ch
 const empty_stat   = "".padStart(length_stat);
 
 /* Display */
@@ -609,6 +609,50 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   // Show item list with flex alignment
   //
   const time_1 = performance.now();
+  //
+  // Header
+  //
+  const header_wrapper = document.createElement("div");
+  header_wrapper.className = "header-wrapper";
+  //
+  const header_inner = document.createElement("div");
+  header_inner.className = "header-inner";
+  //
+  const header_title_wrapper = document.createElement("div");
+  header_title_wrapper.className = "header-title-wrapper bg-fall";
+  const header_title_inner = document.createElement("div");
+  header_title_inner.className = "header-title-inner subtitle text-ellipsis";
+  header_title_inner.textContent = "Internet Archive Item";
+  header_title_wrapper.appendChild(header_title_inner);
+  //
+  const header_stat_prev_wrapper = document.createElement("div");
+  header_stat_prev_wrapper.className = "header-stat-wrapper bg-grow";
+  const header_stat_prev_inner = document.createElement("div");
+  header_stat_prev_inner.className = "header-stat-inner subtitle";
+  header_stat_prev_inner.textContent = "Prev";
+  header_stat_prev_wrapper.appendChild(header_stat_prev_inner);
+  //
+  const header_stat_curr_wrapper = document.createElement("div");
+  header_stat_curr_wrapper.className = "header-stat-wrapper bg-fall";
+  const header_stat_curr_inner = document.createElement("div");
+  header_stat_curr_inner.className = "header-stat-inner subtitle";
+  header_stat_curr_inner.textContent = "Curr";
+  header_stat_curr_wrapper.appendChild(header_stat_curr_inner);
+  //
+  const header_stat_grow_wrapper = document.createElement("div");
+  header_stat_grow_wrapper.className = "header-grow-wrapper bg-grow";
+  const header_stat_grow_inner = document.createElement("div");
+  header_stat_grow_inner.className = "header-grow-inner subtitle";
+  header_stat_grow_inner.innerHTML = "&plus;&minus;";
+  header_stat_grow_wrapper.appendChild(header_stat_grow_inner);
+  //
+  header_inner.appendChild(header_title_wrapper    );
+  header_inner.appendChild(header_stat_prev_wrapper);
+  header_inner.appendChild(header_stat_curr_wrapper);
+  header_inner.appendChild(header_stat_grow_wrapper);
+  //
+  header_wrapper.appendChild(header_inner  );
+  container     .appendChild(header_wrapper);
   //
   for (let index = 0; index < results_curr_exp.length; index++) {
     const item = results_curr_exp[index];

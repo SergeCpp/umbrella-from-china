@@ -7,7 +7,8 @@ function get_doc_arr(doc, name) {
   let arr = doc.arr_cache[name];
   if (arr !== undefined) return arr;
 
-  const node = doc.querySelector('arr[name="' + name + '"], str[name="' + name + '"]');
+  const node = doc.querySelector('arr[name="' + name + '"], ' +
+                                 'str[name="' + name + '"]');
   arr = node
     ? node.tagName === "arr"
       ? Array.from(node.querySelectorAll("str"), n => n.textContent.toLowerCase())
@@ -325,7 +326,8 @@ function filter_items(stats_items, stats_date,
     const views_all = downloads;
     const ratio_all = parseFloat((views_all / days_all).toFixed(3));
 
-    const days_old  = days_all - 30; // Always valid
+    const days_old  = days_all - 30;
+    if   (days_old  < 1) continue; // Item should be at least 31 days of age
     const views_old = views_all - month;
     const ratio_old = parseFloat((views_old / days_old).toFixed(3));
 

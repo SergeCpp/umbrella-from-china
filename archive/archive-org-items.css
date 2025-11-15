@@ -1,15 +1,68 @@
 /* Wrapper > inner > [title, stat:prev, stat:curr, grow] */
 
+/* Header */
+
+.header-wrapper {
+  border-top-color: white;
+  border-top-style: solid;
+  border-top-width: 3px; /* Medium */
+  border-bottom-color: #ebebeb; /* Gray92. Matches page header */
+  border-bottom-style: solid;
+  border-bottom-width: 3px; /* Medium. Matches page header */
+}
+.header-inner {
+  align-items: center; /* Vertically center title, stats, and grow */
+  border-radius: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.header-title-wrapper {
+  flex: 1 1 auto;
+  letter-spacing: 1px;
+  overflow-x: hidden; /* To constrain the child, to use ellipsis there. Value "clip" not works here */
+  padding: 0.5rem 0.5rem;
+  word-spacing: 1px;
+}
+.header-title-inner { /* Title holder */
+}
+
+.header-stat-wrapper { /* For 22ch of non-bold monospaced */
+  flex: 0 0 22ch;
+  font-family: monospace;
+  padding: 0.5rem 0 0.5rem 0.5rem;
+}
+.header-stat-inner { /* For bold subtitle of other font */
+  font-family: Verdana;
+  letter-spacing: 1px;
+}
+
+.header-grow-wrapper { /* For 3ch of non-bold monospaced */
+  flex: 0 0 3ch;
+  font-family: monospace;
+  padding: 0.5rem 0.5rem;
+}
+.header-grow-inner { /* For bold subtitle of other font */
+  font-family: Verdana;
+  letter-spacing: 1px;
+}
+
+.bg-grow {
+  background-color: hsl(0.42turn 75% 95%); /* Perceived lighter than fall:98 */
+}
+.bg-fall {
+  background-color: hsl(0.58turn 75% 98%);
+}
+
+/* Item */
+
 .item-wrapper {
   border-top-color: white;
   border-top-style: solid;
   border-top-width: 3px; /* Medium */
-  border-bottom-color: #ebebeb; /* Gray92. Matches header */
+  border-bottom-color: #ebebeb; /* Gray92. Matches page header */
   border-bottom-style: solid;
-  border-bottom-width: 3px; /* Medium. Matches header */
-}
-.item-wrapper:last-child {
-  border-bottom: none;
+  border-bottom-width: 3px; /* Medium. Matches page header */
 }
 
 .item-inner {
@@ -19,7 +72,7 @@
   justify-content: space-between;
 }
 .item-inner:hover {
-  background-color: #fafafa; /* Gray98. Matches header */
+  background-color: #fafafa; /* Gray98. Matches page header */
 }
 
 /* Title with gauges above and below */
@@ -57,7 +110,7 @@
   color: inherit; /* Use parent text color instead of link color */
   display: block; /* For full title area to be clickable */
   outline-offset: -2px; /* For outline not to be clipped, to be within padding */
-  padding: 0.5rem 0.5rem; /* Matches right padding of grow indicators, and header */
+  padding: 0.5rem 0.5rem; /* Matches right padding of grow indicators, and page header */
   text-decoration: none;
 }
 .item-title a:hover {
@@ -137,17 +190,17 @@
 .item-grow-old {
   border-radius: 0.5rem 0.5rem 0 0;
   color: black;
-  padding: 0 0.5rem; /* Matches left padding of item-title a, and header */
+  padding: 0 0.5rem; /* Matches left padding of item-title a, and page header */
 }
 .item-grow-23 {
   border-radius: 0 0 0 0;
   color: #696969; /* DimGray. L41 */
-  padding: 0 0.5rem; /* Matches left padding of item-title a, and header */
+  padding: 0 0.5rem; /* Matches left padding of item-title a, and page header */
 }
 .item-grow-7 {
   border-radius: 0 0 0.5rem 0.5rem;
   color: #696969; /* DimGray. L41 */
-  padding: 0 0.5rem; /* Matches left padding of item-title a, and header */
+  padding: 0 0.5rem; /* Matches left padding of item-title a, and page header */
 }
 
 .item-inner:hover .item-stat-prev-23,

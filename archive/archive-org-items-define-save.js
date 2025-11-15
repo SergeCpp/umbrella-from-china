@@ -831,8 +831,9 @@ function init_dates() {
 /* Main */
 
 function get_stat_arr(doc, name) {
-  const node = doc.querySelector('arr[name="' + name + '"], str[name="' + name + '"]');
-  const arr  = node
+  const node = doc.querySelector('arr[name="' + name + '"], ' +
+                                 'str[name="' + name + '"]');
+  const arr = node
     ? node.tagName === "arr"
       ? Array.from(node.querySelectorAll("str"), n => n.textContent.toLowerCase())
       : [node.textContent.toLowerCase()]
