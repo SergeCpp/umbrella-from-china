@@ -22,7 +22,7 @@
   letter-spacing: 1px;
   overflow-x: hidden; /* To constrain the child, to use ellipsis there. Value "clip" not works here */
   padding: 0.5rem 0.5rem;
-  word-spacing: 1px;
+  word-spacing: 0.15em;
 }
 .header-title-inner { /* Title holder */
 }

@@ -581,26 +581,26 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     }
   }
 
-  // 1:0, 3:0, 4:1, 10:1, 20:3, 50:5, 100:7, 200:11, 500:16, 800:21, 826:21
-  const horz_marks_cnt = Math.round(Math.floor(Math.sqrt(horz_curr_prev.length * 0.33)) * 1.33);
+  // 1:0, 3:0, 4:1, 10:1, 20:2, 30:3, 50:4, 75:5, 100:6, 125:7, 150:8, 200:10, 300:12, 500:16, 800:21, 826:21
+  const horz_marks_cnt = Math.floor(Math.pow(horz_curr_prev.length, 0.551) / 1.841);
   const horz_marks     = get_marks(horz_curr_prev, horz_marks_cnt, 0);
   const mark_grow_old  = horz_marks.above;
   const mark_fall_old  = horz_marks.below;
 
-  // 1:0, 3:0, 4:1, 10:1, 20:2, 50:3, 100:5, 200:7, 500:11, 800:14, 826:14
-  const vert_marks_cnt = Math.floor(Math.sqrt(vert_all_old.length * 0.25));
+  // 1:0, 3:0, 4:1, 10:1, 20:2, 30:2, 50:3, 75:4, 100:5, 125:5, 150:6, 200:7, 300:9, 500:11, 800:14, 826:14
+  const vert_marks_cnt = Math.floor(Math.sqrt(vert_all_old.length) / 1.917);
   const vert_marks     = get_marks(vert_all_old, vert_marks_cnt, 0);
   const mark_grow_23_7 = vert_marks.above;
   const mark_fall_23_7 = vert_marks.below;
 
-  // 1:0, 3:0, 4:1, 10:1, 20:3, 50:5, 100:7, 200:11, 500:16, 800:21, 826:21
-  const rank_marks_cnt = Math.round(Math.floor(Math.sqrt(rank_up_dn.length * 0.33)) * 1.33);
+  // 1:0, 3:0, 4:1, 10:1, 20:2, 30:3, 50:4, 75:5, 100:6, 125:7, 150:8, 200:10, 300:12, 500:16, 800:21, 826:21
+  const rank_marks_cnt = Math.floor(Math.pow(rank_up_dn.length, 0.551) / 1.841);
   const rank_marks     = get_marks(rank_up_dn, rank_marks_cnt, 0);
   const mark_rank_up   = rank_marks.above;
   const mark_rank_dn   = rank_marks.below;
 
-  // 1:1, 3:1, 4:1, 10:2, 20:2, 50:3, 100:5, 200:6, 500:10, 800:12, 826:12
-  const mood_marks_cnt = Math.ceil(Math.sqrt(mood_pos_neg.length) / 2.4);
+  // 1:1, 3:1, 4:1, 10:2, 20:2, 30:3, 50:3, 75:4, 100:5, 125:5, 150:6, 200:6, 300:8, 500:10, 800:12, 826:12
+  const mood_marks_cnt = Math.ceil(Math.sqrt(mood_pos_neg.length) / 2.396);
   const mood_marks     = get_marks(mood_pos_neg, mood_marks_cnt, 0);
   const mark_mood_pos  = mood_marks.above;
   const mark_mood_neg  = mood_marks.below;
