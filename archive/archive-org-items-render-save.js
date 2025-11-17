@@ -1,11 +1,11 @@
 /* Constants */
 
-const length_views = 6; // 123456
-const length_days  = 5; // 12345
-const length_ratio = 7; // 123.567
+const views_length = 6; // 123456
+const days_length  = 5; // 12345
+const ratio_length = 7; // 123.567
 
-const length_stat  = length_views + 2 + length_days + 2 + length_ratio; // Used in CSS as 22ch
-const empty_stat   = "".padStart(length_stat);
+const stat_length  = views_length + 2 + days_length + 2 + ratio_length; // Used in CSS as 22ch
+const stat_empty   = "".padStart(stat_length);
 
 /* Display */
 
@@ -443,18 +443,18 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     //
     const _prev = {}; // _old, _23, _7
     if (item_prev) {
-      _prev._old = item_prev.views_old.toString().padStart(length_views) + " /"        +
-                   item_prev.days_old .toString().padStart(length_days ) +        " =" +
-                   item_prev.ratio_old.toFixed(3).padStart(length_ratio);
-      _prev._23  = item_prev.views_23 .toString().padStart(length_views) + " /   23 =" +
-                   item_prev.ratio_23 .toFixed(3).padStart(length_ratio);
-      _prev._7   = item_prev.views_7  .toString().padStart(length_views) + " /    7 =" +
-                   item_prev.ratio_7  .toFixed(3).padStart(length_ratio);
+      _prev._old = item_prev.views_old.toString().padStart(views_length) + " /"        +
+                   item_prev.days_old .toString().padStart(days_length ) +        " =" +
+                   item_prev.ratio_old.toFixed(3).padStart(ratio_length);
+      _prev._23  = item_prev.views_23 .toString().padStart(views_length) + " /   23 =" +
+                   item_prev.ratio_23 .toFixed(3).padStart(ratio_length);
+      _prev._7   = item_prev.views_7  .toString().padStart(views_length) + " /    7 =" +
+                   item_prev.ratio_7  .toFixed(3).padStart(ratio_length);
     }
     else {
-      _prev._old = empty_stat;
-      _prev._23  = empty_stat;
-      _prev._7   = empty_stat;
+      _prev._old = stat_empty;
+      _prev._23  = stat_empty;
+      _prev._7   = stat_empty;
     }
     item.prev = _prev;
 
@@ -463,18 +463,18 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     //
     const _curr = {}; // _old, _23, _7
     if (!item.is_prev) {
-      _curr._old = item.views_old.toString().padStart(length_views) + " /"        +
-                   item.days_old .toString().padStart(length_days ) +        " =" +
-                   item.ratio_old.toFixed(3).padStart(length_ratio);
-      _curr._23  = item.views_23 .toString().padStart(length_views) + " /   23 =" +
-                   item.ratio_23 .toFixed(3).padStart(length_ratio);
-      _curr._7   = item.views_7  .toString().padStart(length_views) + " /    7 =" +
-                   item.ratio_7  .toFixed(3).padStart(length_ratio);
+      _curr._old = item.views_old.toString().padStart(views_length) + " /"        +
+                   item.days_old .toString().padStart(days_length ) +        " =" +
+                   item.ratio_old.toFixed(3).padStart(ratio_length);
+      _curr._23  = item.views_23 .toString().padStart(views_length) + " /   23 =" +
+                   item.ratio_23 .toFixed(3).padStart(ratio_length);
+      _curr._7   = item.views_7  .toString().padStart(views_length) + " /    7 =" +
+                   item.ratio_7  .toFixed(3).padStart(ratio_length);
     }
     else {
-      _curr._old = empty_stat;
-      _curr._23  = empty_stat;
-      _curr._7   = empty_stat;
+      _curr._old = stat_empty;
+      _curr._23  = stat_empty;
+      _curr._7   = stat_empty;
     }
     item.curr = _curr;
 
@@ -587,8 +587,8 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   const mark_grow_old  = horz_marks.above;
   const mark_fall_old  = horz_marks.below;
 
-  // 1:0, 3:0, 4:1, 10:1, 20:2, 30:2, 50:3, 75:4, 100:5, 125:5, 150:6, 200:7, 300:9, 500:11, 800:14, 826:14
-  const vert_marks_cnt = Math.floor(Math.sqrt(vert_all_old.length) / 1.917);
+  // 1:0, 3:0, 4:1, 10:1, 20:2, 30:3, 50:3, 75:4, 100:5, 125:6, 150:6, 200:7, 300:9, 500:11, 800:14, 826:14
+  const vert_marks_cnt = Math.floor(Math.pow(vert_all_old.length, 0.482) / 1.699);
   const vert_marks     = get_marks(vert_all_old, vert_marks_cnt, 0);
   const mark_grow_23_7 = vert_marks.above;
   const mark_fall_23_7 = vert_marks.below;
@@ -599,8 +599,8 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
   const mark_rank_up   = rank_marks.above;
   const mark_rank_dn   = rank_marks.below;
 
-  // 1:1, 3:1, 4:1, 10:2, 20:2, 30:3, 50:3, 75:4, 100:5, 125:5, 150:6, 200:6, 300:8, 500:10, 800:12, 826:12
-  const mood_marks_cnt = Math.ceil(Math.sqrt(mood_pos_neg.length) / 2.396);
+  // 1:1, 3:1, 4:1, 10:2, 20:2, 30:3, 50:4, 75:4, 100:5, 125:5, 150:6, 200:7, 300:8, 500:10, 800:12, 826:12
+  const mood_marks_cnt = Math.ceil(Math.pow(mood_pos_neg.length, 0.487) / 2.195);
   const mood_marks     = get_marks(mood_pos_neg, mood_marks_cnt, 0);
   const mark_mood_pos  = mood_marks.above;
   const mark_mood_neg  = mood_marks.below;

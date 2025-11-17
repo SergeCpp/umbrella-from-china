@@ -54,6 +54,13 @@
   background-color: hsl(0.58turn 75% 98%);
 }
 
+.header-inner:hover .bg-grow {
+  background-color: hsl(0.42turn 75% 92%); /* Lower Lightness by 3 from 95 */
+}
+.header-inner:hover .bg-fall {
+  background-color: hsl(0.58turn 75% 95%); /* Lower Lightness by 3 from 98 */
+}
+
 /* Item */
 
 .item-wrapper {
