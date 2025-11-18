@@ -19,12 +19,13 @@
 
 .header-title-wrapper {
   flex: 1 1 auto;
-  letter-spacing: 1px;
   overflow-x: hidden; /* To constrain the child, to use ellipsis there. Value "clip" not works here */
   padding: 0.5rem 0.5rem;
-  word-spacing: 0.15em;
 }
 .header-title-inner { /* Title holder */
+  font-family: Verdana;
+  letter-spacing: 1px;
+  word-spacing: 0.15em;
 }
 
 .header-stat-wrapper { /* For 22ch of non-bold monospaced */
@@ -38,13 +39,13 @@
 }
 
 .header-grow-wrapper { /* For 3ch of non-bold monospaced */
-  flex: 0 0 3ch;
+  flex: 0 0 4ch; /* 3ch + 1ch extra to ease fit header text */
   font-family: monospace;
-  padding: 0.5rem 0.5rem;
+  padding: 0.5rem calc(0.5rem - 0.5ch); /* Lessen by 1ch added above */
 }
 .header-grow-inner { /* For bold subtitle of other font */
   font-family: Verdana;
-  letter-spacing: 1px;
+  text-align: center; /* No letter-spacing here, for equal left and right space */
 }
 
 .bg-grow {
