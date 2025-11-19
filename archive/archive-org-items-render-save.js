@@ -1,7 +1,7 @@
 /* Constants */
 
 const views_length = 6; // 123456
-const days_length  = 5; // 12345
+const  days_length = 5; // 12345
 const ratio_length = 7; // 123.567
 
 const stat_length  = views_length + 2 + days_length + 2 + ratio_length; // Used in CSS as 22ch
@@ -158,6 +158,32 @@ function get_marks(rel, cnt, mid) {
   return { above: above_cnt > 0 ? above_val : +Infinity, // Possible array of all mid's is handled here
            below: below_cnt > 0 ? below_val : -Infinity  // Because both above_cnt and below_cnt will be 0
   };
+}
+
+// index: 0..length-1, base: log(length), steep: 1..9, decay: max value (min value: 1)
+function get_scale_log(index, base, steep, decay) {
+  if (base === 0) return 1; // length === 1 (length === 0 cannot be here)
+
+  const i_norm = Math.log(index + 1) / base; // 0..1
+  const o_norm = Math.pow(i_norm, steep);   // 0..1
+  const scale  = o_norm * (decay - 1) + 1; // 1..decay
+
+  return scale;
+}
+
+// index: 0..length-1, base: 0..1 (of length), steep: 1..9, decay: max value (min value: 1)
+// sig_* are precomputed
+function get_scale_sig(index, length, base, steep, decay, sig_min, sig_max) {
+  if (length === 1) return 1; // length === 0 cannot be here
+
+  const i_norm     = index / (length - 1); // 0..1
+//const sig_min    = 1 / (1 + Math.exp((base - 0)      * steep));
+  const sig_i_norm = 1 / (1 + Math.exp((base - i_norm) * steep));
+//const sig_max    = 1 / (1 + Math.exp((base - 1)      * steep));
+  const o_norm     = (sig_i_norm - sig_min) / (sig_max - sig_min); // 0..1
+  const scale      = o_norm * (decay - 1) + 1; // 1..decay
+
+  return scale;
 }
 
 function get_totals(results) {
@@ -403,38 +429,55 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
            (value >= max) ? '100%' : (Math.log(value + 1) * base).toFixed(3) + '%';
   }
 
-  ///////////////////////////
-  // Compose prev, curr, grow
+  ///////////////////////////////
+  // Compose prev, curr, and grow
   //
-  // For log scaling of marks
+  // For log/sig scaling of marks
   //
-  const curr_base = Math.log(results_curr_exp.length); // For length === 1 is checked below, 0 was checked above
+  const curr_length   = results_curr_exp.length;
+  const curr_log_base = Math.log(curr_length); // For length === 1 is checked below, 0 was checked above
   //
   // Substantial changes marking: horizontal impact of old      from prev to     curr
   // Substantial changes marking: vertical   impact of 23 and 7 into all  within curr
   //
-  const horz_decay     =  9; // For scale from top: 1 to bottom: 1/10
-  const horz_steep     =  1; // No steep here, just log
-  const horz_curr_prev = []; // Of results_curr_exp.length anyway
+  const horz_decay     = 10; // For scale from top: 1 to bottom: 1/10
+  const horz_log_steep = 1;  // No steep here, just log
+  const horz_sig_base  = 0.1;
+  const horz_sig_steep = 2;
+  const horz_sig_min   = 1 / (1 + Math.exp((horz_sig_base - 0) * horz_sig_steep));
+  const horz_sig_max   = 1 / (1 + Math.exp((horz_sig_base - 1) * horz_sig_steep));
+  const horz_curr_prev = []; // Of curr_length anyway
   //
-  const vert_decay     =  9; // Scale divisor 1 to 10
-  const vert_steep     =  1; // No steep here, just log
-  const vert_all_old   = [];
+  const vert_decay     = 10; // Scale divisor: 1 to 10
+  const vert_log_steep = 1;  // No steep here, just log
+  const vert_sig_base  = 0.1;
+  const vert_sig_steep = 2;
+  const vert_sig_min   = 1 / (1 + Math.exp((vert_sig_base - 0) * vert_sig_steep));
+  const vert_sig_max   = 1 / (1 + Math.exp((vert_sig_base - 1) * vert_sig_steep));
+  const vert_all_old   = []; // Of curr_length anyway
   //
   // Mark rank changes
   // Mark mood changes
   //
-  const rank_decay     = 29; // Scale divisor 1 to 30
-  const rank_steep     =  3; // To more than log prioritize top items
-  const rank_up_dn     = [];
+  const rank_decay     = 30; // Scale divisor: 1 to 30
+  const rank_log_steep = 3;  // To more than log prioritize top items
+  const rank_sig_base  = 0.1;
+  const rank_sig_steep = 5;
+  const rank_sig_min   = 1 / (1 + Math.exp((rank_sig_base - 0) * rank_sig_steep));
+  const rank_sig_max   = 1 / (1 + Math.exp((rank_sig_base - 1) * rank_sig_steep));
+  const rank_up_dn     = []; // Of curr_length anyway
   //
-  const mood_decay     =  9; // Scale divisor 1 to 10
-  const mood_steep     =  2; // To more than log prioritize top items
-  const mood_pos_neg   = [];
+  const mood_decay     = 10; // Scale divisor: 1 to 10
+  const mood_log_steep = 2;  // To more than log prioritize top items
+  const mood_sig_base  = 0.1;
+  const mood_sig_steep = 3;
+  const mood_sig_min   = 1 / (1 + Math.exp((mood_sig_base - 0) * mood_sig_steep));
+  const mood_sig_max   = 1 / (1 + Math.exp((mood_sig_base - 1) * mood_sig_steep));
+  const mood_pos_neg   = []; // Of curr_length anyway
   //
   // Gauges
   //
-  for (let index_curr = 0; index_curr < results_curr_exp.length; index_curr++) {
+  for (let index_curr = 0; index_curr < curr_length; index_curr++) {
     const item = results_curr_exp[index_curr];
     const item_prev = map_prev[item.identifier];
 
@@ -444,7 +487,7 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     const _prev = {}; // _old, _23, _7
     if (item_prev) {
       _prev._old = item_prev.views_old.toString().padStart(views_length) + " /"        +
-                   item_prev.days_old .toString().padStart(days_length ) +        " =" +
+                   item_prev.days_old .toString().padStart( days_length) +        " =" +
                    item_prev.ratio_old.toFixed(3).padStart(ratio_length);
       _prev._23  = item_prev.views_23 .toString().padStart(views_length) + " /   23 =" +
                    item_prev.ratio_23 .toFixed(3).padStart(ratio_length);
@@ -464,7 +507,7 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     const _curr = {}; // _old, _23, _7
     if (!item.is_prev) {
       _curr._old = item.views_old.toString().padStart(views_length) + " /"        +
-                   item.days_old .toString().padStart(days_length ) +        " =" +
+                   item.days_old .toString().padStart( days_length) +        " =" +
                    item.ratio_old.toFixed(3).padStart(ratio_length);
       _curr._23  = item.views_23 .toString().padStart(views_length) + " /   23 =" +
                    item.ratio_23 .toFixed(3).padStart(ratio_length);
@@ -482,15 +525,14 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     // Horz and Vert substantial changes, 0 is no change
     //
     let horz_change = 0;
-    if(item_prev && !item.is_prev) { // Item is markable
+    if (item_prev && !item.is_prev) { // Item is markable
       horz_change = (item.ratio_old && item_prev.ratio_old)
-        ? Math.log(item.ratio_old / item_prev.ratio_old)
-        : 0;
-      if   (horz_change !== 0) {
-        const horz_scale = 1 +
-          (curr_base
-           ? (horz_decay * Math.pow(Math.log(index_curr + 1) / curr_base, horz_steep))
-           : 0);
+          ? Math.log(item.ratio_old /  item_prev.ratio_old)
+          : 0;
+      if (horz_change !== 0) {
+//      const horz_scale = get_scale_log(index_curr, curr_log_base, horz_log_steep, horz_decay);
+        const horz_scale = get_scale_sig(index_curr, curr_length,
+          horz_sig_base, horz_sig_steep, horz_decay, horz_sig_min, horz_sig_max);
         horz_change /= horz_scale;
         item.horz_change = horz_change; // Needed in markable item only, and if not 0 only
       }
@@ -500,13 +542,12 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     let vert_change = 0;
     if (!item.is_prev) { // Item is markable
       vert_change = (item.ratio_all && item.ratio_old)
-        ? Math.log(item.ratio_all / item.ratio_old)
-        : 0;
-      if   (vert_change !== 0) {
-        const vert_scale = 1 +
-          (curr_base
-           ? (vert_decay * Math.pow(Math.log(index_curr + 1) / curr_base, vert_steep))
-           : 0);
+          ? Math.log(item.ratio_all /  item.ratio_old)
+          : 0;
+      if (vert_change !== 0) {
+//      const vert_scale = get_scale_log(index_curr, curr_log_base, vert_log_steep, vert_decay);
+        const vert_scale = get_scale_sig(index_curr, curr_length,
+          vert_sig_base, vert_sig_steep, vert_decay, vert_sig_min, vert_sig_max);
         vert_change /= vert_scale;
         item.vert_change = vert_change; // Needed in markable item only, and if not 0 only
       }
@@ -520,7 +561,9 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
     const rank_diff = item.index_prev - index_curr; // No abs
     if   (rank_diff !== 0) { // Also if length === 1 then index_prev === index_curr
       if (!item.is_prev && !item.no_prev) { // Item is markable
-        const rank_scale = 1 + (rank_decay * Math.pow(Math.log(index_curr + 1) / curr_base, rank_steep));
+//      const rank_scale = get_scale_log(index_curr, curr_log_base, rank_log_steep, rank_decay);
+        const rank_scale = get_scale_sig(index_curr, curr_length,
+          rank_sig_base, rank_sig_steep, rank_decay, rank_sig_min, rank_sig_max);
         rank_change      = rank_diff / rank_scale;
         item.rank_change = rank_change; // Needed in markable item only, and if rank_diff is not 0 only
       }
@@ -544,10 +587,9 @@ function render_results(results_curr, date_curr, results_prev, date_prev) {
 
       const grow_mood = get_grow_mood(grow_old, grow_23, grow_7);
       if   (grow_mood !== 0) {
-        const mood_scale = 1 +
-          (curr_base
-           ? (mood_decay * Math.pow(Math.log(index_curr + 1) / curr_base, mood_steep))
-           : 0);
+//      const mood_scale = get_scale_log(index_curr, curr_log_base, mood_log_steep, mood_decay);
+        const mood_scale = get_scale_sig(index_curr, curr_length,
+          mood_sig_base, mood_sig_steep, mood_decay, mood_sig_min, mood_sig_max);
         _mood = grow_mood / mood_scale;
       }
       _grow._mood = _mood; // Needed in markable item only
