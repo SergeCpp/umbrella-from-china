@@ -2,6 +2,8 @@ Site file list
 
 https://umbrella-from-china.neocities.org/archive/archive-org-items-define-save.js // Not used, just copy of work
 https://umbrella-from-china.neocities.org/archive/archive-org-items-define-work.js
+https://umbrella-from-china.neocities.org/archive/archive-org-items-filter-save.js // Not used, just copy of work
+https://umbrella-from-china.neocities.org/archive/archive-org-items-filter-work.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-helper-save.js // Not used, just copy of work
 https://umbrella-from-china.neocities.org/archive/archive-org-items-helper-work.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-render-save.js // Not used, just copy of work
@@ -11,7 +13,7 @@ https://umbrella-from-china.neocities.org/archive/archive-org-items-runner-work.
 https://umbrella-from-china.neocities.org/archive/archive-org-items.css
 https://umbrella-from-china.neocities.org/archive/archive-org-items.html
 --------
-10 files
+12 files
 
 See archive-dates.txt for the complete actual stat list
 -------------------------------------------------------
