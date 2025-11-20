@@ -236,9 +236,9 @@ function filter_date(date, min, max) {
   return                             (date_month >= min.month) || (date_month <= max.month);
 }
 
-/* Check and Filter Items */
+/* Checking and Initial Filtering Items, and Calculating Stats */
 
-function filter_items(stats_items, stats_date,
+function filter_base(stats_items, stats_date,
   archived_min, archived_max, created_min, created_max,
   collections, creators, title) {
   const filtered_items = [];
@@ -246,11 +246,11 @@ function filter_items(stats_items, stats_date,
   for (let i = 0; i < stats_items.length; i++) {
     const doc = stats_items[i];
 
-    /* Checking and Initial Filters */
+    /* Checking and Initial Filtering Items */
 
     // Identifier and Title
     const identifier_str = get_doc_str(doc, 'identifier');
-    const title_str      = get_doc_str(doc, 'title'     );
+    const      title_str = get_doc_str(doc, 'title'     );
     if (!identifier_str || !title_str) continue;
 
     // Mediatype
@@ -290,14 +290,14 @@ function filter_items(stats_items, stats_date,
 
     // Views
     const downloads_str = get_doc_str(doc, 'downloads');
-    const month_str     = get_doc_str(doc, 'month'    );
-    const week_str      = get_doc_str(doc, 'week'     );
+    const     month_str = get_doc_str(doc, 'month'    );
+    const      week_str = get_doc_str(doc, 'week'     );
 
     if (!downloads_str || !month_str || !week_str) continue;
 
     const downloads = parseInt(downloads_str, 10);
-    const month     = parseInt(month_str,     10);
-    const week      = parseInt(week_str,      10);
+    const month     = parseInt(    month_str, 10);
+    const week      = parseInt(     week_str, 10);
 
     if (isNaN(downloads) || isNaN(month) || isNaN(week)) continue;
     if ((downloads < 0) || (month < 0) || (week < 0)) continue;
@@ -322,12 +322,12 @@ function filter_items(stats_items, stats_date,
 
     const calc_date = new Date(stats_date + "T11:59:59.999Z"); // To count a day for published on day before
 
-    const days_all  = Math.round((calc_date - publicdate) / (24 * 60 * 60 * 1000));
+    const  days_all = Math.round((calc_date - publicdate) / (24 * 60 * 60 * 1000));
     const views_all = downloads;
     const ratio_all = parseFloat((views_all / days_all).toFixed(3));
 
-    const days_old  = days_all - 30;
-    if   (days_old  < 1) continue; // Item should be at least 31 days of age
+    const  days_old = days_all - 30;
+    if    (days_old < 1) continue; // Item should be at least 31 days of age
     const views_old = views_all - month;
     const ratio_old = parseFloat((views_old / days_old).toFixed(3));
 
@@ -336,8 +336,8 @@ function filter_items(stats_items, stats_date,
 
     filtered_items.push({
       identifier: identifier_str,
-      title     : title_str,
-      mediatype : mediatype_str,
+      title     :      title_str,
+      mediatype :  mediatype_str,
       item_size ,
       days_all  ,
       views_all ,
