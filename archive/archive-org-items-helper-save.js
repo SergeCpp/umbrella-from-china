@@ -928,7 +928,39 @@ function filter_sets(items_prev, items_curr, prev_only, curr_only) {
 /* Controls */
 
 function init_controls() {
-  // 1. Add Enter key to all text inputs
+  // Add click and Enter/Space/Arrows to tabs
+  const tabs = ['a', 'b', 'c', 'd', 'e'];
+
+  tabs.forEach((tab, index) => {
+    const button = document.getElementById('tab-' + tab);
+    if   (button) {
+      button.onclick = () => tab_switch(tab);
+      button.onkeyup = function(event) {
+        if ((event.key === 'Enter') || (event.key === ' ')) {
+          tab_switch(tab);
+        }
+      };
+      button.onkeydown = function(event) {
+        if ((event.key === 'Enter') || (event.key === ' ')) {
+          event.preventDefault();
+        }
+        else if ((event.key === 'ArrowLeft') || (event.key === 'ArrowRight')) {
+          event.preventDefault();
+
+          const index_new = (event.key === 'ArrowLeft') // else ArrowRight
+                          ? ((index - 1 + tabs.length) % tabs.length)
+                          : ((index + 1)               % tabs.length);
+
+          const button_new = document.getElementById('tab-' + tabs[index_new]);
+          if   (button_new) {
+            button_new.focus();
+          }
+        }
+      };
+    }
+  });
+
+  // Add Enter key to inputs
   [  'collections',      'creators',    'subjects',       'title', 'description',
    'downloads-min', 'downloads-max',   'month-min',   'month-max',    'week-min', 'week-max',
     'archived-min',  'archived-max', 'created-min', 'created-max',    'favs-min', 'favs-max',
@@ -944,14 +976,14 @@ function init_controls() {
     }
   });
 
-  // 2. Add click to button
+  // Add click to button
   const button = document.getElementById('process-filter');
   if   (button) {
     button.onclick = process_filter;
   }
 }
 
-//
+// EOF
 
 
 

@@ -118,8 +118,8 @@ function input_allowed_favs(input) {
 
 /* Filter Route */
 
-function filter_route(base_curr_items, base_curr_date,
-                      base_prev_items, base_prev_date,
+function filter_route(base_prev_items, base_prev_date,
+                      base_curr_items, base_curr_date,
   sect_subjects, sect_descriptions) {
 
   // Archived Range
@@ -172,32 +172,32 @@ function filter_route(base_curr_items, base_curr_date,
 
   // Collections, Creators, Subjects, Title and Description
   const collections_str = document.getElementById("collections").value;
-  const creators_str    = document.getElementById("creators"   ).value;
-  const subjects_str    = document.getElementById("subjects"   ).value;
-  const title_str       = document.getElementById("title"      ).value;
+  const    creators_str = document.getElementById("creators"   ).value;
+  const    subjects_str = document.getElementById("subjects"   ).value;
+  const       title_str = document.getElementById("title"      ).value;
   const description_str = document.getElementById("description").value;
 
   if (!input_allowed_chars(collections_str) ||
-      !input_allowed_chars(creators_str   ) ||
-      !input_allowed_chars(subjects_str   ) ||
-      !input_allowed_chars(title_str      ) ||
+      !input_allowed_chars(   creators_str) ||
+      !input_allowed_chars(   subjects_str) ||
+      !input_allowed_chars(      title_str) ||
       !input_allowed_chars(description_str)) {
     return { error: err_chars };
   }
 
   const collections = input_clean_parse(collections_str);
-  const creators    = input_clean_parse(creators_str   );
-  const subjects    = input_clean_parse(subjects_str   );
-  const title       = input_clean_parse(title_str      );
+  const creators    = input_clean_parse(   creators_str);
+  const subjects    = input_clean_parse(   subjects_str);
+  const title       = input_clean_parse(      title_str);
   const description = input_clean_parse(description_str);
 
   // Views
   let dl_min_str = document.getElementById("downloads-min").value.trim().toLowerCase();
   let dl_max_str = document.getElementById("downloads-max").value.trim().toLowerCase();
-  let mo_min_str = document.getElementById("month-min"    ).value.trim().toLowerCase();
-  let mo_max_str = document.getElementById("month-max"    ).value.trim().toLowerCase();
-  let wk_min_str = document.getElementById("week-min"     ).value.trim().toLowerCase();
-  let wk_max_str = document.getElementById("week-max"     ).value.trim().toLowerCase();
+  let mo_min_str = document.getElementById(    "month-min").value.trim().toLowerCase();
+  let mo_max_str = document.getElementById(    "month-max").value.trim().toLowerCase();
+  let wk_min_str = document.getElementById(     "week-min").value.trim().toLowerCase();
+  let wk_max_str = document.getElementById(     "week-max").value.trim().toLowerCase();
 
   let dl_min_str_t = null;
   let dl_max_str_t = null;
@@ -431,10 +431,10 @@ function filter_route(base_curr_items, base_curr_date,
   if (wait_section(sect_descriptions, description)) return { wait: true };
 
   // Checking and Initial Filtering Items, and Calculating Stats
-  let results_curr = filter_base(base_curr_items, base_curr_date,
+  let results_prev = filter_base(base_prev_items, base_prev_date,
     archived_min_range, archived_max_range, created_min_range, created_max_range,
     collections, creators, title);
-  let results_prev = filter_base(base_prev_items, base_prev_date,
+  let results_curr = filter_base(base_curr_items, base_curr_date,
     archived_min_range, archived_max_range, created_min_range, created_max_range,
     collections, creators, title);
 
@@ -447,8 +447,8 @@ function filter_route(base_curr_items, base_curr_date,
     wk_min_str, wk_min_kv, wk_min_no, wk_min_agg,
     wk_max_str, wk_max_kv, wk_max_no, wk_max_agg);
   if (filtered_views.done) {
-    results_curr = filtered_views.curr;
     results_prev = filtered_views.prev;
+    results_curr = filtered_views.curr;
   }
 
   // Favs
@@ -456,15 +456,15 @@ function filter_route(base_curr_items, base_curr_date,
     favs_min_str, favs_min_kv, favs_min_no, favs_min_agg,
     favs_max_str, favs_max_kv, favs_max_no, favs_max_agg);
   if (filtered_favs.done) {
-    results_curr = filtered_favs.curr;
     results_prev = filtered_favs.prev;
+    results_curr = filtered_favs.curr;
   }
 
   // Subjects
   const filtered_subjects = filter_section(results_prev, results_curr, sect_subjects.items, subjects);
   if   (filtered_subjects.done) {
-    results_curr = filtered_subjects.curr;
     results_prev = filtered_subjects.prev;
+    results_curr = filtered_subjects.curr;
   }
   else if (filtered_subjects.error) {
     const error =            sect_subjects.text_error
@@ -476,8 +476,8 @@ function filter_route(base_curr_items, base_curr_date,
   // Descriptions
   const filtered_descriptions = filter_section(results_prev, results_curr, sect_descriptions.items, description);
   if   (filtered_descriptions.done) {
-    results_curr = filtered_descriptions.curr;
     results_prev = filtered_descriptions.prev;
+    results_curr = filtered_descriptions.curr;
   }
   else if (filtered_descriptions.error) {
     const error =            sect_descriptions.text_error
@@ -492,8 +492,8 @@ function filter_route(base_curr_items, base_curr_date,
 
   const filtered_sets = filter_sets(results_prev, results_curr, prev_only, curr_only);
   if   (filtered_sets.done) {
-    results_curr = filtered_sets.curr;
     results_prev = filtered_sets.prev;
+    results_curr = filtered_sets.curr;
   }
 
   return { done: true, prev: results_prev, curr: results_curr };

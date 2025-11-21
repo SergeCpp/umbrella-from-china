@@ -1,30 +1,30 @@
 /* Global Variables */
 
-const stat_file_dates   = [];    // ["YYYY-MM-DD"]
-const stat_file_cache   = {};    // ["YYYY-MM-DD"] = { data: NodeList / [], usage: counter }
+const stat_file_dates   = [];     // ["YYYY-MM-DD"]
+const stat_file_cache   = {};     // ["YYYY-MM-DD"] = { data: NodeList / [], usage: counter }
 
-let   sf_cache_hits     = 0;     // Non-negative integer
-let   sf_cache_misses   = 0;     // Non-negative integer
+let   sf_cache_hits     = 0;      // Non-negative integer
+let   sf_cache_misses   = 0;      // Non-negative integer
 
-let   stat_curr_date    = null;  // "YYYY-MM-DD"
-let   stat_curr_items   = null;  // NodeList / []
+let   stat_prev_date    = null;   // "YYYY-MM-DD"
+let   stat_prev_items   = null;   // NodeList / []
 
-let   stat_prev_date    = null;  // "YYYY-MM-DD"
-let   stat_prev_items   = null;  // NodeList / []
+let   stat_curr_date    = null;   // "YYYY-MM-DD"
+let   stat_curr_items   = null;   // NodeList / []
 
-const stat_subjects     = {      // Section
-  date      : "2025-10-19",      // Subjects is the constant part of the stat
-  file      : "data-subjects",   // Template with # for date
-  name_data : "subject",         // Name for arr/str data node
-  name_error: "Subjects",        // Name for error messages
-  text_error: null,              // Error message
-  items     : null,              // null / {} / undefined
+const stat_subjects     = {       // Section
+  date      : "2025-10-19",       // Subjects is the constant part of the stat
+  file      : "data-subjects",    // Template with # for date
+  name_data : "subject",          // Name for arr/str data node
+  name_error: "Subjects",         // Name for error messages
+  text_error: null,               // Error message
+  items     : null,               // null / {} / undefined
   du_load   : 0,
   du_parse  : 0
 };
 
-const stat_descriptions = {      // Section
-  date      : "2025-11-07",
+const stat_descriptions = {       // Section
+  date      : "2025-11-07",       // Descriptions is the constant part of the stat
   file      : "data-descriptions",
   name_data : "description",
   name_error: "Descriptions",
@@ -34,8 +34,8 @@ const stat_descriptions = {      // Section
   du_parse  : 0
 };
 
-let   du_load           = 0;     // Duration of load
-let   du_parse          = 0;     // Duration of parse
+let du_load  = 0; // Duration of load
+let du_parse = 0; // Duration of parse
 
 /* Section: Subjects and Descriptions Processing */
 
@@ -137,6 +137,108 @@ function filter_section(items_prev, items_curr, section_items, section_terms) {
   return { done: true, prev: results_prev, curr: results_curr };
 }
 
+/* Tabbed Input */
+
+let   tab_active    = null;
+const tab_input_ids =
+  [  'collections',      'creators',    'subjects',       'title', 'description',
+   'downloads-min', 'downloads-max',   'month-min',   'month-max',    'week-min', 'week-max',
+    'archived-min',  'archived-max', 'created-min', 'created-max',    'favs-min', 'favs-max',
+       'prev-only',     'curr-only'];
+const tab_input_vals = {}; // [tab] = { values }; [""] = { defaults };
+
+// Initialization
+
+function init_tabs() {
+  tab_to_vals ("" );
+  tab_activate('c');
+}
+
+// Data
+
+function tab_to_vals(tab) {
+  if (!tab_input_vals[tab]) tab_input_vals[tab] = {};
+
+  tab_input_ids.forEach(id => {
+    const input = document.getElementById(id);
+    if   (input) {
+      const value = id.endsWith('-only')
+                  ? input.checked
+                  : input.value;
+
+      tab_input_vals[tab][id] = value;
+    }
+  });
+}
+
+function tab_to_inputs(tab) {
+  if (!tab_input_vals[tab]) { tab_to_inputs(""); return; }
+
+  tab_input_ids.forEach(id => {
+    const input = document.getElementById(id);
+    if   (input) {
+      if (id.endsWith('-only'))
+        input.checked = tab_input_vals[tab][id];
+      else
+        input.value   = tab_input_vals[tab][id];
+    }
+  });
+}
+
+function tab_is_changed(tab) {
+  if (!tab_input_vals[tab]) return false;
+
+  for (const id in tab_input_vals[""]) {
+    if (tab_input_vals[tab][id] !== tab_input_vals[""][id]) return true;
+  }
+
+  return false;
+}
+
+// Presentation
+
+function tab_activate(tab_to) {
+  if (tab_to === tab_active) return;
+
+  const button_to = document.getElementById('tab-' + tab_to);
+  if   (button_to) {
+    button_to.classList.add('active');
+  }
+
+  const tab_from   = tab_active;
+        tab_active = tab_to;
+  if  (!tab_from) return;
+
+  const button_from = document.getElementById('tab-' + tab_from);
+  if   (button_from) {
+    button_from.classList.remove('active');
+  }
+}
+
+function tab_mark(tab, changed) {
+  const button = document.getElementById('tab-' + tab);
+  if   (button) {
+    if (changed)
+      button.classList.add   ('changed');
+    else
+      button.classList.remove('changed');
+  }
+}
+
+// Transition
+
+function tab_update(tab_new) {
+  tab_to_vals(tab_active);
+  tab_mark   (tab_active, tab_is_changed(tab_active));
+
+  if (tab_new !== tab_active) tab_to_inputs(tab_new);
+}
+
+function tab_switch(tab) {
+  tab_update  (tab);
+  tab_activate(tab);
+}
+
 /* Filter */
 
 function process_filter() {
@@ -147,8 +249,8 @@ function process_filter() {
   try {
 
   // Filter
-  const results_filter = filter_route(stat_curr_items, stat_curr_date,
-                                      stat_prev_items, stat_prev_date,
+  const results_filter = filter_route(stat_prev_items, stat_prev_date,
+                                      stat_curr_items, stat_curr_date,
     stat_subjects, stat_descriptions);
 
   if (results_filter.error) {
@@ -169,7 +271,7 @@ function process_filter() {
   const du_filter = performance.now() - time_0;
 
   // Render
-  const du_render = render_results(results_curr, stat_curr_date, results_prev, stat_prev_date);
+  const du_render = render_results(results_prev, stat_prev_date, results_curr, stat_curr_date);
   if  (!du_render) {
     return;
   }
@@ -192,7 +294,7 @@ function process_filter() {
                         'Render ' + du_render.pre.toFixed(1) +   ' / ' +
                                     du_render.dom.toFixed(1) + ' ms';
   } catch (err) {
-    container.innerHTML = '<div class="text-center text-comment">Error: ' + err.message + '</div>';
+    container.innerHTML = error_compose("Error: " + err.message);
   }
 }
 
@@ -347,7 +449,7 @@ function init_dates() {
       stat_prev_date = stat_file_dates[stat_file_dates.length - 2];
     })
     .catch(err => {
-      container.innerHTML = '<div class="text-center text-comment">Error: ' + err.message + '</div>';
+      container.innerHTML = error_compose("Error: " + err.message);
       throw err;
     });
 }
@@ -383,8 +485,8 @@ function conv_stat_docs(docs) {
     const week       = doc.querySelector('str[name="week"]'      )?.textContent;
 
     const collection_arr = get_stat_arr(doc, "collection");
-    const creator_arr    = get_stat_arr(doc, "creator"   );
-    const title_arr      = title ? [title.toLowerCase()] : []; // Doubled as array for filtering
+    const    creator_arr = get_stat_arr(doc, "creator"   );
+    const      title_arr = title ? [title.toLowerCase()] : []; // Lowercased as array for filtering
 
     stats.push({
       identifier,
@@ -397,8 +499,8 @@ function conv_stat_docs(docs) {
       month     ,
       week      ,
       collection_arr,
-      creator_arr,
-      title_arr
+         creator_arr,
+           title_arr
     });
   }
 
@@ -487,8 +589,7 @@ function load_stat(date, what) {
       process_filter();
     })
     .catch(err => {
-      document.getElementById("results").innerHTML =
-        '<div class="text-center text-comment">Error: ' + err.message + '</div>';
+      document.getElementById("results").innerHTML = error_compose("Error: " + err.message);
     });
 }
 
@@ -507,7 +608,7 @@ function load_stats() {
     process_filter();
   })
   .catch(err => {
-    container.innerHTML = '<div class="text-center text-comment">Error: ' + err.message + '</div>';
+    container.innerHTML = error_compose("Error: " + err.message);
   });
 }
 

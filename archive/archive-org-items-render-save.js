@@ -287,14 +287,13 @@ function render_stats(results, date, what, container) {
   container.appendChild(stats_text);
 }
 
-function render_results(results_curr, date_curr, results_prev, date_prev) {
+function render_results(results_prev, date_prev, results_curr, date_curr) {
   const time_0    = performance.now();
   const container = document.getElementById("results");
         container.innerHTML = "";
 
-  if (!results_curr.length && !results_prev.length) {
-    container.innerHTML =
-      '<div class="text-center text-comment">No items matched the filters</div>';
+  if (!results_prev.length && !results_curr.length) {
+    container.innerHTML = error_compose("No items matched the filters");
     return false;
   }
 
