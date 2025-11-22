@@ -120,11 +120,12 @@ function input_allowed_favs(input) {
 
 function filter_route(base_prev_items, base_prev_date,
                       base_curr_items, base_curr_date,
-  sect_subjects, sect_descriptions) {
+  sect_subjects, sect_descriptions,
+  input_values) {
 
   // Archived Range
-  const archived_min_str = document.getElementById("archived-min").value.trim();
-  const archived_max_str = document.getElementById("archived-max").value.trim();
+  const archived_min_str = input_values["archived-min"].trim();
+  const archived_max_str = input_values["archived-max"].trim();
 
   const archived_min_range = get_date_range(archived_min_str);
   const archived_max_range = get_date_range(archived_max_str);
@@ -147,8 +148,8 @@ function filter_route(base_prev_items, base_prev_date,
   }
 
   // Created Range
-  const created_min_str = document.getElementById("created-min").value.trim();
-  const created_max_str = document.getElementById("created-max").value.trim();
+  const created_min_str = input_values["created-min"].trim();
+  const created_max_str = input_values["created-max"].trim();
 
   const created_min_range = get_date_range(created_min_str);
   const created_max_range = get_date_range(created_max_str);
@@ -171,11 +172,11 @@ function filter_route(base_prev_items, base_prev_date,
   }
 
   // Collections, Creators, Subjects, Title and Description
-  const collections_str = document.getElementById("collections").value;
-  const    creators_str = document.getElementById("creators"   ).value;
-  const    subjects_str = document.getElementById("subjects"   ).value;
-  const       title_str = document.getElementById("title"      ).value;
-  const description_str = document.getElementById("description").value;
+  const collections_str = input_values["collections"];
+  const    creators_str = input_values["creators"   ];
+  const    subjects_str = input_values["subjects"   ];
+  const       title_str = input_values["title"      ];
+  const description_str = input_values["description"];
 
   if (!input_allowed_chars(collections_str) ||
       !input_allowed_chars(   creators_str) ||
@@ -192,12 +193,12 @@ function filter_route(base_prev_items, base_prev_date,
   const description = input_clean_parse(description_str);
 
   // Views
-  let dl_min_str = document.getElementById("downloads-min").value.trim().toLowerCase();
-  let dl_max_str = document.getElementById("downloads-max").value.trim().toLowerCase();
-  let mo_min_str = document.getElementById(    "month-min").value.trim().toLowerCase();
-  let mo_max_str = document.getElementById(    "month-max").value.trim().toLowerCase();
-  let wk_min_str = document.getElementById(     "week-min").value.trim().toLowerCase();
-  let wk_max_str = document.getElementById(     "week-max").value.trim().toLowerCase();
+  let dl_min_str = input_values["downloads-min"].trim().toLowerCase();
+  let dl_max_str = input_values["downloads-max"].trim().toLowerCase();
+  let mo_min_str = input_values[    "month-min"].trim().toLowerCase();
+  let mo_max_str = input_values[    "month-max"].trim().toLowerCase();
+  let wk_min_str = input_values[     "week-min"].trim().toLowerCase();
+  let wk_max_str = input_values[     "week-max"].trim().toLowerCase();
 
   let dl_min_str_t = null;
   let dl_max_str_t = null;
@@ -356,8 +357,8 @@ function filter_route(base_prev_items, base_prev_date,
   }
 
   // Favs
-  let favs_min_str = document.getElementById("favs-min").value.trim().toLowerCase();
-  let favs_max_str = document.getElementById("favs-max").value.trim().toLowerCase();
+  let favs_min_str = input_values["favs-min"].trim().toLowerCase();
+  let favs_max_str = input_values["favs-max"].trim().toLowerCase();
 
   let favs_min_str_t = null;
   let favs_max_str_t = null;
@@ -487,8 +488,8 @@ function filter_route(base_prev_items, base_prev_date,
   }
 
   // Sets. Must be the last filter
-  const prev_only = document.getElementById("prev-only").checked;
-  const curr_only = document.getElementById("curr-only").checked;
+  const prev_only = input_values["prev-only"];
+  const curr_only = input_values["curr-only"];
 
   const filtered_sets = filter_sets(results_prev, results_curr, prev_only, curr_only);
   if   (filtered_sets.done) {

@@ -459,6 +459,29 @@
   color: #525252; /* Gray32. Lower Lightness by 3 from 35 */
 }
 
+/* Item marking */
+
+.item-mark-a {
+  background-color: hsl(0.07turn 75% 89%); /* Perceived lighter than mark-e:86 */
+  height: 3px;
+  width: 100%;
+}
+.item-mark-b {
+  background-color: hsl(0.42turn 75% 83%); /* Perceived lighter than mark-d:86 */
+  height: 3px;
+  width: 100%;
+}
+.item-mark-d {
+  background-color: hsl(0.58turn 75% 86%);
+  height: 3px;
+  width: 100%;
+}
+.item-mark-e {
+  background-color: hsl(0.91turn 75% 86%);
+  height: 3px;
+  width: 100%;
+}
+
 /* EOF */
 
 

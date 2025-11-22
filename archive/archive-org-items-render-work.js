@@ -4,290 +4,12 @@ const views_length = 6; // 123456
 const  days_length = 5; // 12345
 const ratio_length = 7; // 123.567
 
-const stat_length  = views_length + 2 + days_length + 2 + ratio_length; // Used in CSS as 22ch
-const stat_empty   = "".padStart(stat_length);
+const  stat_length = views_length + 2 + days_length + 2 + ratio_length; // Used in CSS as 22ch
+const  stat_empty  = "".padStart(stat_length);
 
-/* Display */
+/* Render */
 
-//    07-21  07-23  07-31  08-07 > 07-21
-//    07-27  07-31  08-07  08-14 > 08-14
-//
-// ^^^    0      2     19      0 >    25
-// ^^     1      8     37      3 >    40
-// ^      5     24     49      3 >    82
-// +++   11     58     91     12 >    94
-// ++    58    142    164     85 >   133
-// +     64     88    112     85 >    53
-//
-// -    293    175    129    256 >    69
-// --   150    130     72    144 >   115
-// ---   65     26     10     55 >    95
-// v     28     26     12     34 >    20
-// vv     0      2      0      0 >    14
-// vvv    0      0      0      0 >     6
-
-function get_grow_ratio(curr, prev) {
-  if (!curr && !prev) return "   ";
-  if (!curr || !prev) return "ooo";
-
-  const ratio = curr / prev;
-
-  if   (ratio === 1)  return "   ";
-
-  if   (ratio > 1) {
-    if (ratio < 1.01) return "+  ";
-    if (ratio < 1.03) return "++ ";
-    if (ratio < 1.06) return "+++";
-
-    if (ratio < 1.12) return "^  ";
-    if (ratio < 1.24) return "^^ ";
-                      return "^^^";
-  }
-  //    ratio < 1
-  if   (ratio > 0.99) return "-  ";
-  if   (ratio > 0.98) return "-- ";
-  if   (ratio > 0.96) return "---";
-
-  if   (ratio > 0.94) return "v  ";
-  if   (ratio > 0.90) return "vv ";
-                      return "vvv";
-}
-
-function get_grow_fixed(curr, prev) {
-  const diff = curr - prev;
-  if   (diff === 0)     return "   ";
-
-  const diff_abs = Math.abs(diff);
-
-  if   (diff > 0) {
-    if (diff_abs === 1) return "+  ";
-    if (diff_abs === 2) return "++ ";
-    if (diff_abs === 3) return "+++";
-
-    if (diff_abs <=  5) return "^  ";
-    if (diff_abs <= 10) return "^^ ";
-                        return "^^^";
-  }
-  //    diff < 0
-  if   (diff_abs === 1) return "-  ";
-  if   (diff_abs === 2) return "-- ";
-  if   (diff_abs === 3) return "---";
-
-  if   (diff_abs <=  5) return "v  ";
-  if   (diff_abs <= 10) return "vv ";
-                        return "vvv";
-}
-
-const grow_values = {
-  "^^^":  18,
-  "^^ ":  12,
-  "^  ":   6,
-  "+++":   3,
-  "++ ":   2,
-  "+  ":   1,
-  "   ":   0,
-  "-  ":  -1,
-  "-- ":  -2,
-  "---":  -3,
-  "v  ":  -6,
-  "vv ": -12,
-  "vvv": -18
-};
-
-function get_grow_value(grow) {
-  return grow_values[grow] || 0;
-}
-
-function get_grow_mood(grow_old, grow_23, grow_7) {
-  const v_old = get_grow_value(grow_old);
-  const v_23  = get_grow_value(grow_23 );
-  const v_7   = get_grow_value(grow_7  );
-
-  if ((v_old >= 0) && (v_23 >= 0) && (v_7 >= 0)) return v_old + v_23 + v_7;
-  if ((v_old <  0) && (v_23 <  0) && (v_7 <  0)) return v_old + v_23 + v_7;
-
-  return 0;
-}
-
-// Substantial changes marking
-function get_marks(rel, cnt, mid) {
-  if   (cnt <= 0)      return { above: +Infinity, below: -Infinity };
-  const rel_len = rel.length;
-  if   (rel_len === 0) return { above: +Infinity, below: -Infinity };
-  if   (rel_len === 1) {
-    const val = rel[0];
-    if   (val > mid)   return { above:  val,      below: -Infinity };
-    if   (val < mid)   return { above: +Infinity, below:  val      };
-                       return { above: +Infinity, below: -Infinity };
-  }
-  if ((cnt + cnt) > rel_len) {
-    cnt = Math.floor(rel_len / 2);
-  }
-  rel.sort((above, below) => above - below); // Ascending
-
-  let above_cnt = cnt;
-  let below_cnt = cnt;
-  let above_idx = rel_len - cnt;
-  let below_idx = cnt     -   1;
-  let above_val = rel[above_idx];
-  let below_val = rel[below_idx];
-
-  while (above_val <= mid) { // Above value is in below side, or at mid
-    below_idx++; // Move below side to right
-    below_val = rel[below_idx]; // Update its value
-    below_cnt++; // Count it
-
-    above_cnt--; // Use place
-    if (above_cnt === 0) break; // Above side is empty
-    above_idx++; // Move above side to right
-    above_val = rel[above_idx]; // Update its value
-  }
-  while (below_val >= mid) { // Below value is in above side, or at mid
-    if (above_cnt > 0) { // Above side not empty
-      if (rel[above_idx - 1] > mid) { // And something is present there to add to above side
-        above_val = rel[above_idx - 1]; // Update its value
-        above_cnt++; // Count it
-        above_idx--; // Move above side to left
-      }
-    }
-    below_cnt--; // Use place
-    if (below_cnt === 0) break; // Below side is empty
-    below_idx--; // Move below side to left
-    below_val = rel[below_idx]; // Update its value
-  }
-  return { above: above_cnt > 0 ? above_val : +Infinity, // Possible array of all mid's is handled here
-           below: below_cnt > 0 ? below_val : -Infinity  // Because both above_cnt and below_cnt will be 0
-  };
-}
-
-// index: 0..length-1, base: log(length), steep: 1..9, decay: max value (min value: 1)
-function get_scale_log(index, base, steep, decay) {
-  if (base === 0) return 1; // length === 1 (length === 0 cannot be here)
-
-  const i_norm = Math.log(index + 1) / base; // 0..1
-  const o_norm = Math.pow(i_norm, steep);   // 0..1
-  const scale  = o_norm * (decay - 1) + 1; // 1..decay
-
-  return scale;
-}
-
-// index: 0..length-1, base: 0..1 (of length), steep: 1..9, decay: max value (min value: 1)
-// sig_* are precomputed
-function get_scale_sig(index, length, base, steep, decay, sig_min, sig_max) {
-  if (length === 1) return 1; // length === 0 cannot be here
-
-  const i_norm     = index / (length - 1); // 0..1
-//const sig_min    = 1 / (1 + Math.exp((base - 0)      * steep));
-  const sig_i_norm = 1 / (1 + Math.exp((base - i_norm) * steep));
-//const sig_max    = 1 / (1 + Math.exp((base - 1)      * steep));
-  const o_norm     = (sig_i_norm - sig_min) / (sig_max - sig_min); // 0..1
-  const scale      = o_norm * (decay - 1) + 1; // 1..decay
-
-  return scale;
-}
-
-function get_totals(results) {
-  const totals = { audio: 0, video: 0, bytes: 0, views: 0, favorites: 0, favorited: 0,
-                   max_favorites: 0, max_ratio_old: 0, max_ratio_all: 0 };
-
-  for (let i = 0; i < results.length; i++) {
-    const item = results[i];
-
-    if      (item.mediatype === "movies") totals.video++; // Most frequent type
-    else if (item.mediatype === "audio" ) totals.audio++;
-
-    totals.bytes += item.item_size;
-    totals.views += item.views_all;
-
-    totals.favorites +=  item.favorites;
-    totals.favorited += (item.favorites > 0);
-
-    if (totals.max_favorites < item.favorites) {
-        totals.max_favorites = item.favorites; }
-
-    if (totals.max_ratio_old < item.ratio_old) {
-        totals.max_ratio_old = item.ratio_old; }
-
-    if (totals.max_ratio_all < item.ratio_all) {
-        totals.max_ratio_all = item.ratio_all; }
-  }
-
-  return totals;
-}
-
-function format_bytes(bytes) {
-  const units = ['KiB', 'MiB', 'GiB'];
-  let   value = bytes;
-  let   index = -1;
-
-  while (value >= 1024) {
-         value /= 1024;
-         index++;
-  }
-  let fract = (value <   9.9995) ? 3 :
-              (value <  99.995 ) ? 2 :
-              (value < 999.95  ) ? 1 : 0;
-
-  return value.toFixed(fract) + ' ' + units[index];
-}
-
-function format_num_str(num, str) {
-  return num + ' ' + str + ((num === 1) ? "" : 's');
-}
-
-function sort_results(results) {
-  results.sort((a, b) => { // Descending for ratios
-    if (a.ratio_old !== b.ratio_old) { return b.ratio_old - a.ratio_old; }
-    if (a.ratio_23  !== b.ratio_23 ) { return b.ratio_23  - a.ratio_23;  }
-    if (a.ratio_7   !== b.ratio_7  ) { return b.ratio_7   - a.ratio_7;   }
-    return a.title.localeCompare(b.title); // Ascending for titles: A >> Z
-  });
-}
-
-function render_stats(results, date, what, container) {
-  sort_results(results);
-
-  // Show stats: Min, 10%, 25%, 50%, 75%, 90%, Max
-  const stats_text = document.createElement("div");
-  stats_text.className = "text-center";
-  stats_text.style.color = "#696969"; // DimGray, L41
-
-  // Calculate stats from sorted results
-  const max = results[0                 ]?.ratio_old || 0;
-  const min = results[results.length - 1]?.ratio_old || 0;
-
-  // Simple percentile approximations (array is already sorted)
-  const get_percentile = (percent) => {
-    const index = Math.floor((100 - percent) / 100 * results.length);
-    return results[index]?.ratio_old || 0;
-  };
-
-  const percentile10 = get_percentile(10);
-  const quartile1    = get_percentile(25);
-  const median       = get_percentile(50);
-  const quartile3    = get_percentile(75);
-  const percentile90 = get_percentile(90);
-
-  stats_text.innerHTML =
-    '<span ' +
-       'role="button" style="cursor:pointer;" tabindex="0" ' +
-       'onkeydown="if ((event.key === \'Enter\') || (event.key === \' \')) { event.preventDefault(); }" ' +
-       'onkeyup  ="if ((event.key === \'Enter\') || (event.key === \' \')) { ' +
-                  'date_change_menu(event, \'' + what + '\'); }" ' +
-       'onclick  ="date_change_menu(event, \'' + what + '\')" ' +
-       '>' + date + '</span>'        + ' : ' +
-    'Min ' + min         .toFixed(3) + ' / ' +
-    '10% ' + percentile10.toFixed(3) + ' / ' +
-    '25% ' + quartile1   .toFixed(3) + ' / ' +
-    '50% ' + median      .toFixed(3) + ' / ' +
-    '75% ' + quartile3   .toFixed(3) + ' / ' +
-    '90% ' + percentile90.toFixed(3) + ' / ' +
-    'Max ' + max         .toFixed(3);
-
-  container.appendChild(stats_text);
-}
-
-function render_results(results_prev, date_prev, results_curr, date_curr) {
+function render_results(results_prev, date_prev, results_curr, date_curr, results_mark) {
   const time_0    = performance.now();
   const container = document.getElementById("results");
         container.innerHTML = "";
@@ -320,7 +42,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr) {
       vert_change: 0,
       rank_change: 0,
       grow       : null,
-      gauges     : null });
+      gauges     : null,
+      marks      : null });
   }
 
   // Add items from  results_prev that absent in results_curr
@@ -339,7 +62,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr) {
         vert_change: 0,
         rank_change: 0,
         grow       : null,
-        gauges     : null });
+        gauges     : null,
+        marks      : null });
     }
     map_prev[item.identifier] = item;
   }
@@ -376,6 +100,46 @@ function render_results(results_prev, date_prev, results_curr, date_curr) {
     map_curr_exp[item.identifier].index_prev = index;
   }
 
+  ////////
+  // Marks
+  //
+  const mark_names   = ['a', 'b', 'd', 'e'];
+  const mark_classes = {
+    a: 'item-mark-a',
+    b: 'item-mark-b',
+    d: 'item-mark-d',
+    e: 'item-mark-e'
+  };
+  const mark_colors = {
+    a: 'hsl(0.07turn, 75%, 62%)',
+    b: 'hsl(0.42turn, 75%, 41%)',
+    d: 'hsl(0.58turn, 75%, 65%)',
+    e: 'hsl(0.91turn, 75%, 68%)'
+  };
+  const mark_nums = {};
+
+  for (const mark of mark_names) {
+    const _rm = results_mark[mark];
+    if  (!_rm) continue;
+
+    const _rm_ids = {}; // Collect all identifiers
+    for (const item of _rm.prev) _rm_ids[item.identifier] = null;
+    for (const item of _rm.curr) _rm_ids[item.identifier] = null;
+
+    let _num = 0;
+
+    for (const id in _rm_ids) {
+      const item = map_curr_exp[id];
+      if   (item) {
+        if (!item.marks) item.marks = {};
+        item.marks[mark] = true;
+        _num++;
+      }
+    }
+
+    mark_nums[mark] = _num;
+  }
+
   ///////////////////////////////////////////////
   // Total counts displaying for expanded results
   //
@@ -410,6 +174,35 @@ function render_results(results_prev, date_prev, results_curr, date_curr) {
                            'Checkboxes above to select';
   }
   container.appendChild(sets_div);
+
+  // Marks displaying
+  if (Object.keys(mark_nums).length) {
+    const marks_div = document.createElement("div");
+    marks_div.className = "text-center text-comment";
+    marks_div.appendChild(document.createTextNode('Marked: '));
+
+    const mark_parts = [];
+    let   mark_first = true;
+
+    for (const mark of mark_names) {
+      if (mark in mark_nums) {
+        if (!mark_first) {
+          mark_parts.push(document.createTextNode(' / '));
+        }
+        mark_first = false;
+
+        const mark_span = document.createElement('span');
+        mark_span.textContent = format_num_str(mark_nums[mark], 'Item');
+        mark_span.style.color = mark_colors[mark];
+        mark_parts.push(mark_span);
+      }
+    }
+
+    for (const mark_part of mark_parts) {
+      marks_div.appendChild(mark_part);
+    }
+    container.appendChild(marks_div);
+  }
 
   // Spacing
   container.lastElementChild.style.marginBottom = "1em"; // Add space before item list
@@ -892,9 +685,23 @@ function render_results(results_prev, date_prev, results_curr, date_curr) {
     item_inner.appendChild(stat_curr_container );
     item_inner.appendChild(stat_grow_container );
 
-    // 8. Wrap and add item to the page
-    item_wrapper.appendChild(item_inner  );
-    container   .appendChild(item_wrapper);
+    // 8.0. Wrap
+    item_wrapper.appendChild(item_inner);
+
+    // 8.1. Add mark indicators (if any)
+    if (item.marks) {
+      for (const mark of mark_names) {
+        if (item.marks[mark]) {
+          const mark_div = document.createElement("div");
+          mark_div.className = mark_classes[mark];
+          item_wrapper.appendChild(mark_div);
+        }
+      }
+      item_wrapper.style.borderBottom = "none"; // Mark will be the border
+    }
+
+    // 8.2. Add item to the page
+    container.appendChild(item_wrapper);
   }
 
   return { pre: time_1 - time_0, dom: performance.now() - time_1 };

@@ -145,19 +145,19 @@ const tab_input_ids =
    'downloads-min', 'downloads-max',   'month-min',   'month-max',    'week-min', 'week-max',
     'archived-min',  'archived-max', 'created-min', 'created-max',    'favs-min', 'favs-max',
        'prev-only',     'curr-only'];
-const tab_input_vals = {}; // [tab] = { values }; [""] = { defaults };
+const tab_input_values = {}; // [tab] = { values }; [""] = { defaults };
 
 // Initialization
 
 function init_tabs() {
-  tab_to_vals ("" );
-  tab_activate('c');
+  tab_to_values("" );
+  tab_activate ('c');
 }
 
 // Data
 
-function tab_to_vals(tab) {
-  if (!tab_input_vals[tab]) tab_input_vals[tab] = {};
+function tab_to_values(tab) {
+  if (!tab_input_values[tab]) tab_input_values[tab] = {};
 
   tab_input_ids.forEach(id => {
     const input = document.getElementById(id);
@@ -166,30 +166,30 @@ function tab_to_vals(tab) {
                   ? input.checked
                   : input.value;
 
-      tab_input_vals[tab][id] = value;
+      tab_input_values[tab][id] = value;
     }
   });
 }
 
 function tab_to_inputs(tab) {
-  if (!tab_input_vals[tab]) { tab_to_inputs(""); return; }
+  if (!tab_input_values[tab]) { tab_to_inputs(""); return; }
 
   tab_input_ids.forEach(id => {
     const input = document.getElementById(id);
     if   (input) {
       if (id.endsWith('-only'))
-        input.checked = tab_input_vals[tab][id];
+        input.checked = tab_input_values[tab][id];
       else
-        input.value   = tab_input_vals[tab][id];
+        input.value   = tab_input_values[tab][id];
     }
   });
 }
 
 function tab_is_changed(tab) {
-  if (!tab_input_vals[tab]) return false;
+  if (!tab_input_values[tab]) return false;
 
-  for (const id in tab_input_vals[""]) {
-    if (tab_input_vals[tab][id] !== tab_input_vals[""][id]) return true;
+  for (const id in tab_input_values[""]) {
+    if (tab_input_values[tab][id] !== tab_input_values[""][id]) return true;
   }
 
   return false;
@@ -228,8 +228,8 @@ function tab_mark(tab, changed) {
 // Transition
 
 function tab_update(tab_new) {
-  tab_to_vals(tab_active);
-  tab_mark   (tab_active, tab_is_changed(tab_active));
+  tab_to_values(tab_active);
+  tab_mark     (tab_active, tab_is_changed(tab_active));
 
   if (tab_new !== tab_active) tab_to_inputs(tab_new);
 }
@@ -237,6 +237,16 @@ function tab_update(tab_new) {
 function tab_switch(tab) {
   tab_update  (tab);
   tab_activate(tab);
+}
+
+// Interface
+
+function tab_get(tab) {
+  if (tab === tab_active) tab_update(tab_active);
+
+  return tab_is_changed(tab)
+         ? { changed: true,  values: tab_input_values[tab] }
+         : { changed: false, values: tab_input_values["" ] };
 }
 
 /* Filter */
@@ -248,10 +258,12 @@ function process_filter() {
         timings.textContent = "";
   try {
 
-  // Filter
+  // Filtering
+  const  inputs_filter = tab_get('c');
   const results_filter = filter_route(stat_prev_items, stat_prev_date,
                                       stat_curr_items, stat_curr_date,
-    stat_subjects, stat_descriptions);
+    stat_subjects, stat_descriptions,
+    inputs_filter.values);
 
   if (results_filter.error) {
     container.innerHTML = results_filter.error;
@@ -261,17 +273,45 @@ function process_filter() {
     return;
   }
   if (!results_filter.done) {
-    container.innerHTML = error_compose("Unexpected error");
+    container.innerHTML = error_compose("Unexpected filtering error");
     return;
   }
 
-  const { curr: results_curr, prev: results_prev } = results_filter;
+  const { prev: results_filter_prev, curr: results_filter_curr } = results_filter;
 
-  // Filtering Duration
+  // Marking
+  const results_mark = {};
+
+  for (const tab of ['a', 'b', 'd', 'e']) {
+    const inputs = tab_get(tab);
+    if  (!inputs.changed) continue;
+
+    const marks = filter_route(stat_prev_items, stat_prev_date,
+                               stat_curr_items, stat_curr_date,
+      stat_subjects, stat_descriptions,
+      inputs.values);
+
+    if (marks.error) {
+      container.innerHTML = marks.error;
+      return;
+    }
+    if (marks.wait) {
+      return;
+    }
+    if (!marks.done) {
+      container.innerHTML = error_compose("Unexpected marking error");
+      return;
+    }
+
+    results_mark[tab] = { prev: marks.prev, curr: marks.curr };
+  }
+
+  // Filtering and Marking Duration
   const du_filter = performance.now() - time_0;
 
   // Render
-  const du_render = render_results(results_prev, stat_prev_date, results_curr, stat_curr_date);
+  const du_render = render_results(results_filter_prev, stat_prev_date,
+                                   results_filter_curr, stat_curr_date, results_mark);
   if  (!du_render) {
     return;
   }
