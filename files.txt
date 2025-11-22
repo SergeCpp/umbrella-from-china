@@ -6,6 +6,8 @@ https://umbrella-from-china.neocities.org/archive/archive-org-items-filter-save.
 https://umbrella-from-china.neocities.org/archive/archive-org-items-filter-work.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-helper-save.js // Not used, just copy of work
 https://umbrella-from-china.neocities.org/archive/archive-org-items-helper-work.js
+https://umbrella-from-china.neocities.org/archive/archive-org-items-marker-save.js // Not used, just copy of work
+https://umbrella-from-china.neocities.org/archive/archive-org-items-marker-work.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-render-save.js // Not used, just copy of work
 https://umbrella-from-china.neocities.org/archive/archive-org-items-render-work.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-runner-save.js // Not used, just copy of work
@@ -13,7 +15,7 @@ https://umbrella-from-china.neocities.org/archive/archive-org-items-runner-work.
 https://umbrella-from-china.neocities.org/archive/archive-org-items.css
 https://umbrella-from-china.neocities.org/archive/archive-org-items.html
 --------
-12 files
+14 files
 
 See archive-dates.txt for the complete actual stat list
 -------------------------------------------------------
@@ -307,7 +309,7 @@ https://umbrella-from-china.neocities.org/ziyan-dancer.txt
 --------
 58 files
 
-The total size of the site files is less than 69 megabytes
+The total size of the site files is less than 70 megabytes
 
 No external images hotlinking, all images are hosted on Neocities
 
