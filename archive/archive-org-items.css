@@ -1,6 +1,11 @@
 /* Tabs */
 
-.btn-tab {
+.tab-row {
+  align-items: center;
+  display: flex;
+}
+
+.tab-btn {
   border-bottom-color: white;
   border-bottom-style: solid;
   border-bottom-width: 3px;
@@ -480,6 +485,19 @@
   background-color: hsl(0.91turn 75% 86%);
   height: 3px;
   width: 100%;
+}
+
+.item-mark-a-text {
+  color: hsl(0.07turn, 75%, 62%);
+}
+.item-mark-b-text {
+  color: hsl(0.42turn, 75%, 41%);
+}
+.item-mark-d-text {
+  color: hsl(0.58turn, 75%, 65%);
+}
+.item-mark-e-text {
+  color: hsl(0.91turn, 75%, 68%);
 }
 
 /* EOF */

@@ -103,41 +103,32 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   ////////
   // Marks
   //
-  const mark_names   = ['a', 'b', 'd', 'e'];
-  const mark_classes = {
-    a: 'item-mark-a',
-    b: 'item-mark-b',
-    d: 'item-mark-d',
-    e: 'item-mark-e'
-  };
-  const mark_colors = {
-    a: 'hsl(0.07turn, 75%, 62%)',
-    b: 'hsl(0.42turn, 75%, 41%)',
-    d: 'hsl(0.58turn, 75%, 65%)',
-    e: 'hsl(0.91turn, 75%, 68%)'
-  };
-  const mark_nums = {};
+  let mark_counts = null;
 
-  for (const mark of mark_names) {
-    const _rm = results_mark[mark];
-    if  (!_rm) continue;
+  if (results_mark) {
+    for (const rm of results_mark) {
+      const mark = rm.mark;
+      const prev = rm.prev;
+      const curr = rm.curr;
 
-    const _rm_ids = {}; // Collect all identifiers
-    for (const item of _rm.prev) _rm_ids[item.identifier] = null;
-    for (const item of _rm.curr) _rm_ids[item.identifier] = null;
+      const rm_ids = {}; // Collect all identifiers
+      for (const item of prev) rm_ids[item.identifier] = null;
+      for (const item of curr) rm_ids[item.identifier] = null;
 
-    let _num = 0;
+      let count = 0;
 
-    for (const id in _rm_ids) {
-      const item = map_curr_exp[id];
-      if   (item) {
-        if (!item.marks) item.marks = {};
-        item.marks[mark] = true;
-        _num++;
+      for (const id in rm_ids) {
+        const item = map_curr_exp[id];
+        if  (!item) continue;
+
+        if (!item.marks) item.marks = [];
+        item.marks.push(mark);
+        count++;
       }
-    }
 
-    mark_nums[mark] = _num;
+      if (!mark_counts) mark_counts = [];
+      mark_counts.push({ mark, count });
+    }
   }
 
   ///////////////////////////////////////////////
@@ -176,7 +167,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   container.appendChild(sets_div);
 
   // Marks displaying
-  if (Object.keys(mark_nums).length) {
+  if (mark_counts) {
     const marks_div = document.createElement("div");
     marks_div.className = "text-center text-comment";
     marks_div.appendChild(document.createTextNode('Marked: '));
@@ -184,18 +175,14 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     const mark_parts = [];
     let   mark_first = true;
 
-    for (const mark of mark_names) {
-      if (mark in mark_nums) {
-        if (!mark_first) {
-          mark_parts.push(document.createTextNode(' / '));
-        }
-        mark_first = false;
+    for (const mark_count of mark_counts) {
+      if (mark_first) mark_first = false;
+      else mark_parts.push(document.createTextNode(' / '));
 
-        const mark_span = document.createElement('span');
-        mark_span.textContent = format_num_str(mark_nums[mark], 'Item');
-        mark_span.style.color = mark_colors[mark];
-        mark_parts.push(mark_span);
-      }
+      const mark_span = document.createElement("span");
+      mark_span.className = "item-mark-" + mark_count.mark + "-text";
+      mark_span.textContent = format_num_str(mark_count.count, 'Item');
+      mark_parts.push(mark_span);
     }
 
     for (const mark_part of mark_parts) {
@@ -685,22 +672,21 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     item_inner.appendChild(stat_curr_container );
     item_inner.appendChild(stat_grow_container );
 
-    // 8.0. Wrap
+    ////////////
+    // 8.1. Wrap
     item_wrapper.appendChild(item_inner);
 
-    // 8.1. Add mark indicators (if any)
+    // 8.2. Add mark indicators (if any)
     if (item.marks) {
-      for (const mark of mark_names) {
-        if (item.marks[mark]) {
-          const mark_div = document.createElement("div");
-          mark_div.className = mark_classes[mark];
-          item_wrapper.appendChild(mark_div);
-        }
+      for (const mark of item.marks) {
+        const mark_div = document.createElement("div");
+        mark_div.className = "item-mark-" + mark;
+        item_wrapper.appendChild(mark_div);
       }
       item_wrapper.style.borderBottom = "none"; // Mark will be the border
     }
 
-    // 8.2. Add item to the page
+    // 8.3. Add item to the page
     container.appendChild(item_wrapper);
   }
 

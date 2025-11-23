@@ -249,6 +249,23 @@ function tab_get(tab) {
          : { changed: false, values: tab_input_values["" ] };
 }
 
+/* Subset */
+
+function get_subset(items, ids) {
+  const subset = [];
+
+  for (let i = 0; i < items.length; i++) {
+    const doc = items[i];
+    const id  = get_doc_str(doc, 'identifier');
+
+    if (ids[id]) {
+      subset.push(doc);
+    }
+  }
+
+  return subset;
+}
+
 /* Filter */
 
 function process_filter() {
@@ -280,14 +297,28 @@ function process_filter() {
   const { prev: results_filter_prev, curr: results_filter_curr } = results_filter;
 
   // Marking
-  const results_mark = {};
+  let results_mark = null;
+  let marking_base = null;
 
   for (const tab of ['a', 'b', 'd', 'e']) {
     const inputs = tab_get(tab);
     if  (!inputs.changed) continue;
 
-    const marks = filter_route(stat_prev_items, stat_prev_date,
-                               stat_curr_items, stat_curr_date,
+    if (!marking_base) {
+      const ids_prev = {};
+      const ids_curr = {};
+
+      for (const item of results_filter_prev) ids_prev[item.identifier] = true;
+      for (const item of results_filter_curr) ids_curr[item.identifier] = true;
+
+      const base_prev = get_subset(stat_prev_items, ids_prev);
+      const base_curr = get_subset(stat_curr_items, ids_curr);
+
+      marking_base = { prev: base_prev, curr: base_curr };
+    }
+
+    const marks = filter_route(marking_base.prev, stat_prev_date,
+                               marking_base.curr, stat_curr_date,
       stat_subjects, stat_descriptions,
       inputs.values);
 
@@ -303,7 +334,8 @@ function process_filter() {
       return;
     }
 
-    results_mark[tab] = { prev: marks.prev, curr: marks.curr };
+    if (!results_mark) results_mark = [];
+    results_mark.push({ mark: tab, prev: marks.prev, curr: marks.curr });
   }
 
   // Filtering and Marking Duration
