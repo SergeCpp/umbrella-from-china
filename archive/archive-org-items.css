@@ -467,12 +467,12 @@
 /* Item marking */
 
 .item-mark-a {
-  background-color: hsl(0.07turn 75% 89%); /* Perceived lighter than mark-e:86 */
+  background-color: hsl(0.07turn 75% 86%);
   height: 3px;
   width: 100%;
 }
 .item-mark-b {
-  background-color: hsl(0.42turn 75% 83%); /* Perceived lighter than mark-d:86 */
+  background-color: hsl(0.42turn 75% 77%);
   height: 3px;
   width: 100%;
 }

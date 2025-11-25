@@ -69,9 +69,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   }
 
   // Create prev expanded results array
-  const results_prev_exp = [...results_prev]; // Make copy
-
   // Add items from results_curr that absent in results_prev
+  const results_prev_exp = [...results_prev]; // Make copy
   for (const item of results_curr) {
     if (!map_prev[item.identifier]) {
       only_curr++;
@@ -116,7 +115,6 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       for (const item of curr) rm_ids[item.identifier] = null;
 
       let count = 0;
-
       for (const id in rm_ids) {
         const item = map_curr_exp[id];
         if  (!item) continue;
@@ -172,21 +170,13 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     marks_div.className = "text-center text-comment";
     marks_div.appendChild(document.createTextNode('Marked: '));
 
-    const mark_parts = [];
-    let   mark_first = true;
-
-    for (const mark_count of mark_counts) {
-      if (mark_first) mark_first = false;
-      else mark_parts.push(document.createTextNode(' / '));
-
+    const mark_last = mark_counts.length - 1;
+    for (let m = 0; m <= mark_last; m++) {
       const mark_span = document.createElement("span");
-      mark_span.className = "item-mark-" + mark_count.mark + "-text";
-      mark_span.textContent = format_num_str(mark_count.count, 'Item');
-      mark_parts.push(mark_span);
-    }
-
-    for (const mark_part of mark_parts) {
-      marks_div.appendChild(mark_part);
+      mark_span.className = "item-mark-" + mark_counts[m].mark + "-text";
+      mark_span.textContent = format_num_str(mark_counts[m].count, 'Item');
+      marks_div.appendChild(mark_span);
+      if (m < mark_last) marks_div.appendChild(document.createTextNode(' / '));
     }
     container.appendChild(marks_div);
   }
@@ -678,9 +668,11 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
     // 8.2. Add mark indicators (if any)
     if (item.marks) {
-      for (const mark of item.marks) {
+      const mark_last = item.marks.length - 1;
+      for (let m = 0; m <= mark_last; m++) {
         const mark_div = document.createElement("div");
-        mark_div.className = "item-mark-" + mark;
+        mark_div.className = "item-mark-" + item.marks[m];
+        if (m < mark_last) mark_div.style.borderBottom = "3px solid white";
         item_wrapper.appendChild(mark_div);
       }
       item_wrapper.style.borderBottom = "none"; // Mark will be the border

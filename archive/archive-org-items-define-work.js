@@ -251,11 +251,11 @@ function tab_get(tab) {
 
 /* Subset */
 
-function get_subset(items, ids) {
+function get_stat_subset(stat, ids) {
   const subset = [];
 
-  for (let i = 0; i < items.length; i++) {
-    const doc = items[i];
+  for (let i = 0; i < stat.length; i++) {
+    const doc = stat[i];
     const id  = get_doc_str(doc, 'identifier');
 
     if (ids[id]) {
@@ -311,8 +311,8 @@ function process_filter() {
       for (const item of results_filter_prev) ids_prev[item.identifier] = true;
       for (const item of results_filter_curr) ids_curr[item.identifier] = true;
 
-      const base_prev = get_subset(stat_prev_items, ids_prev);
-      const base_curr = get_subset(stat_curr_items, ids_curr);
+      const base_prev = get_stat_subset(stat_prev_items, ids_prev);
+      const base_curr = get_stat_subset(stat_curr_items, ids_curr);
 
       marking_base = { prev: base_prev, curr: base_curr };
     }
