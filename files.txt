@@ -129,13 +129,15 @@ https://umbrella-from-china.neocities.org/images/xiaoye-ting-600x375.avif
 https://umbrella-from-china.neocities.org/images/xiaoye-ting-600x375.jpg
 https://umbrella-from-china.neocities.org/images/xiaoye-ting-600x375.webp
 https://umbrella-from-china.neocities.org/images/xie-an-ran-1200x1800.avif
+https://umbrella-from-china.neocities.org/images/xie-an-ran-180x180.avif
 https://umbrella-from-china.neocities.org/images/xie-an-ran-192x192.jpg
+https://umbrella-from-china.neocities.org/images/xie-an-ran-360x360.avif
 https://umbrella-from-china.neocities.org/images/xie-an-ran-5000x5000.jpg
 https://umbrella-from-china.neocities.org/images/xie-an-ran-5504x8256.jpg
 https://umbrella-from-china.neocities.org/images/xie-an-ran-600x900.avif
+-
 https://umbrella-from-china.neocities.org/images/xie-an-ran-600x900.jpg
 https://umbrella-from-china.neocities.org/images/xie-an-ran-600x900.webp
--
 https://umbrella-from-china.neocities.org/images/xisi-1616x1010.jpg
 https://umbrella-from-china.neocities.org/images/xisi-960x600.avif
 https://umbrella-from-china.neocities.org/images/xue-ci-4096x2560.jpg
@@ -144,9 +146,9 @@ https://umbrella-from-china.neocities.org/images/xue-qiu-1192x745.jpg
 https://umbrella-from-china.neocities.org/images/xue-qiu-960x600.avif
 https://umbrella-from-china.neocities.org/images/yaorenmao-1920x1200.jpg
 https://umbrella-from-china.neocities.org/images/yaorenmao-960x600.avif
+-
 https://umbrella-from-china.neocities.org/images/zhao-fangjing-2880x1800.jpg
 https://umbrella-from-china.neocities.org/images/zhao-fangjing-960x600.avif
--
 https://umbrella-from-china.neocities.org/images/zi-jiaer-1976x1235.jpg
 https://umbrella-from-china.neocities.org/images/zi-jiaer-960x600.avif
 https://umbrella-from-china.neocities.org/images/ziyan-3200x2000.jpg
@@ -154,7 +156,7 @@ https://umbrella-from-china.neocities.org/images/ziyan-960x600.avif
 https://umbrella-from-china.neocities.org/images/ziyan-zi-jiaer-xue-wei-luoxi-3072x1920.jpg
 https://umbrella-from-china.neocities.org/images/ziyan-zi-jiaer-xue-wei-luoxi-960x600.avif
 --------------------------------------
-39 avif + 54 jpg + 13 webp = 106 files
+41 avif + 54 jpg + 13 webp = 108 files
 
 https://umbrella-from-china.neocities.org/player/player-def-save.js // Not used, just copy of work
 https://umbrella-from-china.neocities.org/player/player-def-work.js
