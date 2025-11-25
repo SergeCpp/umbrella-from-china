@@ -146,6 +146,13 @@ const tab_input_ids =
     'archived-min',  'archived-max', 'created-min', 'created-max',    'favs-min', 'favs-max',
        'prev-only',     'curr-only'];
 const tab_input_values = {}; // [tab] = { values }; [""] = { defaults };
+const tab_mode         = {   // [tab] = "" / "Filter", for ['c'] = "OR" / "AND" / "SUB"
+  a: "",
+  b: "",
+  c: "OR",
+  d: "",
+  e: ""
+};
 
 // Initialization
 
@@ -195,10 +202,52 @@ function tab_is_changed(tab) {
   return false;
 }
 
+// Mode
+
+function tab_filters_count() {
+  return ['a', 'b', 'd', 'e'].filter(tab => tab_mode[tab] === "Filter").length;
+}
+
+function tab_set_text(tab, text) {
+  const button = document.getElementById('tab-' + tab);
+  if  (!button) return;
+
+  const text_cur = button.textContent;
+  if   (text_cur === text) return;
+
+  button.textContent = text;
+}
+
+function tab_set_center() {
+  let tab_text = "Filter";
+  if (tab_filters_count()) tab_text += ' ' + tab_mode['c'];
+  tab_set_text('c', tab_text);
+}
+
+function tab_toggle(tab) {
+  if(tab === 'c') {
+    if (!tab_filters_count()) return;
+
+    tab_mode[tab] = (tab_mode[tab] === "OR" ) ? "AND"
+                  : (tab_mode[tab] === "AND") ? "SUB"
+                  : (tab_mode[tab] === "SUB") ? "OR"
+                  : "OR"; // Mode was unknown
+  }
+  else {
+    tab_mode[tab]  = (tab_mode[tab] !== "Filter") ?        "Filter" : "";
+    const tab_text = (tab_mode[tab] === "Filter") ? "Mark x Filter" : "Mark";
+    tab_set_text(tab, tab_text);
+  }
+  tab_set_center();
+}
+
 // Presentation
 
 function tab_activate(tab_to) {
-  if (tab_to === tab_active) return;
+  if (tab_to === tab_active) {
+    tab_toggle(tab_to);
+    return;
+  }
 
   const button_to = document.getElementById('tab-' + tab_to);
   if   (button_to) {
@@ -249,7 +298,15 @@ function tab_get(tab) {
          : { changed: false, values: tab_input_values["" ] };
 }
 
-/* Subset */
+function tab_mark_is_filter(tab) {
+  return tab_mode[tab] === "Filter";
+}
+
+function tab_filter_mode() {
+  return tab_mode['c'];
+}
+
+/* Stat Subset */
 
 function get_stat_subset(stat, ids) {
   const subset = [];
@@ -264,6 +321,67 @@ function get_stat_subset(stat, ids) {
   }
 
   return subset;
+}
+
+/* Filtering by Mark Filters */
+
+function filter_by_marks(prev, curr, marks) {
+  const mode = tab_filter_mode();
+
+  // Deduplicate
+  const marked_ids = [];
+
+  for (const mark of marks) {
+    const ids = {}; // Collect all identifiers
+    for (const item of mark.prev) ids[item.identifier] = true; // Need true for Combine by AND
+    for (const item of mark.curr) ids[item.identifier] = true; // Need true for Combine by AND
+    marked_ids.push(ids);
+  }
+
+  // Combine
+  const combined_ids = {};
+
+  switch(mode) {
+    case "AND":
+      const first = marked_ids[0];
+      for (const id in first) {
+        let in_all = true;
+        for (let i = 1; i < marked_ids.length; i++) {
+          if (!marked_ids[i][id]) { // Used true that set above
+            in_all = false;
+            break;
+          }
+        }
+        if (in_all) combined_ids[id] = true;
+      }
+      break;
+
+    case "OR" :
+    case "SUB":
+      for (const ids of marked_ids) {
+        for (const id in ids) combined_ids[id] = true;
+      }
+      break;
+  }
+
+  // Filter
+  let results_prev = [];
+  let results_curr = [];
+
+  switch(mode) {
+    case "AND":
+    case "OR" :
+      results_prev = prev.filter(item => combined_ids[item.identifier]);
+      results_curr = curr.filter(item => combined_ids[item.identifier]);
+      break;
+
+    case "SUB":
+      results_prev = prev.filter(item => !combined_ids[item.identifier]);
+      results_curr = curr.filter(item => !combined_ids[item.identifier]);
+      break;
+  }
+
+  return { prev: results_prev, curr: results_curr };
 }
 
 /* Filter */
@@ -294,11 +412,12 @@ function process_filter() {
     return;
   }
 
-  const { prev: results_filter_prev, curr: results_filter_curr } = results_filter;
+  let { prev: results_filter_prev, curr: results_filter_curr } = results_filter;
 
   // Marking
-  let results_mark = null;
   let marking_base = null;
+  let results_mark = null;
+  let filters_mark = null;
 
   for (const tab of ['a', 'b', 'd', 'e']) {
     const inputs = tab_get(tab);
@@ -336,6 +455,20 @@ function process_filter() {
 
     if (!results_mark) results_mark = [];
     results_mark.push({ mark: tab, prev: marks.prev, curr: marks.curr });
+
+    if (tab_mark_is_filter(tab)) {
+      if (marks.prev.length || marks.curr.length) {
+        if (!filters_mark) filters_mark = [];
+        filters_mark.push({ prev: marks.prev, curr: marks.curr });
+      }
+    }
+  }
+
+  // Filtering by Mark Filters
+  if (filters_mark) {
+    const by_marks = filter_by_marks(results_filter_prev, results_filter_curr, filters_mark);
+    results_filter_prev = by_marks.prev;
+    results_filter_curr = by_marks.curr;
   }
 
   // Filtering and Marking Duration

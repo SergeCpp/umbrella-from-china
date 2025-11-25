@@ -11,10 +11,13 @@
   border-bottom-width: 3px;
   color: #696969; /* DimGray, L41 */
   cursor: pointer;
-  flex: 1 0 auto;
+  flex: 1 1 0;
   outline-offset: -2px; /* For outline not to be clipped, to be within padding */
+  overflow-x: hidden;
   padding: 0.5em 0.5em;
   text-align: center;
+  text-overflow: ellipsis;
+  text-wrap-mode: nowrap;
 }
 
 .tab-a {
@@ -25,7 +28,7 @@
 }
 .tab-c {
   background-color: #f2f2f2;  /* Gray95 */
-  flex-grow: 2;
+  flex-grow: 1.5;
 }
 .tab-d {
   background-color: hsl(0.58turn 75% 95%);
