@@ -306,7 +306,7 @@ function get_stat_subset(stat, ids) {
 
   for (let i = 0; i < stat.length; i++) {
     const doc = stat[i];
-    const id  = get_doc_str(doc, 'identifier');
+    const id  = doc["identifier"];
 
     if (ids[id]) {
       subset.push(doc);
