@@ -214,23 +214,23 @@ function filter_base(stats_items, stats_date,
     /* Checking and Initial Filtering Items */
 
     // Identifier and Title
-    const identifier_str = doc["identifier"];
-    const      title_str = doc["title"     ];
+    const identifier_str = doc.identifier;
+    const      title_str = doc.title;
     if (!identifier_str || !title_str) continue;
 
     // Mediatype
-    const mediatype_str = doc["mediatype"];
+    const mediatype_str = doc.mediatype;
     if  ((mediatype_str !== "movies") && // Movies is the most frequent type
          (mediatype_str !== "audio" )) continue;
 
     // Item Size
-    const item_size_str = doc["item_size"];
+    const item_size_str = doc.item_size;
     if  (!item_size_str) continue;
     const item_size = parseInt(item_size_str, 10);
     if (isNaN(item_size) || (item_size < 0)) continue;
 
     // Created
-    const date_str = doc["date"]; // Can be not set for an item
+    const date_str = doc.date; // Can be not set for an item
     let   date     = null;
 
     if (date_str) {
@@ -247,16 +247,16 @@ function filter_base(stats_items, stats_date,
     if (!filter_date(date, created_min, created_max)) continue;
 
     // Archived
-    const publicdate_str = doc["publicdate"];
+    const publicdate_str = doc.publicdate;
     if  (!publicdate_str) continue;
     const publicdate = new Date(publicdate_str);
     if (isNaN(publicdate.getTime())) continue;
     if (!filter_date(publicdate, archived_min, archived_max)) continue;
 
     // Views
-    const downloads_str = doc["downloads"];
-    const     month_str = doc["month"    ];
-    const      week_str = doc["week"     ];
+    const downloads_str = doc.downloads;
+    const     month_str = doc.month;
+    const      week_str = doc.week;
 
     if (!downloads_str || !month_str || !week_str) continue;
 
@@ -296,7 +296,7 @@ function filter_base(stats_items, stats_date,
     const views_old = views_all - month;
     const ratio_old = parseFloat((views_old / days_old).toFixed(3));
 
-    const colls_arr = doc["collection_arr"];
+    const colls_arr = doc.collection_arr;
     const favorites = colls_arr.filter(c => c.startsWith("fav-")).length;
 
     filtered_items.push({

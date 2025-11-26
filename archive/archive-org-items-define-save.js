@@ -301,19 +301,19 @@ function tab_filter_mode() {
 
 /* Stat Subset */
 
-function get_stat_subset(stat, ids) {
-  const subset = [];
+function get_stat_subset(stat, subset_ids) {
+  const stat_subset = [];
 
   for (let i = 0; i < stat.length; i++) {
-    const doc = stat[i];
-    const id  = doc["identifier"];
+    const stat_doc = stat[i];
+    const stat_id  = stat_doc.identifier;
 
-    if (ids[id]) {
-      subset.push(doc);
+    if (subset_ids[stat_id]) {
+      stat_subset.push(stat_doc);
     }
   }
 
-  return subset;
+  return stat_subset;
 }
 
 /* Filtering by Mark Filters */
@@ -450,10 +450,8 @@ function process_filter() {
     results_mark.push({ mark: tab, prev: marks.prev, curr: marks.curr });
 
     if (tab_mark_is_filter(tab)) {
-      if (marks.prev.length || marks.curr.length) {
-        if (!filters_mark) filters_mark = [];
-        filters_mark.push({ prev: marks.prev, curr: marks.curr });
-      }
+      if (!filters_mark) filters_mark = [];
+      filters_mark.push({ prev: marks.prev, curr: marks.curr });
     }
   }
 
