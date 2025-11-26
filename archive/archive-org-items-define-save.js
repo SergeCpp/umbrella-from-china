@@ -1,16 +1,16 @@
 /* Global Variables */
 
 const stat_file_dates   = [];     // ["YYYY-MM-DD"]
-const stat_file_cache   = {};     // ["YYYY-MM-DD"] = { data: NodeList / [], usage: counter }
+const stat_file_cache   = {};     // ["YYYY-MM-DD"] = { data: [], usage: counter }
 
 let   sf_cache_hits     = 0;      // Non-negative integer
 let   sf_cache_misses   = 0;      // Non-negative integer
 
 let   stat_prev_date    = null;   // "YYYY-MM-DD"
-let   stat_prev_items   = null;   // NodeList / []
+let   stat_prev_items   = null;   // []
 
 let   stat_curr_date    = null;   // "YYYY-MM-DD"
-let   stat_curr_items   = null;   // NodeList / []
+let   stat_curr_items   = null;   // []
 
 const stat_subjects     = {       // Section
   date      : "2025-10-19",       // Subjects is the constant part of the stat
@@ -81,23 +81,16 @@ function load_section(section) {
       const docs = xml.querySelectorAll("doc");
 
       // Create data lookup map for id: data
-//    section.items = new Map(); // Slower
-      section.items =        {}; // Faster
+      section.items = {};
       const data_selector = 'arr[name="' + section.name_data + '"], ' +
                             'str[name="' + section.name_data + '"]';
       for (const doc of docs) {
-        const node_i = doc.querySelector('str[name="identifier"]');
-        if  (!node_i) continue;
-        const identifier = node_i.textContent;
+        const node_id = doc.querySelector('str[name="identifier"]');
+        if  (!node_id) continue;
 
-        const node_d = doc.querySelector(data_selector);
-        const data   = node_d
-          ? node_d.tagName === "arr"
-            ? Array.from(node_d.querySelectorAll("str"), n => n.textContent.toLowerCase())
-            : [node_d.textContent.toLowerCase()]
-          : [];
-//      section.items.set(identifier,   data); // Slower
-        section.items    [identifier] = data;  // Faster
+        const identifier = node_id.textContent;
+        const data = get_node_arr(doc, data_selector, true);
+        section.items[identifier] = data;
       }
       const time_2 = performance.now();
 
@@ -661,16 +654,15 @@ function init_dates() {
 
 /* Main */
 
-function get_stat_arr(doc, name) {
-  const node = doc.querySelector('arr[name="' + name + '"], ' +
-                                 'str[name="' + name + '"]');
-  const arr = node
-    ? node.tagName === "arr"
-      ? Array.from(node.querySelectorAll("str"), n => n.textContent.toLowerCase())
-      : [node.textContent.toLowerCase()]
-    : [];
+function get_node_arr(doc, name, is_selector = false) {
+  const node = doc.querySelector(is_selector ? name :
+                                 ('arr[name="' + name + '"], ' +
+                                  'str[name="' + name + '"]'));
+  if  (!node) return [];
+  if   (node.tagName === "arr")
+    return Array.from(node.querySelectorAll("str"), n => n.textContent.toLowerCase());
 
-  return arr;
+  return [node.textContent.toLowerCase()];
 }
 
 function conv_stat_docs(docs) {
@@ -689,8 +681,8 @@ function conv_stat_docs(docs) {
     const month      = doc.querySelector('str[name="month"]'     )?.textContent;
     const week       = doc.querySelector('str[name="week"]'      )?.textContent;
 
-    const collection_arr = get_stat_arr(doc, "collection");
-    const    creator_arr = get_stat_arr(doc, "creator"   );
+    const collection_arr = get_node_arr(doc, "collection");
+    const    creator_arr = get_node_arr(doc, "creator"   );
     const      title_arr = title ? [title.toLowerCase()] : []; // Lowercased as array for filtering
 
     stats.push({
@@ -740,7 +732,7 @@ function load_stat_file(date) {
 
       if (xml.querySelector("parsererror")) { throw new Error(date + " &mdash; Invalid XML format"); }
       const docs   = xml.querySelectorAll("doc");
-//    const stats  = conv_stat_docs(docs);
+      const stats  = conv_stat_docs(docs);
       const time_2 = performance.now();
 
       // Accumulate
@@ -762,10 +754,8 @@ function load_stat_file(date) {
         if (min_entry) delete stat_file_cache[min_entry];
       }
 
-      stat_file_cache[date] = { data: docs,  usage: 1 };
-      return docs;
-//    stat_file_cache[date] = { data: stats, usage: 1 };
-//    return stats;
+      stat_file_cache[date] = { data: stats, usage: 1 };
+      return stats;
     });
 }
 

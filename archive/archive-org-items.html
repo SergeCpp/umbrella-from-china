@@ -13,70 +13,6 @@
   <script defer src="archive-org-items-marker-work.js"></script>
   <script defer src="archive-org-items-render-work.js"></script>
   <script defer src="archive-org-items-runner-work.js"></script>
-
-<style>
-.in-wrap {
-  font-family: monospace;
-  margin: 0.3em auto;
-  max-width: 105ch;
-}
-.in-wide {
-  box-sizing: border-box;
-  font-family: monospace;
-  width: 100%;
-}
-
-.in-grid {
-  display: grid;
-  font-family: monospace;
-  gap: 0.3em 1ch;
-  grid-template-columns: repeat(auto-fit, minmax(33ch, 1fr));
-  margin: 0.3em auto 1em;
-  max-width: 105ch;
-}
-.in-grid :is(button, input) {
-  font-family: monospace;
-}
-
-.in-flex {
-  align-items: center;
-  display: flex;
-}
-.in-mid {
-  flex: 1;
-}
-.in-mid-flex {
-  display: flex;
-  flex: 0;
-}
-.in-side {
-  flex: 0;
-}
-.in-side-flex {
-  display: flex;
-  flex: 1;
-}
-
-.label-mid {
-  cursor: pointer;
-  display: block;
-  text-align: center;
-}
-.label-side {
-  cursor: pointer;
-  flex: 1;
-}
-
-.chk {
-  accent-color: #b5b5b5; /* Gray71 */
-  cursor: pointer;
-}
-.btn {
-  cursor: pointer;
-  margin: 0 0.3em;
-  padding: 0 2.5ch;
-}
-</style>
 </head>
 
 <body>
@@ -139,7 +75,7 @@ href="https://archive.org/advancedsearch.php
 
 -->
 
-<div class="in-wrap" style="margin-top: 1em; margin-bottom: 0.6em;">
+<div class="in-wrap" style="margin-top: 1.2em; margin-bottom: 0.6em;">
   <div class="tab-row">
     <div class="tab-btn tab-a" id="tab-a" role="button" tabindex="0">Mark</div>
     <div class="tab-btn tab-b" id="tab-b" role="button" tabindex="0">Mark</div>
@@ -184,7 +120,7 @@ href="https://archive.org/advancedsearch.php
     <div class="in-side">
       <input id="downloads-min" type="text" size="10" maxlength="10" placeholder="Min / Prev"></div>
     <div class="in-mid">
-      <label class="label-mid" for="downloads-min">Downloads</label></div>
+      <label class="in-label-mid" for="downloads-min">Downloads</label></div>
     <div class="in-side">
       <input id="downloads-max" type="text" size="10" maxlength="10" placeholder="Max / Curr"></div>
   </div>
@@ -193,7 +129,7 @@ href="https://archive.org/advancedsearch.php
     <div class="in-side">
       <input id="month-min" type="text" size="10" maxlength="10" placeholder="Min / Prev"></div>
     <div class="in-mid">
-      <label class="label-mid" for="month-min">Month</label></div>
+      <label class="in-label-mid" for="month-min">Month</label></div>
     <div class="in-side">
       <input id="month-max" type="text" size="10" maxlength="10" placeholder="Max / Curr"></div>
   </div>
@@ -202,7 +138,7 @@ href="https://archive.org/advancedsearch.php
     <div class="in-side">
       <input id="week-min" type="text" size="10" maxlength="10" placeholder="Min / Prev"></div>
     <div class="in-mid">
-      <label class="label-mid" for="week-min">Week</label></div>
+      <label class="in-label-mid" for="week-min">Week</label></div>
     <div class="in-side">
       <input id="week-max" type="text" size="10" maxlength="10" placeholder="Max / Curr"></div>
   </div>
@@ -211,7 +147,7 @@ href="https://archive.org/advancedsearch.php
     <div class="in-side">
       <input id="created-min" type="text" size="10" maxlength="10" placeholder="Min" value="2012-01-01"></div>
     <div class="in-mid">
-      <label class="label-mid" for="created-min">Created</label></div>
+      <label class="in-label-mid" for="created-min">Created</label></div>
     <div class="in-side">
       <input id="created-max" type="text" size="10" maxlength="10" placeholder="Max" value="2024-10-19"></div>
   </div>
@@ -219,13 +155,13 @@ href="https://archive.org/advancedsearch.php
   <div class="in-flex">
     <div class="in-side-flex">
       <input id="favs-min" type="text" size="5" maxlength="5" placeholder="Favs">
-      <label for="favs-min" class="label-side"></label></div>
+      <label for="favs-min" class="in-label-side"></label></div>
     <div class="in-mid-flex">
-      <input id="prev-only" class="chk" type="checkbox">
-      <button id="process-filter" class="btn">Filter</button>
-      <input id="curr-only" class="chk" type="checkbox"></div>
+      <input id="prev-only" class="in-chk" type="checkbox">
+      <button id="process-filter" class="in-btn">Filter</button>
+      <input id="curr-only" class="in-chk" type="checkbox"></div>
     <div class="in-side-flex">
-      <label for="favs-max" class="label-side"></label>
+      <label for="favs-max" class="in-label-side"></label>
       <input id="favs-max" type="text" size="5" maxlength="5" placeholder="Favs"></div>
   </div>
 
@@ -233,7 +169,7 @@ href="https://archive.org/advancedsearch.php
     <div class="in-side">
       <input id="archived-min" type="text" size="10" maxlength="10" placeholder="Min" value="2022-05-06"></div>
     <div class="in-mid">
-      <label class="label-mid" for="archived-min">Archived</label></div>
+      <label class="in-label-mid" for="archived-min">Archived</label></div>
     <div class="in-side">
       <input id="archived-max" type="text" size="10" maxlength="10" placeholder="Max" value="2025-03-08"></div>
   </div>

@@ -164,6 +164,70 @@
   border-bottom-color: hsl(0.91turn 75% 71%);
 }
 
+/* Inputs */
+
+.in-wrap {
+  font-family: monospace;
+  margin: 0.3em auto;
+  max-width: 105ch;
+}
+.in-wide {
+  box-sizing: border-box;
+  font-family: monospace;
+  width: 100%;
+}
+
+.in-grid {
+  display: grid;
+  font-family: monospace;
+  gap: 0.3em 1ch;
+  grid-template-columns: repeat(auto-fit, minmax(33ch, 1fr));
+  margin: 0.3em auto 1em;
+  max-width: 105ch;
+}
+.in-grid :is(button, input) {
+  font-family: monospace;
+}
+
+.in-flex {
+  align-items: center;
+  display: flex;
+}
+.in-mid {
+  flex: 1;
+}
+.in-mid-flex {
+  display: flex;
+  flex: 0;
+}
+.in-side {
+  flex: 0;
+}
+.in-side-flex {
+  display: flex;
+  flex: 1;
+}
+
+.in-label-mid {
+  cursor: pointer;
+  display: block;
+  text-align: center;
+}
+.in-label-side {
+  cursor: pointer;
+  flex: 1;
+}
+
+.in-chk {
+  accent-color: #b5b5b5; /* Gray71 */
+  cursor: pointer;
+}
+.in-btn {
+  cursor: pointer;
+  margin: 0 0.3em;
+  padding: 0 2.5ch;
+}
+
 /* Wrapper > inner > [title, stat:prev, stat:curr, grow] */
 
 /* Header */

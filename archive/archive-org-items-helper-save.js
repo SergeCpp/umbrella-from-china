@@ -1,36 +1,11 @@
-/* Doc Cache */
+/* Doc */
 
 function get_doc_arr(doc, name) {
-  if (!(doc instanceof Element)) return doc[name + "_arr"] ?? [];
-
-  if (!doc.arr_cache) doc.arr_cache = {};
-  let arr = doc.arr_cache[name];
-  if (arr !== undefined) return arr;
-
-  const node = doc.querySelector('arr[name="' + name + '"], ' +
-                                 'str[name="' + name + '"]');
-  arr = node
-    ? node.tagName === "arr"
-      ? Array.from(node.querySelectorAll("str"), n => n.textContent.toLowerCase())
-      : [node.textContent.toLowerCase()]
-    : [];
-
-  doc.arr_cache[name] = arr;
-  return arr;
+  return doc[name + "_arr"] ?? [];
 }
 
 function get_doc_str(doc, name) {
-  if (!(doc instanceof Element)) return doc[name] ?? null;
-
-  if (!doc.str_cache) doc.str_cache = {};
-  let str = doc.str_cache[name];
-  if (str !== undefined) return str;
-
-  const node = doc.querySelector('str[name="' + name + '"]');
-  str = node ? node.textContent : null;
-
-  doc.str_cache[name] = str;
-  return str;
+  return doc[name] ?? null;
 }
 
 /* Filter by Query */
