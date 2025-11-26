@@ -108,6 +108,10 @@
   <loc>https://umbrella-from-china.neocities.org/zhao-fangjing-songs</loc>
   <priority>0.7</priority>
 </url>
+<url>
+  <loc>https://umbrella-from-china.neocities.org/sitemap</loc>
+  <priority>0.6</priority>
+</url>
 </urlset>
 
 

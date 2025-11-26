@@ -276,14 +276,14 @@ https://umbrella-from-china.neocities.org/ren-ran-videos.txt
 https://umbrella-from-china.neocities.org/robots.txt
 https://umbrella-from-china.neocities.org/shi-yuan-jiang-dancer.html
 https://umbrella-from-china.neocities.org/shi-yuan-jiang-dancer.txt
-https://umbrella-from-china.neocities.org/sitemap.xml
+https://umbrella-from-china.neocities.org/sitemap.html
 -
+https://umbrella-from-china.neocities.org/sitemap.xml
 https://umbrella-from-china.neocities.org/style.css
 https://umbrella-from-china.neocities.org/tang-yufei-songs.html
 https://umbrella-from-china.neocities.org/tang-yufei-songs.txt
 https://umbrella-from-china.neocities.org/tong-hua-nichole-dancer.html
 https://umbrella-from-china.neocities.org/tong-hua-nichole-dancer.txt
-https://umbrella-from-china.neocities.org/tools.html // Used only for testing, etc.
 https://umbrella-from-china.neocities.org/wang-ziyu-songs.html
 https://umbrella-from-china.neocities.org/wang-ziyu-songs.txt
 https://umbrella-from-china.neocities.org/wu-tong-dancer.html
