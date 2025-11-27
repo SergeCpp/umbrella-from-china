@@ -212,14 +212,25 @@ function evaluate_term(term, values) {
     case "OR":
       return term.terms.some(part => evaluate_term(part, values));
 
-    case "NOT":
+    case "XOR":
+      //  XOR : Include if one match only
+      let cnt_match = 0;
+      for (const part of term.terms) {
+        if (evaluate_term(part, values)) {
+          cnt_match++;
+          if (cnt_match > 1) return false;
+        }
+      }
+      return cnt_match === 1;
+
+    case "NOT"   :
     case "NOTANY":
-      //  NOTANY: Exclude if any value matches term.excl
+      //  NOTANY : Exclude if any value matches term.excl
       const any_match = evaluate_term(term.excl, values);
       return (!term.incl || evaluate_term(term.incl, values)) && !any_match;
 
     case "NOTALL":
-      //  NOTALL: Exclude if all values matches term.excl
+      //  NOTALL : Exclude if all values matches term.excl
       const all_match = values.every(value => evaluate_term(term.excl, [value]));
       return (!term.incl || evaluate_term(term.incl, values)) && !all_match;
 
@@ -227,7 +238,7 @@ function evaluate_term(term, values) {
       return values.some(value => value.includes(term.text));
 
     default:
-      return false; // Unknown type
+      return false; // Unknown type of term
   }
 }
 
@@ -273,6 +284,14 @@ function parse_term(term) {
       type: "NOTALL",
       incl: incl ? parse_term(incl) : null,
       excl:        parse_term(excl)
+    };
+  }
+  // Check for XOR next
+  else if (term.includes(" XOR ")) {
+    const terms = term.split(" XOR ").map(part => parse_term(part));
+    return {
+      type: "XOR",
+      terms: terms
     };
   }
   // Check for OR next
