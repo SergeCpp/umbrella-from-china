@@ -89,6 +89,209 @@ function error_compose(title, description = null) {
   return err_beg + title + err_end;
 }
 
+/* Filter by Date */
+
+function filter_date(date, min, max) {
+  if (min.base === "year") return (date >= min.min) && (date <= max.max);
+
+  // Month-based
+  const date_month = date.getUTCMonth() + 1;
+  const date_day   = date.getUTCDate();
+
+  const date_ge_md = () => (date_month > min.month) || ((date_month === min.month) && (date_day >= min.day));
+  const date_le_md = () => (date_month < max.month) || ((date_month === max.month) && (date_day <= max.day));
+
+  if (min.day && max.day) {
+    if (min.month <= max.month) return date_ge_md() && date_le_md();
+    return                             date_ge_md() || date_le_md();
+  }
+  if (min.day) {
+    if (min.month <= max.month) return date_ge_md() && (date_month <= max.month);
+    return                             date_ge_md() || (date_month <= max.month);
+  }
+  if (max.day) {
+    if (min.month <= max.month) return (date_month >= min.month) && date_le_md();
+    return                             (date_month >= min.month) || date_le_md();
+  }
+  // Month only
+  if (min.month <= max.month) return (date_month >= min.month) && (date_month <= max.month);
+  return                             (date_month >= min.month) || (date_month <= max.month);
+}
+
+function get_date_range(date_str) {
+  if (!date_str) return null;
+
+  // Catch empty parts like "2022-", "2022--", "2022-08-", "2022--08"
+  const parts_str = date_str.split('-').map(part => part.trim());
+  if   (parts_str.some(part => !/^\d{1,4}$/.test(part))) return null;
+
+  const first_str = parts_str[0];
+  const first_len = first_str.length;
+
+  const parts = parts_str.map(Number); // Ok with check above
+
+  if (first_len === 4) { // Year-based format
+    const base = "year";
+
+    if (parts.length === 1) { // Year
+      const year = parts[0];
+      if (!is_date_valid(year, 1, 1)) return null;
+      return {
+        base,
+        min: new Date(Date.UTC(year, 01-1, 01, 00, 00, 00, 000)), // Year beg
+        max: new Date(Date.UTC(year, 12-1, 31, 23, 59, 59, 999))  // Year end
+      };
+    }
+    if (parts.length === 2) { // Year-Month
+      const [year, month] = parts;
+      if (!is_date_valid(year, month, 1)) return null;
+      const e_mday = new Date(Date.UTC(year, month, 0)).getUTCDate();
+      return {
+        base,
+        min: new Date(Date.UTC(year, month - 1, 1,      00, 00, 00, 000)), // Month beg
+        max: new Date(Date.UTC(year, month - 1, e_mday, 23, 59, 59, 999))  // Month end
+      };
+    }
+    if (parts.length === 3) { // Year-Month-Day
+      const [year, month, day] = parts;
+      if (!is_date_valid(year, month, day)) return null;
+      return {
+        base,
+        min: new Date(Date.UTC(year, month - 1, day, 00, 00, 00, 000)), // Day beg
+        max: new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999))  // Day end
+      };
+    }
+    return null; // Invalid format
+  }
+
+  // Month-based format
+
+  const base = "month";
+
+  if (first_len === 3) {
+    if (first_str === "520") return { base, month: 5, day: 20 }; // Happy 520 Day!
+    return null;
+  }
+
+  const month = parts[0];
+  if  ((month < 1) || (month > 12)) return null;
+
+  if (parts.length === 1) return { base, month };
+
+  if (parts.length === 2) {
+    const day = parts[1];
+    if (!is_date_valid(2024, month, day)) return null; // Allow 29 days for February
+    return { base, month, day };
+  }
+  return null; // Invalid format
+}
+
+function is_date_valid(year, month, day) {
+  // Create date and check if it "corrects" the input
+  const  date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && 
+         date.getUTCMonth() === (month - 1) && 
+         date.getUTCDate() === day;
+}
+
+/* Filter by Query */
+
+function filter_matches(doc, field, terms) {
+  if (!terms || !terms.length) return true; // No or empty filter = match all
+
+  const values = doc[field + "_arr"];
+
+  return terms.some(term => evaluate_term(term, values)); // Check if any term matches
+}
+
+function evaluate_term(term, values) {
+  switch(term.type) {
+    case "AND":
+      return term.terms.every(part => evaluate_term(part, values));
+
+    case "OR":
+      return term.terms.some(part => evaluate_term(part, values));
+
+    case "NOT":
+    case "NOTANY":
+      //  NOTANY: Exclude if any value matches term.excl
+      const any_match = evaluate_term(term.excl, values);
+      return (!term.incl || evaluate_term(term.incl, values)) && !any_match;
+
+    case "NOTALL":
+      //  NOTALL: Exclude if all values matches term.excl
+      const all_match = values.every(value => evaluate_term(term.excl, [value]));
+      return (!term.incl || evaluate_term(term.incl, values)) && !all_match;
+
+    case "TEXT":
+      return values.some(value => value.includes(term.text));
+
+    default:
+      return false; // Unknown type
+  }
+}
+
+function parse_term(term) {
+  term = term.trim();
+
+  // Check for AND first (higher precedence)
+  if (term.includes(" AND ")) {
+    const terms = term.split(" AND ").map(part => parse_term(part));
+    return {
+      type: "AND",
+      terms: terms
+    };
+  }
+  // Check for NOT next
+  else if (term.includes("NOT ")) {
+    const index = term.indexOf("NOT ");
+    const incl  = term.substring(0, index    ); // Left
+    const excl  = term.substring(   index + 4); // Right
+    return {
+      type: "NOT",
+      incl: incl ? parse_term(incl) : null,
+      excl:        parse_term(excl)
+    };
+  }
+  // Check for NOTANY next
+  else if (term.includes("NOTANY ")) {
+    const index = term.indexOf("NOTANY ");
+    const incl  = term.substring(0, index    ); // Left
+    const excl  = term.substring(   index + 7); // Right
+    return {
+      type: "NOTANY",
+      incl: incl ? parse_term(incl) : null,
+      excl:        parse_term(excl)
+    };
+  }
+  // Check for NOTALL next
+  else if (term.includes("NOTALL ")) {
+    const index = term.indexOf("NOTALL ");
+    const incl  = term.substring(0, index    ); // Left
+    const excl  = term.substring(   index + 7); // Right
+    return {
+      type: "NOTALL",
+      incl: incl ? parse_term(incl) : null,
+      excl:        parse_term(excl)
+    };
+  }
+  // Check for OR next
+  else if (term.includes(" OR ")) {
+    const terms = term.split(" OR ").map(part => parse_term(part));
+    return {
+      type: "OR",
+      terms: terms
+    };
+  }
+  // Plain text term (OR behavior of comma-separated terms)
+  else {
+    return {
+      type: "TEXT", // Quote allows leading/trailing space, also ' ' possible for term
+      text: term.replace(/['"]/g, "").toLowerCase()
+    };
+  }
+}
+
 /* Filter Input Check */
 
 function input_clean_parse(input) {

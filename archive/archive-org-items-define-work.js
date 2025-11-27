@@ -130,14 +130,72 @@ function filter_section(items_prev, items_curr, section_items, section_terms) {
   return { done: true, prev: results_prev, curr: results_curr };
 }
 
-/* Tabbed Input */
+/* Controls */
 
-let   tab_active    = null;
-const tab_input_ids =
+const input_ids =
   [  'collections',      'creators',    'subjects',       'title', 'description',
    'downloads-min', 'downloads-max',   'month-min',   'month-max',    'week-min', 'week-max',
     'archived-min',  'archived-max', 'created-min', 'created-max',    'favs-min', 'favs-max',
        'prev-only',     'curr-only'];
+
+// Initialization
+
+function init_controls() {
+  // Add click and Enter/Space/Arrows to tabs
+  const tabs = ['a', 'b', 'c', 'd', 'e'];
+
+  tabs.forEach((tab, index) => {
+    const button = document.getElementById('tab-' + tab);
+    if   (button) {
+      button.onclick = () => tab_switch(tab);
+      button.onkeyup = function(event) {
+        if ((event.key === 'Enter') || (event.key === ' ')) {
+          tab_switch(tab);
+        }
+      };
+      button.onkeydown = function(event) {
+        if ((event.key === 'Enter') || (event.key === ' ')) {
+          event.preventDefault();
+        }
+        else if ((event.key === 'ArrowLeft') || (event.key === 'ArrowRight')) {
+          event.preventDefault();
+
+          const index_new = (event.key === 'ArrowLeft') // else ArrowRight
+                          ? ((index - 1 + tabs.length) % tabs.length)
+                          : ((index + 1)               % tabs.length);
+
+          const button_new = document.getElementById('tab-' + tabs[index_new]);
+          if   (button_new) {
+            button_new.focus();
+          }
+        }
+      };
+    }
+  });
+
+  // Add Enter key to inputs
+  input_ids.forEach(id => {
+    const input = document.getElementById(id);
+    if   (input) {
+      input.onkeyup = function(event) {
+        if (event.key === 'Enter') {
+          process_filter();
+        }
+      };
+    }
+  });
+
+  // Add click to button
+  const button = document.getElementById('process-filter');
+  if   (button) {
+    button.onclick = process_filter;
+  }
+}
+
+/* Tabbed Input */
+
+let   tab_active       = null;
+const tab_input_ids    = input_ids;
 const tab_input_values = {}; // [tab] = { values }; [""] = { defaults };
 const tab_mode         = {   // [tab] = "" / "Filter", for ['c'] = "OR" / "AND" / "SUB"
   a: "",
@@ -197,7 +255,7 @@ function tab_is_changed(tab) {
 
 // Mode
 
-function tab_filters_count() {
+function tab_mark_filters_count() {
   return ['a', 'b', 'd', 'e'].filter(tab => tab_mode[tab] === "Filter").length;
 }
 
@@ -213,13 +271,13 @@ function tab_set_text(tab, text) {
 
 function tab_set_center() {
   let tab_text = "Filter";
-  if (tab_filters_count()) tab_text += ' ' + tab_mode['c'];
+  if (tab_mark_filters_count()) tab_text += ' ' + tab_mode['c'];
   tab_set_text('c', tab_text);
 }
 
 function tab_toggle(tab) {
   if(tab === 'c') {
-    if (!tab_filters_count()) return;
+    if (!tab_mark_filters_count()) return;
 
     tab_mode[tab] = (tab_mode[tab] === "OR" ) ? "AND"
                   : (tab_mode[tab] === "AND") ? "SUB"
@@ -284,19 +342,27 @@ function tab_switch(tab) {
 // Interface
 
 function tab_get(tab) {
-  if (tab === tab_active) tab_update(tab_active);
+  if (tab === tab_active) tab_update(tab);
 
   return tab_is_changed(tab)
          ? { changed: true,  values: tab_input_values[tab] }
          : { changed: false, values: tab_input_values["" ] };
 }
 
-function tab_mark_is_filter(tab) {
-  return tab_mode[tab] === "Filter";
+function tab_filter_inputs() {
+  return tab_get('c');
 }
 
 function tab_filter_mode() {
   return tab_mode['c'];
+}
+
+function tab_marks() {
+  return ['a', 'b', 'd', 'e'];
+}
+
+function tab_mark_is_filter(tab) {
+  return tab_mode[tab] === "Filter";
 }
 
 /* Stat Subset */
@@ -387,7 +453,7 @@ function process_filter() {
   try {
 
   // Filtering
-  const  inputs_filter = tab_get('c');
+  const  inputs_filter = tab_filter_inputs();
   const results_filter = filter_route(stat_prev_items, stat_prev_date,
                                       stat_curr_items, stat_curr_date,
     stat_subjects, stat_descriptions,
@@ -412,7 +478,7 @@ function process_filter() {
   let results_mark = null;
   let filters_mark = null;
 
-  for (const tab of ['a', 'b', 'd', 'e']) {
+  for (const tab of tab_marks()) {
     const inputs = tab_get(tab);
     if  (!inputs.changed) continue;
 
