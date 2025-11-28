@@ -196,7 +196,7 @@ function init_controls() {
 let   tab_active       = null;
 const tab_input_ids    = input_ids;
 const tab_input_values = {}; // [tab] = { values }; [""] = { defaults };
-const tab_mode         = {   // [tab] = "" / "Filter", for ['c'] = "OR" / "AND" / "SUB" / "XOR"
+const tab_mode         = {   // [tab] = "" / "Filter", for ['c'] = "OR" / "AND" / "NOT" / "XOR"
   a: "",
   b: "",
   c: "OR",
@@ -279,8 +279,8 @@ function tab_toggle(tab) {
     if (!tab_mark_filters_count()) return;
 
     tab_mode[tab] = (tab_mode[tab] ===  "OR") ? "AND"
-                  : (tab_mode[tab] === "AND") ? "SUB"
-                  : (tab_mode[tab] === "SUB") ? "XOR"
+                  : (tab_mode[tab] === "AND") ? "NOT"
+                  : (tab_mode[tab] === "NOT") ? "XOR"
                   : (tab_mode[tab] === "XOR") ?  "OR"
                   : "OR"; // Mode was unknown
   }
@@ -384,6 +384,7 @@ function get_stat_subset(stat, subset_ids) {
 
 /* Filtering by Mark Filters */
 
+// Array of marks is not empty
 function filter_by_marks(prev, curr, marks) {
   const mode = tab_filter_mode();
 
@@ -432,7 +433,7 @@ function filter_by_marks(prev, curr, marks) {
       break;
 
     case  "OR":
-    case "SUB":
+    case "NOT":
       for (const ids of marked_ids) {
         for (const id in ids) combined_ids[id] = true;
       }
@@ -451,7 +452,7 @@ function filter_by_marks(prev, curr, marks) {
       results_curr = curr.filter(item => combined_ids[item.identifier]);
       break;
 
-    case "SUB":
+    case "NOT":
       results_prev = prev.filter(item => !combined_ids[item.identifier]);
       results_curr = curr.filter(item => !combined_ids[item.identifier]);
       break;
