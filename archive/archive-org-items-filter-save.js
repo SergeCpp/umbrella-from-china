@@ -32,7 +32,8 @@ const err_views =
   'Aggregate range uses aggregate function in any field (or in both fields) of min/max pair<br />' +
   'Examples: min 10 / 20, min 10 / avg 30, also: max 20 / min 10 ("reversed" aggregate range)<br />' +
   'Note: min 10 / 20, and 10 / min 20 aggregate ranges both are mean min 10 / min 20<br />' +
-  'Aggregate functions are: min, avg, max, add, sub, prev, curr' +
+  'Aggregate item functions are: min, avg, max, add, sub, prev, curr<br />' +
+  'Aggregate prev/curr functions are: topp/tp, topc/tc, btmp/bp, btmc/bc' +
   '</p><p>' +
   'Keys: grow, fall, same, diff (aliases: / \\ = !) switch min/max logic to prev/curr logic<br />' +
   'Key allows number after it, and percent sign % can be after number' +
@@ -653,7 +654,8 @@ function filter_route(base_prev_items, base_prev_date,
   // Descriptions Check: Wait for sect_descriptions.items to load
   if (wait_section(sect_descriptions, description)) return { wait: true };
 
-  // Checking and Initial Filtering Items, and Calculating Stats
+  /////////////////////////////////////////////////////////////////
+  // 1. Checking and Initial Filtering Items, and Calculating Stats
   let results_prev = filter_base(base_prev_items, base_prev_date,
     archived_min_range, archived_max_range, created_min_range, created_max_range,
     collections, creators, title);
@@ -661,7 +663,35 @@ function filter_route(base_prev_items, base_prev_date,
     archived_min_range, archived_max_range, created_min_range, created_max_range,
     collections, creators, title);
 
-  // Views
+  // 2. Subjects
+  const filtered_subjects = filter_section(results_prev, results_curr,
+    sect_subjects.items, subjects);
+  if (filtered_subjects.done) {
+    results_prev = filtered_subjects.prev;
+    results_curr = filtered_subjects.curr;
+  }
+  else if (filtered_subjects.error) {
+    const error =            sect_subjects.text_error
+                ? (err_beg + sect_subjects.text_error + err_end)
+                :  err_subjects; // Generic
+    return { error };
+  }
+
+  // 3. Description
+  const filtered_descriptions = filter_section(results_prev, results_curr,
+    sect_descriptions.items, description);
+  if (filtered_descriptions.done) {
+    results_prev = filtered_descriptions.prev;
+    results_curr = filtered_descriptions.curr;
+  }
+  else if (filtered_descriptions.error) {
+    const error =            sect_descriptions.text_error
+                ? (err_beg + sect_descriptions.text_error + err_end)
+                :  err_descriptions; // Generic
+    return { error };
+  }
+
+  // 4. Views
   const filtered_views = filter_views(results_prev, results_curr,
     dl_min_str, dl_min_kv, dl_min_no, dl_min_agg,
     dl_max_str, dl_max_kv, dl_max_no, dl_max_agg, is_dl_old,
@@ -674,7 +704,7 @@ function filter_route(base_prev_items, base_prev_date,
     results_curr = filtered_views.curr;
   }
 
-  // Favs
+  // 5. Favs
   const filtered_favs = filter_favs(results_prev, results_curr,
     favs_min_str, favs_min_kv, favs_min_no, favs_min_agg,
     favs_max_str, favs_max_kv, favs_max_no, favs_max_agg);
@@ -683,33 +713,7 @@ function filter_route(base_prev_items, base_prev_date,
     results_curr = filtered_favs.curr;
   }
 
-  // Subjects
-  const filtered_subjects = filter_section(results_prev, results_curr, sect_subjects.items, subjects);
-  if   (filtered_subjects.done) {
-    results_prev = filtered_subjects.prev;
-    results_curr = filtered_subjects.curr;
-  }
-  else if (filtered_subjects.error) {
-    const error =            sect_subjects.text_error
-                ? (err_beg + sect_subjects.text_error + err_end)
-                :  err_subjects; // Generic
-    return { error };
-  }
-
-  // Descriptions
-  const filtered_descriptions = filter_section(results_prev, results_curr, sect_descriptions.items, description);
-  if   (filtered_descriptions.done) {
-    results_prev = filtered_descriptions.prev;
-    results_curr = filtered_descriptions.curr;
-  }
-  else if (filtered_descriptions.error) {
-    const error =            sect_descriptions.text_error
-                ? (err_beg + sect_descriptions.text_error + err_end)
-                :  err_descriptions; // Generic
-    return { error };
-  }
-
-  // Sets. Must be the last filter
+  // 6. Sets. Must be the last filter
   const prev_only = input_values["prev-only"];
   const curr_only = input_values["curr-only"];
 

@@ -196,7 +196,8 @@ function get_num(str, key_other) {
   return [ s, op ];
 }
 
-// Syntax: [[min | avg | max | add | sub | prev | curr] non-negative integer]
+// Syntax: [[agg] non-negative integer]
+// agg is: min | avg | max | add | sub | prev | curr | topp/tp | topc/tc | btmp/bp | btmc/bc
 function get_agg(str) {
   if (!str) return [ "", null ]; // Any number on this side
 
@@ -210,6 +211,16 @@ function get_agg(str) {
   else if (str.startsWith("sub" )) { sl = 3; agg = "sub" ; }
   else if (str.startsWith("prev")) { sl = 4; agg = "prev"; }
   else if (str.startsWith("curr")) { sl = 4; agg = "curr"; }
+  //
+  else if (str.startsWith("topp")) { sl = 4; agg = "topp"; }
+  else if (str.startsWith("tp"  )) { sl = 2; agg = "topp"; }
+  else if (str.startsWith("topc")) { sl = 4; agg = "topc"; }
+  else if (str.startsWith("tc"  )) { sl = 2; agg = "topc"; }
+  //
+  else if (str.startsWith("btmp")) { sl = 4; agg = "btmp"; }
+  else if (str.startsWith("bp"  )) { sl = 2; agg = "btmp"; }
+  else if (str.startsWith("btmc")) { sl = 4; agg = "btmc"; }
+  else if (str.startsWith("bc"  )) { sl = 2; agg = "btmc"; }
 
   let s = sl ? str.slice(sl).trimStart() : str;
   if (!/^\d{1,8}$/.test(s))    return [ str, null ];
@@ -322,9 +333,9 @@ function filter_count_keys(items_prev, items_curr,
 
   const res = {};
 
-  const [outer, inner] = is_key(prev_str)
-    ? [count_curr, count_prev]  // Curr may be smaller
-    : [count_prev, count_curr]; // Prev may be smaller
+  const [outer,      inner     ] = is_key(prev_str)
+      ? [count_curr, count_prev]   // Curr may be smaller
+      : [count_prev, count_curr];  // Prev may be smaller
 
   for (const identifier in outer) {
     if (inner[identifier] === undefined) continue;
@@ -376,7 +387,12 @@ const agg_fn = {
   sub : (prev, curr) => Math.abs(prev - curr),
 
   prev: (prev, curr) => prev,
-  curr: (prev, curr) => curr
+  curr: (prev, curr) => curr,
+
+  topp: (prev, curr) => prev,
+  topc: (prev, curr) => curr,
+  btmp: (prev, curr) => prev,
+  btmc: (prev, curr) => curr
 };
 
 function agg_value(prev, curr, agg) {
@@ -384,11 +400,35 @@ function agg_value(prev, curr, agg) {
   return fn ? fn(prev, curr) : 0;
 }
 
-// Usage: At least one of *_agg must be of: min, avg, max, add, sub, prev, curr
+// n is 1-based
+function agg_nth(items_arr, count_map, n, agg_prefix) {
+  const counts = [];
+
+  for (const item of items_arr) {
+    const count = count_map[item.identifier];
+    if   (count === undefined) continue;
+    counts.push(count);
+  }
+  const counts_len = counts.length;
+  if  (!counts_len) return 0;
+
+  counts.sort((above, below) => above - below); // Ascending
+
+  if (n < 1)          n = 1;
+  if (n > counts_len) n = counts_len;
+
+  if (agg_prefix === "top") return counts[counts_len - n];
+  if (agg_prefix === "btm") return counts[n          - 1];
+
+  return 0;
+}
+
+// Usage: At least one of *_agg must be of: see get_agg
 // If one of *_agg is not set, then this side uses agg of other side
-function filter_count_range_agg(items_prev, items_curr, min_str, min_agg, max_str, max_agg, get_count) {
-  const min = min_str ? parseInt(min_str, 10) : 0;
-  const max = max_str ? parseInt(max_str, 10) : Infinity;
+function filter_count_range_agg(items_prev, items_curr,
+  min_str, min_agg, max_str, max_agg, get_count) {
+  let min = min_str ? parseInt(min_str, 10) : 0;
+  let max = max_str ? parseInt(max_str, 10) : Infinity;
 
   if (!min_agg) min_agg = max_agg;
   if (!max_agg) max_agg = min_agg;
@@ -398,6 +438,29 @@ function filter_count_range_agg(items_prev, items_curr, min_str, min_agg, max_st
 
   for (const item of items_prev) count_prev[item.identifier] = get_count(item);
   for (const item of items_curr) count_curr[item.identifier] = get_count(item);
+
+  const is_nth = (s) => ["topp", "topc", "btmp", "btmc"].includes(s);
+
+  if (is_nth(min_agg)) {
+    const agg_prefix = min_agg.slice(0, 3);
+    const agg_suffix = min_agg.slice(3, 4);
+    const n = min_str ? min : (agg_prefix === "top") ? Infinity : 0;
+
+    const [items_arr , count_map ] = (agg_suffix === 'p')
+        ? [items_curr, count_prev]
+        : [items_prev, count_curr];
+    min = agg_nth(items_arr, count_map, n, agg_prefix);
+  }
+  if (is_nth(max_agg)) {
+    const agg_prefix = max_agg.slice(0, 3);
+    const agg_suffix = max_agg.slice(3, 4);
+    const n = max_str ? max : (agg_prefix === "top") ? 0 : Infinity;
+
+    const [items_arr , count_map ] = (agg_suffix === 'p')
+        ? [items_curr, count_prev]
+        : [items_prev, count_curr];
+    max = agg_nth(items_arr, count_map, n, agg_prefix);
+  }
 
   const res = {};
 
@@ -418,7 +481,8 @@ function filter_count_range_agg(items_prev, items_curr, min_str, min_agg, max_st
   return res;
 }
 
-function filter_count_range_val(items_prev, items_curr, min_str, max_str, get_count) {
+function filter_count_range_val(items_prev, items_curr,
+  min_str, max_str, get_count) {
   const min = min_str ? parseInt(min_str, 10) : 0;
   const max = max_str ? parseInt(max_str, 10) : Infinity;
 
@@ -448,7 +512,7 @@ function filter_count_range_val(items_prev, items_curr, min_str, max_str, get_co
 
 // Usage: *_min_str as *_prev_str, *_max_str as *_curr_str
 // *_str are: number / "" / keys: grow, fall, same, diff
-// *_agg are: min / avg / max / add / sub / prev / curr, and null is allowed for one of *_agg
+// *_agg are: see get_agg, and null is allowed for one of *_agg
 function filter_views_keys_agg(items_prev, items_curr,
   dl_prev_str, dl_prev_kv, dl_prev_no, dl_prev_agg,
   dl_curr_str, dl_curr_kv, dl_curr_no, dl_curr_agg, get_dl,
@@ -605,7 +669,7 @@ function filter_favs_keys(items_prev, items_curr,
 }
 
 // *_str are: number / ""
-// *_agg are: min / avg / max / add / sub / prev / curr, and null is allowed for one of *_agg
+// *_agg are: see get_agg, and null is allowed for one of *_agg
 function filter_favs_agg(items_prev, items_curr,
   favs_min_str, favs_min_agg,
   favs_max_str, favs_max_agg) {
