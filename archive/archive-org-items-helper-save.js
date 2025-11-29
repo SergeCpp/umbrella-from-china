@@ -196,8 +196,11 @@ function get_num(str, key_other) {
   return [ s, op ];
 }
 
-// Syntax: [[agg] non-negative integer]
-// agg is: min | avg | max | add | sub | prev | curr | topp/tp | topc/tc | btmp/bp | btmc/bc
+// Syntax  : [[agg] non-negative integer]
+// agg is  : agg_item | agg_rank
+// agg_item: min | avg | max | add | sub | prev | curr
+// agg_rank: topa/ta | btma/ba | tops/ts | btms/bs
+//           topp/tp | btmp/bp | topc/tc | btmc/bc
 function get_agg(str) {
   if (!str) return [ "", null ]; // Any number on this side
 
@@ -212,13 +215,23 @@ function get_agg(str) {
   else if (str.startsWith("prev")) { sl = 4; agg = "prev"; }
   else if (str.startsWith("curr")) { sl = 4; agg = "curr"; }
   //
-  else if (str.startsWith("topp")) { sl = 4; agg = "topp"; }
-  else if (str.startsWith("tp"  )) { sl = 2; agg = "topp"; }
-  else if (str.startsWith("topc")) { sl = 4; agg = "topc"; }
-  else if (str.startsWith("tc"  )) { sl = 2; agg = "topc"; }
+  else if (str.startsWith("topa")) { sl = 4; agg = "topa"; } // avg
+  else if (str.startsWith("ta"  )) { sl = 2; agg = "topa"; }
+  else if (str.startsWith("btma")) { sl = 4; agg = "btma"; }
+  else if (str.startsWith("ba"  )) { sl = 2; agg = "btma"; }
   //
+  else if (str.startsWith("tops")) { sl = 4; agg = "tops"; } // sub
+  else if (str.startsWith("ts"  )) { sl = 2; agg = "tops"; }
+  else if (str.startsWith("btms")) { sl = 4; agg = "btms"; }
+  else if (str.startsWith("bs"  )) { sl = 2; agg = "btms"; }
+  //
+  else if (str.startsWith("topp")) { sl = 4; agg = "topp"; } // prev
+  else if (str.startsWith("tp"  )) { sl = 2; agg = "topp"; }
   else if (str.startsWith("btmp")) { sl = 4; agg = "btmp"; }
   else if (str.startsWith("bp"  )) { sl = 2; agg = "btmp"; }
+  //
+  else if (str.startsWith("topc")) { sl = 4; agg = "topc"; } // curr
+  else if (str.startsWith("tc"  )) { sl = 2; agg = "topc"; }
   else if (str.startsWith("btmc")) { sl = 4; agg = "btmc"; }
   else if (str.startsWith("bc"  )) { sl = 2; agg = "btmc"; }
 
@@ -389,9 +402,14 @@ const agg_fn = {
   prev: (prev, curr) => prev,
   curr: (prev, curr) => curr,
 
+  topa: (prev, curr) =>         (prev + curr) / 2,
+  btma: (prev, curr) =>         (prev + curr) / 2,
+  tops: (prev, curr) => Math.abs(prev - curr),
+  btms: (prev, curr) => Math.abs(prev - curr),
+
   topp: (prev, curr) => prev,
-  topc: (prev, curr) => curr,
   btmp: (prev, curr) => prev,
+  topc: (prev, curr) => curr,
   btmc: (prev, curr) => curr
 };
 
@@ -401,24 +419,29 @@ function agg_value(prev, curr, agg) {
 }
 
 // n is 1-based
-function agg_nth(items_arr, count_map, n, agg_prefix) {
-  const counts = [];
+function agg_nth(count_prev, count_curr, n, agg) {
+  const values = [];
 
-  for (const item of items_arr) {
-    const count = count_map[item.identifier];
-    if   (count === undefined) continue;
-    counts.push(count);
+  for (const identifier in count_prev) {
+    if (count_curr[identifier] === undefined) continue;
+
+    const icp = count_prev[identifier];
+    const icc = count_curr[identifier];
+
+    values.push(agg_value(icp, icc, agg));
   }
-  const counts_len = counts.length;
-  if  (!counts_len) return 0;
+  const values_len = values.length;
+  if  (!values_len) return 0;
 
-  counts.sort((above, below) => above - below); // Ascending
+  values.sort((above, below) => above - below); // Ascending
 
   if (n < 1)          n = 1;
-  if (n > counts_len) n = counts_len;
+  if (n > values_len) n = values_len;
 
-  if (agg_prefix === "top") return counts[counts_len - n];
-  if (agg_prefix === "btm") return counts[n          - 1];
+  const agg_prefix = agg.slice(0, 3);
+
+  if (agg_prefix === "top") return values[values_len - n];
+  if (agg_prefix === "btm") return values[n          - 1];
 
   return 0;
 }
@@ -439,27 +462,15 @@ function filter_count_range_agg(items_prev, items_curr,
   for (const item of items_prev) count_prev[item.identifier] = get_count(item);
   for (const item of items_curr) count_curr[item.identifier] = get_count(item);
 
-  const is_nth = (s) => ["topp", "topc", "btmp", "btmc"].includes(s);
+  const is_nth = (s) => ["topa", "btma", "tops", "btms", "topp", "btmp", "topc", "btmc"].includes(s);
 
   if (is_nth(min_agg)) {
-    const agg_prefix = min_agg.slice(0, 3);
-    const agg_suffix = min_agg.slice(3, 4);
-    const n = min_str ? min : (agg_prefix === "top") ? Infinity : 0;
-
-    const [items_arr , count_map ] = (agg_suffix === 'p')
-        ? [items_curr, count_prev]
-        : [items_prev, count_curr];
-    min = agg_nth(items_arr, count_map, n, agg_prefix);
+    const n = min_str ? min : (min_agg.slice(0, 3) === "btm") ? 0 : Infinity;
+    min = agg_nth(count_prev, count_curr, n, min_agg);
   }
   if (is_nth(max_agg)) {
-    const agg_prefix = max_agg.slice(0, 3);
-    const agg_suffix = max_agg.slice(3, 4);
-    const n = max_str ? max : (agg_prefix === "top") ? 0 : Infinity;
-
-    const [items_arr , count_map ] = (agg_suffix === 'p')
-        ? [items_curr, count_prev]
-        : [items_prev, count_curr];
-    max = agg_nth(items_arr, count_map, n, agg_prefix);
+    const n = max_str ? max : (max_agg.slice(0, 3) === "top") ? 0 : Infinity;
+    max = agg_nth(count_prev, count_curr, n, max_agg);
   }
 
   const res = {};

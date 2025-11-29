@@ -33,7 +33,8 @@ const err_views =
   'Examples: min 10 / 20, min 10 / avg 30, also: max 20 / min 10 ("reversed" aggregate range)<br />' +
   'Note: min 10 / 20, and 10 / min 20 aggregate ranges both are mean min 10 / min 20<br />' +
   'Aggregate item functions are: min, avg, max, add, sub, prev, curr<br />' +
-  'Aggregate prev/curr functions are: topp/tp, topc/tc, btmp/bp, btmc/bc' +
+  'Aggregate rank functions are: topa/ta, btma/ba for avg; tops/ts, btms/bs for sub;<br />' +
+  'topp/tp, btmp/bp for prev; topc/tc, btmc/bc for curr' +
   '</p><p>' +
   'Keys: grow, fall, same, diff (aliases: / \\ = !) switch min/max logic to prev/curr logic<br />' +
   'Key allows number after it, and percent sign % can be after number' +
