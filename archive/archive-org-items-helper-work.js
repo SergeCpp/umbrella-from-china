@@ -197,9 +197,14 @@ function get_num(str, key_other) {
 }
 
 // Syntax  : [[agg] non-negative integer]
+//
 // agg is  : agg_item | agg_rank
-// agg_item: min | avg | max | add | sub | prev | curr
-// agg_rank: topa/ta | btma/ba | tops/ts | btms/bs
+//
+// agg_item: (min | avg | max) | (add | sub) | (pos | neg) | (prev | curr)
+//
+// agg_rank: topn/tn | btmn/bn | topa/ta | btma/ba | topx/tx | btmx/bx
+//           topd/td | btmd/bd | tops/ts | btms/bs
+//           top+/t+ | btm+/b+ | top-/t- | btm-/b-
 //           topp/tp | btmp/bp | topc/tc | btmc/bc
 function get_agg(str) {
   if (!str) return [ "", null ]; // Any number on this side
@@ -207,33 +212,64 @@ function get_agg(str) {
   let sl  = 0;
   let agg = null;
 
-  if      (str.startsWith("min" )) { sl = 3; agg = "min" ; }
-  else if (str.startsWith("avg" )) { sl = 3; agg = "avg" ; }
-  else if (str.startsWith("max" )) { sl = 3; agg = "max" ; }
-  else if (str.startsWith("add" )) { sl = 3; agg = "add" ; }
-  else if (str.startsWith("sub" )) { sl = 3; agg = "sub" ; }
-  else if (str.startsWith("prev")) { sl = 4; agg = "prev"; }
-  else if (str.startsWith("curr")) { sl = 4; agg = "curr"; }
+  const s2 = str.slice(0, 2);
+  const s3 = str.slice(0, 3);
+  const s4 = str.slice(0, 4);
+
+  if      (s3 === "min" ) { sl = 3; agg = "min" ; }
+  else if (s3 === "avg" ) { sl = 3; agg = "avg" ; }
+  else if (s3 === "max" ) { sl = 3; agg = "max" ; }
+  else if (s3 === "add" ) { sl = 3; agg = "add" ; }
+  else if (s3 === "sub" ) { sl = 3; agg = "sub" ; }
+  else if (s3 === "pos" ) { sl = 3; agg = "pos" ; }
+  else if (s3 === "neg" ) { sl = 3; agg = "neg" ; }
+  else if (s4 === "prev") { sl = 4; agg = "prev"; }
+  else if (s4 === "curr") { sl = 4; agg = "curr"; }
   //
-  else if (str.startsWith("topa")) { sl = 4; agg = "topa"; } // avg
-  else if (str.startsWith("ta"  )) { sl = 2; agg = "topa"; }
-  else if (str.startsWith("btma")) { sl = 4; agg = "btma"; }
-  else if (str.startsWith("ba"  )) { sl = 2; agg = "btma"; }
+  else if (s4 === "topn") { sl = 4; agg = "topn"; } // min
+  else if (s2 === "tn"  ) { sl = 2; agg = "topn"; }
+  else if (s4 === "btmn") { sl = 4; agg = "btmn"; }
+  else if (s2 === "bn"  ) { sl = 2; agg = "btmn"; }
   //
-  else if (str.startsWith("tops")) { sl = 4; agg = "tops"; } // sub
-  else if (str.startsWith("ts"  )) { sl = 2; agg = "tops"; }
-  else if (str.startsWith("btms")) { sl = 4; agg = "btms"; }
-  else if (str.startsWith("bs"  )) { sl = 2; agg = "btms"; }
+  else if (s4 === "topa") { sl = 4; agg = "topa"; } // avg
+  else if (s2 === "ta"  ) { sl = 2; agg = "topa"; }
+  else if (s4 === "btma") { sl = 4; agg = "btma"; }
+  else if (s2 === "ba"  ) { sl = 2; agg = "btma"; }
   //
-  else if (str.startsWith("topp")) { sl = 4; agg = "topp"; } // prev
-  else if (str.startsWith("tp"  )) { sl = 2; agg = "topp"; }
-  else if (str.startsWith("btmp")) { sl = 4; agg = "btmp"; }
-  else if (str.startsWith("bp"  )) { sl = 2; agg = "btmp"; }
+  else if (s4 === "topx") { sl = 4; agg = "topx"; } // max
+  else if (s2 === "tx"  ) { sl = 2; agg = "topx"; }
+  else if (s4 === "btmx") { sl = 4; agg = "btmx"; }
+  else if (s2 === "bx"  ) { sl = 2; agg = "btmx"; }
   //
-  else if (str.startsWith("topc")) { sl = 4; agg = "topc"; } // curr
-  else if (str.startsWith("tc"  )) { sl = 2; agg = "topc"; }
-  else if (str.startsWith("btmc")) { sl = 4; agg = "btmc"; }
-  else if (str.startsWith("bc"  )) { sl = 2; agg = "btmc"; }
+  else if (s4 === "topd") { sl = 4; agg = "topd"; } // add
+  else if (s2 === "td"  ) { sl = 2; agg = "topd"; }
+  else if (s4 === "btmd") { sl = 4; agg = "btmd"; }
+  else if (s2 === "bd"  ) { sl = 2; agg = "btmd"; }
+  //
+  else if (s4 === "tops") { sl = 4; agg = "tops"; } // sub
+  else if (s2 === "ts"  ) { sl = 2; agg = "tops"; }
+  else if (s4 === "btms") { sl = 4; agg = "btms"; }
+  else if (s2 === "bs"  ) { sl = 2; agg = "btms"; }
+  //
+  else if (s4 === "top+") { sl = 4; agg = "top+"; } // pos
+  else if (s2 === "t+"  ) { sl = 2; agg = "top+"; }
+  else if (s4 === "btm+") { sl = 4; agg = "btm+"; }
+  else if (s2 === "b+"  ) { sl = 2; agg = "btm+"; }
+  //
+  else if (s4 === "top-") { sl = 4; agg = "top-"; } // neg
+  else if (s2 === "t-"  ) { sl = 2; agg = "top-"; }
+  else if (s4 === "btm-") { sl = 4; agg = "btm-"; }
+  else if (s2 === "b-"  ) { sl = 2; agg = "btm-"; }
+  //
+  else if (s4 === "topp") { sl = 4; agg = "topp"; } // prev
+  else if (s2 === "tp"  ) { sl = 2; agg = "topp"; }
+  else if (s4 === "btmp") { sl = 4; agg = "btmp"; }
+  else if (s2 === "bp"  ) { sl = 2; agg = "btmp"; }
+  //
+  else if (s4 === "topc") { sl = 4; agg = "topc"; } // curr
+  else if (s2 === "tc"  ) { sl = 2; agg = "topc"; }
+  else if (s4 === "btmc") { sl = 4; agg = "btmc"; }
+  else if (s2 === "bc"  ) { sl = 2; agg = "btmc"; }
 
   let s = sl ? str.slice(sl).trimStart() : str;
   if (!/^\d{1,8}$/.test(s))    return [ str, null ];
@@ -392,25 +428,40 @@ function filter_count_keys(items_prev, items_curr,
 }
 
 const agg_fn = {
-  min : (prev, curr) => Math.min(prev,  curr),
-  avg : (prev, curr) =>         (prev + curr) / 2,
-  max : (prev, curr) => Math.max(prev,  curr),
+  min  : (prev, curr) => Math.min(prev,  curr),
+  avg  : (prev, curr) =>         (prev + curr) / 2,
+  max  : (prev, curr) => Math.max(prev,  curr),
 
-  add : (prev, curr) =>          prev + curr,
-  sub : (prev, curr) => Math.abs(prev - curr),
+  add  : (prev, curr) =>          prev + curr,
+  sub  : (prev, curr) => Math.abs(prev - curr),
 
-  prev: (prev, curr) => prev,
-  curr: (prev, curr) => curr,
+  pos  : (prev, curr) => (curr - prev) > 0 ? (curr - prev) : 0,
+  neg  : (prev, curr) => (prev - curr) > 0 ? (prev - curr) : 0,
 
-  topa: (prev, curr) =>         (prev + curr) / 2,
-  btma: (prev, curr) =>         (prev + curr) / 2,
-  tops: (prev, curr) => Math.abs(prev - curr),
-  btms: (prev, curr) => Math.abs(prev - curr),
+  prev : (prev, curr) => prev,
+  curr : (prev, curr) => curr,
 
-  topp: (prev, curr) => prev,
-  btmp: (prev, curr) => prev,
-  topc: (prev, curr) => curr,
-  btmc: (prev, curr) => curr
+  topn : (prev, curr) => Math.min(prev,  curr),
+  btmn : (prev, curr) => Math.min(prev,  curr),
+  topa : (prev, curr) =>         (prev + curr) / 2,
+  btma : (prev, curr) =>         (prev + curr) / 2,
+  topx : (prev, curr) => Math.max(prev,  curr),
+  btmx : (prev, curr) => Math.max(prev,  curr),
+
+  topd : (prev, curr) =>          prev + curr,
+  btmd : (prev, curr) =>          prev + curr,
+  tops : (prev, curr) => Math.abs(prev - curr),
+  btms : (prev, curr) => Math.abs(prev - curr),
+
+ "top+": (prev, curr) => (curr - prev) > 0 ? (curr - prev) : 0,
+ "btm+": (prev, curr) => (curr - prev) > 0 ? (curr - prev) : 0,
+ "top-": (prev, curr) => (prev - curr) > 0 ? (prev - curr) : 0,
+ "btm-": (prev, curr) => (prev - curr) > 0 ? (prev - curr) : 0,
+
+  topp : (prev, curr) => prev,
+  btmp : (prev, curr) => prev,
+  topc : (prev, curr) => curr,
+  btmc : (prev, curr) => curr
 };
 
 function agg_value(prev, curr, agg) {
@@ -462,17 +513,22 @@ function filter_count_range_agg(items_prev, items_curr,
   for (const item of items_prev) count_prev[item.identifier] = get_count(item);
   for (const item of items_curr) count_curr[item.identifier] = get_count(item);
 
-  const is_nth = (s) => ["topa", "btma", "tops", "btms", "topp", "btmp", "topc", "btmc"].includes(s);
+  // Ranking
+  const min_agg_prefix = min_agg.slice(0, 3);
+  const max_agg_prefix = max_agg.slice(0, 3);
 
-  if (is_nth(min_agg)) {
-    const n = min_str ? min : (min_agg.slice(0, 3) === "btm") ? 0 : Infinity;
+  const is_nth = (s) => ["top", "btm"].includes(s);
+
+  if (is_nth(min_agg_prefix)) {
+    const n = min_str ? min : (min_agg_prefix === "btm") ? 0 : Infinity;
     min = agg_nth(count_prev, count_curr, n, min_agg);
   }
-  if (is_nth(max_agg)) {
-    const n = max_str ? max : (max_agg.slice(0, 3) === "top") ? 0 : Infinity;
+  if (is_nth(max_agg_prefix)) {
+    const n = max_str ? max : (max_agg_prefix === "top") ? 0 : Infinity;
     max = agg_nth(count_prev, count_curr, n, max_agg);
   }
 
+  // Filtering
   const res = {};
 
   for (const identifier in count_prev) {

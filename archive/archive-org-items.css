@@ -164,6 +164,48 @@
   border-bottom-color: hsl(0.91turn 75% 71%);
 }
 
+/* Inputs in Tabs */
+
+input[type="text"].changed {
+  border-style: solid;
+  border-radius: 3px;
+}
+input[type="text"].changed.tab-a {
+  background-color: hsl(0.07turn 75% 95%);
+  border-color: hsl(0.07turn 75% 83%);
+}
+input[type="text"].changed.tab-b {
+  background-color: hsl(0.42turn 75% 92%);
+  border-color: hsl(0.42turn 75% 71%);
+}
+input[type="text"].changed.tab-c {
+  background-color: #f2f2f2; /* Gray95 */
+  border-color: #d4d4d4;  /* Gray83 */
+}
+input[type="text"].changed.tab-d {
+  background-color: hsl(0.58turn 75% 95%);
+  border-color: hsl(0.58turn 75% 83%);
+}
+input[type="text"].changed.tab-e {
+  background-color: hsl(0.91turn 75% 95%);
+  border-color: hsl(0.91turn 75% 83%);
+}
+input[type="checkbox"].changed.tab-a {
+  accent-color: hsl(0.07turn 75% 71%);
+}
+input[type="checkbox"].changed.tab-b {
+  accent-color: hsl(0.42turn 75% 47%);
+}
+input[type="checkbox"].changed.tab-c {
+  accent-color: #b5b5b5;  /* Gray71 */
+}
+input[type="checkbox"].changed.tab-d {
+  accent-color: hsl(0.58turn 75% 71%);
+}
+input[type="checkbox"].changed.tab-e {
+  accent-color: hsl(0.91turn 75% 74%);
+}
+
 /* Inputs */
 
 .in-wrap {

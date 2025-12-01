@@ -140,48 +140,18 @@ const input_ids =
 // Initialization
 
 function init_controls() {
-  // Add click and Enter/Space/Arrows to tabs
-  const tabs = ['a', 'b', 'c', 'd', 'e'];
-
-  tabs.forEach((tab, index) => {
-    const button = document.getElementById('tab-' + tab);
-    if   (button) {
-      button.onclick = () => tab_switch(tab);
-      button.onkeyup = function(event) {
-        if ((event.key === 'Enter') || (event.key === ' ')) {
-          tab_switch(tab);
-        }
-      };
-      button.onkeydown = function(event) {
-        if ((event.key === 'Enter') || (event.key === ' ')) {
-          event.preventDefault();
-        }
-        else if ((event.key === 'ArrowLeft') || (event.key === 'ArrowRight')) {
-          event.preventDefault();
-
-          const index_new = (event.key === 'ArrowLeft') // else ArrowRight
-                          ? ((index - 1 + tabs.length) % tabs.length)
-                          : ((index + 1)               % tabs.length);
-
-          const button_new = document.getElementById('tab-' + tabs[index_new]);
-          if   (button_new) {
-            button_new.focus();
-          }
-        }
-      };
-    }
-  });
-
   // Add Enter key to inputs
   input_ids.forEach(id => {
     const input = document.getElementById(id);
-    if   (input) {
-      input.onkeyup = function(event) {
-        if (event.key === 'Enter') {
-          process_filter();
-        }
-      };
-    }
+    if  (!input) return;
+
+    input.oninput = () => tab_input_changed(input);
+
+    input.onkeyup = function(event) {
+      if (event.key === 'Enter') {
+        process_filter();
+      }
+    };
   });
 
   // Add click to button
@@ -193,6 +163,7 @@ function init_controls() {
 
 /* Tabbed Input */
 
+const tab_names        = ['a', 'b', 'c', 'd', 'e'];
 let   tab_active       = null;
 const tab_input_ids    = input_ids;
 const tab_input_values = {}; // [tab] = { values }; [""] = { defaults };
@@ -203,53 +174,155 @@ const tab_mode         = {   // [tab] = "" / "Filter", for ['c'] = "OR" / "AND" 
   d: "",
   e: ""
 };
+const tab_change_marked       = {}; // [tab] = true / false
+const tab_input_change_marked = {}; // [id]  = tab  / false
 
 // Initialization
 
 function init_tabs() {
-  tab_to_values("" );
-  tab_activate ('c');
+  tab_input_values[""] = {};
+  tab_to_values   ("");
+
+  for (const tab of tab_names) {
+    tab_input_values[tab] = {};
+
+    for (const id in tab_input_values[""]) {
+      tab_input_values[tab][id] = tab_input_values[""][id];
+    }
+
+    tab_change_marked[tab] = false;
+  }
+
+  for (const id in tab_input_values[""]) {
+    tab_input_change_marked[id] = false;
+  }
+
+  // Add click and Enter/Space/Arrows to tabs
+  tab_names.forEach((tab, index) => {
+    const button = document.getElementById('tab-' + tab);
+    if  (!button) return;
+
+    button.onclick = () => tab_switch(tab);
+
+    button.onkeyup = function(event) {
+      if ((event.key === 'Enter') || (event.key === ' ')) {
+        tab_switch(tab);
+      }
+    };
+
+    button.onkeydown = function(event) {
+      if ((event.key === 'Enter') || (event.key === ' ')) {
+        event.preventDefault();
+      }
+      else if ((event.key === 'ArrowLeft') || (event.key === 'ArrowRight')) {
+        event.preventDefault();
+
+        const index_new = (event.key === 'ArrowLeft') // else ArrowRight
+                        ? ((index - 1 + tab_names.length) % tab_names.length)
+                        : ((index + 1)                    % tab_names.length);
+
+        const button_new = document.getElementById('tab-' + tab_names[index_new]);
+        if   (button_new) {
+          button_new.focus();
+        }
+      }
+    };
+  });
+
+  tab_activate('c');
 }
 
 // Data
 
 function tab_to_values(tab) {
-  if (!tab_input_values[tab]) tab_input_values[tab] = {};
-
   tab_input_ids.forEach(id => {
     const input = document.getElementById(id);
-    if   (input) {
-      const value = id.endsWith('-only')
-                  ? input.checked
-                  : input.value;
+    if  (!input) return;
 
-      tab_input_values[tab][id] = value;
-    }
+    const value = id.endsWith('-only') ? input.checked : input.value;
+
+    tab_input_values[tab][id] = value;
   });
 }
 
 function tab_to_inputs(tab) {
-  if (!tab_input_values[tab]) { tab_to_inputs(""); return; }
-
   tab_input_ids.forEach(id => {
     const input = document.getElementById(id);
-    if   (input) {
-      if (id.endsWith('-only'))
-        input.checked = tab_input_values[tab][id];
-      else
-        input.value   = tab_input_values[tab][id];
-    }
+    if  (!input) return;
+
+    if (id.endsWith('-only'))
+      input.checked = tab_input_values[tab][id];
+    else
+      input.value   = tab_input_values[tab][id];
   });
 }
 
 function tab_is_changed(tab) {
-  if (!tab_input_values[tab]) return false;
-
   for (const id in tab_input_values[""]) {
     if (tab_input_values[tab][id] !== tab_input_values[""][id]) return true;
   }
 
   return false;
+}
+
+// Changed Inputs Marking
+
+function tab_input_changed(input) {
+  const id      = input.id;
+  const value   = id.endsWith('-only') ? input.checked : input.value;
+  const changed = value !== tab_input_values[""][id];
+
+  tab_input_mark(tab_active, input, id, changed);
+
+  if (changed)
+    tab_mark  (tab_active, true);
+  else
+    tab_update(tab_active); // Need to check whole tab
+}
+
+function tab_input_mark(tab, input, id, changed) {
+  const marked = tab_input_change_marked[id];
+
+  if (changed) {
+    if (marked === tab) return;
+
+    if (marked) { // Other tab
+      input.classList.remove('tab-' + marked);
+      input.classList.add   ('tab-' + tab);
+      tab_input_change_marked[id]   = tab;
+      return;
+    }
+  }
+  else { // Not changed
+    if (!marked) return;
+  }
+
+  if (changed)
+    input.classList.add   ('changed', 'tab-' + tab);
+  else
+    input.classList.remove('changed', 'tab-' + tab);
+
+  tab_input_change_marked[id] = changed ? tab : false;
+}
+
+// What to do with changed inputs: mark / unmark
+function tab_inputs_mark(tab, mark) {
+  for (const id in tab_input_values[""]) {
+    if (tab_input_values[tab][id] === tab_input_values[""][id]) continue;
+
+    const input = document.getElementById(id);
+    if   (input) {
+      tab_input_mark(tab, input, id, mark);
+    }
+  }
+}
+
+function tab_inputs_lo(tab) {
+  tab_inputs_mark(tab, false);
+}
+
+function tab_inputs_hi(tab) {
+  tab_inputs_mark(tab, true);
 }
 
 // Mode
@@ -300,29 +373,34 @@ function tab_activate(tab_to) {
     return;
   }
 
+  const tab_from = tab_active;
+  if   (tab_from) {
+    const button_from = document.getElementById('tab-' + tab_from);
+    if   (button_from) {
+      button_from.classList.remove('active');
+    }
+  }
+
   const button_to = document.getElementById('tab-' + tab_to);
   if   (button_to) {
     button_to.classList.add('active');
   }
 
-  const tab_from   = tab_active;
-        tab_active = tab_to;
-  if  (!tab_from) return;
-
-  const button_from = document.getElementById('tab-' + tab_from);
-  if   (button_from) {
-    button_from.classList.remove('active');
-  }
+  tab_active = tab_to;
 }
 
 function tab_mark(tab, changed) {
+  if (tab_change_marked[tab] === changed) return;
+
   const button = document.getElementById('tab-' + tab);
-  if   (button) {
-    if (changed)
-      button.classList.add   ('changed');
-    else
-      button.classList.remove('changed');
-  }
+  if  (!button) return;
+
+  if (changed)
+    button.classList.add   ('changed');
+  else
+    button.classList.remove('changed');
+
+  tab_change_marked[tab] = changed;
 }
 
 // Transition
@@ -331,7 +409,11 @@ function tab_update(tab_new) {
   tab_to_values(tab_active);
   tab_mark     (tab_active, tab_is_changed(tab_active));
 
-  if (tab_new !== tab_active) tab_to_inputs(tab_new);
+  if (tab_new !== tab_active) {
+    tab_inputs_lo(tab_active);
+    tab_to_inputs(tab_new);
+    tab_inputs_hi(tab_new);
+  }
 }
 
 function tab_switch(tab) {
@@ -344,9 +426,7 @@ function tab_switch(tab) {
 function tab_get(tab) {
   if (tab === tab_active) tab_update(tab);
 
-  return tab_is_changed(tab)
-         ? { changed: true,  values: tab_input_values[tab] }
-         : { changed: false, values: tab_input_values["" ] };
+  return { changed: tab_is_changed(tab), values: tab_input_values[tab] };
 }
 
 function tab_filter_inputs() {
