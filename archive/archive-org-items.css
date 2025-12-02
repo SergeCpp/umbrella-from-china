@@ -299,6 +299,10 @@ input[type="checkbox"].changed.tab-e {
   border-bottom-style: solid;
   border-bottom-width: 3px; /* Medium. Matches page header */
 }
+.header-wrapper:has(.header-inner:hover) {
+  border-bottom-color: #e3e3e3; /* Gray89 */
+}
+
 .header-inner {
   align-items: center; /* Vertically center title, stats, and grow */
   border-radius: 0.5rem;
@@ -360,6 +364,9 @@ input[type="checkbox"].changed.tab-e {
   border-bottom-color: #ebebeb; /* Gray92. Matches page header */
   border-bottom-style: solid;
   border-bottom-width: 3px; /* Medium. Matches page header */
+}
+.item-wrapper:has(.item-inner:hover) {
+  border-bottom-color: #e3e3e3; /* Gray89 */
 }
 
 .item-inner {
@@ -614,6 +621,19 @@ input[type="checkbox"].changed.tab-e {
   background-color: hsl(0.91turn 75% 86%);
   height: 3px;
   width: 100%;
+}
+
+.item-wrapper:has(.item-inner:hover) .item-mark-a {
+  background-color: hsl(0.07turn 75% 83%);
+}
+.item-wrapper:has(.item-inner:hover) .item-mark-b {
+  background-color: hsl(0.42turn 75% 74%);
+}
+.item-wrapper:has(.item-inner:hover) .item-mark-d {
+  background-color: hsl(0.58turn 75% 83%);
+}
+.item-wrapper:has(.item-inner:hover) .item-mark-e {
+  background-color: hsl(0.91turn 75% 83%);
 }
 
 .item-mark-a-text {
