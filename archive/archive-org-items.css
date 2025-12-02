@@ -270,6 +270,26 @@ input[type="checkbox"].changed.tab-e {
   padding: 0 2.5ch;
 }
 
+/* Menu */
+
+.menu {
+  background-color: #fafafa; /* Gray98 */
+  border: #ebebeb solid 3px; /* Gray92 */
+  border-radius: 6px;
+  box-shadow: 3px 3px 6px rgb(0 0 0 / 0.3);
+  color: #696969; /* DimGray, L41 */
+}
+.menu-opt {
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 4px 8px;
+  text-align: center;
+}
+.menu-opt:hover {
+  background-color: #f2f2f2; /* Gray95 */
+  color: #4a4a4a; /* Gray29 */
+}
+
 /* Wrapper > inner > [title, stat:prev, stat:curr, grow] */
 
 /* Header */

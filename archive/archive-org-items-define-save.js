@@ -147,7 +147,7 @@ function init_controls() {
 
     input.oninput = () => tab_input_changed(input);
 
-    input.onkeyup = function(event) {
+    input.onkeyup = (event) => {
       if (event.key === 'Enter') {
         process_filter();
       }
@@ -197,6 +197,8 @@ function init_tabs() {
     tab_input_change_marked[id] = false;
   }
 
+  tab_activate('c');
+
   // Add click and Enter/Space/Arrows to tabs
   tab_names.forEach((tab, index) => {
     const button = document.getElementById('tab-' + tab);
@@ -204,32 +206,33 @@ function init_tabs() {
 
     button.onclick = () => tab_switch(tab);
 
-    button.onkeyup = function(event) {
-      if ((event.key === 'Enter') || (event.key === ' ')) {
+    button.onkeyup = (event) => {
+      const key = event.key;
+      if ((key === 'Enter') || (key === ' ')) {
         tab_switch(tab);
       }
     };
 
-    button.onkeydown = function(event) {
-      if ((event.key === 'Enter') || (event.key === ' ')) {
+    button.onkeydown = (event) => {
+      const key = event.key;
+      if ((key === 'Enter') || (key === ' ')) {
         event.preventDefault();
+        return;
       }
-      else if ((event.key === 'ArrowLeft') || (event.key === 'ArrowRight')) {
-        event.preventDefault();
 
-        const index_new = (event.key === 'ArrowLeft') // else ArrowRight
-                        ? ((index - 1 + tab_names.length) % tab_names.length)
-                        : ((index + 1)                    % tab_names.length);
+      if ((key !== 'ArrowLeft') && (key !== 'ArrowRight')) return;
+      event.preventDefault();
 
-        const button_new = document.getElementById('tab-' + tab_names[index_new]);
-        if   (button_new) {
-          button_new.focus();
-        }
+      const index_new = (key === 'ArrowLeft') // else ArrowRight
+                      ? ((index - 1 + tab_names.length) % tab_names.length)
+                      : ((index + 1)                    % tab_names.length);
+
+      const button_new = document.getElementById('tab-' + tab_names[index_new]);
+      if   (button_new) {
+        button_new.focus();
       }
     };
   });
-
-  tab_activate('c');
 }
 
 // Data
@@ -686,20 +689,16 @@ function date_change_menu(event, what) {
   if   (menu_top <               window.scrollY)     {
         menu_top = rect.bottom + window.scrollY + 2; }
 
-  const menu_caller = document.activeElement;
-  const menu        = document.createElement('div');
-  menu.id                    = 'date-change-menu';
-  menu.style.position        = 'absolute';
-  menu.style.left            = (rect.left + window.scrollX - 2) + 'px';
-  menu.style.top             =  menu_top                        + 'px';
-  menu.style.backgroundColor = '#fafafa'; // Gray98
-  menu.style.color           = '#696969'; // DimGray, L41
-  menu.style.border          = '#ebebeb solid 3px'; // Gray92
-  menu.style.borderRadius    = '6px';
-  menu.style.boxShadow       = '3px 3px 6px rgb(0 0 0 / 0.3)';
-  menu.setAttribute           ('role', 'menu');
+  const menu_caller   = document.activeElement;
+  const menu          = document.createElement('div');
+  menu.className      = 'menu';
+  menu.id             = 'date-change-menu';
+  menu.setAttribute    ('role', 'menu');
+  menu.style.position = 'absolute';
+  menu.style.left     = (rect.left + window.scrollX - 2) + 'px';
+  menu.style.top      =  menu_top                        + 'px';
 
-  menu.remove_ex = function() {
+  menu.remove_ex = () => {
     document.removeEventListener('click', menu.outside_click);
     menu.remove();
     if (menu_caller && document.body.contains(menu_caller)) { menu_caller.focus(); }
@@ -718,66 +717,53 @@ function date_change_menu(event, what) {
     if (e.key === 'Escape') { menu.remove_ex(); }
   };
 
-  const init_opt = (opt, text) => {
-    opt.style.borderRadius = '6px';
-    opt.style.padding      = '4px 8px';
-    opt.style.cursor       = 'pointer';
-    opt.style.textAlign    = 'center';
-    opt.textContent        =  text;
-    opt.tabIndex           =  0;
-    opt.setAttribute        ('role', 'menuitem');
+  const init_opt = (opt, date) => {
+    opt.className    = 'menu-opt';
+    opt.setAttribute  ('role', 'menuitem');
+    opt.tabIndex     = 0;
+    opt.textContent  = date;
 
-    opt.onmouseover = () => {
-      opt.style.backgroundColor = '#f2f2f2'; // Gray95
-      opt.style.color = '#4a4a4a'; // Gray29
-    };
-    opt.onmouseout = () => {
-      opt.style.backgroundColor = ""; // From menu
-      opt.style.color = ""; // From menu
+    opt.onclick = () => {
+      menu.remove_ex();
+      requestAnimationFrame(() => setTimeout(load_stat, 0, date, what));
     };
 
-    opt.onkeydown = (e) => {
-      const k = e.key;
-      if ((k === 'Enter') || (k === ' ')) {
-        e.preventDefault();
-      } else {
-        if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab'].includes(k)) return;
-        e.preventDefault();
-
-        const menu = e.currentTarget.parentElement;
-        const opts = Array.from(menu.children);
-        const curr = opts.indexOf(e.currentTarget);
-        let   next;
-
-        if ((k === 'ArrowUp') || (k === 'ArrowLeft') || ((k === 'Tab') && e.shiftKey)) {
-          next = (curr - 1 + opts.length) % opts.length;
-        } else { // ArrowDown or ArrowRight or Tab
-          next = (curr + 1)               % opts.length;
-        }
-        opts[next].focus();
-      }
-    };
     opt.onkeyup = (e) => {
       const k = e.key;
       if ((k === 'Enter') || (k === ' ')) {
         opt.click();
       }
     };
+
+    opt.onkeydown = (e) => {
+      const k = e.key;
+      if ((k === 'Enter') || (k === ' ')) {
+        e.preventDefault();
+        return;
+      }
+
+      if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab'].includes(k)) return;
+      e.preventDefault();
+
+      const menu = e.currentTarget.parentElement;
+      const opts = Array.from(menu.children);
+      const curr = opts.indexOf(e.currentTarget);
+      let   next;
+
+      if ((k === 'ArrowUp') || (k === 'ArrowLeft') || ((k === 'Tab') && e.shiftKey)) {
+        next = (curr - 1 + opts.length) % opts.length;
+      } else { // ArrowDown or ArrowRight or Tab
+        next = (curr + 1)               % opts.length;
+      }
+      opts[next].focus();
+    };
   };
 
   for (let i = i_beg; i <= i_end; i++) {
-    const date     = stat_file_dates[i];
-    const date_opt = document.createElement('div');
-    init_opt(date_opt, date);
-
-    date_opt.onclick = function() {
-      menu.remove_ex();
-//    load_stat(date, what); // Menu closing delay when cache is used
-//    setTimeout(load_stat, 5, date, what); // Mostly solved
-//    requestIdleCallback(() => load_stat(date, what), { timeout: 5 }); // Almost solved
-      requestAnimationFrame(() => setTimeout(load_stat, 0, date, what)); // Solved
-    };
-    menu.appendChild(date_opt);
+    const date = stat_file_dates[i];
+    const opt  = document.createElement('div');
+    init_opt(opt, date);
+    menu.appendChild(opt);
   }
 
   document.body.appendChild(menu);
@@ -869,12 +855,11 @@ function conv_stat_docs(docs) {
 function load_stat_file(date) {
   const cached = stat_file_cache[date];
   if   (cached) {
-    sf_cache_hits++;       cached.usage++;
+    sf_cache_hits++;
+    cached.usage++;
     return Promise.resolve(cached.data);
   }
   sf_cache_misses++;
-
-// return new Promise(resolve => setTimeout(resolve, 5, cached)); // For menu closing (solved there)
 
   const time_0    = performance.now();
   const container = document.getElementById("results");
