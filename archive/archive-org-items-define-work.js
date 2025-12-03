@@ -140,7 +140,7 @@ const input_ids =
 // Initialization
 
 function init_controls() {
-  // Add Enter key to inputs
+  // Add Enter to inputs
   input_ids.forEach(id => {
     const input = document.getElementById(id);
     if  (!input) return;
@@ -154,10 +154,24 @@ function init_controls() {
     };
   });
 
-  // Add click to button
+  // Add click and Enter/Space to button
   const button = document.getElementById('process-filter');
   if   (button) {
     button.onclick = process_filter;
+
+    button.onkeyup = (event) => {
+      const key = event.key;
+      if ((key === 'Enter') || (key === ' ')) {
+        process_filter();
+      }
+    };
+
+    button.onkeydown = (event) => {
+      const key = event.key;
+      if ((key === 'Enter') || (key === ' ')) {
+        event.preventDefault();
+      }
+    };
   }
 }
 
@@ -331,7 +345,7 @@ function tab_inputs_hi(tab) {
 // Mode
 
 function tab_mark_filters_count() {
-  return ['a', 'b', 'd', 'e'].filter(tab => tab_mode[tab] === "Filter").length;
+  return tab_marks().filter(tab => tab_mark_is_filter(tab)).length;
 }
 
 function tab_set_text(tab, text) {
@@ -704,8 +718,8 @@ function date_change_menu(event, what) {
     if (menu_caller && document.body.contains(menu_caller)) { menu_caller.focus(); }
   };
 
-  menu.outside_click = (e) => {
-    if (!menu.contains(e.target)) { menu.remove_ex(); }
+  menu.outside_click = (event) => {
+    if (!menu.contains(event.target)) { menu.remove_ex(); }
   };
 
   // Defer adding until all currently pending event handlers (menu creation click) have finished
@@ -713,8 +727,8 @@ function date_change_menu(event, what) {
     if (menu && document.body.contains(menu)) { document.addEventListener('click', menu.outside_click); }
   }, 0);
 
-  menu.onkeydown = (e) => {
-    if (e.key === 'Escape') { menu.remove_ex(); }
+  menu.onkeydown = (event) => {
+    if (event.key === 'Escape') { menu.remove_ex(); }
   };
 
   const init_opt = (opt, date) => {
@@ -728,29 +742,29 @@ function date_change_menu(event, what) {
       requestAnimationFrame(() => setTimeout(load_stat, 0, date, what));
     };
 
-    opt.onkeyup = (e) => {
-      const k = e.key;
-      if ((k === 'Enter') || (k === ' ')) {
+    opt.onkeyup = (event) => {
+      const key = event.key;
+      if ((key === 'Enter') || (key === ' ')) {
         opt.click();
       }
     };
 
-    opt.onkeydown = (e) => {
-      const k = e.key;
-      if ((k === 'Enter') || (k === ' ')) {
-        e.preventDefault();
+    opt.onkeydown = (event) => {
+      const key = event.key;
+      if ((key === 'Enter') || (key === ' ')) {
+        event.preventDefault();
         return;
       }
 
-      if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab'].includes(k)) return;
-      e.preventDefault();
+      if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab'].includes(key)) return;
+      event.preventDefault();
 
-      const menu = e.currentTarget.parentElement;
+      const menu = event.currentTarget.parentElement;
       const opts = Array.from(menu.children);
-      const curr = opts.indexOf(e.currentTarget);
+      const curr = opts.indexOf(event.currentTarget);
       let   next;
 
-      if ((k === 'ArrowUp') || (k === 'ArrowLeft') || ((k === 'Tab') && e.shiftKey)) {
+      if ((key === 'ArrowUp') || (key === 'ArrowLeft') || ((key === 'Tab') && event.shiftKey)) {
         next = (curr - 1 + opts.length) % opts.length;
       } else { // ArrowDown or ArrowRight or Tab
         next = (curr + 1)               % opts.length;

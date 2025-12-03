@@ -167,9 +167,10 @@
 /* Inputs in Tabs */
 
 input[type="text"].changed {
+  border-radius: 3px; /* 3 is better than 2 */
   border-style: solid;
-  border-radius: 3px;
 }
+
 input[type="text"].changed.tab-a {
   background-color: hsl(0.07turn 75% 95%);
   border-color: hsl(0.07turn 75% 83%);
@@ -179,7 +180,7 @@ input[type="text"].changed.tab-b {
   border-color: hsl(0.42turn 75% 71%);
 }
 input[type="text"].changed.tab-c {
-  background-color: #f2f2f2; /* Gray95 */
+  background-color: #f2f2f2;  /* Gray95 */
   border-color: #d4d4d4;  /* Gray83 */
 }
 input[type="text"].changed.tab-d {
@@ -190,6 +191,28 @@ input[type="text"].changed.tab-e {
   background-color: hsl(0.91turn 75% 95%);
   border-color: hsl(0.91turn 75% 83%);
 }
+
+input[type="text"].changed.tab-a:hover {
+  background-color: hsl(0.07turn 75% 92%);
+  border-color: hsl(0.07turn 75% 80%);
+}
+input[type="text"].changed.tab-b:hover {
+  background-color: hsl(0.42turn 75% 89%);
+  border-color: hsl(0.42turn 75% 68%);
+}
+input[type="text"].changed.tab-c:hover {
+  background-color: #ebebeb;  /* Gray92 */
+  border-color: #cccccc;  /* Gray80 */
+}
+input[type="text"].changed.tab-d:hover {
+  background-color: hsl(0.58turn 75% 92%);
+  border-color: hsl(0.58turn 75% 80%);
+}
+input[type="text"].changed.tab-e:hover {
+  background-color: hsl(0.91turn 75% 92%);
+  border-color: hsl(0.91turn 75% 80%);
+}
+
 input[type="checkbox"].changed.tab-a {
   accent-color: hsl(0.07turn 75% 71%);
 }
@@ -264,10 +287,23 @@ input[type="checkbox"].changed.tab-e {
   accent-color: #b5b5b5; /* Gray71 */
   cursor: pointer;
 }
+
 .in-btn {
   cursor: pointer;
   margin: 0 0.3em;
   padding: 0 2.5ch;
+}
+.in-btn:hover {
+  background-color: #ebebeb; /* Gray92, the same as for text input */
+  border-color: #cccccc; /* Gray80, the same as for text input */
+  border-radius: 3px; /* The same as for text input */
+  border-style: solid;
+}
+.in-btn:active {
+  background-color: #f2f2f2; /* Gray95, the same as for text input */
+  border-color: #d4d4d4; /* Gray83, the same as for text input */
+  border-radius: 3px; /* The same as for text input */
+  border-style: solid;
 }
 
 /* Menu */
