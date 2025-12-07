@@ -229,8 +229,24 @@ function format_bytes(bytes) {
   return value.toFixed(fract) + ' ' + units[index];
 }
 
+// number: non-negative integer
+function format_number(number) {
+  const n_str = number.toString();
+  const n_len = n_str.length;
+  let   n_ind = (n_len - 1) % 3 + 1;
+  let   o_str = n_str.substring(0, n_ind);
+
+  while(n_ind < n_len) { // \u2009 is &thinsp;
+    o_str += '\u2009' + n_str.substring(n_ind, n_ind + 3);
+    n_ind += 3;
+  }
+
+  return o_str;
+}
+
+// num: non-negative integer
 function format_num_str(num, str) {
-  return num + ' ' + str + ((num === 1) ? "" : 's');
+  return format_number(num) + ' ' + str + ((num === 1) ? "" : 's');
 }
 
 function sort_results(results) {

@@ -138,8 +138,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   totals_div.className   ="subtitle text-center text-normal";
   totals_div.textContent =
             format_num_str(curr_exp_total,            'Item')  +
-    ' ('  +                curr_exp_totals.audio  +  ' Audio'  +
-    ' / ' +                curr_exp_totals.video  +  ' Video)' +
+    ' ('  + format_number (curr_exp_totals.audio) +  ' Audio'  +
+    ' / ' + format_number (curr_exp_totals.video) +  ' Video)' +
     ' '   + format_bytes  (curr_exp_totals.bytes) +
     ' / ' + format_num_str(curr_exp_totals.views,     'View')  +
     ' / ' + format_num_str(curr_exp_totals.favorites, 'Fav' )  +
