@@ -309,8 +309,7 @@ function tab_input_mark(tab, input, id, changed) {
       tab_input_change_marked[id]   = tab;
       return;
     }
-  }
-  else { // Not changed
+  } else { // Not changed
     if (!marked) return;
   }
 
@@ -373,8 +372,7 @@ function tab_toggle(tab) {
                   : (tab_mode[tab] === "NOT") ? "XOR"
                   : (tab_mode[tab] === "XOR") ?  "OR"
                   : "OR"; // Mode was unknown
-  }
-  else {
+  } else {
     tab_mode[tab]  = (tab_mode[tab] !== "Filter") ?        "Filter" :     "";
     const tab_text = (tab_mode[tab] === "Filter") ? "Mark x Filter" : "Mark";
     tab_set_text(tab, tab_text);
@@ -793,20 +791,37 @@ function init_dates() {
 
   return fetch(dates_url)
     .then(response => {
-      if (!response.ok) { throw new Error("Dates file not found"); }
+      if (!response.ok) throw new Error("Dates file not found");
       return response.text();
     })
     .then(text => {
-      const dates_lines     = text.trim().split("\n");
-      const dates_lines_cnt = dates_lines.length;
+      const date_lines     = text.trim().split('\n');
+      const date_lines_cnt = date_lines.length;
+      if  ((date_lines_cnt === 1) && (date_lines[0] === "")) throw new Error("Dates file is empty");
 
-      for (let line_num = 0; line_num < dates_lines_cnt; line_num++) {
-        stat_file_dates[line_num] = dates_lines[line_num].trim();
+      const date_regex = /^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/;
+
+      for (let line_num = 0; line_num < date_lines_cnt; line_num++) {
+        const date = date_lines[line_num].trim();
+        if  (!date) break; // Stop dates file processing
+        if  (!date_regex.test(date)) continue; // Skip no-date line
+
+        stat_file_dates.push(date);
       }
-      stat_file_dates.sort();
 
-      stat_curr_date = stat_file_dates[stat_file_dates.length - 1];
-      stat_prev_date = stat_file_dates[stat_file_dates.length - 2];
+      const dates_cnt = stat_file_dates.length;
+      if  (!dates_cnt) throw new Error("Dates file &mdash; No correct dates found");
+
+      if   (dates_cnt === 1) { // Prev === Curr is allowed
+        stat_prev_date = stat_file_dates[0];
+        stat_curr_date = stat_file_dates[0];
+      }
+      else {
+        stat_file_dates.sort();
+
+        stat_prev_date = stat_file_dates[dates_cnt - 2];
+        stat_curr_date = stat_file_dates[dates_cnt - 1];
+      }
     })
     .catch(err => {
       container.innerHTML = error_compose("Error: " + err.message);
@@ -883,7 +898,7 @@ function load_stat_file(date) {
 
   return fetch(xml_url)
     .then(response => {
-      if (!response.ok) { throw new Error(date + " &mdash; XML file not found"); }
+      if (!response.ok) throw new Error(date + " &mdash; XML file not found");
       return response.text();
     })
     .then(text => {
@@ -891,7 +906,7 @@ function load_stat_file(date) {
       const parser = new DOMParser();
       const xml    = parser.parseFromString(text, "text/xml");
 
-      if (xml.querySelector("parsererror")) { throw new Error(date + " &mdash; Invalid XML format"); }
+      if (xml.querySelector("parsererror")) throw new Error(date + " &mdash; Invalid XML format");
       const docs   = xml.querySelectorAll("doc");
       const stats  = conv_stat_docs(docs);
       const time_2 = performance.now();
@@ -953,19 +968,32 @@ function load_stats() {
   const container = document.getElementById("results");
         container.innerHTML = '<div class="text-center text-comment">Loading...</div>';
 
-  Promise.all([
-    load_stat_file(stat_curr_date),
+  if (stat_prev_date === stat_curr_date) {
     load_stat_file(stat_prev_date)
-  ])
-  .then(([loaded_curr_items, loaded_prev_items]) => {
-    stat_curr_items = loaded_curr_items;
-    stat_prev_items = loaded_prev_items;
+      .then(loaded_items => {
+        stat_prev_items = loaded_items;
+        stat_curr_items = loaded_items;
 
-    process_filter();
-  })
-  .catch(err => {
-    container.innerHTML = error_compose("Error: " + err.message);
-  });
+        process_filter();
+      })
+      .catch(err => {
+        container.innerHTML = error_compose("Error: " + err.message);
+      });
+  } else { // Different dates to load
+    Promise.all([
+      load_stat_file(stat_prev_date),
+      load_stat_file(stat_curr_date)
+    ])
+    .then(([loaded_prev_items, loaded_curr_items]) => {
+      stat_prev_items = loaded_prev_items;
+      stat_curr_items = loaded_curr_items;
+
+      process_filter();
+    })
+    .catch(err => {
+      container.innerHTML = error_compose("Error: " + err.message);
+    });
+  }
 }
 
 // EOF

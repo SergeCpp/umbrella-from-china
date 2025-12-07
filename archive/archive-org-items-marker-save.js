@@ -169,9 +169,9 @@ function get_scale_sig(index, length, base, steep, decay, sig_min, sig_max) {
   if (length === 1) return 1; // length === 0 cannot be here
 
   const i_norm     = index / (length - 1); // 0..1
-//const sig_min    = 1 / (1 + Math.exp((base - 0)      * steep));
+//const sig_min    = 1 / (1 + Math.exp((base - 0)      * steep));  // Passed
   const sig_i_norm = 1 / (1 + Math.exp((base - i_norm) * steep));
-//const sig_max    = 1 / (1 + Math.exp((base - 1)      * steep));
+//const sig_max    = 1 / (1 + Math.exp((base - 1)      * steep));  // Passed
   const o_norm     = (sig_i_norm - sig_min) / (sig_max - sig_min); // 0..1
   const scale      = o_norm * (decay - 1) + 1; // 1..decay
 
@@ -209,8 +209,11 @@ function get_totals(results) {
   return totals;
 }
 
+// bytes: non-negative integer
 function format_bytes(bytes) {
-  const units = ['KiB', 'MiB', 'GiB'];
+  if (bytes < 1024) return bytes + ' B';
+
+  const units = ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB'];
   let   value = bytes;
   let   index = -1;
 
@@ -218,6 +221,7 @@ function format_bytes(bytes) {
          value /= 1024;
          index++;
   }
+
   let fract = (value <   9.9995) ? 3 :
               (value <  99.995 ) ? 2 :
               (value < 999.95  ) ? 1 : 0;
