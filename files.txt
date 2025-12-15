@@ -35,8 +35,9 @@ https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-202
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-11-07-descriptions.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-11-15.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-11-30.xml.txt
+https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-12-15.xml.txt
 -----------------------------------------------------------
-1 dates + 13 stats + 1 subjects + 1 descriptions = 16 files
+1 dates + 14 stats + 1 subjects + 1 descriptions = 17 files
 
 https://umbrella-from-china.neocities.org/images/acfun-dance-monthly-2021-05-2000x1250.jpg
 https://umbrella-from-china.neocities.org/images/acfun-dance-monthly-2021-05-600x375.avif
@@ -312,7 +313,7 @@ https://umbrella-from-china.neocities.org/ziyan-dancer.txt
 --------
 58 files
 
-The total size of the site files is less than 70 megabytes
+The total size of the site files is less than 71 megabytes
 
 No external images hotlinking, all images are hosted on Neocities
 
