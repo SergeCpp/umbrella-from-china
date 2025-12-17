@@ -7,6 +7,11 @@ const ratio_length = 7; // 123.567
 const  stat_length = views_length + 2 + days_length + 2 + ratio_length; // Used in CSS as 22ch
 const  stat_empty  = "".padStart(stat_length);
 
+const  stat_sl     = " /";
+const  stat_23     = " /   23 =";
+const  stat_7      = " /    7 =";
+const  stat_eq     =        " =";
+
 /* Render */
 
 function render_results(results_prev, date_prev, results_curr, date_curr, results_mark) {
@@ -255,12 +260,12 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     //
     const _prev = {}; // _old, _23, _7
     if (item_prev) {
-      _prev._old = item_prev.views_old.toString().padStart(views_length) + " /"        +
-                   item_prev. days_old.toString().padStart( days_length) +        " =" +
+      _prev._old = item_prev.views_old.toString().padStart(views_length) + stat_sl +
+                   item_prev. days_old.toString().padStart( days_length) + stat_eq +
                    item_prev.ratio_old.toFixed(3).padStart(ratio_length);
-      _prev._23  = item_prev.views_23 .toString().padStart(views_length) + " /   23 =" +
+      _prev._23  = item_prev.views_23 .toString().padStart(views_length) + stat_23 +
                    item_prev.ratio_23 .toFixed(3).padStart(ratio_length);
-      _prev._7   = item_prev.views_7  .toString().padStart(views_length) + " /    7 =" +
+      _prev._7   = item_prev.views_7  .toString().padStart(views_length) + stat_7  +
                    item_prev.ratio_7  .toFixed(3).padStart(ratio_length);
     }
     else {
@@ -275,12 +280,12 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     //
     const _curr = {}; // _old, _23, _7
     if (!item.is_prev) {
-      _curr._old = item.views_old.toString().padStart(views_length) + " /"        +
-                   item. days_old.toString().padStart( days_length) +        " =" +
+      _curr._old = item.views_old.toString().padStart(views_length) + stat_sl +
+                   item. days_old.toString().padStart( days_length) + stat_eq +
                    item.ratio_old.toFixed(3).padStart(ratio_length);
-      _curr._23  = item.views_23 .toString().padStart(views_length) + " /   23 =" +
+      _curr._23  = item.views_23 .toString().padStart(views_length) + stat_23 +
                    item.ratio_23 .toFixed(3).padStart(ratio_length);
-      _curr._7   = item.views_7  .toString().padStart(views_length) + " /    7 =" +
+      _curr._7   = item.views_7  .toString().padStart(views_length) + stat_7  +
                    item.ratio_7  .toFixed(3).padStart(ratio_length);
     }
     else {
