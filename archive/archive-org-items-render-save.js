@@ -256,7 +256,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     const _prev = {}; // _old, _23, _7
     if (item_prev) {
       _prev._old = item_prev.views_old.toString().padStart(views_length) + " /"        +
-                   item_prev.days_old .toString().padStart( days_length) +        " =" +
+                   item_prev. days_old.toString().padStart( days_length) +        " =" +
                    item_prev.ratio_old.toFixed(3).padStart(ratio_length);
       _prev._23  = item_prev.views_23 .toString().padStart(views_length) + " /   23 =" +
                    item_prev.ratio_23 .toFixed(3).padStart(ratio_length);
@@ -276,7 +276,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     const _curr = {}; // _old, _23, _7
     if (!item.is_prev) {
       _curr._old = item.views_old.toString().padStart(views_length) + " /"        +
-                   item.days_old .toString().padStart( days_length) +        " =" +
+                   item. days_old.toString().padStart( days_length) +        " =" +
                    item.ratio_old.toFixed(3).padStart(ratio_length);
       _curr._23  = item.views_23 .toString().padStart(views_length) + " /   23 =" +
                    item.ratio_23 .toFixed(3).padStart(ratio_length);
@@ -298,7 +298,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       horz_change = (item.ratio_old && item_prev.ratio_old)
           ? Math.log(item.ratio_old /  item_prev.ratio_old)
           : 0;
-      if (horz_change !== 0) {
+      if (horz_change) {
 //      const horz_scale = get_scale_log(index_curr, curr_log_base, horz_log_steep, horz_decay);
         const horz_scale = get_scale_sig(index_curr, curr_length,
           horz_sig_base, horz_sig_steep, horz_decay, horz_sig_min, horz_sig_max);
@@ -313,7 +313,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       vert_change = (item.ratio_all && item.ratio_old)
           ? Math.log(item.ratio_all /  item.ratio_old)
           : 0;
-      if (vert_change !== 0) {
+      if (vert_change) {
 //      const vert_scale = get_scale_log(index_curr, curr_log_base, vert_log_steep, vert_decay);
         const vert_scale = get_scale_sig(index_curr, curr_length,
           vert_sig_base, vert_sig_steep, vert_decay, vert_sig_min, vert_sig_max);
@@ -328,7 +328,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     //
     let   rank_change = 0;
     const rank_diff = item.index_prev - index_curr; // No abs
-    if   (rank_diff !== 0) { // Also if length === 1 then index_prev === index_curr
+    if   (rank_diff) { // Also if length === 1 then index_prev === index_curr
       if (!item.is_prev && !item.no_prev) { // Item is markable
 //      const rank_scale = get_scale_log(index_curr, curr_log_base, rank_log_steep, rank_decay);
         const rank_scale = get_scale_sig(index_curr, curr_length,
@@ -355,7 +355,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       _grow._7   = grow_7;
 
       const grow_mood = get_grow_mood(grow_old, grow_23, grow_7);
-      if   (grow_mood !== 0) {
+      if   (grow_mood) {
 //      const mood_scale = get_scale_log(index_curr, curr_log_base, mood_log_steep, mood_decay);
         const mood_scale = get_scale_sig(index_curr, curr_length,
           mood_sig_base, mood_sig_steep, mood_decay, mood_sig_min, mood_sig_max);

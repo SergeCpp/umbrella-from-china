@@ -82,6 +82,9 @@ function filter_base(stats_items, stats_date,
 
     /* Calculating Stats */
 
+    const colls_arr = doc.collection_arr;
+    const favorites = colls_arr.filter(c => c.startsWith("fav-")).length;
+
     const calc_date = new Date(stats_date + "T11:59:59.999Z"); // To count a day for published on day before
 
     const  days_all = Math.round((calc_date - publicdate) / (24 * 60 * 60 * 1000));
@@ -93,26 +96,34 @@ function filter_base(stats_items, stats_date,
     const views_old = views_all - month;
     const ratio_old = parseFloat((views_old / days_old).toFixed(3));
 
-    const colls_arr = doc.collection_arr;
-    const favorites = colls_arr.filter(c => c.startsWith("fav-")).length;
+    const views_30  = month;
+    const views_23  = month - week;
+    const ratio_23  = parseFloat((views_23 / 23).toFixed(3));
+
+    const views_7   = week;
+    const ratio_7   = parseFloat((views_7  /  7).toFixed(3));
 
     filtered_items.push({
       identifier: identifier_str,
       title     :      title_str,
       mediatype :  mediatype_str,
-      item_size ,
-      days_all  ,
-      views_all ,
-      ratio_all ,
-      days_old  ,
-      views_old ,
-      ratio_old ,
-      views_30  :              month,
-      views_23  :              month - week,
-      ratio_23  : parseFloat(((month - week) / 23).toFixed(3)),
-      views_7   :                      week,
-      ratio_7   : parseFloat(         (week  /  7).toFixed(3)),
-      favorites
+      item_size,
+      favorites,
+
+//     days_all,
+      views_all,
+      ratio_all,
+
+       days_old,
+      views_old,
+      ratio_old,
+
+      views_30,
+      views_23,
+      ratio_23,
+
+      views_7,
+      ratio_7
     });
   }
 
