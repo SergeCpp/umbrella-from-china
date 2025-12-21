@@ -149,14 +149,17 @@ function get_key(str) {
   let name  = null;
   let value = null;
 
-  if      (str.startsWith("grow")) { sl = 4; name = "grow"; value = 1; }
-  else if (str.startsWith('/'   )) { sl = 1; name = "grow"; value = 1; }
-  else if (str.startsWith("fall")) { sl = 4; name = "fall"; value = 1; }
-  else if (str.startsWith('\\'  )) { sl = 1; name = "fall"; value = 1; }
-  else if (str.startsWith("same")) { sl = 4; name = "same"; value = 0; }
-  else if (str.startsWith('='   )) { sl = 1; name = "same"; value = 0; }
-  else if (str.startsWith("diff")) { sl = 4; name = "diff"; value = 0; }
-  else if (str.startsWith('!'   )) { sl = 1; name = "diff"; value = 0; }
+  const  s1 = str.slice(0, 1);
+  const  s4 = str.slice(0, 4);
+
+  if      (s4 === "grow") { sl = 4; name = "grow"; value = 1; }
+  else if (s1 === '/'   ) { sl = 1; name = "grow"; value = 1; }
+  else if (s4 === "fall") { sl = 4; name = "fall"; value = 1; }
+  else if (s1 === '\\'  ) { sl = 1; name = "fall"; value = 1; }
+  else if (s4 === "same") { sl = 4; name = "same"; value = 0; }
+  else if (s1 === '='   ) { sl = 1; name = "same"; value = 0; }
+  else if (s4 === "diff") { sl = 4; name = "diff"; value = 0; }
+  else if (s1 === '!'   ) { sl = 1; name = "diff"; value = 0; }
   else return [ str, null ];
 
   let   s = str.slice(sl).trimStart();
@@ -181,15 +184,18 @@ function get_key(str) {
 function get_num(str, key_other) {
   if (!str) return [ "", null ]; // Any number on this side
 
-  let sl = 0;
-  let op = null;
+  let   sl = 0;
+  let   op = null;
 
-  if      (str.startsWith("ae")) { sl = 2; op = "ae"; }
-  else if (str.startsWith('a' )) { sl = 1; op = 'a' ; }
-  else if (str.startsWith("be")) { sl = 2; op = "be"; }
-  else if (str.startsWith('b' )) { sl = 1; op = 'b' ; }
-  else if (str.startsWith( 'e')) { sl = 1; op =  'e'; }
-  else if (str.startsWith("ne")) { sl = 2; op = "ne"; }
+  const s1 = str.slice(0, 1);
+  const s2 = str.slice(0, 2);
+
+  if      (s2 === "ae") { sl = 2; op = "ae"; }
+  else if (s1 === 'a' ) { sl = 1; op = 'a' ; }
+  else if (s2 === "be") { sl = 2; op = "be"; }
+  else if (s1 === 'b' ) { sl = 1; op = 'b' ; }
+  else if (s1 ===  'e') { sl = 1; op =  'e'; }
+  else if (s2 === "ne") { sl = 2; op = "ne"; }
 
   let s = sl ? str.slice(sl).trimStart() : str;
   if (!/^\d{1,8}$/.test(s))    return [ str, null ];
@@ -217,11 +223,12 @@ function get_num(str, key_other) {
 //           topd/td | btmd/bd | tops/ts | btms/bs
 //           top+/t+ | btm+/b+ | top-/t- | btm-/b-
 //           topp/tp | btmp/bp | topc/tc | btmc/bc
+//
 function get_agg(str) {
   if (!str) return [ "", null ]; // Any number on this side
 
-  let sl  = 0;
-  let agg = null;
+  let  sl  = 0;
+  let  agg = null;
 
   const s2 = str.slice(0, 2);
   const s3 = str.slice(0, 3);
@@ -299,6 +306,7 @@ function get_agg(str) {
 // k.v: 1 means a >  b // a >= (b + 1)
 // k.v: 0 means a >= b
 // k.v is non-negative integer or percent
+//
 function is_grow(a, b, k) {
   if (k.is_percent) return (b !== 0) ? // Or (a > 0) can be returned for !0 percents from 0
         (a >= (b * (1 + k.value / 100))) : (k.value !== 0) ? false : true;
@@ -312,6 +320,7 @@ function is_grow(a, b, k) {
 // k.v: 1 means a <  b // a <= (b - 1)
 // k.v: 0 means a <= b
 // k.v is non-negative integer or percent
+//
 function is_fall(a, b, k) {
   if (k.is_percent) return (b !== 0) ?
         (a <= (b * (1 - k.value / 100))) : (k.value !== 0) ? false : (a === 0);
@@ -321,6 +330,7 @@ function is_fall(a, b, k) {
 // Whether a === b with tolerance k.v
 // a and b are non-negative integers
 // k.v is non-negative integer or percent
+//
 function is_same(a, b, k) {
   if (k.is_percent) return (b !== 0) ?
         (Math.abs(a - b) <= (b * k.value / 100)) : (a === 0);
@@ -330,6 +340,7 @@ function is_same(a, b, k) {
 // Whether a !== b by more than k.v
 // a and b are non-negative integers
 // k.v is non-negative integer or percent
+//
 function  is_diff(a, b, k) {
   return !is_same(a, b, k);
 }
@@ -452,32 +463,33 @@ const agg_fn = {
   prev : (prev, curr) => prev,
   curr : (prev, curr) => curr,
 
-  topn : (prev, curr) => Math.min(prev,  curr),
-  btmn : (prev, curr) => Math.min(prev,  curr),
-  topa : (prev, curr) =>         (prev + curr) / 2,
-  btma : (prev, curr) =>         (prev + curr) / 2,
-  topx : (prev, curr) => Math.max(prev,  curr),
-  btmx : (prev, curr) => Math.max(prev,  curr),
+  topn : "min",
+  btmn : "min",
+  topa : "avg",
+  btma : "avg",
+  topx : "max",
+  btmx : "max",
 
-  topd : (prev, curr) =>          prev + curr,
-  btmd : (prev, curr) =>          prev + curr,
-  tops : (prev, curr) => Math.abs(prev - curr),
-  btms : (prev, curr) => Math.abs(prev - curr),
+  topd : "add",
+  btmd : "add",
+  tops : "sub",
+  btms : "sub",
 
- "top+": (prev, curr) => (curr - prev) > 0 ? (curr - prev) : 0,
- "btm+": (prev, curr) => (curr - prev) > 0 ? (curr - prev) : 0,
- "top-": (prev, curr) => (prev - curr) > 0 ? (prev - curr) : 0,
- "btm-": (prev, curr) => (prev - curr) > 0 ? (prev - curr) : 0,
+ "top+": "pos",
+ "btm+": "pos",
+ "top-": "neg",
+ "btm-": "neg",
 
-  topp : (prev, curr) => prev,
-  btmp : (prev, curr) => prev,
-  topc : (prev, curr) => curr,
-  btmc : (prev, curr) => curr
+  topp : "prev",
+  btmp : "prev",
+  topc : "curr",
+  btmc : "curr"
 };
 
+// agg is string / function
 function agg_value(prev, curr, agg) {
-  const  fn = agg_fn[agg];
-  return fn ? fn(prev, curr) : 0;
+  while (typeof agg === "string") agg = agg_fn[agg];
+  return agg ? agg(prev, curr) : 0;
 }
 
 // n is 1-based

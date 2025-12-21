@@ -179,15 +179,19 @@ function init_controls() {
 
 const tab_names        = ['a', 'b', 'c', 'd', 'e'];
 let   tab_active       = null;
+
 const tab_input_ids    = input_ids;
 const tab_input_values = {}; // [tab] = { values }; [""] = { defaults };
-const tab_mode         = {   // [tab] = "" / "Filter"; ['c'] see below
+
+const tab_filter_modes = ["OR", "AND", "NOT", "ONE", "TWO", "THREE"];
+const tab_mode         = {   // [tab] = "" / "Filter"; ['c'] see tab_filter_modes
   a: "",
   b: "",
-  c: "OR", // "OR" / "AND" / "NOT" / "ONE" / "TWO" / "THREE"
+  c: "OR",
   d: "",
   e: ""
 };
+
 const tab_change_marked       = {}; // [tab] = true / false
 const tab_input_change_marked = {}; // [id]  = tab  / false
 
@@ -367,13 +371,8 @@ function tab_toggle(tab) {
   if(tab === 'c') {
     if (!tab_mark_filters_count()) return;
 
-    tab_mode[tab] = (tab_mode[tab] === "OR"   ) ? "AND"
-                  : (tab_mode[tab] === "AND"  ) ? "NOT"
-                  : (tab_mode[tab] === "NOT"  ) ? "ONE"
-                  : (tab_mode[tab] === "ONE"  ) ? "TWO"
-                  : (tab_mode[tab] === "TWO"  ) ? "THREE"
-                  : (tab_mode[tab] === "THREE") ? "OR"
-                  : "OR"; // Mode was unknown
+    const curr     =  tab_filter_modes.indexOf(tab_mode[tab]);
+    tab_mode[tab]  =  tab_filter_modes[(curr + 1) % tab_filter_modes.length];
   } else {
     tab_mode[tab]  = (tab_mode[tab] !== "Filter") ?        "Filter" :     "";
     const tab_text = (tab_mode[tab] === "Filter") ? "Mark x Filter" : "Mark";
