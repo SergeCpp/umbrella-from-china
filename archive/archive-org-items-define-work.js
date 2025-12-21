@@ -181,10 +181,10 @@ const tab_names        = ['a', 'b', 'c', 'd', 'e'];
 let   tab_active       = null;
 const tab_input_ids    = input_ids;
 const tab_input_values = {}; // [tab] = { values }; [""] = { defaults };
-const tab_mode         = {   // [tab] = "" / "Filter", for ['c'] = "OR" / "AND" / "NOT" / "XOR"
+const tab_mode         = {   // [tab] = "" / "Filter"; ['c'] see below
   a: "",
   b: "",
-  c: "OR",
+  c: "OR", // "OR" / "AND" / "NOT" / "ONE" / "TWO" / "THREE"
   d: "",
   e: ""
 };
@@ -367,10 +367,12 @@ function tab_toggle(tab) {
   if(tab === 'c') {
     if (!tab_mark_filters_count()) return;
 
-    tab_mode[tab] = (tab_mode[tab] ===  "OR") ? "AND"
-                  : (tab_mode[tab] === "AND") ? "NOT"
-                  : (tab_mode[tab] === "NOT") ? "XOR"
-                  : (tab_mode[tab] === "XOR") ?  "OR"
+    tab_mode[tab] = (tab_mode[tab] === "OR"   ) ? "AND"
+                  : (tab_mode[tab] === "AND"  ) ? "NOT"
+                  : (tab_mode[tab] === "NOT"  ) ? "ONE"
+                  : (tab_mode[tab] === "ONE"  ) ? "TWO"
+                  : (tab_mode[tab] === "TWO"  ) ? "THREE"
+                  : (tab_mode[tab] === "THREE") ? "OR"
                   : "OR"; // Mode was unknown
   } else {
     tab_mode[tab]  = (tab_mode[tab] !== "Filter") ?        "Filter" :     "";
@@ -484,6 +486,7 @@ function filter_by_marks(prev, curr, marks) {
   const mode = tab_filter_mode();
 
   // Deduplicate
+  const marked_cnt = marks.length; // 1..
   const marked_ids = [];
 
   for (const mark of marks) {
@@ -494,6 +497,7 @@ function filter_by_marks(prev, curr, marks) {
   }
 
   // Combine
+  let   combined_cnt = null;
   const combined_ids = {};
 
   switch(mode) {
@@ -501,7 +505,7 @@ function filter_by_marks(prev, curr, marks) {
       const first = marked_ids[0];
       for (const id in first) {
         let in_all = true;
-        for (let i = 1; i < marked_ids.length; i++) {
+        for (let i = 1; i < marked_cnt; i++) {
           if (!marked_ids[i][id]) { // Used true that set above
             in_all = false;
             break;
@@ -511,26 +515,22 @@ function filter_by_marks(prev, curr, marks) {
       }
       break;
 
-    case "XOR":
-      // Count how many times each identifier appears across marked_ids
-      const count = {};
-      for (const ids of marked_ids) {
-        for (const id in ids) {
-          count[id] = count[id] ? count[id] + 1 : 1;
-        }
-      }
-      // Include only those that appear in one mark (ids) only
-      for (const id in count) {
-        if (count[id] === 1) {
-          combined_ids[id] = true;
-        }
-      }
-      break;
-
-    case  "OR":
+    case "OR" :
     case "NOT":
       for (const ids of marked_ids) {
         for (const id in ids) combined_ids[id] = true;
+      }
+      break;
+
+    case "ONE"  :
+    case "TWO"  :
+    case "THREE":
+      combined_cnt = (mode === "ONE") ? 1 : (mode === "TWO") ? 2 : 3;
+      if (combined_cnt > marked_cnt) return { prev: [], curr: [] };
+
+      // Count how many times each identifier appears across marked_ids
+      for (const ids of marked_ids) {
+        for (const id in ids) combined_ids[id] = combined_ids[id] ? combined_ids[id] + 1 : 1;
       }
       break;
   }
@@ -541,8 +541,7 @@ function filter_by_marks(prev, curr, marks) {
 
   switch(mode) {
     case "AND":
-    case "XOR":
-    case  "OR":
+    case "OR" :
       results_prev = prev.filter(item => combined_ids[item.identifier]);
       results_curr = curr.filter(item => combined_ids[item.identifier]);
       break;
@@ -550,6 +549,13 @@ function filter_by_marks(prev, curr, marks) {
     case "NOT":
       results_prev = prev.filter(item => !combined_ids[item.identifier]);
       results_curr = curr.filter(item => !combined_ids[item.identifier]);
+      break;
+
+    case "ONE"  :
+    case "TWO"  :
+    case "THREE":
+      results_prev = prev.filter(item => combined_ids[item.identifier] === combined_cnt);
+      results_curr = curr.filter(item => combined_ids[item.identifier] === combined_cnt);
       break;
   }
 
