@@ -486,10 +486,15 @@ const agg_fn = {
   btmc : "curr"
 };
 
-// agg is string / function
 function agg_value(prev, curr, agg) {
-  while (typeof agg === "string") agg = agg_fn[agg];
-  return agg ? agg(prev, curr) : 0;
+  let fn = agg_fn[agg];
+
+  if (typeof fn === "string") {
+    fn =   agg_fn[fn];
+    agg_fn[agg] = fn;
+  }
+
+  return fn ? fn(prev, curr) : 0;
 }
 
 // n is 1-based
@@ -504,6 +509,7 @@ function agg_nth(count_prev, count_curr, n, agg) {
 
     values.push(agg_value(icp, icc, agg));
   }
+
   const values_len = values.length;
   if  (!values_len) return 0;
 

@@ -222,12 +222,12 @@ function init_tabs() {
     const button = document.getElementById('tab-' + tab);
     if  (!button) return;
 
-    button.onclick = () => tab_switch(tab);
+    button.onclick = (event) => tab_click(tab, event.shiftKey, event.ctrlKey);
 
     button.onkeyup = (event) => {
       const key = event.key;
       if ((key === 'Enter') || (key === ' ')) {
-        tab_switch(tab);
+        tab_click(tab, event.shiftKey, event.ctrlKey);
       }
     };
 
@@ -241,13 +241,14 @@ function init_tabs() {
       if ((key !== 'ArrowLeft') && (key !== 'ArrowRight')) return;
       event.preventDefault();
 
-      const index_new = (key === 'ArrowLeft') // else ArrowRight
-                      ? ((index - 1 + tab_names.length) % tab_names.length)
-                      : ((index + 1)                    % tab_names.length);
+      const all  = tab_names.length;
+      const next = (key === 'ArrowLeft') // else ArrowRight
+                 ? ((index - 1 + all) % all)
+                 : ((index + 1)       % all);
 
-      const button_new = document.getElementById('tab-' + tab_names[index_new]);
-      if   (button_new) {
-        button_new.focus();
+      const button_next = document.getElementById('tab-' + tab_names[next]);
+      if   (button_next) {
+        button_next.focus();
       }
     };
   });
@@ -367,12 +368,17 @@ function tab_set_center() {
   tab_set_text('c', tab_text);
 }
 
-function tab_toggle(tab) {
+function tab_toggle(tab, shift) {
   if(tab === 'c') {
     if (!tab_mark_filters_count()) return;
 
-    const curr     =  tab_filter_modes.indexOf(tab_mode[tab]);
-    tab_mode[tab]  =  tab_filter_modes[(curr + 1) % tab_filter_modes.length];
+    const all  = tab_filter_modes.length;
+    const curr = tab_filter_modes.indexOf(tab_mode[tab]);
+    const next = shift
+               ? ((curr - 1 + all) % all)
+               : ((curr + 1)       % all);
+
+    tab_mode[tab]  =  tab_filter_modes[next];
   } else {
     tab_mode[tab]  = (tab_mode[tab] !== "Filter") ?        "Filter" :     "";
     const tab_text = (tab_mode[tab] === "Filter") ? "Mark x Filter" : "Mark";
@@ -383,9 +389,9 @@ function tab_toggle(tab) {
 
 // Presentation
 
-function tab_activate(tab_to) {
+function tab_activate(tab_to, shift = false) {
   if (tab_to === tab_active) {
-    tab_toggle(tab_to);
+    tab_toggle(tab_to, shift);
     return;
   }
 
@@ -403,6 +409,8 @@ function tab_activate(tab_to) {
   }
 
   tab_active = tab_to;
+
+  if (shift) tab_toggle(tab_to, shift);
 }
 
 function tab_mark(tab, changed) {
@@ -432,9 +440,18 @@ function tab_update(tab_new) {
   }
 }
 
-function tab_switch(tab) {
+function tab_switch(tab, shift) {
   tab_update  (tab);
-  tab_activate(tab);
+  tab_activate(tab, shift);
+}
+
+// Click Handler
+
+function tab_click(tab, shift, ctrl) {
+  if (ctrl)
+    tab_toggle(tab, shift);
+  else
+    tab_switch(tab, shift);
 }
 
 // Interface
@@ -764,13 +781,14 @@ function date_change_menu(event, what) {
 
       const menu = event.currentTarget.parentElement;
       const opts = Array.from(menu.children);
+      const all  = opts.length;
       const curr = opts.indexOf(event.currentTarget);
       let   next;
 
       if ((key === 'ArrowUp') || (key === 'ArrowLeft') || ((key === 'Tab') && event.shiftKey)) {
-        next = (curr - 1 + opts.length) % opts.length;
+        next = (curr - 1 + all) % all;
       } else { // ArrowDown or ArrowRight or Tab
-        next = (curr + 1)               % opts.length;
+        next = (curr + 1)       % all;
       }
       opts[next].focus();
     };

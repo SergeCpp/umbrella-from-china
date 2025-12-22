@@ -18,6 +18,7 @@
   text-align: center;
   text-overflow: ellipsis;
   text-wrap-mode: nowrap;
+  user-select: none;
 }
 
 .tab-a {
@@ -320,6 +321,7 @@ input[type="checkbox"].changed.tab-e {
   cursor: pointer;
   padding: 4px 8px;
   text-align: center;
+  user-select: none;
 }
 .menu-opt:hover {
   background-color: #f2f2f2; /* Gray95 */
