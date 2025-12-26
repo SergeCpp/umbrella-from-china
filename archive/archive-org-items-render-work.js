@@ -111,26 +111,34 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
   if (results_mark) {
     for (const rm of results_mark) {
-      const mark = rm.mark;
-      const prev = rm.prev;
-      const curr = rm.curr;
+      let mark_count = 0;
 
-      const rm_ids = {}; // Collect all identifiers
-      for (const item of prev) rm_ids[item.identifier] = null;
-      for (const item of curr) rm_ids[item.identifier] = null;
-
-      let count = 0;
-      for (const id in rm_ids) {
+      for (const mark_item of rm.prev) {
+        const id = mark_item.identifier;
         const item = map_curr_exp[id];
-        if  (!item) continue;
+        if (!item) continue;
+        if (item.no_prev) continue;
 
         if (!item.marks) item.marks = [];
-        item.marks.push(mark);
-        count++;
+        item.marks.push(rm.mark);
+        mark_count++;
+      }
+
+      for (const mark_item of rm.curr) {
+        const id = mark_item.identifier;
+        const item = map_curr_exp[id];
+        if (!item) continue;
+        if (item.is_prev) continue;
+
+        if (!item.marks) item.marks = [];
+        if (!item.marks.includes(rm.mark)) {
+          item.marks.push(rm.mark);
+          mark_count++;
+        }
       }
 
       if (!mark_counts) mark_counts = [];
-      mark_counts.push({ mark, count });
+      mark_counts.push({ mark: rm.mark, count: mark_count });
     }
   }
 
