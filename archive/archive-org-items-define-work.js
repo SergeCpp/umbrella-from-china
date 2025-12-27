@@ -308,7 +308,7 @@ function tab_input_mark(tab, input, id, changed) {
   if (changed) {
     if (marked === tab) return;
 
-    if (marked) { // Other tab
+    if (marked) { // Other tab. Normally never goes here
       input.classList.remove('tab-' + marked);
       input.classList.add   ('tab-' + tab);
       tab_input_change_marked[id]   = tab;

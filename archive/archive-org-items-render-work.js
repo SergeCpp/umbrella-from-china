@@ -116,8 +116,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       for (const mark_item of rm.prev) {
         const id = mark_item.identifier;
         const item = map_curr_exp[id];
-        if (!item) continue;
-        if (item.no_prev) continue;
+        if (!item || item.no_prev) continue;
 
         if (!item.marks) item.marks = [];
         item.marks.push(rm.mark);
@@ -127,14 +126,13 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       for (const mark_item of rm.curr) {
         const id = mark_item.identifier;
         const item = map_curr_exp[id];
-        if (!item) continue;
-        if (item.is_prev) continue;
+        if (!item || item.is_prev) continue;
+
+        if (item.marks && item.marks.includes(rm.mark)) continue; // Avoid duplication of mark
 
         if (!item.marks) item.marks = [];
-        if (!item.marks.includes(rm.mark)) {
-          item.marks.push(rm.mark);
-          mark_count++;
-        }
+        item.marks.push(rm.mark);
+        mark_count++;
       }
 
       if (!mark_counts) mark_counts = [];
@@ -267,7 +265,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     // Prev
     //
     const _prev = {}; // _old, _23, _7
-    if (item_prev) {
+    if (!item.no_prev) {
       _prev._old = item_prev.views_old.toString().padStart(views_length) + stat_sl +
                    item_prev. days_old.toString().padStart( days_length) + stat_eq +
                    item_prev.ratio_old.toFixed(3).padStart(ratio_length);
@@ -307,7 +305,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     // Horz and Vert substantial changes, 0 is no change
     //
     let horz_change = 0;
-    if (item_prev && !item.is_prev) { // Item is markable
+    if (!item.no_prev && !item.is_prev) { // Item is markable
       horz_change = (item.ratio_old && item_prev.ratio_old)
           ? Math.log(item.ratio_old /  item_prev.ratio_old)
           : 0;
@@ -342,7 +340,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     let   rank_change = 0;
     const rank_diff = item.index_prev - index_curr; // No abs
     if   (rank_diff) { // Also if length === 1 then index_prev === index_curr
-      if (!item.is_prev && !item.no_prev) { // Item is markable
+      if (!item.no_prev && !item.is_prev) { // Item is markable
 //      const rank_scale = get_scale_log(index_curr, curr_log_base, rank_log_steep, rank_decay);
         const rank_scale = get_scale_sig(index_curr, curr_length,
           rank_sig_base, rank_sig_steep, rank_decay, rank_sig_min, rank_sig_max);
@@ -389,7 +387,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     //
     const _gauges = {};
     let   _gauges_set = false;
-    if (item_prev) {
+    if (!item.no_prev) {
       _gauges.below_a_w = get_percentage(item_prev.favorites, max_favorites, base_favorites);
       _gauges_set = true;
     }
@@ -480,7 +478,6 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   //
   for (let index = 0; index < results_curr_exp.length; index++) {
     const item = results_curr_exp[index];
-    const item_prev = map_prev[item.identifier];
 
     // 1. Outer wrapper, for border/divider and spacing
     const item_wrapper = document.createElement("div");
@@ -528,7 +525,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     item_gauge_below_b.className = "item-gauge-below-b";
 
     // Display favorites prev and curr counts on the below gauges
-    if (item_prev) {
+    if (!item.no_prev) {
       item_gauge_below_a.style.width = item.gauges.below_a_w;
     }
 
@@ -564,7 +561,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     stat_prev_7.textContent = item.prev._7;
 
     // Rank changes marking
-    if (item_prev && !item.is_prev) {
+    if (!item.no_prev && !item.is_prev) {
       if      (item.rank_change >= mark_rank_up) { // index < item.index_prev
         stat_prev_old.classList.add("item-mark-up");
         stat_prev_23 .classList.add("item-mark-up");
@@ -603,7 +600,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     stat_curr_7.textContent = item.curr._7;
 
     // Substantial changes marking: horizontal impact of old from prev to curr
-    if (item_prev && !item.is_prev) {
+    if (!item.no_prev && !item.is_prev) {
       if      (item.horz_change >= mark_grow_old) {
         stat_curr_old.classList.add("item-mark-grow");
       }
@@ -650,7 +647,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     stat_grow_7.textContent = item.grow._7;
 
     // Grow mood marking: positive and negative
-    if (item_prev && !item.is_prev) {
+    if (!item.no_prev && !item.is_prev) {
       if      (item.grow._mood >= mark_mood_pos) {
         stat_grow_old.classList.add("item-mark-grow");
         stat_grow_23 .classList.add("item-mark-grow");
