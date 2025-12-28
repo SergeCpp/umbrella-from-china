@@ -495,6 +495,47 @@ function get_stat_subset(stat, subset_ids) {
   return stat_subset;
 }
 
+/* Merging of Mark Filters */
+
+// Array of marks is not empty
+function merger_by_marks(prev, curr, marks) {
+  const mode = tab_filter_mode();
+  const mark_cnt = marks.length; // 1..
+  const mode_cnt = { "ONE": 1, "TWO": 2, "THREE": 3, "FOUR": 4 }[mode];
+  if  (!mode_cnt || (mode_cnt >= mark_cnt)) return { done: false };
+
+  const marked = {};
+  for (let i = 0; i < mark_cnt; i++) {
+    for (const mark of marks[i].prev) {
+      const id = mark.identifier;
+      if (!marked[id]) marked[id] = [];
+      marked[id].push(i);
+    }
+    for (const mark of marks[i].curr) {
+      const id = mark.identifier;
+      if (marked[id] && marked[id].includes(i)) continue; // Avoid duplication of mark
+      if (!marked[id]) marked[id] = [];
+      marked[id].push(i);
+    }
+  }
+
+  const items_prev = {};
+  for (const item of prev) items_prev[item.identifier] = true;
+
+  const remove = {};
+  for (const item of curr) {
+    const id = item.identifier;
+    if (!items_prev[id]) continue;
+    if (!marked[id]) continue;
+    if (marked[id].length > mode_cnt) remove[id] = true;
+  }
+
+  const results_prev = prev.filter(item => !remove[item.identifier]);
+  const results_curr = curr.filter(item => !remove[item.identifier]);
+
+  return { done: true, prev: results_prev, curr: results_curr };
+}
+
 /* Filtering by Mark Filters */
 
 // Array of marks is not empty
@@ -652,6 +693,12 @@ function process_filter() {
   if (filters_mark) {
     results_filter_prev = filter_by_marks(results_filter_prev, filters_mark.map(marks => marks.prev));
     results_filter_curr = filter_by_marks(results_filter_curr, filters_mark.map(marks => marks.curr));
+
+    const merged = merger_by_marks(results_filter_prev, results_filter_curr, filters_mark);
+    if   (merged.done) {
+      results_filter_prev = merged.prev;
+      results_filter_curr = merged.curr;
+    }
   }
 
   // Filtering and Marking Duration
