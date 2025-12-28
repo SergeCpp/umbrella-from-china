@@ -210,14 +210,14 @@ function filter_matches(doc, field, terms) {
 }
 
 function evaluate_term(term, values) {
-  switch(term.type) {
+  switch (term.type) {
     case "AND":
       return term.terms.every(part => evaluate_term(part, values));
 
     case "OR":
       return term.terms.some(part => evaluate_term(part, values));
 
-    case "XOR":
+    case "XOR": {
       //  XOR : Include if one match only
       let cnt_match = 0;
       for (const part of term.terms) {
@@ -227,18 +227,18 @@ function evaluate_term(term, values) {
         }
       }
       return cnt_match === 1;
-
+    }
     case "NOT"   :
-    case "NOTANY":
+    case "NOTANY": {
       //  NOTANY : Exclude if any value matches term.excl
       const any_match = evaluate_term(term.excl, values);
       return (!term.incl || evaluate_term(term.incl, values)) && !any_match;
-
-    case "NOTALL":
+    }
+    case "NOTALL": {
       //  NOTALL : Exclude if all values matches term.excl
       const all_match = values.every(value => evaluate_term(term.excl, [value]));
       return (!term.incl || evaluate_term(term.incl, values)) && !all_match;
-
+    }
     case "TEXT":
       return values.some(value => value.includes(term.text));
 
