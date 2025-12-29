@@ -503,19 +503,20 @@ function filter_by_marks_cell(items, marks, mode) {
 
   switch (mode) {
     case "AND": {
-      const marks_cnt = marks.length; // 1..
-      const marks_ids = [];
-      for (const mark of marks) {
+      const mark_cnt = marks.length; // 1..
+      const mark_ids = [null];
+      for (let i = 1; i < mark_cnt; i++) {
+        const mark = marks[i];
         const ids = {};
         for (const item of mark) ids[item.identifier] = true;
-        marks_ids.push(ids);
+        mark_ids.push(ids);
       }
 
-      const first = marks_ids[0];
-      for (const id in first) {
+      for (const item of marks[0]) {
+        const id = item.identifier;
         let in_all = true;
-        for (let i = 1; i < marks_cnt; i++) {
-          if (!marks_ids[i][id]) {
+        for (let i = 1; i < mark_cnt; i++) {
+          if (!mark_ids[i][id]) {
             in_all = false;
             break;
           }
@@ -559,65 +560,39 @@ function filter_by_marks(prev, curr, marks) {
     }
   }
 
-  const marks_cnt = marks.length; // 1..
-  const group_cnt = { "ONE": 1, "TWO": 2, "THREE": 3, "FOUR": 4 }[mode];
-  if  (!group_cnt) return { prev: [], curr: [] }; // Unknown mode
+  const mark_cnt = marks.length; // 1..
+  const mode_cnt = { "ONE": 1, "TWO": 2, "THREE": 3, "FOUR": 4 }[mode];
+  if  (!mode_cnt || (mode_cnt > mark_cnt)) return { prev: [], curr: [] }; // Unknown mode or insufficient marks
 
-//const mark_prev_arr = {};
-//const mark_curr_arr = {};
   const mark_both_arr = {};
-
-  for (let i = 0; i < marks_cnt; i++) {
-    for (const mark of marks[i].prev) {
-      const id = mark.identifier;
-
-//    if (!mark_prev_arr[id]) mark_prev_arr[id] = [];
-//    mark_prev_arr[id].push(i);
-
+  for (let i = 0; i < mark_cnt; i++) {
+    for (const item of marks[i].prev) {
+      const id = item.identifier;
       if (!mark_both_arr[id]) mark_both_arr[id] = [];
       mark_both_arr[id].push(i);
     }
 
-    for (const mark of marks[i].curr) {
-      const id = mark.identifier;
-
-//    if (!mark_curr_arr[id]) mark_curr_arr[id] = [];
-//    mark_curr_arr[id].push(i);
-
+    for (const item of marks[i].curr) {
+      const id = item.identifier;
       if (mark_both_arr[id] && mark_both_arr[id].includes(i)) continue; // Avoid duplication of mark
       if (!mark_both_arr[id]) mark_both_arr[id] = [];
       mark_both_arr[id].push(i);
     }
   }
 
-  const mark_prev_ids = [];
-  const mark_curr_ids = [];
+  const group_prev_ids = {};
+  const group_curr_ids = {};
 
   for (const mark of marks) {
-    const prev_ids = {};
-    for (const item of mark.prev) prev_ids[item.identifier] = true;
-    mark_prev_ids.push(prev_ids);
-
-    const curr_ids = {};
-    for (const item of mark.curr) curr_ids[item.identifier] = true;
-    mark_curr_ids.push(curr_ids);
+    for (const item of mark.prev) group_prev_ids[item.identifier] = (group_prev_ids[item.identifier] || 0) + 1;
+    for (const item of mark.curr) group_curr_ids[item.identifier] = (group_curr_ids[item.identifier] || 0) + 1;
   }
 
-  const group_prev_ids = {};
-  for (const ids of mark_prev_ids) {
-    for (const id in ids) group_prev_ids[id] = (group_prev_ids[id] || 0) + 1;
-  }
-
-  const group_curr_ids = {};
-  for (const ids of mark_curr_ids) {
-    for (const id in ids) group_curr_ids[id] = (group_curr_ids[id] || 0) + 1;
-  }
-
-  let results_prev = prev.filter(item => group_prev_ids[item.identifier] === group_cnt);
-  let results_curr = curr.filter(item => group_curr_ids[item.identifier] === group_cnt);
+  let results_prev = prev.filter(item => group_prev_ids[item.identifier] === mode_cnt);
+  let results_curr = curr.filter(item => group_curr_ids[item.identifier] === mode_cnt);
 
   // Remove overmarked items that passed filter (differently marked cells)
-  if (marks_cnt > group_cnt) {
+  if (mark_cnt > mode_cnt) {
     const passed_prev = {};
     for (const item of results_prev) passed_prev[item.identifier] = true;
 
@@ -627,7 +602,7 @@ function filter_by_marks(prev, curr, marks) {
       if (!passed_prev[id]) continue;
       if (!mark_both_arr[id]) continue;
 
-      if (mark_both_arr[id].length > group_cnt) {
+      if (mark_both_arr[id].length > mode_cnt) {
         if (!overmarked) overmarked = {};
         overmarked[id] = true;
       }
@@ -636,6 +611,25 @@ function filter_by_marks(prev, curr, marks) {
     if (overmarked) {
       results_prev = results_prev.filter(item => !overmarked[item.identifier]);
       results_curr = results_curr.filter(item => !overmarked[item.identifier]);
+    }
+  }
+
+  // Add sidemarked items that not passed filter (differently marked cells)
+  const side_prev = {};
+  for (const item of prev) {
+    const id = item.identifier;
+    if (!mark_both_arr[id] || !group_prev_ids[id]) continue;
+    if ((mark_both_arr[id].length === mode_cnt) && (group_prev_ids[id] < mode_cnt)) {
+      side_prev[id] = item;
+    }
+  }
+
+  for (const item of curr) {
+    const id = item.identifier;
+    if (!side_prev[id]) continue;
+    if (group_curr_ids[id] === group_prev_ids[id]) {
+      results_prev.push(side_prev[id]);
+      results_curr.push(item);
     }
   }
 
