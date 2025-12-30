@@ -498,7 +498,7 @@ function get_stat_subset(stat, subset_ids) {
 /* Filtering by Mark Filters */
 
 // Array of marks is not empty
-function filter_by_marks_cell(items, marks, mode) {
+function filter_by_marks_side(items, marks, mode) {
   const combined_ids = {};
 
   switch (mode) {
@@ -546,15 +546,13 @@ function filter_by_marks_cell(items, marks, mode) {
 }
 
 // Array of marks is not empty
-function filter_by_marks(prev, curr, marks) {
-  const mode = tab_filter_mode();
-
+function filter_by_marks(prev, curr, marks, mode) {
   switch (mode) {
     case "OR"  :
     case "AND" :
     case "NONE": {
-      const results_prev = filter_by_marks_cell(prev, marks.map(mark => mark.prev), mode);
-      const results_curr = filter_by_marks_cell(curr, marks.map(mark => mark.curr), mode);
+      const results_prev = filter_by_marks_side(prev, marks.map(mark => mark.prev), mode);
+      const results_curr = filter_by_marks_side(curr, marks.map(mark => mark.curr), mode);
 
       return { prev: results_prev, curr: results_curr };
     }
@@ -564,6 +562,7 @@ function filter_by_marks(prev, curr, marks) {
   const mode_cnt = { "ONE": 1, "TWO": 2, "THREE": 3, "FOUR": 4 }[mode];
   if  (!mode_cnt || (mode_cnt > mark_cnt)) return { prev: [], curr: [] }; // Unknown mode or insufficient marks
 
+  // Map of marks each identifier marked by (in both prev/curr sides)
   const mark_both_arr = {};
   for (let i = 0; i < mark_cnt; i++) {
     for (const item of marks[i].prev) {
@@ -580,6 +579,7 @@ function filter_by_marks(prev, curr, marks) {
     }
   }
 
+  // Maps of mark counts for each identifier marked (in prev/curr sides separately)
   const group_prev_ids = {};
   const group_curr_ids = {};
 
@@ -588,11 +588,13 @@ function filter_by_marks(prev, curr, marks) {
     for (const item of mark.curr) group_curr_ids[item.identifier] = (group_curr_ids[item.identifier] || 0) + 1;
   }
 
+  // Side filtering
   let results_prev = prev.filter(item => group_prev_ids[item.identifier] === mode_cnt);
   let results_curr = curr.filter(item => group_curr_ids[item.identifier] === mode_cnt);
 
-  // Remove overmarked items that passed filter (differently marked cells)
-  if (mark_cnt > mode_cnt) {
+  // Remove overmarked items that passed filter (differently marked cells of prev/curr sides)
+  // If prev: a and curr: b then both: a, b (overmark for ONE)
+  if (mark_cnt > mode_cnt) { // The only case overmarking can occur
     const passed_prev = {};
     for (const item of results_prev) passed_prev[item.identifier] = true;
 
@@ -614,7 +616,8 @@ function filter_by_marks(prev, curr, marks) {
     }
   }
 
-  // Add sidemarked items that not passed filter (differently marked cells)
+  // Add undermarked items that not passed filter (differently marked cells of prev/curr sides)
+  // If prev: a and curr: b then both: a, b (undermark for TWO)
   const side_prev = {};
   for (const item of prev) {
     const id = item.identifier;
@@ -627,7 +630,7 @@ function filter_by_marks(prev, curr, marks) {
   for (const item of curr) {
     const id = item.identifier;
     if (!side_prev[id]) continue;
-    if (group_curr_ids[id] === group_prev_ids[id]) {
+    if (group_curr_ids[id] === group_prev_ids[id]) { // The only case of undermarking
       results_prev.push(side_prev[id]);
       results_curr.push(item);
     }
@@ -716,7 +719,8 @@ function process_filter() {
 
   // Filtering by Mark Filters
   if (filters_mark) {
-    const filtered_by_marks = filter_by_marks(results_filter_prev, results_filter_curr, filters_mark);
+    const filtered_by_marks = filter_by_marks(results_filter_prev, results_filter_curr,
+      filters_mark, tab_filter_mode());
     results_filter_prev = filtered_by_marks.prev;
     results_filter_curr = filtered_by_marks.curr;
   }
