@@ -246,7 +246,15 @@ function format_number(number) {
 
 // num: non-negative integer
 function format_num_str(num, str) {
-  return format_number(num) + ' ' + str + ((num === 1) ? "" : 's');
+  return format_number(num) + ' ' + str + (num === 1 ? "" : 's');
+}
+
+function cap_first(str) {
+  return str.at(0).toUpperCase() + str.slice(1);
+}
+
+function low_first(str) {
+  return str.at(0).toLowerCase() + str.slice(1);
 }
 
 function sort_results(results) {
@@ -282,7 +290,7 @@ function render_stats(results, date, what, container) {
   const quartile3    = get_percentile(75);
   const percentile90 = get_percentile(90);
 
-  stats_text.innerHTML =
+  stats_text.innerHTML = cap_first(what) + ' : ' +
     '<span ' +
        'role="button" style="cursor:pointer;" tabindex="0" ' +
        'onkeydown="if ((event.key === \'Enter\') || (event.key === \' \')) { event.preventDefault(); }" ' +

@@ -135,7 +135,7 @@ const input_ids =
   [  'collections',      'creators',    'subjects',       'title', 'description',
    'downloads-min', 'downloads-max',   'month-min',   'month-max',    'week-min', 'week-max',
     'archived-min',  'archived-max', 'created-min', 'created-max',    'favs-min', 'favs-max',
-       'prev-only',     'curr-only'];
+       'only-prev',     'only-curr'];
 
 // Initialization
 
@@ -261,7 +261,7 @@ function tab_to_values(tab) {
     const input = document.getElementById(id);
     if  (!input) return;
 
-    const value = id.endsWith('-only') ? input.checked : input.value;
+    const value = input.type === 'checkbox' ? input.checked : input.value;
 
     tab_input_values[tab][id] = value;
   });
@@ -272,7 +272,7 @@ function tab_to_inputs(tab) {
     const input = document.getElementById(id);
     if  (!input) return;
 
-    if (id.endsWith('-only'))
+    if (input.type === 'checkbox')
       input.checked = tab_input_values[tab][id];
     else
       input.value   = tab_input_values[tab][id];
@@ -291,7 +291,7 @@ function tab_is_changed(tab) {
 
 function tab_input_changed(input) {
   const id      = input.id;
-  const value   = id.endsWith('-only') ? input.checked : input.value;
+  const value   = input.type === 'checkbox' ? input.checked : input.value;
   const changed = value !== tab_input_values[""][id];
 
   tab_input_mark(tab_active, input, id, changed);

@@ -816,17 +816,17 @@ function filter_favs(items_prev, items_curr,
 
 /* Filter Sets */
 
-function filter_sets(items_prev, items_curr, prev_only, curr_only) {
-  if (!prev_only && !curr_only) return { done: false };
+function filter_sets(items_prev, items_curr, only_prev, only_curr) {
+  if (!only_prev && !only_curr) return { done: false };
 
-  if (prev_only && !curr_only) {
+  if (only_prev && !only_curr) {
     const map_curr = {};
     for (const item of items_curr) map_curr[item.identifier] = true;
     const results_prev = items_prev.filter(item => map_curr[item.identifier] === undefined);
     return { done: true, prev: results_prev, curr: [] };
   }
 
-  if (!prev_only && curr_only) {
+  if (!only_prev && only_curr) {
     const map_prev = {};
     for (const item of items_prev) map_prev[item.identifier] = true;
     const results_curr = items_curr.filter(item => map_prev[item.identifier] === undefined);

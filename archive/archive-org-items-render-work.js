@@ -12,6 +12,23 @@ const  stat_23     = " /   23 =";
 const  stat_7      = " /    7 =";
 const  stat_eq     =        " =";
 
+/* Variables */
+
+let show_prev      = true;
+let show_curr      = true;
+let show_both      = true;
+
+let show_unmarked  = true;
+
+let show_rank_up   = true;
+let show_rank_dn   = true;
+let show_horz_grow = true;
+let show_horz_fall = true;
+let show_vert_grow = true;
+let show_vert_fall = true;
+let show_mood_pos  = true;
+let show_mood_neg  = true;
+
 /* Render */
 
 function render_results(results_prev, date_prev, results_curr, date_curr, results_mark) {
@@ -27,8 +44,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   ///////
   // Sets
   //
-  let only_curr = 0;
   let only_prev = 0;
+  let only_curr = 0;
   let only_both = 0;
 
   // Lookup helper for create curr expanded results array
@@ -165,12 +182,13 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   const sets_div = document.createElement("div");
   sets_div.className = "text-center text-comment";
 
-  if ((only_curr === 0) && (only_prev === 0)) {
-    sets_div.textContent = 'All Items are present in both ' + date_prev + ' and ' + date_curr;
+  if ((only_prev === 0) && (only_curr === 0)) {
+    sets_div.textContent = (only_both === 1 ? 'Item is' : 'All Items are') +
+                           ' present in both Prev and Curr';
   } else {
-    sets_div.textContent = only_prev + ' in ' + date_prev + ' only, ' +
-                           only_curr + ' in ' + date_curr + ' only, ' +
-                           only_both + ' in ' +     'both'+      '. ' +
+    sets_div.textContent = only_prev + ' in Prev only, ' +
+                           only_curr + ' in Curr only, ' +
+                           only_both + ' in both. ' +
                            'Checkboxes above to select';
   }
   container.appendChild(sets_div);

@@ -718,10 +718,10 @@ function filter_route(base_prev_items, base_prev_date,
   }
 
   // 6. Sets. Must be the last filter
-  const prev_only = input_values["prev-only"];
-  const curr_only = input_values["curr-only"];
+  const only_prev = input_values["only-prev"];
+  const only_curr = input_values["only-curr"];
 
-  const filtered_sets = filter_sets(results_prev, results_curr, prev_only, curr_only);
+  const filtered_sets = filter_sets(results_prev, results_curr, only_prev, only_curr);
   if   (filtered_sets.done) {
     results_prev = filtered_sets.prev;
     results_curr = filtered_sets.curr;
