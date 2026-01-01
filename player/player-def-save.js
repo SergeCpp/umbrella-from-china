@@ -658,11 +658,11 @@ function get_song_id_curr(player, player_type, key) {
 /* State Marking Logic */
 
 function cap_first(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
+  return str.at(0).toUpperCase() + str.slice(1);
 }
 
 function low_first(str) {
-  return str.charAt(0).toLowerCase() + str.slice(1);
+  return str.at(0).toLowerCase() + str.slice(1);
 }
 
 function set_player_state(pl, song_id, state) {
