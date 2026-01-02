@@ -1,4 +1,4 @@
-/* Constants */
+/* Stat data sizes and templates */
 
 const views_length = 6; // 123456
 const  days_length = 5; // 12345
@@ -11,23 +11,6 @@ const  stat_sl     = " /";
 const  stat_23     = " /   23 =";
 const  stat_7      = " /    7 =";
 const  stat_eq     =        " =";
-
-/* Variables */
-
-let show_prev      = true;
-let show_curr      = true;
-let show_both      = true;
-
-let show_unmarked  = true;
-
-let show_rank_up   = true;
-let show_rank_dn   = true;
-let show_horz_grow = true;
-let show_horz_fall = true;
-let show_vert_grow = true;
-let show_vert_fall = true;
-let show_mood_pos  = true;
-let show_mood_neg  = true;
 
 /* Render */
 
