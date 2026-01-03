@@ -12,6 +12,25 @@ const  stat_23     = " /   23 =";
 const  stat_7      = " /    7 =";
 const  stat_eq     =        " =";
 
+/* Which items to show */
+
+let show_prev      = true; function inp_prev(checked) { show_prev = checked; }
+let show_curr      = true; function inp_curr(checked) { show_curr = checked; }
+let show_both      = true; function inp_both(checked) { show_both = checked; }
+
+/*
+let show_unmarked  = true;
+
+let show_rank_up   = true;
+let show_rank_dn   = true;
+let show_horz_grow = true;
+let show_horz_fall = true;
+let show_vert_grow = true;
+let show_vert_fall = true;
+let show_mood_pos  = true;
+let show_mood_neg  = true;
+*/
+
 /* Render */
 
 function render_results(results_prev, date_prev, results_curr, date_curr, results_mark) {
@@ -169,10 +188,30 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     sets_div.textContent = (only_both === 1 ? 'Item is' : 'All Items are') +
                            ' present in both Prev and Curr';
   } else {
-    sets_div.textContent = only_prev + ' in Prev only, ' +
-                           only_curr + ' in Curr only, ' +
-                           only_both + ' in both. ' +
-                           'Checkboxes above to select';
+    sets_div.style.display = "flex"; // For gap
+    sets_div.style.fontSize = "1.2em"; // Else text becomes too small here
+    sets_div.style.gap = "0.6em"; // Half of a font
+    sets_div.style.margin = "0 auto";
+    sets_div.style.width = "fit-content"; // To center by margin auto
+
+    const chk_prev = only_prev && (only_curr || only_both);
+    const chk_curr = only_curr && (only_prev || only_both);
+    const chk_both = only_both && (only_prev || only_curr);
+
+    const pre_prev = chk_prev ? '<label for="show-prev" style="cursor: pointer;">' : "";
+    const pre_curr = chk_curr ? '<label for="show-curr" style="cursor: pointer;">' : "";
+    const pre_both = chk_both ? '<label for="show-both" style="cursor: pointer;">' : "";
+
+    const suf_prev = chk_prev ? '&thinsp;</label><input id="show-prev" class="in-chk" type="checkbox" ' +
+      (show_prev ? 'checked ' : "") + 'oninput="inp_prev(this.checked)">' : ',';
+    const suf_curr = chk_curr ? '&thinsp;</label><input id="show-curr" class="in-chk" type="checkbox" ' +
+      (show_curr ? 'checked ' : "") + 'oninput="inp_curr(this.checked)">' : ',';
+    const suf_both = chk_both ? '&thinsp;</label><input id="show-both" class="in-chk" type="checkbox" ' +
+      (show_both ? 'checked ' : "") + 'oninput="inp_both(this.checked)">' : "";
+
+    sets_div.innerHTML = '<span>' + pre_prev + only_prev + ' in Prev only' + suf_prev + '</span>' +
+                         '<span>' + pre_curr + only_curr + ' in Curr only' + suf_curr + '</span>' +
+                         '<span>' + pre_both + only_both + ' in both'      + suf_both + '</span>';
   }
   container.appendChild(sets_div);
 
@@ -479,6 +518,10 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   //
   for (let index = 0; index < results_curr_exp.length; index++) {
     const item = results_curr_exp[index];
+
+    if (                  item.is_prev && !show_prev) continue;
+    if ( item.no_prev                  && !show_curr) continue;
+    if (!item.no_prev && !item.is_prev && !show_both) continue;
 
     // 1. Outer wrapper, for border/divider and spacing
     const item_wrapper = document.createElement("div");
