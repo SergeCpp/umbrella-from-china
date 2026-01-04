@@ -293,9 +293,9 @@ function render_stats(results, date, what, container) {
   stats_text.innerHTML = cap_first(what) + ' : ' +
     '<span ' +
        'role="button" style="cursor:pointer;" tabindex="0" ' +
-       'onkeydown="if ((event.key === \'Enter\') || (event.key === \' \')) { event.preventDefault(); }" ' +
-       'onkeyup  ="if ((event.key === \'Enter\') || (event.key === \' \')) { ' +
-                  'date_change_menu(event, \'' + what + '\'); }" ' +
+       'onkeydown="if ((event.key === \'Enter\') || (event.key === \' \')) event.preventDefault();" ' +
+       'onkeyup  ="if ((event.key === \'Enter\') || (event.key === \' \')) ' +
+                  'date_change_menu(event, \'' + what + '\');" ' +
        'onclick  ="date_change_menu(event, \'' + what + '\')" ' +
        '>' + date + '</span>'        + ' : ' +
     'Min ' + min         .toFixed(3) + ' / ' +

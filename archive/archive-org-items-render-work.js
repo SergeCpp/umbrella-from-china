@@ -14,22 +14,15 @@ const  stat_eq     =        " =";
 
 /* Which items to show */
 
-let show_prev      = true; function inp_prev(checked) { show_prev = checked; }
-let show_curr      = true; function inp_curr(checked) { show_curr = checked; }
-let show_both      = true; function inp_both(checked) { show_both = checked; }
+let show_prev  = true; function inp_prev (checked) { show_prev  = checked; }
+let show_curr  = true; function inp_curr (checked) { show_curr  = checked; }
+let show_both  = true; function inp_both (checked) { show_both  = checked; }
 
-/*
-let show_unmarked  = true;
-
-let show_rank_up   = true;
-let show_rank_dn   = true;
-let show_horz_grow = true;
-let show_horz_fall = true;
-let show_vert_grow = true;
-let show_vert_fall = true;
-let show_mood_pos  = true;
-let show_mood_neg  = true;
-*/
+let show_plain = true; function inp_plain(checked) { show_plain = checked; }
+let show_rank  = true; function inp_rank (checked) { show_rank  = checked; }
+let show_horz  = true; function inp_horz (checked) { show_horz  = checked; }
+let show_vert  = true; function inp_vert (checked) { show_vert  = checked; }
+let show_mood  = true; function inp_mood (checked) { show_mood  = checked; }
 
 /* Render */
 
@@ -59,6 +52,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     results_curr_exp.push({ ...item,
       is_prev    : false,
       no_prev    : null,
+      is_both    : null,
       prev       : null,
       curr       : null,
       index_prev : null,
@@ -79,6 +73,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       results_curr_exp.push({ ...item,
         is_prev    : true,
         no_prev    : null,
+        is_both    : null,
         prev       : null,
         curr       : null,
         index_prev : null,
@@ -111,10 +106,12 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
   // Create a map of curr expanded results by identifier
   // Set no_prev actual values in curr expanded results
+  // Set is_both actual values in curr expanded results
   const map_curr_exp = {};
   for (const item of results_curr_exp) {
     map_curr_exp[item.identifier] = item;
     item.no_prev = !map_prev[item.identifier];
+    item.is_both = !item.no_prev && !item.is_prev;
   }
 
   // Traverse prev expanded and set index_prev in curr expanded
@@ -180,40 +177,57 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   render_stats(results_prev, date_prev, "prev", container); // Also sorts results_prev
   render_stats(results_curr, date_curr, "curr", container); // Also sorts results_curr
 
+  // Which items to show
+  const pre_html = (id) => {
+    return '<label for="' + id + '" style="cursor: pointer;">';
+  };
+
+  const suf_html = (id, chk, inp) => {
+    return '</label><input id="' + id + '" ' +
+      'class="in-chk" type="checkbox" ' + (chk ? 'checked ' : "") +
+      'oninput="' + inp + '(this.checked)" ' +
+      'onkeyup="if (event.key === \'Enter\') process_filter();">';
+  };
+
   // Sets displaying
+  // Which items to show
   const sets_div = document.createElement("div");
   sets_div.className = "text-center text-comment";
 
   if ((only_prev === 0) && (only_curr === 0)) {
-    sets_div.textContent = (only_both === 1 ? 'Item is' : 'All Items are') +
-                           ' present in both Prev and Curr';
+    sets_div.textContent = (only_both === 1 ? 'Item is' : 'All Items are') + ' present in both Prev and Curr';
   } else {
-    sets_div.style.display = "flex"; // For gap
-    sets_div.style.fontSize = "1.2em"; // Else text becomes too small here
-    sets_div.style.gap = "0.6em"; // Half of a font
-    sets_div.style.margin = "0 auto";
-    sets_div.style.width = "fit-content"; // To center by margin auto
-
     const chk_prev = only_prev && (only_curr || only_both);
     const chk_curr = only_curr && (only_prev || only_both);
     const chk_both = only_both && (only_prev || only_curr);
 
-    const pre_prev = chk_prev ? '<label for="show-prev" style="cursor: pointer;">' : "";
-    const pre_curr = chk_curr ? '<label for="show-curr" style="cursor: pointer;">' : "";
-    const pre_both = chk_both ? '<label for="show-both" style="cursor: pointer;">' : "";
+    const pre_prev = chk_prev ? pre_html('show-prev') : "";
+    const pre_curr = chk_curr ? pre_html('show-curr') : "";
+    const pre_both = chk_both ? pre_html('show-both') : "";
 
-    const suf_prev = chk_prev ? '&thinsp;</label><input id="show-prev" class="in-chk" type="checkbox" ' +
-      (show_prev ? 'checked ' : "") + 'oninput="inp_prev(this.checked)">' : ',';
-    const suf_curr = chk_curr ? '&thinsp;</label><input id="show-curr" class="in-chk" type="checkbox" ' +
-      (show_curr ? 'checked ' : "") + 'oninput="inp_curr(this.checked)">' : ',';
-    const suf_both = chk_both ? '&thinsp;</label><input id="show-both" class="in-chk" type="checkbox" ' +
-      (show_both ? 'checked ' : "") + 'oninput="inp_both(this.checked)">' : "";
+    const suf_prev = chk_prev ? suf_html('show-prev', show_prev, 'inp_prev') : ',';
+    const suf_curr = chk_curr ? suf_html('show-curr', show_curr, 'inp_curr') : ',';
+    const suf_both = chk_both ? suf_html('show-both', show_both, 'inp_both') : "";
 
-    sets_div.innerHTML = '<span>' + pre_prev + only_prev + ' in Prev only' + suf_prev + '</span>' +
-                         '<span>' + pre_curr + only_curr + ' in Curr only' + suf_curr + '</span>' +
-                         '<span>' + pre_both + only_both + ' in both'      + suf_both + '</span>';
+    // Span wrapper is needed here for text not to become too small
+    sets_div.innerHTML = '<span>' + pre_prev + only_prev + ' in Prev only' + suf_prev + ' ' +
+                                    pre_curr + only_curr + ' in Curr only' + suf_curr + ' ' +
+                                    pre_both + only_both + ' in both'      + suf_both + '</span>';
   }
   container.appendChild(sets_div);
+
+  // Which items to show
+  const show_div = document.createElement("div");
+  show_div.className = "text-center text-comment";
+
+  // For span see above
+  show_div.innerHTML = '<span>' +
+    pre_html('show-plain') + 'Plain' + suf_html('show-plain', show_plain, 'inp_plain') + ' ' +
+    pre_html('show-rank' ) + 'Rank'  + suf_html('show-rank' , show_rank , 'inp_rank' ) + ' ' +
+    pre_html('show-horz' ) + 'Horz'  + suf_html('show-horz' , show_horz , 'inp_horz' ) + ' ' +
+    pre_html('show-vert' ) + 'Vert'  + suf_html('show-vert' , show_vert , 'inp_vert' ) + ' ' +
+    pre_html('show-mood' ) + 'Mood'  + suf_html('show-mood' , show_mood , 'inp_mood' ) + '</span>';
+  container.appendChild(show_div);
 
   // Marks displaying
   if (mark_counts) {
@@ -345,7 +359,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     // Horz and Vert substantial changes, 0 is no change
     //
     let horz_change = 0;
-    if (!item.no_prev && !item.is_prev) { // Item is markable
+    if (item.is_both) { // Item is markable
       horz_change = (item.ratio_old && item_prev.ratio_old)
           ? Math.log(item.ratio_old /  item_prev.ratio_old)
           : 0;
@@ -380,7 +394,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     let   rank_change = 0;
     const rank_diff = item.index_prev - index_curr; // No abs
     if   (rank_diff) { // Also if length === 1 then index_prev === index_curr
-      if (!item.no_prev && !item.is_prev) { // Item is markable
+      if (item.is_both) { // Item is markable
 //      const rank_scale = get_scale_log(index_curr, curr_log_base, rank_log_steep, rank_decay);
         const rank_scale = get_scale_sig(index_curr, curr_length,
           rank_sig_base, rank_sig_steep, rank_decay, rank_sig_min, rank_sig_max);
@@ -396,7 +410,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     let   _mood = 0;
     const _grow = {}; // _old, _23, _7 [, _mood]
     //
-    if (!item.no_prev && !item.is_prev) { // Item is markable
+    if (item.is_both) { // Item is markable
       const grow_old = get_grow_ratio(item.ratio_old, item_prev.ratio_old);
       const grow_23  = get_grow_fixed(item.views_23 , item_prev.views_23 );
       const grow_7   = get_grow_fixed(item.views_7  , item_prev.views_7  );
@@ -516,12 +530,16 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   header_wrapper.appendChild(header_inner  );
   container     .appendChild(header_wrapper);
   //
+  let   shown_idx = 0;
+  const shown_use = !show_prev || !show_curr || !show_both ||
+     !show_plain || !show_rank || !show_horz || !show_vert || !show_mood;
+  //
   for (let index = 0; index < results_curr_exp.length; index++) {
     const item = results_curr_exp[index];
 
-    if (                  item.is_prev && !show_prev) continue;
-    if ( item.no_prev                  && !show_curr) continue;
-    if (!item.no_prev && !item.is_prev && !show_both) continue;
+    if (item.is_prev && !show_prev) continue;
+    if (item.no_prev && !show_curr) continue;
+    if (item.is_both && !show_both) continue;
 
     // 1. Outer wrapper, for border/divider and spacing
     const item_wrapper = document.createElement("div");
@@ -555,10 +573,10 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
     const item_link = document.createElement("a");
     item_link.className = "text-ellipsis";
-    item_link.textContent = (index + 1) + ". " + item.title;
     item_link.href = "https://archive.org/details/" + item.identifier;
-    item_link.target = "_blank";
     item_link.rel = "noopener"; // Safe for _blank
+    item_link.target = "_blank";
+    item_link.textContent = (shown_use ? (shown_idx + 1) + " / " : "") + (index + 1) + ". " + item.title;
     item_title.appendChild(item_link);
 
     // Below gauges
@@ -605,16 +623,19 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     stat_prev_7.textContent = item.prev._7;
 
     // Rank changes marking
-    if (!item.no_prev && !item.is_prev) {
+    let is_rank = false;
+    if (item.is_both) {
       if      (item.rank_change >= mark_rank_up) { // index < item.index_prev
         stat_prev_old.classList.add("item-mark-up");
         stat_prev_23 .classList.add("item-mark-up");
         stat_prev_7  .classList.add("item-mark-up");
+        is_rank = true;
       }
       else if (item.rank_change <= mark_rank_dn) { // index > item.index_prev
         stat_prev_old.classList.add("item-mark-dn");
         stat_prev_23 .classList.add("item-mark-dn");
         stat_prev_7  .classList.add("item-mark-dn");
+        is_rank = true;
       }
     }
 
@@ -644,24 +665,30 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     stat_curr_7.textContent = item.curr._7;
 
     // Substantial changes marking: horizontal impact of old from prev to curr
-    if (!item.no_prev && !item.is_prev) {
+    let is_horz = false;
+    if (item.is_both) {
       if      (item.horz_change >= mark_grow_old) {
         stat_curr_old.classList.add("item-mark-grow");
+        is_horz = true;
       }
       else if (item.horz_change <= mark_fall_old) {
         stat_curr_old.classList.add("item-mark-fall");
+        is_horz = true;
       }
     }
 
     // Substantial changes marking: vertical impact of 23 and 7 into all within curr
+    let is_vert = false;
     if (!item.is_prev) {
       if      (item.vert_change >= mark_grow_23_7) {
         stat_curr_23.classList.add("item-mark-grow");
         stat_curr_7 .classList.add("item-mark-grow");
+        is_vert = true;
       }
       else if (item.vert_change <= mark_fall_23_7) {
         stat_curr_23.classList.add("item-mark-fall");
         stat_curr_7 .classList.add("item-mark-fall");
+        is_vert = true;
       }
     }
 
@@ -691,16 +718,19 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     stat_grow_7.textContent = item.grow._7;
 
     // Grow mood marking: positive and negative
-    if (!item.no_prev && !item.is_prev) {
+    let is_mood = false;
+    if (item.is_both) {
       if      (item.grow._mood >= mark_mood_pos) {
         stat_grow_old.classList.add("item-mark-grow");
         stat_grow_23 .classList.add("item-mark-grow");
         stat_grow_7  .classList.add("item-mark-grow");
+        is_mood = true;
       }
       else if (item.grow._mood <= mark_mood_neg) {
         stat_grow_old.classList.add("item-mark-fall");
         stat_grow_23 .classList.add("item-mark-fall");
         stat_grow_7  .classList.add("item-mark-fall");
+        is_mood = true;
       }
     }
 
@@ -732,8 +762,20 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       item_wrapper.style.borderBottom = "none"; // Mark will be the border
     }
 
-    // 8.3. Add item to the page
+    // 8.3. Which items to show
+    const is_plain = !is_rank && !is_horz && !is_vert && !is_mood;
+    if   (is_plain) {
+      if (!show_plain) continue;
+    } else {
+      if (!(is_rank && show_rank) &&
+          !(is_horz && show_horz) &&
+          !(is_vert && show_vert) &&
+          !(is_mood && show_mood)) continue;
+    }
+
+    // 8.4. Add item to the page
     container.appendChild(item_wrapper);
+    shown_idx++;
   }
 
   return { pre: time_1 - time_0, dom: performance.now() - time_1 };
