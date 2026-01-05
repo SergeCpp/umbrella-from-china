@@ -222,11 +222,13 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
   // For span see above
   show_div.innerHTML = '<span>' +
-    pre_html('show-plain') + 'Plain' + suf_html('show-plain', show_plain, 'inp_plain') + ' ' +
-    pre_html('show-rank' ) + 'Rank'  + suf_html('show-rank' , show_rank , 'inp_rank' ) + ' ' +
-    pre_html('show-horz' ) + 'Horz'  + suf_html('show-horz' , show_horz , 'inp_horz' ) + ' ' +
-    pre_html('show-vert' ) + 'Vert'  + suf_html('show-vert' , show_vert , 'inp_vert' ) + ' ' +
-    pre_html('show-mood' ) + 'Mood'  + suf_html('show-mood' , show_mood , 'inp_mood' ) + '</span>';
+    pre_html('show-plain') + 'Plain Items' +
+                                      suf_html('show-plain', show_plain, 'inp_plain') + ' ' +
+                             'Substantially changed by: ' +
+    pre_html('show-rank')  + 'Rank' + suf_html('show-rank',  show_rank,  'inp_rank')  + ' ' +
+    pre_html('show-horz')  + 'Horz' + suf_html('show-horz',  show_horz,  'inp_horz')  + ' ' +
+    pre_html('show-vert')  + 'Vert' + suf_html('show-vert',  show_vert,  'inp_vert')  + ' ' +
+    pre_html('show-mood')  + 'Mood' + suf_html('show-mood',  show_mood,  'inp_mood')  + '</span>';
   container.appendChild(show_div);
 
   // Marks displaying
@@ -530,9 +532,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   header_wrapper.appendChild(header_inner  );
   container     .appendChild(header_wrapper);
   //
-  let   shown_idx = 0;
-  const shown_use = !show_prev || !show_curr || !show_both ||
-     !show_plain || !show_rank || !show_horz || !show_vert || !show_mood;
+  let shown_cnt = 0;
   //
   for (let index = 0; index < results_curr_exp.length; index++) {
     const item = results_curr_exp[index];
@@ -576,7 +576,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     item_link.href = "https://archive.org/details/" + item.identifier;
     item_link.rel = "noopener"; // Safe for _blank
     item_link.target = "_blank";
-    item_link.textContent = (shown_use ? (shown_idx + 1) + " / " : "") + (index + 1) + ". " + item.title;
+    item_link.textContent = (shown_cnt === index ? "" : (shown_cnt + 1) + " / ") + (index + 1) + ". " + item.title;
     item_title.appendChild(item_link);
 
     // Below gauges
@@ -775,7 +775,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
     // 8.4. Add item to the page
     container.appendChild(item_wrapper);
-    shown_idx++;
+    shown_cnt++;
   }
 
   return { pre: time_1 - time_0, dom: performance.now() - time_1 };
