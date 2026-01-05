@@ -224,7 +224,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   show_div.innerHTML = '<span>' +
     pre_html('show-plain') + 'Plain Items' +
                                       suf_html('show-plain', show_plain, 'inp_plain') + ' ' +
-                             'Substantially changed by: ' +
+                             'Substantially changed in: ' +
     pre_html('show-rank')  + 'Rank' + suf_html('show-rank',  show_rank,  'inp_rank')  + ' ' +
     pre_html('show-horz')  + 'Horz' + suf_html('show-horz',  show_horz,  'inp_horz')  + ' ' +
     pre_html('show-vert')  + 'Vert' + suf_html('show-vert',  show_vert,  'inp_vert')  + ' ' +
