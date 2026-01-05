@@ -92,6 +92,7 @@ body {
   font-family: Verdana;
   line-height: 1.5;
   margin: 0 auto;
+  max-width: 1200px; /* 240 x 5 */
   padding: 0 1rem;
 }
 
