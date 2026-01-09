@@ -233,6 +233,26 @@ input[type="checkbox"].changed.tab-e {
   accent-color: hsl(0.91turn 75% 74%);
 }
 
+/* Inputs in Show Selector */
+
+.in-chk.rank-up {
+  accent-color: hsl(0.07turn 75% 71%);
+}
+.in-chk.rank-dn {
+  accent-color: hsl(0.91turn 75% 74%);
+}
+
+.in-chk.horz-grow,
+.in-chk.vert-grow,
+.in-chk.mood-pos {
+  accent-color: hsl(0.42turn 75% 47%);
+}
+.in-chk.horz-fall,
+.in-chk.vert-fall,
+.in-chk.mood-neg {
+  accent-color: hsl(0.58turn 75% 71%);
+}
+
 /* Inputs */
 
 .in-wrap {

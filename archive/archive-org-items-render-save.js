@@ -14,15 +14,23 @@ const  stat_eq     =        " =";
 
 /* Which items to show */
 
-let show_prev  = true; function inp_prev (checked) { show_prev  = checked; }
-let show_curr  = true; function inp_curr (checked) { show_curr  = checked; }
-let show_both  = true; function inp_both (checked) { show_both  = checked; }
+let show_prev      = true; function inp_prev     (checked) { show_prev      = checked; }
+let show_curr      = true; function inp_curr     (checked) { show_curr      = checked; }
+let show_both      = true; function inp_both     (checked) { show_both      = checked; }
 
-let show_plain = true; function inp_plain(checked) { show_plain = checked; }
-let show_rank  = true; function inp_rank (checked) { show_rank  = checked; }
-let show_horz  = true; function inp_horz (checked) { show_horz  = checked; }
-let show_vert  = true; function inp_vert (checked) { show_vert  = checked; }
-let show_mood  = true; function inp_mood (checked) { show_mood  = checked; }
+let show_plain     = true; function inp_plain    (checked) { show_plain     = checked; }
+
+let show_rank_up   = true; function inp_rank_up  (checked) { show_rank_up   = checked; }
+let show_rank_dn   = true; function inp_rank_dn  (checked) { show_rank_dn   = checked; }
+
+let show_horz_grow = true; function inp_horz_grow(checked) { show_horz_grow = checked; }
+let show_horz_fall = true; function inp_horz_fall(checked) { show_horz_fall = checked; }
+
+let show_vert_grow = true; function inp_vert_grow(checked) { show_vert_grow = checked; }
+let show_vert_fall = true; function inp_vert_fall(checked) { show_vert_fall = checked; }
+
+let show_mood_pos  = true; function inp_mood_pos (checked) { show_mood_pos  = checked; }
+let show_mood_neg  = true; function inp_mood_neg (checked) { show_mood_neg  = checked; }
 
 /* Render */
 
@@ -178,15 +186,20 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   render_stats(results_curr, date_curr, "curr", container); // Also sorts results_curr
 
   // Which items to show
-  const pre_html = (id) => {
-    return '<label for="' + id + '" style="cursor: pointer;">';
+  const pre_chk_html = (id) => {
+    return '<span class="text-nowrap"><label for="' + id + '" style="cursor: pointer;">';
   };
 
-  const suf_html = (id, chk, inp) => {
-    return '</label><input id="' + id + '" ' +
-      'class="in-chk" type="checkbox" ' + (chk ? 'checked ' : "") +
+  const set_chk_html = (id, chk, inp, acc = "") => {
+    return '<input id="' + id + '" ' +
+      'class="in-chk' + (acc ? ' ' + acc : "") + '" ' +
+      'type="checkbox" ' + (chk ? 'checked ' : "") +
       'oninput="' + inp + '(this.checked)" ' +
       'onkeyup="if (event.key === \'Enter\') process_filter();">';
+  };
+
+  const suf_chk_html = (id, chk, inp) => {
+    return '</label>' + set_chk_html(id, chk, inp) + '</span>';
   };
 
   // Sets displaying
@@ -194,20 +207,20 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   const sets_div = document.createElement("div");
   sets_div.className = "text-center text-comment";
 
-  if ((only_prev === 0) && (only_curr === 0)) {
+  if (!only_prev && !only_curr) {
     sets_div.textContent = (only_both === 1 ? 'Item is' : 'All Items are') + ' present in both Prev and Curr';
   } else {
     const chk_prev = only_prev && (only_curr || only_both);
     const chk_curr = only_curr && (only_prev || only_both);
     const chk_both = only_both && (only_prev || only_curr);
 
-    const pre_prev = chk_prev ? pre_html('show-prev') : "";
-    const pre_curr = chk_curr ? pre_html('show-curr') : "";
-    const pre_both = chk_both ? pre_html('show-both') : "";
+    const pre_prev = chk_prev ? pre_chk_html('show-prev') : "";
+    const pre_curr = chk_curr ? pre_chk_html('show-curr') : "";
+    const pre_both = chk_both ? pre_chk_html('show-both') : "";
 
-    const suf_prev = chk_prev ? suf_html('show-prev', show_prev, 'inp_prev') : ',';
-    const suf_curr = chk_curr ? suf_html('show-curr', show_curr, 'inp_curr') : ',';
-    const suf_both = chk_both ? suf_html('show-both', show_both, 'inp_both') : "";
+    const suf_prev = chk_prev ? suf_chk_html('show-prev', show_prev, 'inp_prev') : ',';
+    const suf_curr = chk_curr ? suf_chk_html('show-curr', show_curr, 'inp_curr') : ',';
+    const suf_both = chk_both ? suf_chk_html('show-both', show_both, 'inp_both') : "";
 
     // Span wrapper is needed here for text not to become too small
     sets_div.innerHTML = '<span>' + pre_prev + only_prev + ' in Prev only' + suf_prev + ' ' +
@@ -222,13 +235,25 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
   // For span see above
   show_div.innerHTML = '<span>' +
-    pre_html('show-plain') + 'Plain Items' +
-                                      suf_html('show-plain', show_plain, 'inp_plain') + ' ' +
-                             'Substantially changed in: ' +
-    pre_html('show-rank')  + 'Rank' + suf_html('show-rank',  show_rank,  'inp_rank')  + ' ' +
-    pre_html('show-horz')  + 'Horz' + suf_html('show-horz',  show_horz,  'inp_horz')  + ' ' +
-    pre_html('show-vert')  + 'Vert' + suf_html('show-vert',  show_vert,  'inp_vert')  + ' ' +
-    pre_html('show-mood')  + 'Mood' + suf_html('show-mood',  show_mood,  'inp_mood')  + '</span>';
+    pre_chk_html('show-plain')     + 'Plain Items' +
+    suf_chk_html('show-plain',     show_plain,     'inp_plain')   + ' ' +
+                                     'Substantially changed in: ' +
+    pre_chk_html('show-rank-up')   + 'Rank' + '</label>' +
+    set_chk_html('show-rank-up',   show_rank_up,   'inp_rank_up',   'rank-up')   +
+    set_chk_html('show-rank-dn',   show_rank_dn,   'inp_rank_dn',   'rank-dn')   + '</span>' + ' ' +
+
+    pre_chk_html('show-horz-grow') + 'Horz' + '</label>' +
+    set_chk_html('show-horz-grow', show_horz_grow, 'inp_horz_grow', 'horz-grow') +
+    set_chk_html('show-horz-fall', show_horz_fall, 'inp_horz_fall', 'horz-fall') + '</span>' + ' ' +
+
+    pre_chk_html('show-vert-grow') + 'Vert' + '</label>' +
+    set_chk_html('show-vert-grow', show_vert_grow, 'inp_vert_grow', 'vert-grow') +
+    set_chk_html('show-vert-fall', show_vert_fall, 'inp_vert_fall', 'vert-fall') + '</span>' + ' ' +
+
+    pre_chk_html('show-mood-pos')  + 'Mood' + '</label>' +
+    set_chk_html('show-mood-pos',  show_mood_pos,  'inp_mood_pos',  'mood-pos')  +
+    set_chk_html('show-mood-neg',  show_mood_neg,  'inp_mood_neg',  'mood-neg')  + '</span>' +
+    '</span>';
   container.appendChild(show_div);
 
   // Marks displaying
@@ -537,9 +562,11 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   for (let index = 0; index < results_curr_exp.length; index++) {
     const item = results_curr_exp[index];
 
-    if (item.is_prev && !show_prev) continue;
-    if (item.no_prev && !show_curr) continue;
-    if (item.is_both && !show_both) continue;
+    if (only_prev || only_curr) {
+      if (item.is_prev && !show_prev) continue;
+      if (item.no_prev && !show_curr) continue;
+      if (item.is_both && !show_both) continue;
+    }
 
     // 1. Outer wrapper, for border/divider and spacing
     const item_wrapper = document.createElement("div");
@@ -623,19 +650,20 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     stat_prev_7.textContent = item.prev._7;
 
     // Rank changes marking
-    let is_rank = false;
+    let is_rank_up = false;
+    let is_rank_dn = false;
     if (item.is_both) {
       if      (item.rank_change >= mark_rank_up) { // index < item.index_prev
         stat_prev_old.classList.add("item-mark-up");
         stat_prev_23 .classList.add("item-mark-up");
         stat_prev_7  .classList.add("item-mark-up");
-        is_rank = true;
+        is_rank_up = true;
       }
       else if (item.rank_change <= mark_rank_dn) { // index > item.index_prev
         stat_prev_old.classList.add("item-mark-dn");
         stat_prev_23 .classList.add("item-mark-dn");
         stat_prev_7  .classList.add("item-mark-dn");
-        is_rank = true;
+        is_rank_dn = true;
       }
     }
 
@@ -665,30 +693,32 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     stat_curr_7.textContent = item.curr._7;
 
     // Substantial changes marking: horizontal impact of old from prev to curr
-    let is_horz = false;
+    let is_horz_grow = false;
+    let is_horz_fall = false;
     if (item.is_both) {
       if      (item.horz_change >= mark_grow_old) {
         stat_curr_old.classList.add("item-mark-grow");
-        is_horz = true;
+        is_horz_grow = true;
       }
       else if (item.horz_change <= mark_fall_old) {
         stat_curr_old.classList.add("item-mark-fall");
-        is_horz = true;
+        is_horz_fall = true;
       }
     }
 
     // Substantial changes marking: vertical impact of 23 and 7 into all within curr
-    let is_vert = false;
+    let is_vert_grow = false;
+    let is_vert_fall = false;
     if (!item.is_prev) {
       if      (item.vert_change >= mark_grow_23_7) {
         stat_curr_23.classList.add("item-mark-grow");
         stat_curr_7 .classList.add("item-mark-grow");
-        is_vert = true;
+        is_vert_grow = true;
       }
       else if (item.vert_change <= mark_fall_23_7) {
         stat_curr_23.classList.add("item-mark-fall");
         stat_curr_7 .classList.add("item-mark-fall");
-        is_vert = true;
+        is_vert_fall = true;
       }
     }
 
@@ -718,19 +748,20 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     stat_grow_7.textContent = item.grow._7;
 
     // Grow mood marking: positive and negative
-    let is_mood = false;
+    let is_mood_pos = false;
+    let is_mood_neg = false;
     if (item.is_both) {
       if      (item.grow._mood >= mark_mood_pos) {
         stat_grow_old.classList.add("item-mark-grow");
         stat_grow_23 .classList.add("item-mark-grow");
         stat_grow_7  .classList.add("item-mark-grow");
-        is_mood = true;
+        is_mood_pos = true;
       }
       else if (item.grow._mood <= mark_mood_neg) {
         stat_grow_old.classList.add("item-mark-fall");
         stat_grow_23 .classList.add("item-mark-fall");
         stat_grow_7  .classList.add("item-mark-fall");
-        is_mood = true;
+        is_mood_neg = true;
       }
     }
 
@@ -763,14 +794,19 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     }
 
     // 8.3. Which items to show
-    const is_plain = !is_rank && !is_horz && !is_vert && !is_mood;
+    const is_plain = !is_rank_up && !is_horz_grow && !is_vert_grow && !is_mood_pos &&
+                     !is_rank_dn && !is_horz_fall && !is_vert_fall && !is_mood_neg;
     if   (is_plain) {
       if (!show_plain) continue;
     } else {
-      if (!(is_rank && show_rank) &&
-          !(is_horz && show_horz) &&
-          !(is_vert && show_vert) &&
-          !(is_mood && show_mood)) continue;
+      if (!(is_rank_up   && show_rank_up  ) &&
+          !(is_rank_dn   && show_rank_dn  ) &&
+          !(is_horz_grow && show_horz_grow) &&
+          !(is_horz_fall && show_horz_fall) &&
+          !(is_vert_grow && show_vert_grow) &&
+          !(is_vert_fall && show_vert_fall) &&
+          !(is_mood_pos  && show_mood_pos ) &&
+          !(is_mood_neg  && show_mood_neg )) continue;
     }
 
     // 8.4. Add item to the page
