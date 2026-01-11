@@ -209,6 +209,8 @@ function get_totals(results) {
   return totals;
 }
 
+/* Formatting */
+
 // bytes: non-negative integer
 function format_bytes(bytes) {
   if (bytes < 1024) return bytes + ' B';
@@ -249,6 +251,13 @@ function format_num_str(num, str) {
   return format_number(num) + ' ' + str + (num === 1 ? "" : 's');
 }
 
+const nowrap_beg = '<span class="text-nowrap">';
+const nowrap_end = '</span>';
+//
+function format_nowrap(str) {
+  return nowrap_beg + str + nowrap_end;
+}
+
 function cap_first(str) {
   return str.at(0).toUpperCase() + str.slice(1);
 }
@@ -256,6 +265,8 @@ function cap_first(str) {
 function low_first(str) {
   return str.at(0).toLowerCase() + str.slice(1);
 }
+
+/* Sorting */
 
 function sort_results(results) {
   results.sort((a, b) => { // Descending for ratios
@@ -265,6 +276,8 @@ function sort_results(results) {
     return a.title.localeCompare(b.title); // Ascending for titles: A >> Z
   });
 }
+
+/* Render */
 
 function render_stats(results, date, what, container) {
   sort_results(results);
@@ -290,21 +303,22 @@ function render_stats(results, date, what, container) {
   const quartile3    = get_percentile(75);
   const percentile90 = get_percentile(90);
 
-  stats_text.innerHTML = cap_first(what) + ' : ' +
-    '<span ' +
-       'role="button" style="cursor:pointer;" tabindex="0" ' +
-       'onkeydown="if ((event.key === \'Enter\') || (event.key === \' \')) event.preventDefault();" ' +
-       'onkeyup  ="if ((event.key === \'Enter\') || (event.key === \' \')) ' +
-                  'date_change_menu(event, \'' + what + '\');" ' +
-       'onclick  ="date_change_menu(event, \'' + what + '\')" ' +
-       '>' + date + '</span>'        + ' : ' +
-    'Min ' + min         .toFixed(3) + ' / ' +
-    '10% ' + percentile10.toFixed(3) + ' / ' +
-    '25% ' + quartile1   .toFixed(3) + ' / ' +
-    '50% ' + median      .toFixed(3) + ' / ' +
-    '75% ' + quartile3   .toFixed(3) + ' / ' +
-    '90% ' + percentile90.toFixed(3) + ' / ' +
-    'Max ' + max         .toFixed(3);
+  stats_text.innerHTML =
+    format_nowrap(cap_first(what) + ' :') + ' ' +
+    format_nowrap('<span ' +
+      'role="button" style="cursor:pointer;" tabindex="0" ' +
+      'onkeydown="if ((event.key === \'Enter\') || (event.key === \' \')) event.preventDefault();" ' +
+      'onkeyup  ="if ((event.key === \'Enter\') || (event.key === \' \')) ' +
+                 'date_change_menu(event, \'' + what + '\');" ' +
+      'onclick  ="date_change_menu(event, \'' + what + '\')" ' +
+      '>' + date + '</span>' + ' :') + ' ' +
+    format_nowrap('Min ' + min         .toFixed(3) + ' /') + ' ' +
+    format_nowrap('10% ' + percentile10.toFixed(3) + ' /') + ' ' +
+    format_nowrap('25% ' + quartile1   .toFixed(3) + ' /') + ' ' +
+    format_nowrap('50% ' + median      .toFixed(3) + ' /') + ' ' +
+    format_nowrap('75% ' + quartile3   .toFixed(3) + ' /') + ' ' +
+    format_nowrap('90% ' + percentile90.toFixed(3) + ' /') + ' ' +
+    format_nowrap('Max ' + max         .toFixed(3));
 
   container.appendChild(stats_text);
 }

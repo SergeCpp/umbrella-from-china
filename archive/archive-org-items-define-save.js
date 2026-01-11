@@ -645,7 +645,7 @@ function process_filter() {
   const time_0    = performance.now();
   const container = document.getElementById("results");
   const timings   = document.getElementById("timings");
-        timings.textContent = "";
+        timings.innerHTML = "";
   try {
 
   // Filtering
@@ -739,19 +739,19 @@ function process_filter() {
   const sf_cache_size = Object.keys(stat_file_cache).length;
 
   // Performance
-  timings.textContent = 'Cache: ' + sf_cache_size   + ' / ' +
-                                    sf_cache_hits   + ' / ' +
-                                    sf_cache_misses +  ', ' +
-
-                        'Load: '  + du_load      .toFixed(1) +   ' / ' +
-                  stat_subjects    .du_load      .toFixed(1) +   ' / ' +
-                  stat_descriptions.du_load      .toFixed(1) + ' ms, ' +
-                        'Parse '  + du_parse     .toFixed(1) +   ' / ' +
-                  stat_subjects    .du_parse     .toFixed(1) +   ' / ' +
-                  stat_descriptions.du_parse     .toFixed(1) + ' ms, ' +
-                        'Filter ' + du_filter    .toFixed(1) + ' ms, ' +
-                        'Render ' + du_render.pre.toFixed(1) +   ' / ' +
-                                    du_render.dom.toFixed(1) + ' ms';
+  timings.innerHTML =
+    format_nowrap('Cache: ' + sf_cache_size            +   ' / ' +
+                              sf_cache_hits            +   ' / ' +
+                              sf_cache_misses          +    ',') + ' ' +
+    format_nowrap('Load: '  + du_load      .toFixed(1) +   ' / ' +
+           stat_subjects     .du_load      .toFixed(1) +   ' / ' +
+           stat_descriptions .du_load      .toFixed(1) + ' ms,') + ' ' +
+    format_nowrap('Parse '  + du_parse     .toFixed(1) +   ' / ' +
+           stat_subjects     .du_parse     .toFixed(1) +   ' / ' +
+           stat_descriptions .du_parse     .toFixed(1) + ' ms,') + ' ' +
+    format_nowrap('Filter ' + du_filter    .toFixed(1) + ' ms,') + ' ' +
+    format_nowrap('Render ' + du_render.pre.toFixed(1) +   ' / ' +
+                              du_render.dom.toFixed(1) + ' ms' );
   } catch (err) {
     container.innerHTML = error_compose("Error: " + err.message);
   }

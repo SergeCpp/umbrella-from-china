@@ -14,23 +14,23 @@ const  stat_eq     =        " =";
 
 /* Which items to show */
 
-let show_prev      = true; function inp_prev     (checked) { show_prev      = checked; }
-let show_curr      = true; function inp_curr     (checked) { show_curr      = checked; }
-let show_both      = true; function inp_both     (checked) { show_both      = checked; }
+let show_prev      = true; function inp_prev      (checked) { show_prev      = checked; }
+let show_curr      = true; function inp_curr      (checked) { show_curr      = checked; }
+let show_both      = true; function inp_both      (checked) { show_both      = checked; }
 
-let show_plain     = true; function inp_plain    (checked) { show_plain     = checked; }
+let show_plain     = true; function inp_plain     (checked) { show_plain     = checked; }
 
-let show_rank_up   = true; function inp_rank_up  (checked) { show_rank_up   = checked; }
-let show_rank_dn   = true; function inp_rank_dn  (checked) { show_rank_dn   = checked; }
+let show_rank_up   = true; function inp_rank_up   (checked) { show_rank_up   = checked; }
+let show_rank_dn   = true; function inp_rank_dn   (checked) { show_rank_dn   = checked; }
 
-let show_horz_grow = true; function inp_horz_grow(checked) { show_horz_grow = checked; }
-let show_horz_fall = true; function inp_horz_fall(checked) { show_horz_fall = checked; }
+let show_horz_grow = true; function inp_horz_grow (checked) { show_horz_grow = checked; }
+let show_horz_fall = true; function inp_horz_fall (checked) { show_horz_fall = checked; }
 
-let show_vert_grow = true; function inp_vert_grow(checked) { show_vert_grow = checked; }
-let show_vert_fall = true; function inp_vert_fall(checked) { show_vert_fall = checked; }
+let show_vert_grow = true; function inp_vert_grow (checked) { show_vert_grow = checked; }
+let show_vert_fall = true; function inp_vert_fall (checked) { show_vert_fall = checked; }
 
-let show_mood_pos  = true; function inp_mood_pos (checked) { show_mood_pos  = checked; }
-let show_mood_neg  = true; function inp_mood_neg (checked) { show_mood_neg  = checked; }
+let show_mood_pos  = true; function inp_mood_pos  (checked) { show_mood_pos  = checked; }
+let show_mood_neg  = true; function inp_mood_neg  (checked) { show_mood_neg  = checked; }
 
 /* Render */
 
@@ -167,18 +167,19 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   ///////////////////////////////////////////////
   // Total counts displaying for expanded results
   //
-  const curr_exp_totals  = get_totals(results_curr_exp);
-  const curr_exp_total   = curr_exp_totals.audio + curr_exp_totals.video;
-  const totals_div       = document.createElement("div");
-  totals_div.className   ="subtitle text-center text-normal";
-  totals_div.textContent =
-            format_num_str(curr_exp_total,            'Item')  +
-    ' ('  + format_number (curr_exp_totals.audio) +  ' Audio'  +
-    ' / ' + format_number (curr_exp_totals.video) +  ' Video)' +
-    ' '   + format_bytes  (curr_exp_totals.bytes) +
-    ' / ' + format_num_str(curr_exp_totals.views,     'View')  +
-    ' / ' + format_num_str(curr_exp_totals.favorites, 'Fav' )  +
-    ' ('  + format_num_str(curr_exp_totals.favorited, 'Item')  + ')';
+  const curr_exp_totals = get_totals(results_curr_exp);
+  const curr_exp_total  = curr_exp_totals.audio + curr_exp_totals.video;
+  const totals_div      = document.createElement("div");
+  totals_div.className  ="subtitle text-center text-normal";
+  totals_div.innerHTML  =
+    format_nowrap(format_num_str(curr_exp_total,            'Item'))        + ' ' +
+    format_nowrap(
+            '(' + format_number (curr_exp_totals.audio) +  ' Audio' + ' /'  + ' ' +
+                  format_number (curr_exp_totals.video) +  ' Video)')       + ' ' +
+    format_nowrap(format_bytes  (curr_exp_totals.bytes)             + ' /') + ' ' +
+    format_nowrap(format_num_str(curr_exp_totals.views,     'View') + ' /') + ' ' +
+    format_nowrap(format_num_str(curr_exp_totals.favorites, 'Fav' )         + ' ' +
+            '(' + format_num_str(curr_exp_totals.favorited, 'Item') + ')');
   container.appendChild(totals_div);
 
   // Both stats displaying
@@ -187,7 +188,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
   // Which items to show
   const pre_chk_html = (id) => {
-    return '<span class="text-nowrap"><label for="' + id + '" style="cursor: pointer;">';
+    return '<label for="' + id + '" style="cursor: pointer;">';
   };
 
   const set_chk_html = (id, chk, inp, acc = "") => {
@@ -199,7 +200,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   };
 
   const suf_chk_html = (id, chk, inp) => {
-    return '</label>' + set_chk_html(id, chk, inp) + '</span>';
+    return '</label>' + set_chk_html(id, chk, inp);
   };
 
   // Sets displaying
@@ -208,7 +209,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   sets_div.className = "text-center text-comment";
 
   if (!only_prev && !only_curr) {
-    sets_div.textContent = (only_both === 1 ? 'Item is' : 'All Items are') + ' present in both Prev and Curr';
+    sets_div.innerHTML =
+      format_nowrap((only_both === 1 ? 'Item is' : 'All Items are') + ' present') + ' ' +
+      format_nowrap('in both Prev and Curr');
   } else {
     const chk_prev = only_prev && (only_curr || only_both);
     const chk_curr = only_curr && (only_prev || only_both);
@@ -222,10 +225,11 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     const suf_curr = chk_curr ? suf_chk_html('show-curr', show_curr, 'inp_curr') : ',';
     const suf_both = chk_both ? suf_chk_html('show-both', show_both, 'inp_both') : "";
 
-    // Span wrapper is needed here for text not to become too small
-    sets_div.innerHTML = '<span>' + pre_prev + only_prev + ' in Prev only' + suf_prev + ' ' +
-                                    pre_curr + only_curr + ' in Curr only' + suf_curr + ' ' +
-                                    pre_both + only_both + ' in both'      + suf_both + '</span>';
+    // Span wrappers around checkboxes are needed also for text not to become too small
+    sets_div.innerHTML =
+      format_nowrap(pre_prev + only_prev + ' in Prev only' + suf_prev) + ' ' +
+      format_nowrap(pre_curr + only_curr + ' in Curr only' + suf_curr) + ' ' +
+      format_nowrap(pre_both + only_both + ' in both'      + suf_both);
   }
   container.appendChild(sets_div);
 
@@ -233,27 +237,28 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   const show_div = document.createElement("div");
   show_div.className = "text-center text-comment";
 
-  // For span see above
-  show_div.innerHTML = '<span>' +
-    pre_chk_html('show-plain')     + 'Plain Items' +
-    suf_chk_html('show-plain',     show_plain,     'inp_plain')   + ' ' +
-                                     'Substantially changed in: ' +
-    pre_chk_html('show-rank-up')   + 'Rank' + '</label>' +
-    set_chk_html('show-rank-up',   show_rank_up,   'inp_rank_up',   'rank-up')   +
-    set_chk_html('show-rank-dn',   show_rank_dn,   'inp_rank_dn',   'rank-dn')   + '</span>' + ' ' +
-
-    pre_chk_html('show-horz-grow') + 'Horz' + '</label>' +
-    set_chk_html('show-horz-grow', show_horz_grow, 'inp_horz_grow', 'horz-grow') +
-    set_chk_html('show-horz-fall', show_horz_fall, 'inp_horz_fall', 'horz-fall') + '</span>' + ' ' +
-
-    pre_chk_html('show-vert-grow') + 'Vert' + '</label>' +
-    set_chk_html('show-vert-grow', show_vert_grow, 'inp_vert_grow', 'vert-grow') +
-    set_chk_html('show-vert-fall', show_vert_fall, 'inp_vert_fall', 'vert-fall') + '</span>' + ' ' +
-
-    pre_chk_html('show-mood-pos')  + 'Mood' + '</label>' +
-    set_chk_html('show-mood-pos',  show_mood_pos,  'inp_mood_pos',  'mood-pos')  +
-    set_chk_html('show-mood-neg',  show_mood_neg,  'inp_mood_neg',  'mood-neg')  + '</span>' +
-    '</span>';
+  // For spans and checkboxes see above
+  show_div.innerHTML =
+    format_nowrap(
+      pre_chk_html('show-plain')     + 'Plain Items' +
+      suf_chk_html('show-plain',     show_plain,     'inp_plain'))  + ' ' +
+    format_nowrap(                     'Substantially changed in:') + ' ' +
+    format_nowrap(
+      pre_chk_html('show-rank-up')   + 'Rank' + '</label>' +
+      set_chk_html('show-rank-up',   show_rank_up,   'inp_rank_up',   'rank-up')    +
+      set_chk_html('show-rank-dn',   show_rank_dn,   'inp_rank_dn',   'rank-dn'))   + ' ' +
+    format_nowrap(
+      pre_chk_html('show-horz-grow') + 'Horz' + '</label>' +
+      set_chk_html('show-horz-grow', show_horz_grow, 'inp_horz_grow', 'horz-grow')  +
+      set_chk_html('show-horz-fall', show_horz_fall, 'inp_horz_fall', 'horz-fall')) + ' ' +
+    format_nowrap(
+      pre_chk_html('show-vert-grow') + 'Vert' + '</label>' +
+      set_chk_html('show-vert-grow', show_vert_grow, 'inp_vert_grow', 'vert-grow')  +
+      set_chk_html('show-vert-fall', show_vert_fall, 'inp_vert_fall', 'vert-fall')) + ' ' +
+    format_nowrap(
+      pre_chk_html('show-mood-pos')  + 'Mood' + '</label>' +
+      set_chk_html('show-mood-pos',  show_mood_pos,  'inp_mood_pos',  'mood-pos') +
+      set_chk_html('show-mood-neg',  show_mood_neg,  'inp_mood_neg',  'mood-neg'));
   container.appendChild(show_div);
 
   // Marks displaying
@@ -264,11 +269,18 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
     const mark_last = mark_counts.length - 1;
     for (let m = 0; m <= mark_last; m++) {
+      const nowrap_span = document.createElement("span");
+      nowrap_span.className = "text-nowrap";
+
       const mark_span = document.createElement("span");
       mark_span.className = "item-mark-" + mark_counts[m].mark + "-text";
       mark_span.textContent = format_num_str(mark_counts[m].count, 'Item');
-      marks_div.appendChild(mark_span);
-      if (m < mark_last) marks_div.appendChild(document.createTextNode(' / '));
+
+      nowrap_span.appendChild(mark_span);
+      if (m < mark_last) nowrap_span.appendChild(document.createTextNode(' /'));
+
+      marks_div.appendChild(nowrap_span);
+      if (m < mark_last) marks_div.appendChild(document.createTextNode(' '));
     }
     container.appendChild(marks_div);
   }
