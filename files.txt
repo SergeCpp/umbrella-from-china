@@ -1,25 +1,27 @@
 Site file list
 
-https://umbrella-from-china.neocities.org/archive/archive-org-items-define-save.js // Not used, just copy of work
+Files named with save are not used, just copies of work
+-------------------------------------------------------
+https://umbrella-from-china.neocities.org/archive/archive-org-items-define-save.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-define-work.js
-https://umbrella-from-china.neocities.org/archive/archive-org-items-filter-save.js // Not used, just copy of work
+https://umbrella-from-china.neocities.org/archive/archive-org-items-filter-save.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-filter-work.js
-https://umbrella-from-china.neocities.org/archive/archive-org-items-helper-save.js // Not used, just copy of work
+https://umbrella-from-china.neocities.org/archive/archive-org-items-helper-save.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-helper-work.js
-https://umbrella-from-china.neocities.org/archive/archive-org-items-marker-save.js // Not used, just copy of work
+https://umbrella-from-china.neocities.org/archive/archive-org-items-marker-save.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-marker-work.js
-https://umbrella-from-china.neocities.org/archive/archive-org-items-render-save.js // Not used, just copy of work
+https://umbrella-from-china.neocities.org/archive/archive-org-items-render-save.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-render-work.js
-https://umbrella-from-china.neocities.org/archive/archive-org-items-runner-save.js // Not used, just copy of work
+https://umbrella-from-china.neocities.org/archive/archive-org-items-runner-save.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-runner-work.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items.css
 https://umbrella-from-china.neocities.org/archive/archive-org-items.html
---------
-14 files
+---------------------------------
+1 css + 1 html + 12 js = 14 files
 
 See archive-dates.txt for the complete actual stat list
 -------------------------------------------------------
-https://umbrella-from-china.neocities.org/archive/stats/archive-dates.txt // Dates of all stat files
+https://umbrella-from-china.neocities.org/archive/stats/archive-dates.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-07-21.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-07-23.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-07-27.xml.txt
@@ -40,6 +42,8 @@ https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-202
 -----------------------------------------------------------
 1 dates + 15 stats + 1 subjects + 1 descriptions = 18 files
 
+All images listed are used actually
+-----------------------------------
 https://umbrella-from-china.neocities.org/images/acfun-dance-monthly-2021-05-2000x1250.jpg
 https://umbrella-from-china.neocities.org/images/acfun-dance-monthly-2021-05-600x375.avif
 https://umbrella-from-china.neocities.org/images/acfun-dance-monthly-2021-05-600x375.jpg
@@ -50,7 +54,7 @@ https://umbrella-from-china.neocities.org/images/bilibili-dancing-festival-2021-
 https://umbrella-from-china.neocities.org/images/bilibili-dancing-festival-2021-600x375.webp
 https://umbrella-from-china.neocities.org/images/chinese-clothing-600x375.avif
 https://umbrella-from-china.neocities.org/images/chinese-clothing-600x375.jpg
--
+
 https://umbrella-from-china.neocities.org/images/chinese-clothing-600x375.webp
 https://umbrella-from-china.neocities.org/images/chinese-clothing-960x600.jpg
 https://umbrella-from-china.neocities.org/images/chinese-dance-sun-jingchen-1420x1988.jpg
@@ -61,7 +65,7 @@ https://umbrella-from-china.neocities.org/images/chinese-songs-1280x720.jpg
 https://umbrella-from-china.neocities.org/images/dashenhui-1440x1440.jpg
 https://umbrella-from-china.neocities.org/images/dashenhui-600x600.avif
 https://umbrella-from-china.neocities.org/images/dashenhui-600x600.jpg
--
+
 https://umbrella-from-china.neocities.org/images/dashenhui-600x600.webp
 https://umbrella-from-china.neocities.org/images/dong-min-1152x720.jpg
 https://umbrella-from-china.neocities.org/images/dong-min-600x375.avif
@@ -72,7 +76,7 @@ https://umbrella-from-china.neocities.org/images/fan-jia-jiang-960x600.avif
 https://umbrella-from-china.neocities.org/images/guang-guang-2720x1700.jpg
 https://umbrella-from-china.neocities.org/images/guang-guang-960x600.avif
 https://umbrella-from-china.neocities.org/images/huang-ling-600x375.avif
--
+
 https://umbrella-from-china.neocities.org/images/huang-ling-600x375.jpg
 https://umbrella-from-china.neocities.org/images/huang-ling-600x375.webp
 https://umbrella-from-china.neocities.org/images/huang-ling-960x600.jpg
@@ -83,7 +87,7 @@ https://umbrella-from-china.neocities.org/images/lan-youjin-600x375.webp
 https://umbrella-from-china.neocities.org/images/lingyuan-yousa-2000x1250.jpg
 https://umbrella-from-china.neocities.org/images/lingyuan-yousa-960x600.avif
 https://umbrella-from-china.neocities.org/images/lingyuan-yousa-unplugged-1648x1030.jpg
--
+
 https://umbrella-from-china.neocities.org/images/lingyuan-yousa-unplugged-960x600.avif
 https://umbrella-from-china.neocities.org/images/love-at-first-sight-3168x1980.jpg
 https://umbrella-from-china.neocities.org/images/love-at-first-sight-600x375.avif
@@ -94,7 +98,7 @@ https://umbrella-from-china.neocities.org/images/miao-pu-jiang-960x600.avif
 https://umbrella-from-china.neocities.org/images/qisan-3040x1900.jpg
 https://umbrella-from-china.neocities.org/images/qisan-960x600.avif
 https://umbrella-from-china.neocities.org/images/ren-ran-1280x720.jpg
--
+
 https://umbrella-from-china.neocities.org/images/ren-ran-birds-and-cicadas-1728x1080.jpg
 https://umbrella-from-china.neocities.org/images/ren-ran-birds-and-cicadas-960x600.avif
 https://umbrella-from-china.neocities.org/images/shi-yuan-jiang-3456x2160.jpg
@@ -105,7 +109,7 @@ https://umbrella-from-china.neocities.org/images/tang-shiyi-1728x1080.jpg
 https://umbrella-from-china.neocities.org/images/tang-shiyi-960x600.avif
 https://umbrella-from-china.neocities.org/images/tong-hua-nichole-3088x1930.jpg
 https://umbrella-from-china.neocities.org/images/tong-hua-nichole-600x375.avif
--
+
 https://umbrella-from-china.neocities.org/images/tong-hua-nichole-600x375.jpg
 https://umbrella-from-china.neocities.org/images/tong-hua-nichole-600x375.webp
 https://umbrella-from-china.neocities.org/images/tong-hua-nichole-960x600.avif
@@ -116,7 +120,7 @@ https://umbrella-from-china.neocities.org/images/wan-yi-600x375.webp
 https://umbrella-from-china.neocities.org/images/wang-ziyu-1728x1080.jpg
 https://umbrella-from-china.neocities.org/images/wang-ziyu-960x600.avif
 https://umbrella-from-china.neocities.org/images/wu-tong-1728x1080.jpg
--
+
 https://umbrella-from-china.neocities.org/images/wu-tong-960x600.avif
 https://umbrella-from-china.neocities.org/images/xiangcai-mao-bing-1920x1200.jpg
 https://umbrella-from-china.neocities.org/images/xiangcai-mao-bing-960x600.avif
@@ -127,7 +131,7 @@ https://umbrella-from-china.neocities.org/images/xiao-wu-960x600.avif
 https://umbrella-from-china.neocities.org/images/xiaodan-1128x705.jpg
 https://umbrella-from-china.neocities.org/images/xiaodan-960x600.avif
 https://umbrella-from-china.neocities.org/images/xiaoye-ting-3136x1960.jpg
--
+
 https://umbrella-from-china.neocities.org/images/xiaoye-ting-600x375.avif
 https://umbrella-from-china.neocities.org/images/xiaoye-ting-600x375.jpg
 https://umbrella-from-china.neocities.org/images/xiaoye-ting-600x375.webp
@@ -138,7 +142,7 @@ https://umbrella-from-china.neocities.org/images/xie-an-ran-360x360.avif
 https://umbrella-from-china.neocities.org/images/xie-an-ran-5000x5000.jpg
 https://umbrella-from-china.neocities.org/images/xie-an-ran-5504x8256.jpg
 https://umbrella-from-china.neocities.org/images/xie-an-ran-600x900.avif
--
+
 https://umbrella-from-china.neocities.org/images/xie-an-ran-600x900.jpg
 https://umbrella-from-china.neocities.org/images/xie-an-ran-600x900.webp
 https://umbrella-from-china.neocities.org/images/xisi-1616x1010.jpg
@@ -149,7 +153,7 @@ https://umbrella-from-china.neocities.org/images/xue-qiu-1192x745.jpg
 https://umbrella-from-china.neocities.org/images/xue-qiu-960x600.avif
 https://umbrella-from-china.neocities.org/images/yaorenmao-1920x1200.jpg
 https://umbrella-from-china.neocities.org/images/yaorenmao-960x600.avif
--
+
 https://umbrella-from-china.neocities.org/images/zhao-fangjing-2880x1800.jpg
 https://umbrella-from-china.neocities.org/images/zhao-fangjing-960x600.avif
 https://umbrella-from-china.neocities.org/images/zi-jiaer-1976x1235.jpg
@@ -161,14 +165,18 @@ https://umbrella-from-china.neocities.org/images/ziyan-zi-jiaer-xue-wei-luoxi-96
 --------------------------------------
 41 avif + 54 jpg + 13 webp = 108 files
 
-https://umbrella-from-china.neocities.org/player/player-def-save.js // Not used, just copy of work
+Files named with save are not used, just copies of work
+-------------------------------------------------------
+https://umbrella-from-china.neocities.org/player/player-def-save.js
 https://umbrella-from-china.neocities.org/player/player-def-work.js
-https://umbrella-from-china.neocities.org/player/player-run-save.js // Not used, just copy of work
+https://umbrella-from-china.neocities.org/player/player-run-save.js
 https://umbrella-from-china.neocities.org/player/player-run-work.js
 https://umbrella-from-china.neocities.org/player/player.css
--------
-5 files
+----------------------
+1 css + 4 js = 5 files
 
+All images listed are used actually
+-----------------------------------
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-01-720x720.avif
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-01-720x720.jpg
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-02-720x720.avif
@@ -179,7 +187,7 @@ https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-04-
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-04-720x720.jpg
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-05-720x720.avif
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-05-720x720.jpg
--
+
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-06-720x720.avif
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-06-720x720.jpg
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-07-720x720.avif
@@ -190,7 +198,7 @@ https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-09-
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-09-720x720.jpg
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-10-720x720.avif
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-10-720x720.jpg
--
+
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-11-720x720.avif
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-11-720x720.jpg
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-12-720x720.avif
@@ -201,7 +209,7 @@ https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-14-
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-14-720x720.jpg
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-15-720x720.avif
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-15-720x720.jpg
--
+
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-16-720x720.avif
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-16-720x720.jpg
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-17-720x720.avif
@@ -212,7 +220,7 @@ https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-19-
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-19-720x720.jpg
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-20-720x720.avif
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-20-720x720.jpg
--
+
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-21-720x720.avif
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-21-720x720.jpg
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-22-720x720.avif
@@ -223,7 +231,7 @@ https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-24-
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-24-720x720.jpg
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-25-720x720.avif
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-25-720x720.jpg
--
+
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-26-720x720.avif
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-26-720x720.jpg
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-27-720x720.avif
@@ -234,7 +242,7 @@ https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-29-
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-29-720x720.jpg
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-30-720x720.avif
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-30-720x720.jpg
--
+
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-31-720x720.avif
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-31-720x720.jpg
 https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-32-720x720.avif
@@ -257,8 +265,8 @@ https://umbrella-from-china.neocities.org/chinese-songs.txt
 https://umbrella-from-china.neocities.org/chinese-videos.txt
 https://umbrella-from-china.neocities.org/fan-jia-jiang-dancer.html
 https://umbrella-from-china.neocities.org/fan-jia-jiang-dancer.txt
-https://umbrella-from-china.neocities.org/files.txt // This file
--
+https://umbrella-from-china.neocities.org/files.txt
+
 https://umbrella-from-china.neocities.org/guang-guang-dancer.html
 https://umbrella-from-china.neocities.org/guang-guang-dancer.txt
 https://umbrella-from-china.neocities.org/index.html
@@ -269,7 +277,7 @@ https://umbrella-from-china.neocities.org/liu-keyi-songs.html
 https://umbrella-from-china.neocities.org/liu-keyi-songs.txt
 https://umbrella-from-china.neocities.org/miao-pu-jiang-dancer.html
 https://umbrella-from-china.neocities.org/miao-pu-jiang-dancer.txt
--
+
 https://umbrella-from-china.neocities.org/not_found.html
 https://umbrella-from-china.neocities.org/qisan-dancer.html
 https://umbrella-from-china.neocities.org/qisan-dancer.txt
@@ -280,7 +288,7 @@ https://umbrella-from-china.neocities.org/robots.txt
 https://umbrella-from-china.neocities.org/shi-yuan-jiang-dancer.html
 https://umbrella-from-china.neocities.org/shi-yuan-jiang-dancer.txt
 https://umbrella-from-china.neocities.org/sitemap.html
--
+
 https://umbrella-from-china.neocities.org/sitemap.xml
 https://umbrella-from-china.neocities.org/style.css
 https://umbrella-from-china.neocities.org/tang-yufei-songs.html
@@ -291,7 +299,7 @@ https://umbrella-from-china.neocities.org/wang-ziyu-songs.html
 https://umbrella-from-china.neocities.org/wang-ziyu-songs.txt
 https://umbrella-from-china.neocities.org/wu-tong-dancer.html
 https://umbrella-from-china.neocities.org/wu-tong-dancer.txt
--
+
 https://umbrella-from-china.neocities.org/xiangcai-mao-bing-dancer.html
 https://umbrella-from-china.neocities.org/xiangcai-mao-bing-dancer.txt
 https://umbrella-from-china.neocities.org/xiao-qian-teng-dancer.html
@@ -302,7 +310,7 @@ https://umbrella-from-china.neocities.org/xiaodan-dancer.html
 https://umbrella-from-china.neocities.org/xiaodan-dancer.txt
 https://umbrella-from-china.neocities.org/xisi-dancer.html
 https://umbrella-from-china.neocities.org/xisi-dancer.txt
--
+
 https://umbrella-from-china.neocities.org/xue-ci-dancer.html
 https://umbrella-from-china.neocities.org/xue-ci-dancer.txt
 https://umbrella-from-china.neocities.org/zhao-fangjing-songs.html
@@ -311,8 +319,8 @@ https://umbrella-from-china.neocities.org/zi-jiaer-dancer.html
 https://umbrella-from-china.neocities.org/zi-jiaer-dancer.txt
 https://umbrella-from-china.neocities.org/ziyan-dancer.html
 https://umbrella-from-china.neocities.org/ziyan-dancer.txt
---------
-58 files
+-------------------------------------------
+1 css + 27 html + 29 txt + 1 xml = 58 files
 
 The total size of the site files is less than 71 megabytes
 
