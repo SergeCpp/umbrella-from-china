@@ -7,7 +7,13 @@ const err_ed  = '</p></details>';
 const err_end = '</div>';
 
 const err_chars =
-  err_beg + 'Allowed characters are: a-z, 0-9, underscore, dash, period, comma, quote, and space' +
+  err_beg +
+  err_bds + 'Allowed characters are: a-z, 0-9, =!&lt;&gt;, underscore, dash, period, comma, quote, and space' +
+  err_es  +
+  'Creators: =5 finds items (two) with exactly five creators<br />' +
+  'Creators: Xiao >1 finds items (three) where more than one creator has Xiao in name<br />' +
+  'Subjects: Dance >4 finds items (14) where more than four subjects contain Dance' +
+  err_ed +
   err_end;
 
 const err_date =
@@ -43,7 +49,7 @@ const err_views =
   'Key allows number after it, and percent sign % can be after number' +
   '</p><p>' +
   'Number in prev/curr logic (alone, not after key) allows prefix: a, ae, b, be, e, ne' +
-  err_ed  +
+  err_ed +
   err_end;
 const err_views_range =
   err_beg + 'Min views count must be less than or equal to max views count' +
@@ -61,7 +67,7 @@ const err_favs =
   'Meaning: above, above or equal, below, below or equal, equal, not equal' +
   '</p><p>' +
   'Examples: /3, \\2, =1, !1, a1, be2, e3' +
-  err_ed  +
+  err_ed +
   err_end;
 const err_favs_range =
   err_beg + 'Min favorites count must be less than or equal to max favorites count' +
@@ -239,6 +245,35 @@ function evaluate_term(term, values) {
       const all_match = values.every(value => evaluate_term(term.excl, [value]));
       return (!term.incl || evaluate_term(term.incl, values)) && !all_match;
     }
+    case "COUNT": {
+      let cnt_match = 0;
+      for (const value of values) {
+        if (evaluate_term(term.test, [value])) {
+          cnt_match++;
+          switch (term.cnd) {
+            case '==':
+            case '=' : if (cnt_match >  term.cnt) return false; break;
+            case '!=':
+            case '!' : if (cnt_match >  term.cnt) return true;  break;
+            case '<=': if (cnt_match >  term.cnt) return false; break;
+            case '<' : if (cnt_match >= term.cnt) return false; break;
+            case '>=': if (cnt_match >= term.cnt) return true;  break;
+            case '>' : if (cnt_match >  term.cnt) return true;  break;
+          }
+        }
+      }
+      switch (term.cnd) {
+        case '==':
+        case '=' : return cnt_match === term.cnt;
+        case '!=':
+        case '!' : return cnt_match !== term.cnt;
+        case '<=': return cnt_match <=  term.cnt;
+        case '<' : return cnt_match <   term.cnt;
+        case '>=': return cnt_match >=  term.cnt;
+        case '>' : return cnt_match >   term.cnt;
+        default  : return false; // Unknown condition
+      }
+    }
     case "TEXT":
       return values.some(value => value.includes(term.text));
 
@@ -247,7 +282,7 @@ function evaluate_term(term, values) {
   }
 }
 
-function parse_term(term) {
+function parse_term(term, allow_count = true) {
   term = term.trim();
 
   // Check for AND first (higher precedence)
@@ -258,62 +293,110 @@ function parse_term(term) {
       terms: terms
     };
   }
+
   // Check for NOT next
-  else if (term.includes("NOT ")) {
+  if (term.includes("NOT ")) {
     const index = term.indexOf("NOT ");
-    const incl  = term.substring(0, index    ); // Left
-    const excl  = term.substring(   index + 4); // Right
+    const incl  = term.substring(0, index    ).trim(); // Left
+    const excl  = term.substring(   index + 4).trim(); // Right
     return {
       type: "NOT",
       incl: incl ? parse_term(incl) : null,
       excl:        parse_term(excl)
     };
   }
+
   // Check for NOTANY next
-  else if (term.includes("NOTANY ")) {
+  if (term.includes("NOTANY ")) {
     const index = term.indexOf("NOTANY ");
-    const incl  = term.substring(0, index    ); // Left
-    const excl  = term.substring(   index + 7); // Right
+    const incl  = term.substring(0, index    ).trim(); // Left
+    const excl  = term.substring(   index + 7).trim(); // Right
     return {
       type: "NOTANY",
       incl: incl ? parse_term(incl) : null,
       excl:        parse_term(excl)
     };
   }
+
   // Check for NOTALL next
-  else if (term.includes("NOTALL ")) {
+  if (term.includes("NOTALL ")) {
     const index = term.indexOf("NOTALL ");
-    const incl  = term.substring(0, index    ); // Left
-    const excl  = term.substring(   index + 7); // Right
+    const incl  = term.substring(0, index    ).trim(); // Left
+    const excl  = term.substring(   index + 7).trim(); // Right
     return {
       type: "NOTALL",
       incl: incl ? parse_term(incl) : null,
       excl:        parse_term(excl)
     };
   }
+
   // Check for XOR next
-  else if (term.includes(" XOR ")) {
+  if (term.includes(" XOR ")) {
     const terms = term.split(" XOR ").map(part => parse_term(part));
     return {
       type: "XOR",
       terms: terms
     };
   }
+
   // Check for OR next
-  else if (term.includes(" OR ")) {
+  if (term.includes(" OR ")) {
     const terms = term.split(" OR ").map(part => parse_term(part));
     return {
       type: "OR",
       terms: terms
     };
   }
-  // Plain text term (OR behavior of comma-separated terms)
-  else {
-    return {
-      type: "TEXT", // Quote allows leading/trailing space, also ' ' possible for term
-      text: term.replace(/['"]/g, "").toLowerCase()
-    };
+
+  // Check for COUNT next
+  if (allow_count) {
+    const cnd_ones = ['=' , '!' , '<' , '>' ];
+    const cnd_twos = ['==', '!=', '<=', '>='];
+    let   cnd_one  = null;
+    let   cnd_idx  = -1;
+
+    for (let i = term.length - 1; i >= 0; i--) {
+      if (cnd_ones.includes(term[i])) {
+        cnd_one = term[i];
+        cnd_idx = i;
+        break;
+      }
+    }
+
+    if (cnd_one) {
+      let cnd_two = null;
+
+      if ((cnd_one === '=') && (cnd_idx > 0)) {
+        const str_two = term.substring(cnd_idx - 1, cnd_idx + 1);
+        if (cnd_twos.includes(str_two)) {
+          cnd_two = str_two;
+          cnd_idx--;
+        }
+      }
+
+      const cnd     = cnd_two ? cnd_two : cnd_one;
+      const nxt_idx = cnd_idx + cnd.length;
+      const test    = term.substring(0, cnd_idx).trim(); // Term to test for
+      const cnt_str = term.substring(   nxt_idx).trim(); // Count of occurrences for it
+      let   cnt     = parseInt(cnt_str, 10);
+
+      if (!isNaN(cnt) && (cnt >= 0)) { // Only valid count to use
+        return {
+          type: "COUNT",
+          test: parse_term(test, false), // No more counts
+          cnd,
+          cnt
+        };
+      }
+      // Falls to TEXT
+    }
   }
+
+  // Plain text term (OR behavior of comma-separated terms)
+  return {
+    type: "TEXT", // Quote allows leading/trailing space, also ' ' possible for term
+    text: term.replace(/['"]/g, "").toLowerCase()
+  };
 }
 
 /* Filter Input Check */
@@ -324,11 +407,11 @@ function input_clean_parse(input) {
     .split  (',')
     .map    (term => term.trim())
     .filter (term => term) // Non-empty only
-    .map    (parse_term);
+    .map    (term => parse_term(term));
 }
 
 function input_allowed_chars(input) {
-  return !/[^a-zA-Z0-9._\-'" ,]/.test(input);
+  return !/[^a-zA-Z0-9._\-'" =!<>,]/.test(input);
 }
 
 function input_allowed_keys(input) {
