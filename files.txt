@@ -39,8 +39,9 @@ https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-202
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-11-30.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-12-15.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-12-31.xml.txt
+https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2026-01-15.xml.txt
 -----------------------------------------------------------
-1 dates + 15 stats + 1 subjects + 1 descriptions = 18 files
+1 dates + 16 stats + 1 subjects + 1 descriptions = 19 files
 
 All images listed are used actually
 -----------------------------------
@@ -256,6 +257,8 @@ https://umbrella-from-china.neocities.org/tang-yufei-covers/tang-yufei-cover-35-
 ---------------------------
 35 avif + 35 jpg = 70 files
 
+3 common + 2+15 dance + 1+6 songs = 27 pages (+1 archive above)
+---------------------------------------------------------------
 https://umbrella-from-china.neocities.org/chinese-dance.html
 https://umbrella-from-china.neocities.org/chinese-dance.txt
 https://umbrella-from-china.neocities.org/chinese-group-dance.html
@@ -322,7 +325,7 @@ https://umbrella-from-china.neocities.org/ziyan-dancer.txt
 -------------------------------------------
 1 css + 27 html + 29 txt + 1 xml = 58 files
 
-The total size of the site files is less than 71 megabytes
+The total size of the site files is less than 72 megabytes
 
 No external images hotlinking, all images are hosted on Neocities
 
