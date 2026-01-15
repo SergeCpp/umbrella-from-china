@@ -332,9 +332,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   // Mark rank changes
   // Mark mood changes
   //
-  const rank_decay     = 30; // Scale divisor: 1 to 30
+  const rank_decay     = 40; // Scale divisor: 1 to 40
   const rank_log_steep = 3;  // To more than log prioritize top items
-  const rank_sig_base  = 0.1;
+  const rank_sig_base  = 0.2;
   const rank_sig_steep = 5;
   const rank_sig_min   = 1 / (1 + Math.exp((rank_sig_base - 0) * rank_sig_steep));
   const rank_sig_max   = 1 / (1 + Math.exp((rank_sig_base - 1) * rank_sig_steep));

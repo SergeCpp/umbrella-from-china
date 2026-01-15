@@ -13,6 +13,9 @@ const err_chars =
   'Creators: =5 finds items (two) with exactly five creators<br />' +
   'Creators: Xiao >1 finds items (three) where more than one creator has Xiao in name<br />' +
   'Subjects: Dance >4 finds items (14) where more than four subjects contain Dance' +
+  '</p><p>' +
+  'Conditionals are: = or ==, ! or !=, &lt;, &lt;=, &gt;, &gt;=<br />' +
+  'Allowed counts: 0 to 9999' +
   err_ed +
   err_end;
 
@@ -37,7 +40,7 @@ const err_views =
   'Range min/max values can be numbers, with empty field as no-limit value<br />' +
   'Aggregate range uses aggregate function in any field (or in both fields) of min/max pair<br />' +
   'Examples: min 10 / 20, min 10 / avg 30, also: max 20 / min 10 (reversed aggregate range)<br />' +
-  'Note: min 10 / 20, and 10 / min 20 aggregate ranges both are mean min 10 / min 20<br />' +
+  'Note: min 10 / 20, and 10 / min 20 aggregate ranges both equal min 10 / min 20<br />' +
   'Aggregate item functions are: min, avg, max, add, sub, pos, neg, prev, curr<br />' +
   'Aggregate rank functions are:<br />' +
     'topn/tn, btmn/bn for min; topa/ta, btma/ba for avg; topx/tx, btmx/bx for max;<br />' +
@@ -59,7 +62,7 @@ const err_favs =
   err_beg +
   err_bds + 'Allowed are numbers: 0 to 9999, and keys: grow, fall, same, diff' +
   err_es  +
-  'Keys have aliases: / \\ = ! that allow number after them<br />' +
+  'Keys have aliases: / \\ = ! and allow number after them<br />' +
   'For / and \\ number is distance, for = and ! number is tolerance<br />' +
   'Defaults: / is /1, \\ is \\1, = is =0, ! is !0' +
   '</p><p>' +
@@ -251,27 +254,30 @@ function evaluate_term(term, values) {
         if (evaluate_term(term.test, [value])) {
           cnt_match++;
           switch (term.cnd) {
-            case '==':
-            case '=' : if (cnt_match >  term.cnt) return false; break;
-            case '!=':
-            case '!' : if (cnt_match >  term.cnt) return true;  break;
-            case '<=': if (cnt_match >  term.cnt) return false; break;
+            case '=' :
+            case '==': if (cnt_match >  term.cnt) return false; break;
+            case '!' :
+            case '!=': if (cnt_match >  term.cnt) return true;  break;
+
             case '<' : if (cnt_match >= term.cnt) return false; break;
-            case '>=': if (cnt_match >= term.cnt) return true;  break;
+            case '<=': if (cnt_match >  term.cnt) return false; break;
             case '>' : if (cnt_match >  term.cnt) return true;  break;
+            case '>=': if (cnt_match >= term.cnt) return true;  break;
           }
         }
       }
       switch (term.cnd) {
-        case '==':
-        case '=' : return cnt_match === term.cnt;
-        case '!=':
-        case '!' : return cnt_match !== term.cnt;
-        case '<=': return cnt_match <=  term.cnt;
+        case '=' :
+        case '==': return cnt_match === term.cnt;
+        case '!' :
+        case '!=': return cnt_match !== term.cnt;
+
         case '<' : return cnt_match <   term.cnt;
-        case '>=': return cnt_match >=  term.cnt;
+        case '<=': return cnt_match <=  term.cnt;
         case '>' : return cnt_match >   term.cnt;
-        default  : return false; // Unknown condition
+        case '>=': return cnt_match >=  term.cnt;
+
+        default  : return false; // Unknown conditional
       }
     }
     case "TEXT":
@@ -282,117 +288,105 @@ function evaluate_term(term, values) {
   }
 }
 
-function parse_term(term, allow_count = true) {
+function parse_node_split(term, op) {
+  const sp_op_sp = ' ' + op + ' ';
+  if (!term.includes(sp_op_sp)) return null;
+
+  const terms = term.split(sp_op_sp).map(part => parse_term(part));
+  return { type: op, terms };
+}
+
+function parse_node_sides(term, op) {
+  const op_sp = op + ' ';
+  if (!term.includes(op_sp)) return null;
+
+  const op_idx = term.indexOf(op_sp);
+  const ex_idx = op_idx + op_sp.length;
+  const incl  = term.substring(0, op_idx).trim(); // Left
+  const excl  = term.substring(   ex_idx);        // Right
+  return {
+    type: op,
+    incl: incl ? parse_term(incl) : null,
+    excl:        parse_term(excl)
+  };
+}
+
+function parse_term(term) {
   term = term.trim();
+  let node = null;
 
   // Check for AND first (higher precedence)
-  if (term.includes(" AND ")) {
-    const terms = term.split(" AND ").map(part => parse_term(part));
-    return {
-      type: "AND",
-      terms: terms
-    };
-  }
+  node = parse_node_split(term, "AND");
+  if (node) return node;
 
   // Check for NOT next
-  if (term.includes("NOT ")) {
-    const index = term.indexOf("NOT ");
-    const incl  = term.substring(0, index    ).trim(); // Left
-    const excl  = term.substring(   index + 4).trim(); // Right
-    return {
-      type: "NOT",
-      incl: incl ? parse_term(incl) : null,
-      excl:        parse_term(excl)
-    };
-  }
+  node = parse_node_sides(term, "NOT");
+  if (node) return node;
 
   // Check for NOTANY next
-  if (term.includes("NOTANY ")) {
-    const index = term.indexOf("NOTANY ");
-    const incl  = term.substring(0, index    ).trim(); // Left
-    const excl  = term.substring(   index + 7).trim(); // Right
-    return {
-      type: "NOTANY",
-      incl: incl ? parse_term(incl) : null,
-      excl:        parse_term(excl)
-    };
-  }
+  node = parse_node_sides(term, "NOTANY");
+  if (node) return node;
 
   // Check for NOTALL next
-  if (term.includes("NOTALL ")) {
-    const index = term.indexOf("NOTALL ");
-    const incl  = term.substring(0, index    ).trim(); // Left
-    const excl  = term.substring(   index + 7).trim(); // Right
-    return {
-      type: "NOTALL",
-      incl: incl ? parse_term(incl) : null,
-      excl:        parse_term(excl)
-    };
-  }
+  node = parse_node_sides(term, "NOTALL");
+  if (node) return node;
 
   // Check for XOR next
-  if (term.includes(" XOR ")) {
-    const terms = term.split(" XOR ").map(part => parse_term(part));
-    return {
-      type: "XOR",
-      terms: terms
-    };
-  }
+  node = parse_node_split(term, "XOR");
+  if (node) return node;
 
   // Check for OR next
-  if (term.includes(" OR ")) {
-    const terms = term.split(" OR ").map(part => parse_term(part));
-    return {
-      type: "OR",
-      terms: terms
-    };
-  }
+  node = parse_node_split(term, "OR");
+  if (node) return node;
 
   // Check for COUNT next
-  if (allow_count) {
-    const cnd_ones = ['=' , '!' , '<' , '>' ];
-    const cnd_twos = ['==', '!=', '<=', '>='];
-    let   cnd_one  = null;
-    let   cnd_idx  = -1;
+  const cnd_ones = ['=' , '!' , '<' , '>' ];
+  const cnd_twos = ['==', '!=', '<=', '>='];
+  let   cnd_one  = null;
+  let   cnd_idx  = -1;
 
-    for (let i = term.length - 1; i >= 0; i--) {
-      if (cnd_ones.includes(term[i])) {
-        cnd_one = term[i];
-        cnd_idx = i;
-        break;
+  for (let i = term.length - 1; i >= 0; i--) {
+    if (cnd_ones.includes(term[i])) {
+      cnd_one = term[i];
+      cnd_idx = i;
+      break;
+    }
+  }
+
+  if (cnd_one) {
+    let cnd_two = null;
+
+    if ((cnd_one === '=') && (cnd_idx > 0)) {
+      const str_two = term.substring(cnd_idx - 1, cnd_idx + 1);
+      if (cnd_twos.includes(str_two)) {
+        cnd_two = str_two;
+        cnd_idx--;
       }
     }
 
-    if (cnd_one) {
-      let cnd_two = null;
+    const cnd     = cnd_two ? cnd_two : cnd_one;
+    const nxt_idx = cnd_idx + cnd.length;
+    const test    = term.substring(0, cnd_idx).trim(); // Text to test for
+    const cnt_str = term.substring(   nxt_idx).trim(); // Count of occurrences for it
 
-      if ((cnd_one === '=') && (cnd_idx > 0)) {
-        const str_two = term.substring(cnd_idx - 1, cnd_idx + 1);
-        if (cnd_twos.includes(str_two)) {
-          cnd_two = str_two;
-          cnd_idx--;
-        }
-      }
-
-      const cnd     = cnd_two ? cnd_two : cnd_one;
-      const nxt_idx = cnd_idx + cnd.length;
-      const test    = term.substring(0, cnd_idx).trim(); // Term to test for
-      const cnt_str = term.substring(   nxt_idx).trim(); // Count of occurrences for it
-      let   cnt     = parseInt(cnt_str, 10);
-
+    if (/^\d{1,4}$/.test(cnt_str)) { // Reasonable limit to count
+      let cnt = parseInt(cnt_str, 10);
       if (!isNaN(cnt) && (cnt >= 0)) { // Only valid count to use
         return {
           type: "COUNT",
-          test: parse_term(test, false), // No more counts
+          test: term2text(test), // No more counts
           cnd,
           cnt
         };
       }
-      // Falls to TEXT
     }
   }
 
-  // Plain text term (OR behavior of comma-separated terms)
+  return term2text(term);
+}
+
+// Plain text term (OR behavior of comma-separated terms)
+function term2text(term) {
   return {
     type: "TEXT", // Quote allows leading/trailing space, also ' ' possible for term
     text: term.replace(/['"]/g, "").toLowerCase()
