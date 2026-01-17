@@ -183,7 +183,7 @@ let   tab_active       = null;
 const tab_input_ids    = input_ids;
 const tab_input_values = {}; // [tab] = { values }; [""] = { defaults };
 
-const tab_filter_modes = ["OR", "AND", "NONE", "ONE", "TWO", "THREE", "FOUR"];
+const tab_filter_modes = ["OR", "AND", "DIFF", "NONE", "ONE", "TWO", "THREE", "FOUR"];
 const tab_mode         = {   // [tab] = "" / "Filter"; ['c'] see tab_filter_modes
   a: "",
   b: "",
@@ -531,15 +531,27 @@ function filter_by_marks_side(items, marks, mode) {
         for (const item of mark) combined_ids[item.identifier] = true;
       }
       break;
+
+    case "DIFF":
+      if (marks.length === 1) return [];
+
+      for (const mark of marks) {
+        for (const item of mark) combined_ids[item.identifier] = (combined_ids[item.identifier] || 0) + 1;
+      }
+      break;
   }
 
   switch (mode) {
     case "AND":
     case "OR" :
-      return items.filter(item => combined_ids[item.identifier]);
+      return items.filter(item =>  combined_ids[item.identifier]);
 
     case "NONE":
       return items.filter(item => !combined_ids[item.identifier]);
+
+    case "DIFF":
+      return items.filter(item =>  combined_ids[item.identifier] &&
+                                  (combined_ids[item.identifier] < marks.length));
   }
 
   return []; // Unknown mode
@@ -550,6 +562,7 @@ function filter_by_marks(prev, curr, marks, mode) {
   switch (mode) {
     case "OR"  :
     case "AND" :
+    case "DIFF":
     case "NONE": {
       const results_prev = filter_by_marks_side(prev, marks.map(mark => mark.prev), mode);
       const results_curr = filter_by_marks_side(curr, marks.map(mark => mark.curr), mode);
