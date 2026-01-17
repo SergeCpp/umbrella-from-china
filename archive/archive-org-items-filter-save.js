@@ -8,15 +8,20 @@ const err_end = '</div>';
 
 const err_chars =
   err_beg +
-  err_bds + 'Allowed characters are: a-z, 0-9, =!&lt;&gt;, underscore, dash, period, comma, quote, and space' +
+  err_bds + 'Allowed characters are: a-z, 0-9, =!&lt;&gt;, (), _-, period, comma, quote, and space' +
   err_es  +
   'Creators: =5 finds items (two) with exactly five creators<br />' +
   'Creators: Xiao >1 finds items (three) where more than one creator has Xiao in name<br />' +
-  'Subjects: Dance >4 finds items (14) where more than four subjects contain Dance' +
+  'Subjects: Dance >4 finds items (14) where more than four subjects contain Dance<br />' +
+  'Description: \'p=2\' finds items (102) with string p=2 in description (no counting)' +
   '</p><p>' +
   'Conditionals are: = or ==, ! or !=, &lt;, &lt;=, &gt;, &gt;=<br />' +
   'Allowed counts: 0 to 9999' +
   err_ed +
+  err_end;
+
+const err_parens =
+  err_beg + 'Parentheses must match: ()' +
   err_end;
 
 const err_date =
@@ -288,22 +293,105 @@ function evaluate_term(term, values) {
   }
 }
 
-function parse_node_split(term, op) {
-  const sp_op_sp = ' ' + op + ' ';
-  if (!term.includes(sp_op_sp)) return null;
+function paren_depth(term, index) {
+  if (index < 0) return 0;
 
-  const terms = term.split(sp_op_sp).map(part => parse_term(part));
-  return { type: op, terms };
+  let depth = 0;
+
+  for (let i = 0; i < term.length; i++) {
+    if (i === index) return depth;
+
+    if (term[i] === '(') { depth++; continue; }
+    if (term[i] === ')')   depth--;
+  }
+
+  return depth; // For index beyond term
+}
+
+function is_alnum(char) {
+  if (!char) return false;
+
+  const code = char.charCodeAt(0);
+
+  if ((code >= 0x30) && (code <= 0x39)) return true;
+  if ((code >= 0x41) && (code <= 0x5a)) return true;
+  if ((code >= 0x61) && (code <= 0x7a)) return true;
+
+  return false;
+}
+
+function parse_find_op(term, op, index) {
+  let found = false;
+
+  do {
+    index = term.indexOf(op, index);
+    if (index === -1) return -1;
+
+    const inext = index + op.length;
+
+    if (((index === 0)           || !is_alnum(term[index - 1])) &&
+        ((inext === term.length) || !is_alnum(term[inext]))) {
+      found = true;
+      break;
+    }
+
+    index = inext;
+  }
+  while ((index + op.length) <= term.length);
+
+  return found ? index : -1;
+}
+
+function parse_node_split(term, op) {
+  const parts = [];
+  let   part  = 0;
+  let   start = 0;
+
+  do {
+    const index = parse_find_op(term, op, start);
+    if   (index === -1) break;
+
+    if (!paren_depth(term, index)) {
+      parts.push(term.substring(part, index));
+      part = index + op.length;
+    }
+
+    start = index + op.length;
+  }
+  while ((start + op.length) <= term.length);
+
+  if (!parts.length) return null;
+
+  parts.push(term.substring(part));
+
+  return {
+    type : op,
+    terms: parts.map(part => parse_term(part))
+  };
 }
 
 function parse_node_sides(term, op) {
-  const op_sp = op + ' ';
-  if (!term.includes(op_sp)) return null;
+  let op_ix = 0;
+  let found = false;
 
-  const op_idx = term.indexOf(op_sp);
-  const ex_idx = op_idx + op_sp.length;
-  const incl  = term.substring(0, op_idx).trim(); // Left
-  const excl  = term.substring(   ex_idx);        // Right
+  do {
+    op_ix = parse_find_op(term, op, op_ix);
+    if (op_ix === -1) return null;
+
+    if (!paren_depth(term, op_ix)) {
+      found = true;
+      break;
+    }
+
+    op_ix += op.length;
+  }
+  while ((op_ix + op.length) <= term.length);
+
+  if (!found) return null;
+
+  const ex_ix = op_ix + op.length;
+  const incl  = term.substring(0, op_ix).trimEnd(); // Left
+  const excl  = term.substring(   ex_ix); // Right
   return {
     type: op,
     incl: incl ? parse_term(incl) : null,
@@ -313,6 +401,18 @@ function parse_node_sides(term, op) {
 
 function parse_term(term) {
   term = term.trim();
+
+  if (term.startsWith('(') && term.endsWith(')')) {
+    let depth = 1;
+
+    for (let i = 1; i < (term.length - 1); i++) {
+      if (term[i] === '(') { depth++; continue; }
+      if (term[i] === ')') { depth--; if (!depth) break; }
+    }
+
+    if (depth === 1) return parse_term(term.slice(1, -1));
+  }
+
   let node = null;
 
   // Check for AND first (higher precedence)
@@ -346,7 +446,7 @@ function parse_term(term) {
   let   cnd_idx  = -1;
 
   for (let i = term.length - 1; i >= 0; i--) {
-    if (cnd_ones.includes(term[i])) {
+    if (cnd_ones.includes(term[i]) && !paren_depth(term, i)) {
       cnd_one = term[i];
       cnd_idx = i;
       break;
@@ -366,15 +466,15 @@ function parse_term(term) {
 
     const cnd     = cnd_two ? cnd_two : cnd_one;
     const nxt_idx = cnd_idx + cnd.length;
-    const test    = term.substring(0, cnd_idx).trim(); // Text to test for
-    const cnt_str = term.substring(   nxt_idx).trim(); // Count of occurrences for it
+    const test    = term.substring(0, cnd_idx); // Term to test for
+    const cnt_str = term.substring(   nxt_idx).trimStart(); // Count of occurrences for it
 
     if (/^\d{1,4}$/.test(cnt_str)) { // Reasonable limit to count
       let cnt = parseInt(cnt_str, 10);
       if (!isNaN(cnt) && (cnt >= 0)) { // Only valid count to use
         return {
           type: "COUNT",
-          test: term2text(test), // No more counts
+          test: parse_term(test),
           cnd,
           cnt
         };
@@ -398,14 +498,37 @@ function term2text(term) {
 function input_clean_parse(input) {
   return input
     .replace(/  +/g, ' ')
+    .replace(/\) ?\(/g, ')AND(') // Normalize ()() to ()AND()
     .split  (',')
     .map    (term => term.trim())
     .filter (term => term) // Non-empty only
     .map    (term => parse_term(term));
 }
 
+function input_parens_match(input) {
+  if (!input) return true; // Empty input is valid
+
+  const chunks = input.split(',');
+
+  for (const chunk of chunks) {
+    const term = chunk.trim();
+    if  (!term) continue; // Skip empty chunk (is valid)
+
+    let depth = 0;
+
+    for (let i = 0; i < term.length; i++) {
+      if (term[i] === '(') { depth++; continue; }
+      if (term[i] === ')') { depth--; if (depth < 0) return false; } // Closing paren without an opening
+    }
+
+    if (depth) return false; // Unclosed opening paren
+  }
+
+  return true;
+}
+
 function input_allowed_chars(input) {
-  return !/[^a-zA-Z0-9._\-'" =!<>,]/.test(input);
+  return !/[^a-zA-Z0-9._\-'" =!<>(),]/.test(input);
 }
 
 function input_allowed_keys(input) {
@@ -488,6 +611,14 @@ function filter_route(base_prev_items, base_prev_date,
       !input_allowed_chars(      title_str) ||
       !input_allowed_chars(description_str)) {
     return { error: err_chars };
+  }
+
+  if (!input_parens_match(collections_str) ||
+      !input_parens_match(   creators_str) ||
+      !input_parens_match(   subjects_str) ||
+      !input_parens_match(      title_str) ||
+      !input_parens_match(description_str)) {
+    return { error: err_parens };
   }
 
   const collections = input_clean_parse(collections_str);
