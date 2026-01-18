@@ -32,6 +32,18 @@ let show_vert_fall = true; function inp_vert_fall (checked) { show_vert_fall = c
 let show_mood_pos  = true; function inp_mood_pos  (checked) { show_mood_pos  = checked; }
 let show_mood_neg  = true; function inp_mood_neg  (checked) { show_mood_neg  = checked; }
 
+let show_nomark    = true; function inp_nomark    (checked) { show_nomark    = checked; }
+
+const show_mark    = {}; // [mark] = true / false
+const hide_mark    = {}; // [mark] = true / false
+
+function init_render() {
+  for (const mark of tab_marks()) {
+    show_mark[mark] = true;
+    hide_mark[mark] = false;
+  }
+}
+
 /* Render */
 
 function render_results(results_prev, date_prev, results_curr, date_curr, results_mark) {
@@ -212,7 +224,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     sets_div.innerHTML =
       format_nowrap((only_both === 1 ? 'Item is' : 'All Items are') + ' present') + ' ' +
       format_nowrap('in both Prev and Curr');
-  } else {
+  }
+  else {
     const chk_prev = only_prev && (only_curr || only_both);
     const chk_curr = only_curr && (only_prev || only_both);
     const chk_both = only_both && (only_prev || only_curr);
@@ -265,19 +278,106 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   if (mark_counts) {
     const marks_div = document.createElement("div");
     marks_div.className = "text-center text-comment";
+
+    // Not marked
+    const nomark_span = document.createElement("span");
+    nomark_span.className = "text-nowrap";
+
+    const nomark_label = document.createElement("label");
+    nomark_label.htmlFor = "show-nomark";
+    nomark_label.style.cursor = "pointer";
+    nomark_label.textContent = "Not marked Items";
+
+    const nomark_chk = document.createElement("input");
+    nomark_chk.checked = show_nomark;
+    nomark_chk.className = "in-chk";
+    nomark_chk.id = "show-nomark";
+    nomark_chk.type = "checkbox";
+
+    nomark_chk.oninput = () => inp_nomark(nomark_chk.checked);
+
+    nomark_chk.onkeyup = (event) => {
+      if (event.key === 'Enter') {
+        process_filter();
+      }
+    };
+
+    nomark_span.appendChild(nomark_label);
+    nomark_span.appendChild(nomark_chk);
+    marks_div.appendChild(nomark_span);
+    marks_div.appendChild(document.createTextNode(' '));
+
+    // Marked
     marks_div.appendChild(document.createTextNode('Marked: '));
 
     const mark_last = mark_counts.length - 1;
     for (let m = 0; m <= mark_last; m++) {
+      const m_mark  = mark_counts[m].mark;
+      const m_count = mark_counts[m].count;
+
       const nowrap_span = document.createElement("span");
       nowrap_span.className = "text-nowrap";
 
       const mark_span = document.createElement("span");
-      mark_span.className = "item-mark-" + mark_counts[m].mark + "-text";
-      mark_span.textContent = format_num_str(mark_counts[m].count, 'Item');
+      mark_span.className = "item-mark-" + m_mark + "-text";
+      mark_span.textContent = format_num_str(m_count, 'Item');
 
-      nowrap_span.appendChild(mark_span);
-      if (m < mark_last) nowrap_span.appendChild(document.createTextNode(' /'));
+      if (m_count) {
+        const mark_label = document.createElement("label");
+        mark_label.htmlFor = "show-mark-" + m_mark;
+        mark_label.style.cursor = "pointer";
+
+        const mark_chk_show = document.createElement("input");
+        mark_chk_show.checked = show_mark[m_mark];
+        mark_chk_show.className = "in-chk" + ' ' + "show-mark-" + m_mark;
+        mark_chk_show.id = "show-mark-" + m_mark;
+        mark_chk_show.type = "checkbox";
+
+        mark_chk_show.oninput = () => {
+          show_mark[m_mark] = mark_chk_show.checked;
+
+          if (mark_chk_show.checked) {
+              mark_chk_hide.checked = false;
+              hide_mark[m_mark]     = false;
+          }
+        };
+
+        mark_chk_show.onkeyup = (event) => {
+          if (event.key === 'Enter') {
+            process_filter();
+          }
+        };
+
+        const mark_chk_hide = document.createElement("input");
+        mark_chk_hide.checked = hide_mark[m_mark];
+        mark_chk_hide.className = "in-chk";
+        mark_chk_hide.id = "hide-mark-" + m_mark;
+        mark_chk_hide.type = "checkbox";
+
+        mark_chk_hide.oninput = () => {
+          hide_mark[m_mark] = mark_chk_hide.checked;
+
+          if (mark_chk_hide.checked) {
+              mark_chk_show.checked = false;
+              show_mark[m_mark]     = false;
+          }
+        };
+
+        mark_chk_hide.onkeyup = (event) => {
+          if (event.key === 'Enter') {
+            process_filter();
+          }
+        };
+
+        mark_label.appendChild(mark_span);
+        nowrap_span.appendChild(mark_label);
+        nowrap_span.appendChild(mark_chk_show);
+        nowrap_span.appendChild(mark_chk_hide);
+      }
+      else { // Marked 0 items by this mark
+        nowrap_span.appendChild(mark_span);
+        if (m < mark_last) nowrap_span.appendChild(document.createTextNode(' /'));
+      }
 
       marks_div.appendChild(nowrap_span);
       if (m < mark_last) marks_div.appendChild(document.createTextNode(' '));
@@ -793,24 +893,39 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     // 8.1. Wrap
     item_wrapper.appendChild(item_inner);
 
-    // 8.2. Add mark indicators (if any)
+    // 8.2. Add mark indicators (if any) and check for show/hide
+    let to_show_mark = false;
+    let to_hide_mark = false;
+
     if (item.marks) {
       const mark_last = item.marks.length - 1;
       for (let m = 0; m <= mark_last; m++) {
+        const m_mark = item.marks[m];
+
+        if (show_mark[m_mark])   to_show_mark = true;
+        if (hide_mark[m_mark]) { to_hide_mark = true; break; }
+
         const mark_div = document.createElement("div");
-        mark_div.className = "item-mark-" + item.marks[m];
+        mark_div.className = "item-mark-" + m_mark;
         if (m < mark_last) mark_div.style.borderBottom = "3px solid white";
         item_wrapper.appendChild(mark_div);
       }
       item_wrapper.style.borderBottom = "none"; // Mark will be the border
     }
+    else { // Item not marked
+      to_show_mark = show_nomark;
+    }
+
+    if (!to_show_mark) continue;
+    if ( to_hide_mark) continue;
 
     // 8.3. Which items to show
     const is_plain = !is_rank_up && !is_horz_grow && !is_vert_grow && !is_mood_pos &&
                      !is_rank_dn && !is_horz_fall && !is_vert_fall && !is_mood_neg;
     if   (is_plain) {
       if (!show_plain) continue;
-    } else {
+    }
+    else {
       if (!(is_rank_up   && show_rank_up  ) &&
           !(is_rank_dn   && show_rank_dn  ) &&
           !(is_horz_grow && show_horz_grow) &&

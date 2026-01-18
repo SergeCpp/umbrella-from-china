@@ -253,6 +253,19 @@ input[type="checkbox"].changed.tab-e {
   accent-color: hsl(0.58turn 75% 71%);
 }
 
+.in-chk.show-mark-a {
+  accent-color: hsl(0.07turn 75% 71%);
+}
+.in-chk.show-mark-b {
+  accent-color: hsl(0.42turn 75% 47%);
+}
+.in-chk.show-mark-d {
+  accent-color: hsl(0.58turn 75% 71%);
+}
+.in-chk.show-mark-e {
+  accent-color: hsl(0.91turn 75% 74%);
+}
+
 /* Inputs */
 
 .in-wrap {
