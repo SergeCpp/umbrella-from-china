@@ -20,82 +20,41 @@ let show_both      = true; function inp_both  (chk) { show_both  = chk.checked; 
 
 let show_plain     = true; function inp_plain (chk) { show_plain = chk.checked; }
 
-let show_rank_up   = true;
-let hide_rank_up   = false;
+const show_noplain = {}; // [noplain] = true / false
+const hide_noplain = {}; // [noplain] = false / true
 
-let show_rank_dn   = true;
-let hide_rank_dn   = false;
+let show_nomark    = true;
 
-let show_horz_grow = true;
-let hide_horz_grow = false;
+const show_mark    = {}; // [mark] = true / false
+const hide_mark    = {}; // [mark] = false / true
 
-let show_horz_fall = true;
-let hide_horz_fall = false;
+function inp_show_hide(chk, accent) {
+  if (show_noplain[accent]) {
+      show_noplain[accent] = false;
+      hide_noplain[accent] = true;
 
-let show_vert_grow = true;
-let hide_vert_grow = false;
-
-let show_vert_fall = true;
-let hide_vert_fall = false;
-
-let show_mood_pos  = true;
-let hide_mood_pos  = false;
-
-let show_mood_neg  = true;
-let hide_mood_neg  = false;
-
-function inp_rank_up(chk, accent) {
-  [show_rank_up,   hide_rank_up]   = chk_show_hide(chk, accent, show_rank_up,   hide_rank_up);
-}
-function inp_rank_dn(chk, accent) {
-  [show_rank_dn,   hide_rank_dn]   = chk_show_hide(chk, accent, show_rank_dn,   hide_rank_dn);
-}
-
-function inp_horz_grow(chk, accent) {
-  [show_horz_grow, hide_horz_grow] = chk_show_hide(chk, accent, show_horz_grow, hide_horz_grow);
-}
-function inp_horz_fall(chk, accent) {
-  [show_horz_fall, hide_horz_fall] = chk_show_hide(chk, accent, show_horz_fall, hide_horz_fall);
-}
-
-function inp_vert_grow(chk, accent) {
-  [show_vert_grow, hide_vert_grow] = chk_show_hide(chk, accent, show_vert_grow, hide_vert_grow);
-}
-function inp_vert_fall(chk, accent) {
-  [show_vert_fall, hide_vert_fall] = chk_show_hide(chk, accent, show_vert_fall, hide_vert_fall);
-}
-
-function inp_mood_pos(chk, accent) {
-  [show_mood_pos,  hide_mood_pos]  = chk_show_hide(chk, accent, show_mood_pos,  hide_mood_pos);
-}
-function inp_mood_neg(chk, accent) {
-  [show_mood_neg,  hide_mood_neg]  = chk_show_hide(chk, accent, show_mood_neg,  hide_mood_neg);
-}
-
-function chk_show_hide(chk, accent, show, hide) {
-  if (show) {
     chk.classList.remove(accent);
     chk.checked = true;
-    show = false;
-    hide = true;
-  }
-  else if (hide) {
-    chk.classList.add(accent);
-    hide = false;
-  }
-  else {
-    show = true;
+    return;
   }
 
-  return [show, hide];
+  if (hide_noplain[accent]) {
+      hide_noplain[accent] = false;
+
+    chk.classList.add(accent);
+    return;
+  }
+
+  show_noplain[accent] = true;
 }
 
-let show_nomark = true;
-
-const show_mark = {}; // [mark] = true / false
-const hide_mark = {}; // [mark] = true / false
-
 function init_render() {
+  for (const noplain of ['rank-up', 'horz-grow', 'vert-grow', 'mood-pos',
+                         'rank-dn', 'horz-fall', 'vert-fall', 'mood-neg']) {
+    show_noplain[noplain] = true;
+    hide_noplain[noplain] = false;
+  }
+
   for (const mark of tab_marks()) {
     show_mark[mark] = true;
     hide_mark[mark] = false;
@@ -263,7 +222,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     return '<label for="' + id + '" style="cursor: pointer;">';
   };
 
-  const set_chk_html = (id, show, input, accent = "", hide = false) => {
+  const set_chk_html = (id, accent, show, hide, input) => {
     return '<input id="' + id + '" ' +
       'class="in-chk' + (accent && !hide ? ' ' + accent : "") + '" ' +
       'type="checkbox" ' + (show || hide ? 'checked ' : "") +
@@ -271,8 +230,13 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       'onkeyup="if (event.key === \'Enter\') process_filter();">';
   };
 
+  const s_h_chk_html = (id, accent) => {
+    return set_chk_html(id, accent, show_noplain[accent],
+                                    hide_noplain[accent], 'inp_show_hide');
+  };
+
   const suf_chk_html = (id, checked, input) => {
-    return '</label>' + set_chk_html(id, checked, input);
+    return '</label>' + set_chk_html(id, "", checked, false, input);
   };
 
   // Sets displaying
@@ -314,24 +278,24 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   show_div.innerHTML =
     format_nowrap(
       pre_chk_html('show-plain')     + 'Plain Items' +
-      suf_chk_html('show-plain',     show_plain,     'inp_plain'))  + ' ' +
+      suf_chk_html('show-plain',   show_plain, 'inp_plain'))        + ' ' +
     format_nowrap(                     'Substantially changed in:') + ' ' +
     format_nowrap(
-      pre_chk_html('show-rank-up')   + 'Rank' + '</label>' +
-      set_chk_html('show-rank-up',   show_rank_up,   'inp_rank_up',   'rank-up',   hide_rank_up)    +
-      set_chk_html('show-rank-dn',   show_rank_dn,   'inp_rank_dn',   'rank-dn',   hide_rank_dn))   + ' ' +
+      pre_chk_html('show-rank-up'  ) + 'Rank' + '</label>' +
+      s_h_chk_html('show-rank-up'  ,   'rank-up'  )  +
+      s_h_chk_html('show-rank-dn'  ,   'rank-dn'  )) + ' ' +
     format_nowrap(
       pre_chk_html('show-horz-grow') + 'Horz' + '</label>' +
-      set_chk_html('show-horz-grow', show_horz_grow, 'inp_horz_grow', 'horz-grow', hide_horz_grow)  +
-      set_chk_html('show-horz-fall', show_horz_fall, 'inp_horz_fall', 'horz-fall', hide_horz_fall)) + ' ' +
+      s_h_chk_html('show-horz-grow',   'horz-grow')  +
+      s_h_chk_html('show-horz-fall',   'horz-fall')) + ' ' +
     format_nowrap(
       pre_chk_html('show-vert-grow') + 'Vert' + '</label>' +
-      set_chk_html('show-vert-grow', show_vert_grow, 'inp_vert_grow', 'vert-grow', hide_vert_grow)  +
-      set_chk_html('show-vert-fall', show_vert_fall, 'inp_vert_fall', 'vert-fall', hide_vert_fall)) + ' ' +
+      s_h_chk_html('show-vert-grow',   'vert-grow')  +
+      s_h_chk_html('show-vert-fall',   'vert-fall')) + ' ' +
     format_nowrap(
-      pre_chk_html('show-mood-pos')  + 'Mood' + '</label>' +
-      set_chk_html('show-mood-pos',  show_mood_pos,  'inp_mood_pos',  'mood-pos',  hide_mood_pos) +
-      set_chk_html('show-mood-neg',  show_mood_neg,  'inp_mood_neg',  'mood-neg',  hide_mood_neg));
+      pre_chk_html('show-mood-pos' ) + 'Mood' + '</label>' +
+      s_h_chk_html('show-mood-pos' ,   'mood-pos' )  +
+      s_h_chk_html('show-mood-neg' ,   'mood-neg' ));
   container.appendChild(show_div);
 
   // Marks displaying
@@ -988,23 +952,23 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       if (!show_plain) continue;
     }
     else {
-      if (!(is_rank_up   && show_rank_up  ) &&
-          !(is_rank_dn   && show_rank_dn  ) &&
-          !(is_horz_grow && show_horz_grow) &&
-          !(is_horz_fall && show_horz_fall) &&
-          !(is_vert_grow && show_vert_grow) &&
-          !(is_vert_fall && show_vert_fall) &&
-          !(is_mood_pos  && show_mood_pos ) &&
-          !(is_mood_neg  && show_mood_neg )) continue;
+      if (!(is_rank_up   && show_noplain['rank-up'  ]) &&
+          !(is_rank_dn   && show_noplain['rank-dn'  ]) &&
+          !(is_horz_grow && show_noplain['horz-grow']) &&
+          !(is_horz_fall && show_noplain['horz-fall']) &&
+          !(is_vert_grow && show_noplain['vert-grow']) &&
+          !(is_vert_fall && show_noplain['vert-fall']) &&
+          !(is_mood_pos  && show_noplain['mood-pos' ]) &&
+          !(is_mood_neg  && show_noplain['mood-neg' ])) continue;
 
-      if ( (is_rank_up   && hide_rank_up  ) ||
-           (is_rank_dn   && hide_rank_dn  ) ||
-           (is_horz_grow && hide_horz_grow) ||
-           (is_horz_fall && hide_horz_fall) ||
-           (is_vert_grow && hide_vert_grow) ||
-           (is_vert_fall && hide_vert_fall) ||
-           (is_mood_pos  && hide_mood_pos ) ||
-           (is_mood_neg  && hide_mood_neg )) continue;
+      if ( (is_rank_up   && hide_noplain['rank-up'  ]) ||
+           (is_rank_dn   && hide_noplain['rank-dn'  ]) ||
+           (is_horz_grow && hide_noplain['horz-grow']) ||
+           (is_horz_fall && hide_noplain['horz-fall']) ||
+           (is_vert_grow && hide_noplain['vert-grow']) ||
+           (is_vert_fall && hide_noplain['vert-fall']) ||
+           (is_mood_pos  && hide_noplain['mood-pos' ]) ||
+           (is_mood_neg  && hide_noplain['mood-neg' ])) continue;
     }
 
     // 8.4. Add item to the page
