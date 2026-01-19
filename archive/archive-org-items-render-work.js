@@ -14,28 +14,86 @@ const  stat_eq     =        " =";
 
 /* Which items to show */
 
-let show_prev      = true; function inp_prev      (checked) { show_prev      = checked; }
-let show_curr      = true; function inp_curr      (checked) { show_curr      = checked; }
-let show_both      = true; function inp_both      (checked) { show_both      = checked; }
+let show_prev      = true; function inp_prev  (chk) { show_prev  = chk.checked; }
+let show_curr      = true; function inp_curr  (chk) { show_curr  = chk.checked; }
+let show_both      = true; function inp_both  (chk) { show_both  = chk.checked; }
 
-let show_plain     = true; function inp_plain     (checked) { show_plain     = checked; }
+let show_plain     = true; function inp_plain (chk) { show_plain = chk.checked; }
 
-let show_rank_up   = true; function inp_rank_up   (checked) { show_rank_up   = checked; }
-let show_rank_dn   = true; function inp_rank_dn   (checked) { show_rank_dn   = checked; }
+let show_rank_up   = true;
+let hide_rank_up   = false;
 
-let show_horz_grow = true; function inp_horz_grow (checked) { show_horz_grow = checked; }
-let show_horz_fall = true; function inp_horz_fall (checked) { show_horz_fall = checked; }
+let show_rank_dn   = true;
+let hide_rank_dn   = false;
 
-let show_vert_grow = true; function inp_vert_grow (checked) { show_vert_grow = checked; }
-let show_vert_fall = true; function inp_vert_fall (checked) { show_vert_fall = checked; }
+let show_horz_grow = true;
+let hide_horz_grow = false;
 
-let show_mood_pos  = true; function inp_mood_pos  (checked) { show_mood_pos  = checked; }
-let show_mood_neg  = true; function inp_mood_neg  (checked) { show_mood_neg  = checked; }
+let show_horz_fall = true;
+let hide_horz_fall = false;
 
-let show_nomark    = true; function inp_nomark    (checked) { show_nomark    = checked; }
+let show_vert_grow = true;
+let hide_vert_grow = false;
 
-const show_mark    = {}; // [mark] = true / false
-const hide_mark    = {}; // [mark] = true / false
+let show_vert_fall = true;
+let hide_vert_fall = false;
+
+let show_mood_pos  = true;
+let hide_mood_pos  = false;
+
+let show_mood_neg  = true;
+let hide_mood_neg  = false;
+
+function inp_rank_up(chk, accent) {
+  [show_rank_up,   hide_rank_up]   = chk_show_hide(chk, accent, show_rank_up,   hide_rank_up);
+}
+function inp_rank_dn(chk, accent) {
+  [show_rank_dn,   hide_rank_dn]   = chk_show_hide(chk, accent, show_rank_dn,   hide_rank_dn);
+}
+
+function inp_horz_grow(chk, accent) {
+  [show_horz_grow, hide_horz_grow] = chk_show_hide(chk, accent, show_horz_grow, hide_horz_grow);
+}
+function inp_horz_fall(chk, accent) {
+  [show_horz_fall, hide_horz_fall] = chk_show_hide(chk, accent, show_horz_fall, hide_horz_fall);
+}
+
+function inp_vert_grow(chk, accent) {
+  [show_vert_grow, hide_vert_grow] = chk_show_hide(chk, accent, show_vert_grow, hide_vert_grow);
+}
+function inp_vert_fall(chk, accent) {
+  [show_vert_fall, hide_vert_fall] = chk_show_hide(chk, accent, show_vert_fall, hide_vert_fall);
+}
+
+function inp_mood_pos(chk, accent) {
+  [show_mood_pos,  hide_mood_pos]  = chk_show_hide(chk, accent, show_mood_pos,  hide_mood_pos);
+}
+function inp_mood_neg(chk, accent) {
+  [show_mood_neg,  hide_mood_neg]  = chk_show_hide(chk, accent, show_mood_neg,  hide_mood_neg);
+}
+
+function chk_show_hide(chk, accent, show, hide) {
+  if (show) {
+    chk.classList.remove(accent);
+    chk.checked = true;
+    show = false;
+    hide = true;
+  }
+  else if (hide) {
+    chk.classList.add(accent);
+    hide = false;
+  }
+  else {
+    show = true;
+  }
+
+  return [show, hide];
+}
+
+let show_nomark = true;
+
+const show_mark = {}; // [mark] = true / false
+const hide_mark = {}; // [mark] = true / false
 
 function init_render() {
   for (const mark of tab_marks()) {
@@ -144,6 +202,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   // Marks
   //
   let mark_counts = null;
+  let marks_total = 0; // Sum of marks on items (not a count of marked items)
 
   if (results_mark) {
     for (const rm of results_mark) {
@@ -173,6 +232,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
       if (!mark_counts) mark_counts = [];
       mark_counts.push({ mark: rm.mark, count: mark_count });
+      marks_total += mark_count; // Count of marks on items (item marked twice is counted twice)
     }
   }
 
@@ -203,16 +263,16 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     return '<label for="' + id + '" style="cursor: pointer;">';
   };
 
-  const set_chk_html = (id, chk, inp, acc = "") => {
+  const set_chk_html = (id, show, input, accent = "", hide = false) => {
     return '<input id="' + id + '" ' +
-      'class="in-chk' + (acc ? ' ' + acc : "") + '" ' +
-      'type="checkbox" ' + (chk ? 'checked ' : "") +
-      'oninput="' + inp + '(this.checked)" ' +
+      'class="in-chk' + (accent && !hide ? ' ' + accent : "") + '" ' +
+      'type="checkbox" ' + (show || hide ? 'checked ' : "") +
+      'oninput="' + input + '(this, \'' + accent + '\')" ' +
       'onkeyup="if (event.key === \'Enter\') process_filter();">';
   };
 
-  const suf_chk_html = (id, chk, inp) => {
-    return '</label>' + set_chk_html(id, chk, inp);
+  const suf_chk_html = (id, checked, input) => {
+    return '</label>' + set_chk_html(id, checked, input);
   };
 
   // Sets displaying
@@ -220,16 +280,11 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   const sets_div = document.createElement("div");
   sets_div.className = "text-center text-comment";
 
-  if (!only_prev && !only_curr) {
-    sets_div.innerHTML =
-      format_nowrap((only_both === 1 ? 'Item is' : 'All Items are') + ' present') + ' ' +
-      format_nowrap('in both Prev and Curr');
-  }
-  else {
-    const chk_prev = only_prev && (only_curr || only_both);
-    const chk_curr = only_curr && (only_prev || only_both);
-    const chk_both = only_both && (only_prev || only_curr);
+  const chk_prev = only_prev && (only_curr || only_both);
+  const chk_curr = only_curr && (only_prev || only_both);
+  const chk_both = only_both && (only_prev || only_curr);
 
+  if (only_prev || only_curr) {
     const pre_prev = chk_prev ? pre_chk_html('show-prev') : "";
     const pre_curr = chk_curr ? pre_chk_html('show-curr') : "";
     const pre_both = chk_both ? pre_chk_html('show-both') : "";
@@ -243,6 +298,11 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       format_nowrap(pre_prev + only_prev + ' in Prev only' + suf_prev) + ' ' +
       format_nowrap(pre_curr + only_curr + ' in Curr only' + suf_curr) + ' ' +
       format_nowrap(pre_both + only_both + ' in both'      + suf_both);
+  }
+  else { // No items in prev/curr only
+    sets_div.innerHTML =
+      format_nowrap((only_both === 1 ? 'Item is' : 'All Items are') + ' present') + ' ' +
+      format_nowrap('in both Prev and Curr');
   }
   container.appendChild(sets_div);
 
@@ -258,54 +318,58 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     format_nowrap(                     'Substantially changed in:') + ' ' +
     format_nowrap(
       pre_chk_html('show-rank-up')   + 'Rank' + '</label>' +
-      set_chk_html('show-rank-up',   show_rank_up,   'inp_rank_up',   'rank-up')    +
-      set_chk_html('show-rank-dn',   show_rank_dn,   'inp_rank_dn',   'rank-dn'))   + ' ' +
+      set_chk_html('show-rank-up',   show_rank_up,   'inp_rank_up',   'rank-up',   hide_rank_up)    +
+      set_chk_html('show-rank-dn',   show_rank_dn,   'inp_rank_dn',   'rank-dn',   hide_rank_dn))   + ' ' +
     format_nowrap(
       pre_chk_html('show-horz-grow') + 'Horz' + '</label>' +
-      set_chk_html('show-horz-grow', show_horz_grow, 'inp_horz_grow', 'horz-grow')  +
-      set_chk_html('show-horz-fall', show_horz_fall, 'inp_horz_fall', 'horz-fall')) + ' ' +
+      set_chk_html('show-horz-grow', show_horz_grow, 'inp_horz_grow', 'horz-grow', hide_horz_grow)  +
+      set_chk_html('show-horz-fall', show_horz_fall, 'inp_horz_fall', 'horz-fall', hide_horz_fall)) + ' ' +
     format_nowrap(
       pre_chk_html('show-vert-grow') + 'Vert' + '</label>' +
-      set_chk_html('show-vert-grow', show_vert_grow, 'inp_vert_grow', 'vert-grow')  +
-      set_chk_html('show-vert-fall', show_vert_fall, 'inp_vert_fall', 'vert-fall')) + ' ' +
+      set_chk_html('show-vert-grow', show_vert_grow, 'inp_vert_grow', 'vert-grow', hide_vert_grow)  +
+      set_chk_html('show-vert-fall', show_vert_fall, 'inp_vert_fall', 'vert-fall', hide_vert_fall)) + ' ' +
     format_nowrap(
       pre_chk_html('show-mood-pos')  + 'Mood' + '</label>' +
-      set_chk_html('show-mood-pos',  show_mood_pos,  'inp_mood_pos',  'mood-pos') +
-      set_chk_html('show-mood-neg',  show_mood_neg,  'inp_mood_neg',  'mood-neg'));
+      set_chk_html('show-mood-pos',  show_mood_pos,  'inp_mood_pos',  'mood-pos',  hide_mood_pos) +
+      set_chk_html('show-mood-neg',  show_mood_neg,  'inp_mood_neg',  'mood-neg',  hide_mood_neg));
   container.appendChild(show_div);
 
   // Marks displaying
+  const chk_nomark = marks_total && results_curr_exp.some(item => !item.marks); // Some marked and some not marked
+
   if (mark_counts) {
     const marks_div = document.createElement("div");
     marks_div.className = "text-center text-comment";
 
     // Not marked
-    const nomark_span = document.createElement("span");
-    nomark_span.className = "text-nowrap";
+    if (chk_nomark) {
+      const nomark_span = document.createElement("span");
+      nomark_span.className = "text-nowrap";
 
-    const nomark_label = document.createElement("label");
-    nomark_label.htmlFor = "show-nomark";
-    nomark_label.style.cursor = "pointer";
-    nomark_label.textContent = "Not marked Items";
+      const nomark_label = document.createElement("label");
+      nomark_label.htmlFor = "show-nomark";
+      nomark_label.style.cursor = "pointer";
+      nomark_label.textContent = "Not marked Items";
 
-    const nomark_chk = document.createElement("input");
-    nomark_chk.checked = show_nomark;
-    nomark_chk.className = "in-chk";
-    nomark_chk.id = "show-nomark";
-    nomark_chk.type = "checkbox";
+      const nomark_chk = document.createElement("input");
+      nomark_chk.checked = show_nomark;
+      nomark_chk.className = "in-chk";
+      nomark_chk.id = "show-nomark";
+      nomark_chk.type = "checkbox";
 
-    nomark_chk.oninput = () => inp_nomark(nomark_chk.checked);
+      nomark_chk.oninput = () => { show_nomark = nomark_chk.checked; };
 
-    nomark_chk.onkeyup = (event) => {
-      if (event.key === 'Enter') {
-        process_filter();
-      }
-    };
+      nomark_chk.onkeyup = (event) => {
+        if (event.key === 'Enter') {
+          process_filter();
+        }
+      };
 
-    nomark_span.appendChild(nomark_label);
-    nomark_span.appendChild(nomark_chk);
-    marks_div.appendChild(nomark_span);
-    marks_div.appendChild(document.createTextNode(' '));
+      nomark_span.appendChild(nomark_label);
+      nomark_span.appendChild(nomark_chk);
+      marks_div.appendChild(nomark_span);
+      marks_div.appendChild(document.createTextNode(' '));
+    }
 
     // Marked
     marks_div.appendChild(document.createTextNode('Marked: '));
@@ -674,11 +738,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   for (let index = 0; index < results_curr_exp.length; index++) {
     const item = results_curr_exp[index];
 
-    if (only_prev || only_curr) {
-      if (item.is_prev && !show_prev) continue;
-      if (item.no_prev && !show_curr) continue;
-      if (item.is_both && !show_both) continue;
-    }
+    if (item.is_prev && chk_prev && !show_prev) continue;
+    if (item.no_prev && chk_curr && !show_curr) continue;
+    if (item.is_both && chk_both && !show_both) continue;
 
     // 1. Outer wrapper, for border/divider and spacing
     const item_wrapper = document.createElement("div");
@@ -894,10 +956,10 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     item_wrapper.appendChild(item_inner);
 
     // 8.2. Add mark indicators (if any) and check for show/hide
-    let to_show_mark = false;
-    let to_hide_mark = false;
-
     if (item.marks) {
+      let to_show_mark = false;
+      let to_hide_mark = false;
+
       const mark_last = item.marks.length - 1;
       for (let m = 0; m <= mark_last; m++) {
         const m_mark = item.marks[m];
@@ -911,13 +973,13 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
         item_wrapper.appendChild(mark_div);
       }
       item_wrapper.style.borderBottom = "none"; // Mark will be the border
+
+      if (!to_show_mark) continue;
+      if ( to_hide_mark) continue;
     }
     else { // Item not marked
-      to_show_mark = show_nomark;
+      if (chk_nomark && !show_nomark) continue;
     }
-
-    if (!to_show_mark) continue;
-    if ( to_hide_mark) continue;
 
     // 8.3. Which items to show
     const is_plain = !is_rank_up && !is_horz_grow && !is_vert_grow && !is_mood_pos &&
@@ -934,6 +996,15 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
           !(is_vert_fall && show_vert_fall) &&
           !(is_mood_pos  && show_mood_pos ) &&
           !(is_mood_neg  && show_mood_neg )) continue;
+
+      if ( (is_rank_up   && hide_rank_up  ) ||
+           (is_rank_dn   && hide_rank_dn  ) ||
+           (is_horz_grow && hide_horz_grow) ||
+           (is_horz_fall && hide_horz_fall) ||
+           (is_vert_grow && hide_vert_grow) ||
+           (is_vert_fall && hide_vert_fall) ||
+           (is_mood_pos  && hide_mood_pos ) ||
+           (is_mood_neg  && hide_mood_neg )) continue;
     }
 
     // 8.4. Add item to the page
