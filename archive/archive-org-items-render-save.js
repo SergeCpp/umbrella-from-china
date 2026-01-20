@@ -450,13 +450,13 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   // For log/sig scaling of marks
   //
   const curr_length   = results_curr_exp.length;
-  const curr_log_base = Math.log(curr_length); // For length === 1 is checked below, 0 was checked above
+//const curr_log_base = Math.log(curr_length); // For length === 1 is checked below, 0 was checked above
   //
   // Substantial changes marking: horizontal impact of old      from prev to     curr
   // Substantial changes marking: vertical   impact of 23 and 7 into all  within curr
   //
   const horz_decay     = 10; // For scale from top: 1 to bottom: 1/10
-  const horz_log_steep = 1;  // No steep here, just log
+//const horz_log_steep = 1;  // No steep here, just log
   const horz_sig_base  = 0.1;
   const horz_sig_steep = 2;
   const horz_sig_min   = 1 / (1 + Math.exp((horz_sig_base - 0) * horz_sig_steep));
@@ -464,7 +464,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   const horz_curr_prev = []; // Of curr_length anyway
   //
   const vert_decay     = 10; // Scale divisor: 1 to 10
-  const vert_log_steep = 1;  // No steep here, just log
+//const vert_log_steep = 1;  // No steep here, just log
   const vert_sig_base  = 0.1;
   const vert_sig_steep = 2;
   const vert_sig_min   = 1 / (1 + Math.exp((vert_sig_base - 0) * vert_sig_steep));
@@ -475,7 +475,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   // Mark mood changes
   //
   const rank_decay     = 40; // Scale divisor: 1 to 40
-  const rank_log_steep = 3;  // To more than log prioritize top items
+//const rank_log_steep = 3;  // To more than log prioritize top items
   const rank_sig_base  = 0.2;
   const rank_sig_steep = 5;
   const rank_sig_min   = 1 / (1 + Math.exp((rank_sig_base - 0) * rank_sig_steep));
@@ -483,7 +483,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   const rank_up_dn     = []; // Of curr_length anyway
   //
   const mood_decay     = 10; // Scale divisor: 1 to 10
-  const mood_log_steep = 2;  // To more than log prioritize top items
+//const mood_log_steep = 2;  // To more than log prioritize top items
   const mood_sig_base  = 0.1;
   const mood_sig_steep = 3;
   const mood_sig_min   = 1 / (1 + Math.exp((mood_sig_base - 0) * mood_sig_steep));
@@ -716,9 +716,69 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   for (let index = 0; index < results_curr_exp.length; index++) {
     const item = results_curr_exp[index];
 
+    // Which items to show
     if (item.is_prev && chk_prev && !show_prev) continue;
     if (item.no_prev && chk_curr && !show_curr) continue;
     if (item.is_both && chk_both && !show_both) continue;
+
+    // Which items to show
+    if (item.marks) {
+      let to_show_mark = false;
+      let to_hide_mark = false;
+
+      const mark_last = item.marks.length - 1;
+      for (let m = 0; m <= mark_last; m++) {
+        const m_mark = item.marks[m];
+
+        if (show_mark[m_mark])   to_show_mark = true;
+        if (hide_mark[m_mark]) { to_hide_mark = true; break; }
+      }
+
+      if (!to_show_mark) continue;
+      if ( to_hide_mark) continue;
+    }
+    else { // Item not marked
+      if (chk_nomark && !show_nomark) continue;
+    }
+
+    // Marking
+    const is_rank_up   =  item.is_both && (item.rank_change >= mark_rank_up); // item.index_prev > index
+    const is_rank_dn   =  item.is_both && (item.rank_change <= mark_rank_dn); // item.index_prev < index
+
+    const is_horz_grow =  item.is_both && (item.horz_change >= mark_grow_old);
+    const is_horz_fall =  item.is_both && (item.horz_change <= mark_fall_old);
+
+    const is_vert_grow = !item.is_prev && (item.vert_change >= mark_grow_23_7);
+    const is_vert_fall = !item.is_prev && (item.vert_change <= mark_fall_23_7);
+
+    const is_mood_pos  =  item.is_both && (item.grow._mood  >= mark_mood_pos);
+    const is_mood_neg  =  item.is_both && (item.grow._mood  <= mark_mood_neg);
+
+    // Which items to show
+    const is_plain = !is_rank_up && !is_horz_grow && !is_vert_grow && !is_mood_pos &&
+                     !is_rank_dn && !is_horz_fall && !is_vert_fall && !is_mood_neg;
+    if   (is_plain) {
+      if (!show_plain) continue;
+    }
+    else {
+      if (!(is_rank_up   && show_noplain['rank-up'  ]) &&
+          !(is_rank_dn   && show_noplain['rank-dn'  ]) &&
+          !(is_horz_grow && show_noplain['horz-grow']) &&
+          !(is_horz_fall && show_noplain['horz-fall']) &&
+          !(is_vert_grow && show_noplain['vert-grow']) &&
+          !(is_vert_fall && show_noplain['vert-fall']) &&
+          !(is_mood_pos  && show_noplain['mood-pos' ]) &&
+          !(is_mood_neg  && show_noplain['mood-neg' ])) continue;
+
+      if ( (is_rank_up   && hide_noplain['rank-up'  ]) ||
+           (is_rank_dn   && hide_noplain['rank-dn'  ]) ||
+           (is_horz_grow && hide_noplain['horz-grow']) ||
+           (is_horz_fall && hide_noplain['horz-fall']) ||
+           (is_vert_grow && hide_noplain['vert-grow']) ||
+           (is_vert_fall && hide_noplain['vert-fall']) ||
+           (is_mood_pos  && hide_noplain['mood-pos' ]) ||
+           (is_mood_neg  && hide_noplain['mood-neg' ])) continue;
+    }
 
     // 1. Outer wrapper, for border/divider and spacing
     const item_wrapper = document.createElement("div");
@@ -802,21 +862,15 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     stat_prev_7.textContent = item.prev._7;
 
     // Rank changes marking
-    let is_rank_up = false;
-    let is_rank_dn = false;
-    if (item.is_both) {
-      if      (item.rank_change >= mark_rank_up) { // index < item.index_prev
-        stat_prev_old.classList.add("item-mark-up");
-        stat_prev_23 .classList.add("item-mark-up");
-        stat_prev_7  .classList.add("item-mark-up");
-        is_rank_up = true;
-      }
-      else if (item.rank_change <= mark_rank_dn) { // index > item.index_prev
-        stat_prev_old.classList.add("item-mark-dn");
-        stat_prev_23 .classList.add("item-mark-dn");
-        stat_prev_7  .classList.add("item-mark-dn");
-        is_rank_dn = true;
-      }
+    if      (is_rank_up) {
+      stat_prev_old.classList.add("item-mark-up");
+      stat_prev_23 .classList.add("item-mark-up");
+      stat_prev_7  .classList.add("item-mark-up");
+    }
+    else if (is_rank_dn) {
+      stat_prev_old.classList.add("item-mark-dn");
+      stat_prev_23 .classList.add("item-mark-dn");
+      stat_prev_7  .classList.add("item-mark-dn");
     }
 
     // 4.5. Prev: assemble the hierarchy
@@ -845,33 +899,21 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     stat_curr_7.textContent = item.curr._7;
 
     // Substantial changes marking: horizontal impact of old from prev to curr
-    let is_horz_grow = false;
-    let is_horz_fall = false;
-    if (item.is_both) {
-      if      (item.horz_change >= mark_grow_old) {
-        stat_curr_old.classList.add("item-mark-grow");
-        is_horz_grow = true;
-      }
-      else if (item.horz_change <= mark_fall_old) {
-        stat_curr_old.classList.add("item-mark-fall");
-        is_horz_fall = true;
-      }
+    if      (is_horz_grow) {
+      stat_curr_old.classList.add("item-mark-grow");
+    }
+    else if (is_horz_fall) {
+      stat_curr_old.classList.add("item-mark-fall");
     }
 
     // Substantial changes marking: vertical impact of 23 and 7 into all within curr
-    let is_vert_grow = false;
-    let is_vert_fall = false;
-    if (!item.is_prev) {
-      if      (item.vert_change >= mark_grow_23_7) {
-        stat_curr_23.classList.add("item-mark-grow");
-        stat_curr_7 .classList.add("item-mark-grow");
-        is_vert_grow = true;
-      }
-      else if (item.vert_change <= mark_fall_23_7) {
-        stat_curr_23.classList.add("item-mark-fall");
-        stat_curr_7 .classList.add("item-mark-fall");
-        is_vert_fall = true;
-      }
+    if      (is_vert_grow) {
+      stat_curr_23.classList.add("item-mark-grow");
+      stat_curr_7 .classList.add("item-mark-grow");
+    }
+    else if (is_vert_fall) {
+      stat_curr_23.classList.add("item-mark-fall");
+      stat_curr_7 .classList.add("item-mark-fall");
     }
 
     // 5.5. Curr: assemble the hierarchy
@@ -900,21 +942,15 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     stat_grow_7.textContent = item.grow._7;
 
     // Grow mood marking: positive and negative
-    let is_mood_pos = false;
-    let is_mood_neg = false;
-    if (item.is_both) {
-      if      (item.grow._mood >= mark_mood_pos) {
-        stat_grow_old.classList.add("item-mark-grow");
-        stat_grow_23 .classList.add("item-mark-grow");
-        stat_grow_7  .classList.add("item-mark-grow");
-        is_mood_pos = true;
-      }
-      else if (item.grow._mood <= mark_mood_neg) {
-        stat_grow_old.classList.add("item-mark-fall");
-        stat_grow_23 .classList.add("item-mark-fall");
-        stat_grow_7  .classList.add("item-mark-fall");
-        is_mood_neg = true;
-      }
+    if      (is_mood_pos) {
+      stat_grow_old.classList.add("item-mark-grow");
+      stat_grow_23 .classList.add("item-mark-grow");
+      stat_grow_7  .classList.add("item-mark-grow");
+    }
+    else if (is_mood_neg) {
+      stat_grow_old.classList.add("item-mark-fall");
+      stat_grow_23 .classList.add("item-mark-fall");
+      stat_grow_7  .classList.add("item-mark-fall");
     }
 
     // 6.5. Grow: assemble the hierarchy
@@ -935,15 +971,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
     // 8.2. Add mark indicators (if any) and check for show/hide
     if (item.marks) {
-      let to_show_mark = false;
-      let to_hide_mark = false;
-
       const mark_last = item.marks.length - 1;
       for (let m = 0; m <= mark_last; m++) {
         const m_mark = item.marks[m];
-
-        if (show_mark[m_mark])   to_show_mark = true;
-        if (hide_mark[m_mark]) { to_hide_mark = true; break; }
 
         const mark_div = document.createElement("div");
         mark_div.className = "item-mark-" + m_mark;
@@ -951,41 +981,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
         item_wrapper.appendChild(mark_div);
       }
       item_wrapper.style.borderBottom = "none"; // Mark will be the border
-
-      if (!to_show_mark) continue;
-      if ( to_hide_mark) continue;
-    }
-    else { // Item not marked
-      if (chk_nomark && !show_nomark) continue;
     }
 
-    // 8.3. Which items to show
-    const is_plain = !is_rank_up && !is_horz_grow && !is_vert_grow && !is_mood_pos &&
-                     !is_rank_dn && !is_horz_fall && !is_vert_fall && !is_mood_neg;
-    if   (is_plain) {
-      if (!show_plain) continue;
-    }
-    else {
-      if (!(is_rank_up   && show_noplain['rank-up'  ]) &&
-          !(is_rank_dn   && show_noplain['rank-dn'  ]) &&
-          !(is_horz_grow && show_noplain['horz-grow']) &&
-          !(is_horz_fall && show_noplain['horz-fall']) &&
-          !(is_vert_grow && show_noplain['vert-grow']) &&
-          !(is_vert_fall && show_noplain['vert-fall']) &&
-          !(is_mood_pos  && show_noplain['mood-pos' ]) &&
-          !(is_mood_neg  && show_noplain['mood-neg' ])) continue;
-
-      if ( (is_rank_up   && hide_noplain['rank-up'  ]) ||
-           (is_rank_dn   && hide_noplain['rank-dn'  ]) ||
-           (is_horz_grow && hide_noplain['horz-grow']) ||
-           (is_horz_fall && hide_noplain['horz-fall']) ||
-           (is_vert_grow && hide_noplain['vert-grow']) ||
-           (is_vert_fall && hide_noplain['vert-fall']) ||
-           (is_mood_pos  && hide_noplain['mood-pos' ]) ||
-           (is_mood_neg  && hide_noplain['mood-neg' ])) continue;
-    }
-
-    // 8.4. Add item to the page
+    // 8.3. Add item to the page
     container.appendChild(item_wrapper);
     shown_cnt++;
   }
