@@ -160,8 +160,10 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   ////////
   // Marks
   //
-  let mark_counts = null;
-  let marks_total = 0; // Sum of marks on items (not a count of marked items)
+  let mark_counts    = null;
+//let marks_total    = 0; // Sum of marks on items (not a count of marked items)
+  let marked_items   = 0;
+  let nomarked_items = results_curr_exp.length;
 
   if (results_mark) {
     for (const rm of results_mark) {
@@ -172,7 +174,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
         const item = map_curr_exp[id];
         if (!item || item.no_prev) continue;
 
-        if (!item.marks) item.marks = [];
+        if (!item.marks) { item.marks = []; marked_items++; }
         item.marks.push(rm.mark);
         mark_count++;
       }
@@ -184,15 +186,17 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
         if (item.marks && item.marks.includes(rm.mark)) continue; // Avoid duplication of mark
 
-        if (!item.marks) item.marks = [];
+        if (!item.marks) { item.marks = []; marked_items++; }
         item.marks.push(rm.mark);
         mark_count++;
       }
 
       if (!mark_counts) mark_counts = [];
       mark_counts.push({ mark: rm.mark, count: mark_count });
-      marks_total += mark_count; // Count of marks on items (item marked twice is counted twice)
+//    marks_total += mark_count; // Count of marks on items (item marked twice is counted twice)
     }
+
+    nomarked_items -= marked_items;
   }
 
   ///////////////////////////////////////////////
@@ -299,7 +303,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   container.appendChild(show_div);
 
   // Marks displaying
-  const chk_nomark = marks_total && results_curr_exp.some(item => !item.marks); // Some marked and some not marked
+  const chk_nomark = marked_items && nomarked_items;
 
   if (mark_counts) {
     const marks_div = document.createElement("div");
@@ -313,7 +317,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       const nomark_label = document.createElement("label");
       nomark_label.htmlFor = "show-nomark";
       nomark_label.style.cursor = "pointer";
-      nomark_label.textContent = "Not marked Items";
+      nomark_label.textContent = "Not marked: " + format_num_str(nomarked_items, "Item");
 
       const nomark_chk = document.createElement("input");
       nomark_chk.checked = show_nomark;
@@ -336,7 +340,17 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     }
 
     // Marked
-    marks_div.appendChild(document.createTextNode('Marked: '));
+    const marked_span = document.createElement("span");
+    marked_span.className = "text-nowrap";
+
+    marked_span.appendChild(document.createTextNode("Marked:"));
+
+    if (mark_counts.length > 1) {
+      marked_span.appendChild(document.createTextNode(' ' + format_num_str(marked_items, "Item") + ':'));
+    }
+
+    marks_div.appendChild(marked_span);
+    marks_div.appendChild(document.createTextNode(' '));
 
     const mark_last = mark_counts.length - 1;
     for (let m = 0; m <= mark_last; m++) {
@@ -348,7 +362,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
       const mark_span = document.createElement("span");
       mark_span.className = "item-mark-" + m_mark + "-text";
-      mark_span.textContent = format_num_str(m_count, 'Item');
+      mark_span.textContent = format_num_str(m_count, "Item");
 
       if (m_count) {
         const mark_label = document.createElement("label");
@@ -404,7 +418,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       }
       else { // Marked 0 items by this mark
         nowrap_span.appendChild(mark_span);
-        if (m < mark_last) nowrap_span.appendChild(document.createTextNode(' /'));
+        if (m < mark_last) nowrap_span.appendChild(document.createTextNode(" /"));
       }
 
       marks_div.appendChild(nowrap_span);
