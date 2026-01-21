@@ -161,7 +161,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   // Marks
   //
   let mark_counts    = null;
+  let marks_count    = 0; // === mark_counts.length
 //let marks_total    = 0; // Sum of marks on items (not a count of marked items)
+  let marks_zero     = 0; // Mark present, but no items marked by this mark
   let marked_items   = 0;
   let nomarked_items = results_curr_exp.length;
 
@@ -193,7 +195,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
       if (!mark_counts) mark_counts = [];
       mark_counts.push({ mark: rm.mark, count: mark_count });
-//    marks_total += mark_count; // Count of marks on items (item marked twice is counted twice)
+      marks_count++;
+//    marks_total +=  mark_count; // Count of marks on items (item marked twice is counted twice)
+      marks_zero  += !mark_count; // No items marked by this mark
     }
 
     nomarked_items -= marked_items;
@@ -303,9 +307,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   container.appendChild(show_div);
 
   // Marks displaying
-  const chk_nomark = marked_items && nomarked_items;
+  const chk_nomark = marks_count && nomarked_items;
 
-  if (mark_counts) {
+  if (marks_count) {
     const marks_div = document.createElement("div");
     marks_div.className = "text-center text-comment";
 
@@ -345,14 +349,14 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
     marked_span.appendChild(document.createTextNode("Marked:"));
 
-    if (mark_counts.length > 1) {
+    if ((marks_count - marks_zero) > 1) { // Several non-zero marks (with items)
       marked_span.appendChild(document.createTextNode(' ' + format_num_str(marked_items, "Item") + ':'));
     }
 
     marks_div.appendChild(marked_span);
     marks_div.appendChild(document.createTextNode(' '));
 
-    const mark_last = mark_counts.length - 1;
+    const mark_last = marks_count - 1;
     for (let m = 0; m <= mark_last; m++) {
       const m_mark  = mark_counts[m].mark;
       const m_count = mark_counts[m].count;
