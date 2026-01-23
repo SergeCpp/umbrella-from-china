@@ -1,32 +1,34 @@
 /* Stat data sizes and templates */
 
-const views_length = 6; // 123456
-const  days_length = 5; // 12345
-const ratio_length = 7; // 123.567
+const views_length   = 6; // 123456
+const  days_length   = 5; // 12345
+const ratio_length   = 7; // 123.567
 
-const  stat_length = views_length + 2 + days_length + 2 + ratio_length; // Used in CSS as 22ch
-const  stat_empty  = "".padStart(stat_length);
+const  stat_length   = views_length + 2 + days_length + 2 + ratio_length; // Used in CSS as 22ch
+const  stat_empty    = "".padStart(stat_length);
 
-const  stat_sl     = " /";
-const  stat_23     = " /   23 =";
-const  stat_7      = " /    7 =";
-const  stat_eq     =        " =";
+const  stat_sl       = " /";
+const  stat_23       = " /   23 =";
+const  stat_7        = " /    7 =";
+const  stat_eq       =        " =";
 
 /* Which items to show */
 
-let show_prev      = true; function inp_prev  (chk) { show_prev  = chk.checked; }
-let show_curr      = true; function inp_curr  (chk) { show_curr  = chk.checked; }
-let show_both      = true; function inp_both  (chk) { show_both  = chk.checked; }
+let show_prev        = true; function inp_prev  (chk) { show_prev  = chk.checked; }
+let show_curr        = true; function inp_curr  (chk) { show_curr  = chk.checked; }
+let show_both        = true; function inp_both  (chk) { show_both  = chk.checked; }
 
-let show_plain     = true; function inp_plain (chk) { show_plain = chk.checked; }
+let show_plain       = true; function inp_plain (chk) { show_plain = chk.checked; }
 
-const show_noplain = {}; // [noplain] = true / false
-const hide_noplain = {}; // [noplain] = false / true
+const show_noplain   = {}; // [noplain] = true / false
+const hide_noplain   = {}; // [noplain] = false / true
 
-let show_nomark    = true;
+let show_nomark      = true;
 
-const show_mark    = {}; // [mark] = true / false
-const hide_mark    = {}; // [mark] = false / true
+const show_mark      = {}; // [mark] = true / false
+const hide_mark      = {}; // [mark] = false / true
+
+const show_marked_by = {}; // [num] = undefined (means true) / true / false
 
 function inp_show_hide(chk, accent) {
   if (show_noplain[accent]) {
@@ -160,12 +162,14 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   ////////
   // Marks
   //
-  let mark_counts    = null;
-  let marks_count    = 0; // === mark_counts.length
-//let marks_total    = 0; // Sum of marks on items (not a count of marked items)
-  let marks_zero     = 0; // Mark present, but no items marked by this mark
-  let marked_items   = 0;
-  let nomarked_items = results_curr_exp.length;
+  let mark_counts     = null;
+  let marks_count     = 0; // === mark_counts.length
+//let marks_total     = 0; // Sum of marks on items (not a count of marked items)
+  let marks_zero      = 0; // Mark present, but no items marked by this mark
+  let marked_by       = null;
+  let marked_by_multi = 0;
+  let marked_items    = 0;
+  let nomarked_items  = results_curr_exp.length;
 
   if (results_mark) {
     for (const rm of results_mark) {
@@ -201,6 +205,17 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     }
 
     nomarked_items -= marked_items;
+
+    // Gather "Marked by # marks" counts
+    for (const item of results_curr_exp) {
+      if (!item.marks) continue;
+      if (!marked_by) marked_by = {};
+
+      const num = item.marks.length;
+      marked_by[num] = (marked_by[num] || 0) + 1;
+    }
+
+    marked_by_multi = marked_items - (marked_by[1] || 0);
   }
 
   ///////////////////////////////////////////////
@@ -307,7 +322,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   container.appendChild(show_div);
 
   // Marks displaying
-  const chk_nomark = marks_count && nomarked_items;
+  const chk_nomark    = marks_count && nomarked_items;
+  const chk_marked_by = {}; // No filtering until allowed
 
   if (marks_count) {
     const marks_div = document.createElement("div");
@@ -346,7 +362,6 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     // Marked
     const marked_span = document.createElement("span");
     marked_span.className = "text-nowrap";
-
     marked_span.appendChild(document.createTextNode("Marked:"));
 
     if ((marks_count - marks_zero) > 1) { // Several non-zero marks (with items)
@@ -429,6 +444,55 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       if (m < mark_last) marks_div.appendChild(document.createTextNode(' '));
     }
     container.appendChild(marks_div);
+
+    if (marked_by_multi) {
+      const marked_by_div = document.createElement("div");
+      marked_by_div.className = "text-center text-comment";
+
+      const marked_by_span = document.createElement("span");
+      marked_by_span.className = "text-nowrap";
+      marked_by_span.textContent = "Marked by:";
+      marked_by_div.appendChild(marked_by_span);
+      marked_by_div.appendChild(document.createTextNode(' '));
+
+      const marked_by_nums = Object.keys(marked_by).map(Number).sort((a, b) => a - b);
+
+      const num_last = marked_by_nums.length - 1;
+      for (let n = 0; n <= num_last; n++) {
+        const num   = marked_by_nums[n];
+        const items = marked_by[num];
+
+        const by_span = document.createElement("span");
+        by_span.className = "text-nowrap";
+
+        const by_label = document.createElement("label");
+        by_label.htmlFor = "show-marked-by-" + num;
+        by_label.style.cursor = "pointer";
+        by_label.textContent = format_num_str(num, "Mark") + ": " + format_num_str(items, "Item");
+
+        const by_chk = document.createElement("input");
+        if (show_marked_by[num] === undefined) show_marked_by[num] = true; // Initialize
+        chk_marked_by[num] = true; // Allow to use for filtering
+        by_chk.checked = show_marked_by[num];
+        by_chk.className = "in-chk";
+        by_chk.id = "show-marked-by-" + num;
+        by_chk.type = "checkbox";
+
+        by_chk.oninput = () => { show_marked_by[num] = by_chk.checked; };
+
+        by_chk.onkeyup = (event) => {
+          if (event.key === 'Enter') {
+            process_filter();
+          }
+        };
+
+        by_span.appendChild(by_label);
+        by_span.appendChild(by_chk);
+        marked_by_div.appendChild(by_span);
+        if (n < num_last) marked_by_div.appendChild(document.createTextNode(' '));
+      }
+      container.appendChild(marked_by_div);
+    }
   }
 
   // Spacing
@@ -727,11 +791,14 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
     // Which items to show
     if (item.marks) {
+      const marks_num  = item.marks.length;
+
+      if (chk_marked_by[marks_num] && !show_marked_by[marks_num]) continue;
+
       let to_show_mark = false;
       let to_hide_mark = false;
 
-      const mark_last = item.marks.length - 1;
-      for (let m = 0; m <= mark_last; m++) {
+      for (let m = 0; m < marks_num; m++) {
         const m_mark = item.marks[m];
 
         if (show_mark[m_mark])   to_show_mark = true;

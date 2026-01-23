@@ -183,7 +183,7 @@ let   tab_active       = null;
 const tab_input_ids    = input_ids;
 const tab_input_values = {}; // [tab] = { values }; [""] = { defaults };
 
-const tab_filter_modes = ["OR", "AND", "DIFF", "NONE", "ONE", "TWO", "THREE", "FOUR"];
+const tab_filter_modes = ["OR", "AND", "DIFF", "MULTI", "NONE", "ONE", "TWO", "THREE", "FOUR"];
 const tab_mode         = {   // [tab] = "" / "Filter"; ['c'] see tab_filter_modes
   a: "",
   b: "",
@@ -532,7 +532,8 @@ function filter_by_marks_side(items, marks, mode) {
       }
       break;
 
-    case "DIFF":
+    case "DIFF" :
+    case "MULTI":
       if (marks.length === 1) return [];
 
       for (const mark of marks) {
@@ -552,6 +553,10 @@ function filter_by_marks_side(items, marks, mode) {
     case "DIFF":
       return items.filter(item =>  combined_ids[item.identifier] &&
                                   (combined_ids[item.identifier] < marks.length));
+
+    case "MULTI":
+      return items.filter(item =>  combined_ids[item.identifier] &&
+                                  (combined_ids[item.identifier] > 1));
   }
 
   return []; // Unknown mode
@@ -560,10 +565,11 @@ function filter_by_marks_side(items, marks, mode) {
 // Array of marks is not empty
 function filter_by_marks(prev, curr, marks, mode) {
   switch (mode) {
-    case "OR"  :
-    case "AND" :
-    case "DIFF":
-    case "NONE": {
+    case "OR"   :
+    case "AND"  :
+    case "DIFF" :
+    case "MULTI":
+    case "NONE" : {
       const results_prev = filter_by_marks_side(prev, marks.map(mark => mark.prev), mode);
       const results_curr = filter_by_marks_side(curr, marks.map(mark => mark.curr), mode);
 
@@ -605,6 +611,10 @@ function filter_by_marks(prev, curr, marks, mode) {
   let results_prev = prev.filter(item => group_prev_ids[item.identifier] === mode_cnt);
   let results_curr = curr.filter(item => group_curr_ids[item.identifier] === mode_cnt);
 
+  // Correction for overmarked and undermarked items performed solely because of whole-item-based marking
+  // Whereas filtering is side-based (cell-based)
+  // See details of item marking in render_results
+
   // Remove overmarked items that passed filter (differently marked cells of prev/curr sides)
   // If prev: a and curr: b then both: a, b (overmark for ONE)
   if (mark_cnt > mode_cnt) { // The only case overmarking can occur
@@ -643,7 +653,7 @@ function filter_by_marks(prev, curr, marks, mode) {
   for (const item of curr) {
     const id = item.identifier;
     if (!side_prev[id]) continue;
-    if (group_curr_ids[id] === group_prev_ids[id]) { // The only case of undermarking
+    if (group_curr_ids[id] === group_prev_ids[id]) { // The only case of undermarking (to match overmarking)
       results_prev.push(side_prev[id]);
       results_curr.push(item);
     }
