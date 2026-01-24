@@ -164,10 +164,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   //
   let mark_counts     = null;
   let marks_count     = 0; // === mark_counts.length
-//let marks_total     = 0; // Sum of marks on items (not a count of marked items)
+  let marks_populated = 0; // Marks that have items marked by this mark
   let marks_zero      = 0; // Mark present, but no items marked by this mark
   let marked_by       = null;
-  let marked_by_multi = 0;
   let marked_items    = 0;
   let nomarked_items  = results_curr_exp.length;
 
@@ -200,10 +199,10 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       if (!mark_counts) mark_counts = [];
       mark_counts.push({ mark: rm.mark, count: mark_count });
       marks_count++;
-//    marks_total +=  mark_count; // Count of marks on items (item marked twice is counted twice)
-      marks_zero  += !mark_count; // No items marked by this mark
+      marks_zero += !mark_count; // No items marked by this mark
     }
 
+    marks_populated = marks_count - marks_zero;
     nomarked_items -= marked_items;
 
     // Gather "Marked by # marks" counts
@@ -214,8 +213,6 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       const num = item.marks.length;
       marked_by[num] = (marked_by[num] || 0) + 1;
     }
-
-    marked_by_multi = marked_items - (marked_by[1] || 0);
   }
 
   ///////////////////////////////////////////////
@@ -322,8 +319,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   container.appendChild(show_div);
 
   // Marks displaying
-  const chk_nomark    = marks_count && nomarked_items;
-  const chk_marked_by = {}; // No filtering until allowed
+  const chk_nomark    =  marks_count && nomarked_items;
+  const chk_marked_by = (marks_populated > 1);
 
   if (marks_count) {
     const marks_div = document.createElement("div");
@@ -364,7 +361,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     marked_span.className = "text-nowrap";
     marked_span.appendChild(document.createTextNode("Marked:"));
 
-    if ((marks_count - marks_zero) > 1) { // Several non-zero marks (with items)
+    if (marks_populated > 1) {
       marked_span.appendChild(document.createTextNode(' ' + format_num_str(marked_items, "Item") + ':'));
     }
 
@@ -445,7 +442,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     }
     container.appendChild(marks_div);
 
-    if (marked_by_multi) {
+    if (chk_marked_by) {
       const marked_by_div = document.createElement("div");
       marked_by_div.className = "text-center text-comment";
 
@@ -472,7 +469,6 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
         const by_chk = document.createElement("input");
         if (show_marked_by[num] === undefined) show_marked_by[num] = true; // Initialize
-        chk_marked_by[num] = true; // Allow to use for filtering
         by_chk.checked = show_marked_by[num];
         by_chk.className = "in-chk";
         by_chk.id = "show-marked-by-" + num;
@@ -793,7 +789,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     if (item.marks) {
       const marks_num  = item.marks.length;
 
-      if (chk_marked_by[marks_num] && !show_marked_by[marks_num]) continue;
+      if (chk_marked_by && !show_marked_by[marks_num]) continue;
 
       let to_show_mark = false;
       let to_hide_mark = false;
