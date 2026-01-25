@@ -223,13 +223,13 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   const totals_div      = document.createElement("div");
   totals_div.className  ="subtitle text-center text-normal";
   totals_div.innerHTML  =
-    format_nowrap(format_num_str(curr_exp_total,            'Item'))        + ' ' +
+    format_nowrap(format_num_str(curr_exp_total,            'Item'))       + ' ' +
     format_nowrap(
-            '(' + format_number (curr_exp_totals.audio) +  ' Audio' + ' /'  + ' ' +
-                  format_number (curr_exp_totals.video) +  ' Video)')       + ' ' +
-    format_nowrap(format_bytes  (curr_exp_totals.bytes)             + ' /') + ' ' +
-    format_nowrap(format_num_str(curr_exp_totals.views,     'View') + ' /') + ' ' +
-    format_nowrap(format_num_str(curr_exp_totals.favorites, 'Fav' )         + ' ' +
+            '(' + format_number (curr_exp_totals.audio) +  ' Audio' + ','  + ' ' +
+                  format_number (curr_exp_totals.video) +  ' Video)')      + ' ' +
+    format_nowrap(format_bytes  (curr_exp_totals.bytes)             + ',') + ' ' +
+    format_nowrap(format_num_str(curr_exp_totals.views,     'View') + ',') + ' ' +
+    format_nowrap(format_num_str(curr_exp_totals.favorites, 'Fav' )        + ' ' +
             '(' + format_num_str(curr_exp_totals.favorited, 'Item') + ')');
   container.appendChild(totals_div);
 
@@ -279,9 +279,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
     // Span wrappers around checkboxes are needed also for text not to become too small
     sets_div.innerHTML =
-      format_nowrap(pre_prev + only_prev + ' in Prev only' + suf_prev) + ' ' +
-      format_nowrap(pre_curr + only_curr + ' in Curr only' + suf_curr) + ' ' +
-      format_nowrap(pre_both + only_both + ' in both'      + suf_both);
+      format_nowrap(pre_prev + format_num_str(only_prev, "Item") + ' in Prev only' + suf_prev) + ' ' +
+      format_nowrap(pre_curr + format_num_str(only_curr, "Item") + ' in Curr only' + suf_curr) + ' ' +
+      format_nowrap(pre_both + format_num_str(only_both, "Item") + ' in both'      + suf_both);
   }
   else { // No items in prev/curr only
     sets_div.innerHTML =
@@ -434,7 +434,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       }
       else { // Marked 0 items by this mark
         nowrap_span.appendChild(mark_span);
-        if (m < mark_last) nowrap_span.appendChild(document.createTextNode(" /"));
+        if (m < mark_last) nowrap_span.appendChild(document.createTextNode(','));
       }
 
       marks_div.appendChild(nowrap_span);
