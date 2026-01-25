@@ -497,8 +497,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   ////////////////////////
   // Log scaling of gauges
   //
-  const max_ratio     = Math.max(curr_exp_totals.max_ratio_old, curr_exp_totals.max_ratio_all);
-  const max_favorites = curr_exp_totals.max_favorites;
+  const max_ratio      = Math.max(curr_exp_totals.max_ratio_old, curr_exp_totals.max_ratio_all);
+  const max_favorites  = curr_exp_totals.max_favorites;
   //
   const base_ratio     = 100 / Math.log(max_ratio     + 1);
   const base_favorites = 100 / Math.log(max_favorites + 1);
@@ -513,46 +513,46 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   //
   // For log/sig scaling of marks
   //
-  const curr_length   = results_curr_exp.length;
-//const curr_log_base = Math.log(curr_length); // For length === 1 is checked below, 0 was checked above
+  const curr_length    = results_curr_exp.length;
+//const curr_log_base  = Math.log(curr_length); // For length === 1 is checked below, 0 was checked above
   //
   // Substantial changes marking: horizontal impact of old      from prev to     curr
   // Substantial changes marking: vertical   impact of 23 and 7 into all  within curr
   //
-  const horz_decay     = 10; // For scale from top: 1 to bottom: 1/10
-//const horz_log_steep = 1;  // No steep here, just log
+  const horz_decay     = 20;  // For scale from top: 1 to bottom: 1/20
+//const horz_log_steep = 1;   // No steep here, just log
   const horz_sig_base  = 0.1;
   const horz_sig_steep = 2;
   const horz_sig_min   = 1 / (1 + Math.exp((horz_sig_base - 0) * horz_sig_steep));
   const horz_sig_max   = 1 / (1 + Math.exp((horz_sig_base - 1) * horz_sig_steep));
-  const horz_curr_prev = []; // Of curr_length anyway
+  const horz_curr_prev = [];  // Of curr_length anyway
   //
-  const vert_decay     = 10; // Scale divisor: 1 to 10
-//const vert_log_steep = 1;  // No steep here, just log
+  const vert_decay     = 20;  // Scale divisor: 1 to 20
+//const vert_log_steep = 1;   // No steep here, just log
   const vert_sig_base  = 0.1;
   const vert_sig_steep = 2;
   const vert_sig_min   = 1 / (1 + Math.exp((vert_sig_base - 0) * vert_sig_steep));
   const vert_sig_max   = 1 / (1 + Math.exp((vert_sig_base - 1) * vert_sig_steep));
-  const vert_all_old   = []; // Of curr_length anyway
+  const vert_all_old   = [];  // Of curr_length anyway
   //
   // Mark rank changes
   // Mark mood changes
   //
-  const rank_decay     = 40; // Scale divisor: 1 to 40
-//const rank_log_steep = 3;  // To more than log prioritize top items
+  const rank_decay     = 120; // Scale divisor: 1 to 120
+//const rank_log_steep = 3;   // To more than log prioritize top items
   const rank_sig_base  = 0.2;
-  const rank_sig_steep = 5;
+  const rank_sig_steep = 6;
   const rank_sig_min   = 1 / (1 + Math.exp((rank_sig_base - 0) * rank_sig_steep));
   const rank_sig_max   = 1 / (1 + Math.exp((rank_sig_base - 1) * rank_sig_steep));
-  const rank_up_dn     = []; // Of curr_length anyway
+  const rank_up_dn     = [];  // Of curr_length anyway
   //
-  const mood_decay     = 10; // Scale divisor: 1 to 10
-//const mood_log_steep = 2;  // To more than log prioritize top items
+  const mood_decay     = 30;  // Scale divisor: 1 to 30
+//const mood_log_steep = 2;   // To more than log prioritize top items
   const mood_sig_base  = 0.1;
   const mood_sig_steep = 3;
   const mood_sig_min   = 1 / (1 + Math.exp((mood_sig_base - 0) * mood_sig_steep));
   const mood_sig_max   = 1 / (1 + Math.exp((mood_sig_base - 1) * mood_sig_steep));
-  const mood_pos_neg   = []; // Of curr_length anyway
+  const mood_pos_neg   = [];  // Of curr_length anyway
   //
   // Gauges
   //
