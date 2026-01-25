@@ -136,7 +136,7 @@ pre i {
 .text-ellipsis {
   overflow-x: clip; /* For the ellipsis. Value "hidden" may add vertical spacing to element */
   text-overflow: ellipsis;
-  text-wrap-mode: nowrap;
+  text-wrap: nowrap;
 }
 .text-justify {
   text-align: justify;
@@ -145,10 +145,10 @@ pre i {
   font-weight: normal;
 }
 .text-nowrap {
-  text-wrap-mode: nowrap;
+  text-wrap: nowrap;
 }
 .text-pretty {
-  text-wrap-style: pretty;
+  text-wrap: pretty;
 }
 .text-top-right {
   margin-top: 0;
