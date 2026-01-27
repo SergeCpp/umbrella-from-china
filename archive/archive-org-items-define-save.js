@@ -763,18 +763,18 @@ function process_filter() {
 
   // Performance
   timings.innerHTML =
-    format_nowrap('Cache: ' + sf_cache_size            +   ' / ' +
-                              sf_cache_hits            +   ' / ' +
-                              sf_cache_misses          +    ',') + '&ensp;' +
-    format_nowrap('Load: '  + du_load      .toFixed(1) +   ' / ' +
-           stat_subjects     .du_load      .toFixed(1) +   ' / ' +
-           stat_descriptions .du_load      .toFixed(1) + ' ms,') + '&ensp;' +
-    format_nowrap('Parse '  + du_parse     .toFixed(1) +   ' / ' +
-           stat_subjects     .du_parse     .toFixed(1) +   ' / ' +
-           stat_descriptions .du_parse     .toFixed(1) + ' ms,') + '&ensp;' +
-    format_nowrap('Filter ' + du_filter    .toFixed(1) + ' ms,') + '&ensp;' +
-    format_nowrap('Render ' + du_render.pre.toFixed(1) +   ' / ' +
-                              du_render.dom.toFixed(1) + ' ms' );
+    format_nowrap('Cache: '  + sf_cache_size            +   ' / ' +
+                               sf_cache_hits            +   ' / ' +
+                               sf_cache_misses          +    ',') + '&ensp;' +
+    format_nowrap('Load: '   + du_load      .toFixed(1) +   ' / ' +
+           stat_subjects      .du_load      .toFixed(1) +   ' / ' +
+           stat_descriptions  .du_load      .toFixed(1) + ' ms,') + '&ensp;' +
+    format_nowrap('Parse: '  + du_parse     .toFixed(1) +   ' / ' +
+           stat_subjects      .du_parse     .toFixed(1) +   ' / ' +
+           stat_descriptions  .du_parse     .toFixed(1) + ' ms,') + '&ensp;' +
+    format_nowrap('Filter: ' + du_filter    .toFixed(1) + ' ms,') + '&ensp;' +
+    format_nowrap('Render: ' + du_render.pre.toFixed(1) +   ' / ' +
+                               du_render.dom.toFixed(1) + ' ms' );
   } catch (err) {
     container.innerHTML = error_compose("Error: " + err.message);
   }
