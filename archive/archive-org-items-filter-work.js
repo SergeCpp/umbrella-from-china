@@ -51,7 +51,8 @@ const err_views =
     'topn/tn, btmn/bn for min; topa/ta, btma/ba for avg; topx/tx, btmx/bx for max;<br />' +
     'topd/td, btmd/bd for add; tops/ts, btms/bs for sub;<br />' +
     'top+/t+, btm+/b+ for pos; top-/t-, btm-/b- for neg;<br />' +
-    'topp/tp, btmp/bp for prev; topc/tc, btmc/bc for curr' +
+    'topp/tp, btmp/bp for prev; topc/tc, btmc/bc for curr<br />' +
+  'Equally ranked items ordered by date archived: min selects newer, max selects older' +
   '</p><p>' +
   'Keys: grow, fall, same, diff (aliases: / \\ = !) switch min/max logic to prev/curr logic<br />' +
   'Key allows number after it, and percent sign % can be after number' +

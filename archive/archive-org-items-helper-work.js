@@ -111,6 +111,7 @@ function filter_base(stats_items, stats_date,
       favorites,
 
 //     days_all,
+       time_all : publicdate.getTime(),
       views_all,
       ratio_all,
 
@@ -498,7 +499,7 @@ function agg_value(prev, curr, agg) {
 }
 
 // n is 1-based
-function agg_nth(count_prev, count_curr, n, agg) {
+function agg_nth(count_prev, count_curr, n, agg, time) {
   const values = [];
 
   for (const identifier in count_prev) {
@@ -507,13 +508,15 @@ function agg_nth(count_prev, count_curr, n, agg) {
     const icp = count_prev[identifier];
     const icc = count_curr[identifier];
 
-    values.push(agg_value(icp, icc, agg));
+    values.push([agg_value(icp, icc, agg), time[identifier]]);
   }
 
   const values_len = values.length;
-  if  (!values_len) return 0;
+  if  (!values_len) return [0, null];
 
-  values.sort((above, below) => above - below); // Ascending
+  values.sort((above, below) => above[0] !== below[0]
+                              ? above[0] -   below[0]   // Lowest count to start of array
+                              : above[1] -   below[1]); // Oldest time  to start of array
 
   if (n < 1)          n = 1;
   if (n > values_len) n = values_len;
@@ -523,15 +526,15 @@ function agg_nth(count_prev, count_curr, n, agg) {
   if (agg_prefix === "top") return values[values_len - n];
   if (agg_prefix === "btm") return values[n          - 1];
 
-  return 0;
+  return [0, null];
 }
 
 // Usage: At least one of *_agg must be of: see get_agg
 // If one of *_agg is not set, then this side uses agg of other side
 function filter_count_range_agg(items_prev, items_curr,
   min_str, min_agg, max_str, max_agg, get_count) {
-  let min = min_str ? parseInt(min_str, 10) : 0;
-  let max = max_str ? parseInt(max_str, 10) : Infinity;
+  let min_count = min_str ? parseInt(min_str, 10) : 0;
+  let max_count = max_str ? parseInt(max_str, 10) : Infinity;
 
   if (!min_agg) min_agg = max_agg;
   if (!max_agg) max_agg = min_agg;
@@ -548,13 +551,25 @@ function filter_count_range_agg(items_prev, items_curr,
 
   const is_nth = (s) => ["top", "btm"].includes(s);
 
-  if (is_nth(min_agg_prefix)) {
-    const n = min_str ? min : (min_agg_prefix === "btm") ? 0 : Infinity;
-    min = agg_nth(count_prev, count_curr, n, min_agg);
+  const is_nth_min = is_nth(min_agg_prefix);
+  const is_nth_max = is_nth(max_agg_prefix);
+
+  const time = {};
+
+  if (is_nth_min || is_nth_max) {
+    for (const item of items_prev) time[item.identifier] = item.time_all; // prev.time_all === curr.time_all
   }
-  if (is_nth(max_agg_prefix)) {
-    const n = max_str ? max : (max_agg_prefix === "top") ? 0 : Infinity;
-    max = agg_nth(count_prev, count_curr, n, max_agg);
+
+  let min_time = null;
+  let max_time = null;
+
+  if (is_nth_min) { // Use min_count as n
+    const n = min_str ? min_count : (min_agg_prefix === "btm") ? 0 : Infinity;
+    [min_count, min_time] = agg_nth(count_prev, count_curr, n, min_agg, time);
+  }
+  if (is_nth_max) { // Use max_count as n
+    const n = max_str ? max_count : (max_agg_prefix === "top") ? 0 : Infinity;
+    [max_count, max_time] = agg_nth(count_prev, count_curr, n, max_agg, time);
   }
 
   // Filtering
@@ -569,7 +584,10 @@ function filter_count_range_agg(items_prev, items_curr,
     const ic_agg_min = agg_value(icp, icc, min_agg);
     const ic_agg_max = agg_value(icp, icc, max_agg);
 
-    if ((ic_agg_min >= min) && (ic_agg_max <= max)) {
+    if ((ic_agg_min >= min_count) && (ic_agg_max <= max_count)) {
+      if ((ic_agg_min === min_count) && min_time && (time[identifier] < min_time)) continue; // Older than min_time
+      if ((ic_agg_max === max_count) && max_time && (time[identifier] > max_time)) continue; // Newer than max_time
+
       res[identifier] = true;
     }
   }
