@@ -209,14 +209,13 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   const totals_div      = document.createElement("div");
   totals_div.className  ="subtitle text-center text-normal";
   totals_div.innerHTML  =
-    format_nowrap(format_num_str(curr_exp_total,            'Item'))       + ' ' +
-    format_nowrap(
-            '(' + format_number (curr_exp_totals.audio) +  ' Audio' + ','  + ' ' +
-                  format_number (curr_exp_totals.video) +  ' Video)')      + ' ' +
+    format_nowrap(format_num_str(curr_exp_total,            'Item') + ':') + ' ' +
+    format_nowrap(format_number (curr_exp_totals.audio)  + ' Audio' +    ' and ' +
+                  format_number (curr_exp_totals.video)  + ' Video' + ',') + ' ' +
     format_nowrap(format_bytes  (curr_exp_totals.bytes)             + ',') + ' ' +
     format_nowrap(format_num_str(curr_exp_totals.views,     'View') + ',') + ' ' +
-    format_nowrap(format_num_str(curr_exp_totals.favorites, 'Fav' )        + ' ' +
-            '(' + format_num_str(curr_exp_totals.favorited, 'Item') + ')');
+    format_nowrap(format_num_str(curr_exp_totals.favorites, 'Fav' ) +     ' on ' +
+                  format_num_str(curr_exp_totals.favorited, 'Item'));
   container.appendChild(totals_div);
 
   // Both stats displaying
