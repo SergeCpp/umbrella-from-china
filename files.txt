@@ -19,8 +19,8 @@ https://umbrella-from-china.neocities.org/archive/archive-org-items.html
 ---------------------------------
 1 css + 1 html + 12 js = 14 files
 
-See archive-dates.txt for the complete actual stat list
--------------------------------------------------------
+Queries for xml generation are in the archive-org-items.html comment block
+--------------------------------------------------------------------------
 https://umbrella-from-china.neocities.org/archive/stats/archive-dates.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-07-21.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-07-23.xml.txt
@@ -327,9 +327,9 @@ https://umbrella-from-china.neocities.org/ziyan-dancer.txt
 
 The total size of the site files is less than 72 megabytes
 
-No external images hotlinking, all images are hosted on Neocities
+No external images hotlinking, all images are hosted on this site
 
-All audio and video files are from Internet Archive (archive.org), with some of them are copied onto udrop.com
+All audio and video files are from Internet Archive (archive.org), with some of them mirrored on udrop.com
 
 EOF
 
