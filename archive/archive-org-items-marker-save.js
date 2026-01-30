@@ -268,19 +268,44 @@ function low_first(str) {
 
 /* Sorting */
 
-function sort_results(results) {
-  results.sort((a, b) => { // Descending for ratios
-    if (a.ratio_old !== b.ratio_old) { return b.ratio_old - a.ratio_old; }
-    if (a.ratio_23  !== b.ratio_23 ) { return b.ratio_23  - a.ratio_23;  }
-    if (a.ratio_7   !== b.ratio_7  ) { return b.ratio_7   - a.ratio_7;   }
-    return a.title.localeCompare(b.title); // Ascending for titles: A >> Z
-  });
+function sort_results(results, by) {
+  switch (by) {
+    case "ratio":
+      // Descending by ratio: max >> min
+      //  Ascending by title:   A >> Z
+      results.sort((a, b) => a.ratio_old !== b.ratio_old ? b.ratio_old - a.ratio_old
+                           : a.ratio_23  !== b.ratio_23  ? b.ratio_23  - a.ratio_23
+                           : a.ratio_7   !== b.ratio_7   ? b.ratio_7   - a.ratio_7
+                           : a.title.localeCompare(b.title));
+      return;
+
+    case "views":
+      // Descending by views: max >> min
+      //  Ascending by title:   A >> Z
+      results.sort((a, b) => a.views_old !== b.views_old ? b.views_old - a.views_old
+                           : a.views_23  !== b.views_23  ? b.views_23  - a.views_23
+                           : a.views_7   !== b.views_7   ? b.views_7   - a.views_7
+                           : a.title.localeCompare(b.title));
+      return;
+
+    // No sort by default
+  }
 }
 
 /* Render */
 
-function render_stats(results, date, what, container) {
-  sort_results(results);
+function render_stats(results, date, what, sort_by, container) {
+  let field  = null;
+  let format = null;
+
+  switch (sort_by) {
+    case "ratio": field = "ratio_old"; format = (value) => value.toFixed(3);     break;
+    case "views": field = "views_old"; format = (value) => format_number(value); break;
+
+    default: return; // Unknown sort_by
+  }
+
+  sort_results(results, sort_by);
 
   // Show stats: Min, 10%, 25%, 50%, 75%, 90%, Max
   const stats_text = document.createElement("div");
@@ -288,13 +313,13 @@ function render_stats(results, date, what, container) {
   stats_text.style.color = "#696969"; // DimGray, L41
 
   // Calculate stats from sorted results
-  const max = results[0                 ]?.ratio_old || 0;
-  const min = results[results.length - 1]?.ratio_old || 0;
+  const max = format(results[0                 ]?.[field] || 0);
+  const min = format(results[results.length - 1]?.[field] || 0);
 
   // Simple percentile approximations (array is already sorted)
   const get_percentile = (percent) => {
     const index = Math.floor((100 - percent) / 100 * results.length);
-    return results[index]?.ratio_old || 0;
+    return format(results[index]?.[field] || 0);
   };
 
   const percentile10 = get_percentile(10);
@@ -306,19 +331,19 @@ function render_stats(results, date, what, container) {
   stats_text.innerHTML =
     format_nowrap(cap_first(what) + ' ' +
       '<span ' +
-      'role="button" style="cursor:pointer;" tabindex="0" ' +
+      'role="button" style="cursor: pointer;" tabindex="0" ' +
       'onkeydown="if ((event.key === \'Enter\') || (event.key === \' \')) event.preventDefault();" ' +
       'onkeyup  ="if ((event.key === \'Enter\') || (event.key === \' \')) ' +
                  'date_change_menu(event, \'' + what + '\');" ' +
       'onclick  ="date_change_menu(event, \'' + what + '\')" ' +
-      '>' + date + '</span>' + ':')                       + '&ensp;' +
-    format_nowrap('Min ' + min         .toFixed(3) + ',') + '&ensp;' +
-    format_nowrap('10% ' + percentile10.toFixed(3) + ',') + '&ensp;' +
-    format_nowrap('25% ' + quartile1   .toFixed(3) + ',') + '&ensp;' +
-    format_nowrap('50% ' + median      .toFixed(3) + ',') + '&ensp;' +
-    format_nowrap('75% ' + quartile3   .toFixed(3) + ',') + '&ensp;' +
-    format_nowrap('90% ' + percentile90.toFixed(3) + ',') + '&ensp;' +
-    format_nowrap('Max ' + max         .toFixed(3));
+      '>' + date + '</span>' + ':')            + '&ensp;' +
+    format_nowrap('Min ' + min          + ',') + '&ensp;' +
+    format_nowrap('10% ' + percentile10 + ',') + '&ensp;' +
+    format_nowrap('25% ' + quartile1    + ',') + '&ensp;' +
+    format_nowrap('50% ' + median       + ',') + '&ensp;' +
+    format_nowrap('75% ' + quartile3    + ',') + '&ensp;' +
+    format_nowrap('90% ' + percentile90 + ',') + '&ensp;' +
+    format_nowrap('Max ' + max);
 
   container.appendChild(stats_text);
 }

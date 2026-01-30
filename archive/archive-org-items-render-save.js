@@ -1,3 +1,7 @@
+/* How to sort items */
+
+let sort_by          = "ratio"; // "ratio" / "views"
+
 /* Which items to show */
 
 let show_prev        = true; function inp_prev  (chk) { show_prev  = chk.checked; }
@@ -125,9 +129,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   // Sets
   only_both = results_curr_exp.length - only_curr - only_prev;
 
-  // Sort expanded arrays for rank changes calculations
-  sort_results(results_curr_exp);
-  sort_results(results_prev_exp);
+  // Sort expanded arrays for show in list (curr) and rank changes calculations (both)
+  sort_results(results_curr_exp, sort_by);
+  sort_results(results_prev_exp, sort_by);
 
   // Create a map of curr expanded results by identifier
   // Set no_prev actual values in curr expanded results
@@ -219,8 +223,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   container.appendChild(totals_div);
 
   // Both stats displaying
-  render_stats(results_prev, date_prev, "prev", container); // Also sorts results_prev
-  render_stats(results_curr, date_curr, "curr", container); // Also sorts results_curr
+  render_stats(results_prev, date_prev, "prev", sort_by, container); // Also sorts results_prev
+  render_stats(results_curr, date_curr, "curr", sort_by, container); // Also sorts results_curr
 
   // Which items to show
   const pre_chk_html = (id) => {
@@ -527,11 +531,35 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   header_stat_prev_wrapper.appendChild(header_stat_prev_inner);
   //
   const header_stat_curr_wrapper = document.createElement("div");
-  header_stat_curr_wrapper.className = "header-stat-wrapper bg-fall";
+  header_stat_curr_wrapper.className = "header-stat-wrapper bg-fall is-button";
   const header_stat_curr_inner = document.createElement("div");
   header_stat_curr_inner.className = "header-stat-inner subtitle";
   header_stat_curr_inner.textContent = "Curr";
   header_stat_curr_wrapper.appendChild(header_stat_curr_inner);
+  //
+  header_stat_curr_wrapper.setAttribute("role", "button");
+  header_stat_curr_wrapper.style.cursor = "pointer";
+  header_stat_curr_wrapper.style.outlineOffset = "-2px";
+  header_stat_curr_wrapper.tabIndex = 0;
+  //
+  header_stat_curr_wrapper.onclick = () => {
+    sort_by = (sort_by === "ratio") ? "views" : "ratio";
+    process_filter();
+  };
+  //
+  header_stat_curr_wrapper.onkeyup = (event) => {
+    const key = event.key;
+    if ((key === 'Enter') || (key === ' ')) {
+      header_stat_curr_wrapper.click();
+    }
+  };
+  //
+  header_stat_curr_wrapper.onkeydown = (event) => {
+    const key = event.key;
+    if ((key === 'Enter') || (key === ' ')) {
+      event.preventDefault();
+    }
+  };
   //
   const header_stat_grow_wrapper = document.createElement("div");
   header_stat_grow_wrapper.className = "header-grow-wrapper bg-grow";
