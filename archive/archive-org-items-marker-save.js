@@ -526,18 +526,13 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by) {
     }
     horz_curr_prev.push(horz_change); // Needed in array anyway
     //
+    // Vert change
+    //
     let vert_change = 0;
     if (!item.is_prev) { // Item is markable
-      if (show_by_old) {
-        vert_change = (item.ratio_30 && item.ratio_old)
-            ? Math.log(item.ratio_30 /  item.ratio_old)
-            : 0;
-      }
-      else {
-        vert_change = (item.ratio_30 && item.ratio_all)
-            ? Math.log(item.ratio_30 /  item.ratio_all)
-            : 0;
-      }
+      vert_change = (item.ratio_30 && item.ratio_old)
+          ? Math.log(item.ratio_30 /  item.ratio_old) // The same change for both show_by values
+          : 0;
       if (vert_change) {
 //      const vert_scale = get_scale_log(index_curr, curr_log_base, vert_log_steep, vert_decay);
         const vert_scale = get_scale_sig(index_curr, curr_length,
