@@ -268,44 +268,50 @@ function low_first(str) {
 
 /* Sorting */
 
-function sort_results(results, by) {
-  switch (by) {
-    case "ratio":
-      // Descending by ratio: max >> min
-      //  Ascending by title:   A >> Z
-      results.sort((a, b) => a.ratio_old !== b.ratio_old ? b.ratio_old - a.ratio_old
-                           : a.ratio_23  !== b.ratio_23  ? b.ratio_23  - a.ratio_23
-                           : a.ratio_7   !== b.ratio_7   ? b.ratio_7   - a.ratio_7
-                           : a.title.localeCompare(b.title));
-      return;
+function sort_results(results, show_by, sort_by) {
+  let field_1 = null;
+  let field_2 = null;
+  let field_3 = null;
 
-    case "views":
-      // Descending by views: max >> min
-      //  Ascending by title:   A >> Z
-      results.sort((a, b) => a.views_old !== b.views_old ? b.views_old - a.views_old
-                           : a.views_23  !== b.views_23  ? b.views_23  - a.views_23
-                           : a.views_7   !== b.views_7   ? b.views_7   - a.views_7
-                           : a.title.localeCompare(b.title));
-      return;
+  switch (show_by + sort_by) {
+    case "old-23-7" + "ratio": field_1 = "ratio_old"; field_2 = "ratio_23"; field_3 = "ratio_7"; break;
+    case "old-23-7" + "views": field_1 = "views_old"; field_2 = "views_23"; field_3 = "views_7"; break;
+    case "all-30-7" + "ratio": field_1 = "ratio_all"; field_2 = "ratio_30"; field_3 = "ratio_7"; break;
+    case "all-30-7" + "views": field_1 = "views_all"; field_2 = "views_30"; field_3 = "views_7"; break;
 
-    // No sort by default
+    default: return; // Unknown parameters
   }
+
+  // Descending by value: max >> min
+  //  Ascending by title:   A >> Z
+  results.sort((a, b) => a[field_1] !== b[field_1] ? b[field_1] - a[field_1]
+                       : a[field_2] !== b[field_2] ? b[field_2] - a[field_2]
+                       : a[field_3] !== b[field_3] ? b[field_3] - a[field_3]
+                       : a.title.localeCompare(b.title));
 }
 
 /* Render */
 
-function render_stats(results, date, what, sort_by, container) {
-  let field  = null;
+function render_stats(results, date, what, show_by, sort_by, container) {
+  let field = null;
+
+  switch (show_by + sort_by) {
+    case "old-23-7" + "ratio": field = "ratio_old"; break;
+    case "old-23-7" + "views": field = "views_old"; break;
+    case "all-30-7" + "ratio": field = "ratio_all"; break;
+    case "all-30-7" + "views": field = "views_all"; break;
+
+    default: return; // Unknown parameters
+  }
+
   let format = null;
 
   switch (sort_by) {
-    case "ratio": field = "ratio_old"; format = (value) => value.toFixed(3);     break;
-    case "views": field = "views_old"; format = (value) => format_number(value); break;
-
-    default: return; // Unknown sort_by
+    case "ratio": format = (value) => value.toFixed(3);     break;
+    case "views": format = (value) => format_number(value); break;
   }
 
-  sort_results(results, sort_by);
+  sort_results(results, show_by, sort_by);
 
   // Show stats: Min, 10%, 25%, 50%, 75%, 90%, Max
   const stats_text = document.createElement("div");
@@ -359,11 +365,14 @@ const  stat_length = views_length + 2 + days_length + 2 + ratio_length; // Used 
 const  stat_empty  = "".padStart(stat_length);
 
 const  stat_sl     = " /";
+const  stat_30     = " /   30 =";
 const  stat_23     = " /   23 =";
 const  stat_7      = " /    7 =";
 const  stat_eq     =        " =";
 
-function compose_items(results_curr_exp, curr_exp_totals, map_prev) {
+function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by) {
+  const show_by_old = (show_by === "old-23-7"); // Else by "all-30-7"
+
   ////////////////////////
   // Log scaling of gauges
   //
@@ -435,13 +444,24 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev) {
     //
     const _prev = {}; // _old, _23, _7
     if (!item.no_prev) {
-      _prev._old = item_prev.views_old.toString().padStart(views_length) + stat_sl +
-                   item_prev. days_old.toString().padStart( days_length) + stat_eq +
-                   item_prev.ratio_old.toFixed(3).padStart(ratio_length);
-      _prev._23  = item_prev.views_23 .toString().padStart(views_length) + stat_23 +
-                   item_prev.ratio_23 .toFixed(3).padStart(ratio_length);
-      _prev._7   = item_prev.views_7  .toString().padStart(views_length) + stat_7  +
-                   item_prev.ratio_7  .toFixed(3).padStart(ratio_length);
+      if (show_by_old) {
+        _prev._old = item_prev.views_old.toString().padStart(views_length) + stat_sl +
+                     item_prev. days_old.toString().padStart( days_length) + stat_eq +
+                     item_prev.ratio_old.toFixed(3).padStart(ratio_length);
+        _prev._23  = item_prev.views_23 .toString().padStart(views_length) + stat_23 +
+                     item_prev.ratio_23 .toFixed(3).padStart(ratio_length);
+        _prev._7   = item_prev.views_7  .toString().padStart(views_length) + stat_7  +
+                     item_prev.ratio_7  .toFixed(3).padStart(ratio_length);
+      }
+      else { // "all-30-7"
+        _prev._old = item_prev.views_all.toString().padStart(views_length) + stat_sl +
+                     item_prev. days_all.toString().padStart( days_length) + stat_eq +
+                     item_prev.ratio_all.toFixed(3).padStart(ratio_length);
+        _prev._23  = item_prev.views_30 .toString().padStart(views_length) + stat_30 +
+                     item_prev.ratio_30 .toFixed(3).padStart(ratio_length);
+        _prev._7   = item_prev.views_7  .toString().padStart(views_length) + stat_7  +
+                     item_prev.ratio_7  .toFixed(3).padStart(ratio_length);
+      }
     }
     else {
       _prev._old = stat_empty;
@@ -455,13 +475,24 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev) {
     //
     const _curr = {}; // _old, _23, _7
     if (!item.is_prev) {
-      _curr._old = item.views_old.toString().padStart(views_length) + stat_sl +
-                   item. days_old.toString().padStart( days_length) + stat_eq +
-                   item.ratio_old.toFixed(3).padStart(ratio_length);
-      _curr._23  = item.views_23 .toString().padStart(views_length) + stat_23 +
-                   item.ratio_23 .toFixed(3).padStart(ratio_length);
-      _curr._7   = item.views_7  .toString().padStart(views_length) + stat_7  +
-                   item.ratio_7  .toFixed(3).padStart(ratio_length);
+      if (show_by_old) {
+        _curr._old = item.views_old.toString().padStart(views_length) + stat_sl +
+                     item. days_old.toString().padStart( days_length) + stat_eq +
+                     item.ratio_old.toFixed(3).padStart(ratio_length);
+        _curr._23  = item.views_23 .toString().padStart(views_length) + stat_23 +
+                     item.ratio_23 .toFixed(3).padStart(ratio_length);
+        _curr._7   = item.views_7  .toString().padStart(views_length) + stat_7  +
+                     item.ratio_7  .toFixed(3).padStart(ratio_length);
+      }
+      else { // "all-30-7"
+        _curr._old = item.views_all.toString().padStart(views_length) + stat_sl +
+                     item. days_all.toString().padStart( days_length) + stat_eq +
+                     item.ratio_all.toFixed(3).padStart(ratio_length);
+        _curr._23  = item.views_30 .toString().padStart(views_length) + stat_30 +
+                     item.ratio_30 .toFixed(3).padStart(ratio_length);
+        _curr._7   = item.views_7  .toString().padStart(views_length) + stat_7  +
+                     item.ratio_7  .toFixed(3).padStart(ratio_length);
+      }
     }
     else {
       _curr._old = stat_empty;
@@ -475,9 +506,16 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev) {
     //
     let horz_change = 0;
     if (item.is_both) { // Item is markable
-      horz_change = (item.ratio_old && item_prev.ratio_old)
-          ? Math.log(item.ratio_old /  item_prev.ratio_old)
-          : 0;
+      if (show_by_old) {
+        horz_change = (item.ratio_old && item_prev.ratio_old)
+            ? Math.log(item.ratio_old /  item_prev.ratio_old)
+            : 0;
+      }
+      else {
+        horz_change = (item.ratio_all && item_prev.ratio_all)
+            ? Math.log(item.ratio_all /  item_prev.ratio_all)
+            : 0;
+      }
       if (horz_change) {
 //      const horz_scale = get_scale_log(index_curr, curr_log_base, horz_log_steep, horz_decay);
         const horz_scale = get_scale_sig(index_curr, curr_length,
@@ -490,9 +528,16 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev) {
     //
     let vert_change = 0;
     if (!item.is_prev) { // Item is markable
-      vert_change = (item.ratio_all && item.ratio_old)
-          ? Math.log(item.ratio_all /  item.ratio_old)
-          : 0;
+      if (show_by_old) {
+        vert_change = (item.ratio_30 && item.ratio_old)
+            ? Math.log(item.ratio_30 /  item.ratio_old)
+            : 0;
+      }
+      else {
+        vert_change = (item.ratio_30 && item.ratio_all)
+            ? Math.log(item.ratio_30 /  item.ratio_all)
+            : 0;
+      }
       if (vert_change) {
 //      const vert_scale = get_scale_log(index_curr, curr_log_base, vert_log_steep, vert_decay);
         const vert_scale = get_scale_sig(index_curr, curr_length,
@@ -526,8 +571,12 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev) {
     const _grow = {}; // _old, _23, _7 [, _mood]
     //
     if (item.is_both) { // Item is markable
-      const grow_old = get_grow_ratio(item.ratio_old, item_prev.ratio_old);
-      const grow_23  = get_grow_fixed(item.views_23 , item_prev.views_23 );
+      const grow_old = show_by_old
+                     ? get_grow_ratio(item.ratio_old, item_prev.ratio_old)
+                     : get_grow_ratio(item.ratio_all, item_prev.ratio_all);
+      const grow_23  = show_by_old
+                     ? get_grow_fixed(item.views_23 , item_prev.views_23 )
+                     : get_grow_fixed(item.views_30 , item_prev.views_30 );
       const grow_7   = get_grow_fixed(item.views_7  , item_prev.views_7  );
 
       _grow._old = grow_old;

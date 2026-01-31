@@ -1,6 +1,7 @@
-/* How to sort items */
+/* How to show and sort items */
 
-let sort_by          = "ratio"; // "ratio" / "views"
+let show_by          = "old-23-7"; // "old-23-7" / "all-30-7"
+let sort_by          = "ratio";    // "ratio"    / "views"
 
 /* Which items to show */
 
@@ -130,8 +131,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   only_both = results_curr_exp.length - only_curr - only_prev;
 
   // Sort expanded arrays for show in list (curr) and rank changes calculations (both)
-  sort_results(results_curr_exp, sort_by);
-  sort_results(results_prev_exp, sort_by);
+  sort_results(results_curr_exp, show_by, sort_by);
+  sort_results(results_prev_exp, show_by, sort_by);
 
   // Create a map of curr expanded results by identifier
   // Set no_prev actual values in curr expanded results
@@ -223,8 +224,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   container.appendChild(totals_div);
 
   // Both stats displaying
-  render_stats(results_prev, date_prev, "prev", sort_by, container); // Also sorts results_prev
-  render_stats(results_curr, date_curr, "curr", sort_by, container); // Also sorts results_curr
+  render_stats(results_prev, date_prev, "prev", show_by, sort_by, container); // Also sorts results_prev
+  render_stats(results_curr, date_curr, "curr", show_by, sort_by, container); // Also sorts results_curr
 
   // Which items to show
   const pre_chk_html = (id) => {
@@ -489,7 +490,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     vert_marks,
     rank_marks,
     mood_marks
-  } = compose_items(results_curr_exp, curr_exp_totals, map_prev);
+  } = compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by);
 
   const mark_grow_old  = horz_marks.above;
   const mark_fall_old  = horz_marks.below;
@@ -524,11 +525,35 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   header_title_wrapper.appendChild(header_title_inner);
   //
   const header_stat_prev_wrapper = document.createElement("div");
-  header_stat_prev_wrapper.className = "header-stat-wrapper bg-grow";
+  header_stat_prev_wrapper.className = "header-stat-wrapper bg-grow is-button";
   const header_stat_prev_inner = document.createElement("div");
   header_stat_prev_inner.className = "header-stat-inner subtitle";
   header_stat_prev_inner.textContent = "Prev";
   header_stat_prev_wrapper.appendChild(header_stat_prev_inner);
+  //
+  header_stat_prev_wrapper.setAttribute("role", "button");
+  header_stat_prev_wrapper.style.cursor = "pointer";
+  header_stat_prev_wrapper.style.outlineOffset = "-2px";
+  header_stat_prev_wrapper.tabIndex = 0;
+  //
+  header_stat_prev_wrapper.onclick = () => {
+    show_by = (show_by === "old-23-7") ? "all-30-7" : "old-23-7";
+    process_filter();
+  };
+  //
+  header_stat_prev_wrapper.onkeyup = (event) => {
+    const key = event.key;
+    if ((key === 'Enter') || (key === ' ')) {
+      header_stat_prev_wrapper.click();
+    }
+  };
+  //
+  header_stat_prev_wrapper.onkeydown = (event) => {
+    const key = event.key;
+    if ((key === 'Enter') || (key === ' ')) {
+      event.preventDefault();
+    }
+  };
   //
   const header_stat_curr_wrapper = document.createElement("div");
   header_stat_curr_wrapper.className = "header-stat-wrapper bg-fall is-button";

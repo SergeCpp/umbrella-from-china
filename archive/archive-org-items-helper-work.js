@@ -97,11 +97,13 @@ function filter_base(stats_items, stats_date,
     const ratio_old = parseFloat((views_old / days_old).toFixed(3));
 
     const views_30  = month;
+    const ratio_30  = parseFloat((views_30  / 30)      .toFixed(3));
+
     const views_23  = month - week;
-    const ratio_23  = parseFloat((views_23 / 23).toFixed(3));
+    const ratio_23  = parseFloat((views_23  / 23)      .toFixed(3));
 
     const views_7   = week;
-    const ratio_7   = parseFloat((views_7  /  7).toFixed(3));
+    const ratio_7   = parseFloat((views_7   /  7)      .toFixed(3));
 
     filtered_items.push({
       identifier: identifier_str,
@@ -110,8 +112,8 @@ function filter_base(stats_items, stats_date,
       item_size,
       favorites,
 
-//     days_all,
        time_all : publicdate.getTime(),
+       days_all,
       views_all,
       ratio_all,
 
@@ -120,6 +122,8 @@ function filter_base(stats_items, stats_date,
       ratio_old,
 
       views_30,
+      ratio_30,
+
       views_23,
       ratio_23,
 
