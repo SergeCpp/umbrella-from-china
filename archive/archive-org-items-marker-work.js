@@ -453,7 +453,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by) {
         _prev._7   = item_prev.views_7  .toString().padStart(views_length) + stat_7  +
                      item_prev.ratio_7  .toFixed(3).padStart(ratio_length);
       }
-      else { // "all-30-7"
+      else {
         _prev._old = item_prev.views_all.toString().padStart(views_length) + stat_sl +
                      item_prev. days_all.toString().padStart( days_length) + stat_eq +
                      item_prev.ratio_all.toFixed(3).padStart(ratio_length);
@@ -484,7 +484,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by) {
         _curr._7   = item.views_7  .toString().padStart(views_length) + stat_7  +
                      item.ratio_7  .toFixed(3).padStart(ratio_length);
       }
-      else { // "all-30-7"
+      else {
         _curr._old = item.views_all.toString().padStart(views_length) + stat_sl +
                      item. days_all.toString().padStart( days_length) + stat_eq +
                      item.ratio_all.toFixed(3).padStart(ratio_length);
@@ -530,9 +530,9 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by) {
     //
     let vert_change = 0;
     if (!item.is_prev) { // Item is markable
-      vert_change = (item.ratio_30 && item.ratio_old)
-          ? Math.log(item.ratio_30 /  item.ratio_old) // The same change for both show_by values
-          : 0;
+      vert_change = (item.ratio_all && item.ratio_old) // The same change for both show_by values
+          ? Math.log(item.ratio_all /  item.ratio_old) // "30 / old" not suits here because of
+          : 0;                                         // possible zeroes in ratio_30 values
       if (vert_change) {
 //      const vert_scale = get_scale_log(index_curr, curr_log_base, vert_log_steep, vert_decay);
         const vert_scale = get_scale_sig(index_curr, curr_length,
