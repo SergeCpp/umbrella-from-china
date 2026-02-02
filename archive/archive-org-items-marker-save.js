@@ -284,10 +284,10 @@ function sort_results(results, show_by, sort_by) {
 
   // Descending by value: max >> min
   //  Ascending by title:   A >> Z
-  results.sort((a, b) => a[field_1] !== b[field_1] ? b[field_1] - a[field_1]
-                       : a[field_2] !== b[field_2] ? b[field_2] - a[field_2]
-                       : a[field_3] !== b[field_3] ? b[field_3] - a[field_3]
-                       : a.title.localeCompare(b.title));
+  results.sort((above, below) => above[field_1] !== below[field_1] ? below[field_1] - above[field_1]
+                               : above[field_2] !== below[field_2] ? below[field_2] - above[field_2]
+                               : above[field_3] !== below[field_3] ? below[field_3] - above[field_3]
+                               : above.title.localeCompare(below.title));
 }
 
 /* Render */

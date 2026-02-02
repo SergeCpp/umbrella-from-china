@@ -87,7 +87,8 @@ function filter_base(stats_items, stats_date,
 
     const calc_date = new Date(stats_date + "T11:59:59.999Z"); // To count a day for published on day before
 
-    const  days_all = Math.round((calc_date - publicdate) / (24 * 60 * 60 * 1000));
+    const  time_all = calc_date - publicdate;
+    const  days_all = Math.round(  time_all / (24 * 60 * 60 * 1000));
     const views_all = downloads;
     const ratio_all = parseFloat((views_all / days_all).toFixed(3));
 
@@ -112,7 +113,7 @@ function filter_base(stats_items, stats_date,
       item_size,
       favorites,
 
-       time_all : publicdate.getTime(),
+       time_all,
        days_all,
       views_all,
       ratio_all,
@@ -519,8 +520,8 @@ function agg_nth(count_prev, count_curr, n, agg, time) {
   if  (!values_len) return [0, null];
 
   values.sort((above, below) => above[0] !== below[0]
-                              ? above[0] -   below[0]   // Lowest count to start of array
-                              : above[1] -   below[1]); // Oldest time  to start of array
+                              ? above[0] -   below[0]   // Lower count to start of array
+                              : below[1] -   above[1]); // Older item  to start of array
 
   if (n < 1)          n = 1;
   if (n > values_len) n = values_len;
@@ -589,8 +590,8 @@ function filter_count_range_agg(items_prev, items_curr,
     const ic_agg_max = agg_value(icp, icc, max_agg);
 
     if ((ic_agg_min >= min_count) && (ic_agg_max <= max_count)) {
-      if ((ic_agg_min === min_count) && min_time && (time[identifier] < min_time)) continue; // Older than min_time
-      if ((ic_agg_max === max_count) && max_time && (time[identifier] > max_time)) continue; // Newer than max_time
+      if ((ic_agg_min === min_count) && min_time && (time[identifier] > min_time)) continue; // Older than min_time
+      if ((ic_agg_max === max_count) && max_time && (time[identifier] < max_time)) continue; // Newer than max_time
 
       res[identifier] = true;
     }
