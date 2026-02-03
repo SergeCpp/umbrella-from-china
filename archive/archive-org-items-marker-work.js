@@ -520,7 +520,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by) {
 //      const horz_scale = get_scale_log(index_curr, curr_log_base, horz_log_steep, horz_decay);
         const horz_scale = get_scale_sig(index_curr, curr_length,
           horz_sig_base, horz_sig_steep, horz_decay, horz_sig_min, horz_sig_max);
-        horz_change /= horz_scale;
+        horz_change *= (horz_decay / horz_scale); // More suitable for log(close-to-one) result
         item.horz_change = horz_change; // Needed in markable item only, and if not 0 only
       }
     }
@@ -537,7 +537,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by) {
 //      const vert_scale = get_scale_log(index_curr, curr_log_base, vert_log_steep, vert_decay);
         const vert_scale = get_scale_sig(index_curr, curr_length,
           vert_sig_base, vert_sig_steep, vert_decay, vert_sig_min, vert_sig_max);
-        vert_change /= vert_scale;
+        vert_change *= (vert_decay / vert_scale); // More suitable for log(close-to-one) result
         item.vert_change = vert_change; // Needed in markable item only, and if not 0 only
       }
     }
