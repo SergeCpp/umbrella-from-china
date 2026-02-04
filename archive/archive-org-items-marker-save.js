@@ -103,14 +103,14 @@ function get_grow_mood(grow_old, grow_23, grow_7) {
 /* Substantial changes marking */
 
 function get_marks(rel, cnt, mid) {
-  if   (cnt <= 0)      return { above: +Infinity, below: -Infinity };
+  if   (cnt <= 0)      return { above: { cnt: 0, val: +Infinity }, below: { cnt: 0, val: -Infinity } };
   const rel_len = rel.length;
-  if   (rel_len === 0) return { above: +Infinity, below: -Infinity };
+  if   (rel_len === 0) return { above: { cnt: 0, val: +Infinity }, below: { cnt: 0, val: -Infinity } };
   if   (rel_len === 1) {
     const val = rel[0];
-    if   (val > mid)   return { above:  val,      below: -Infinity };
-    if   (val < mid)   return { above: +Infinity, below:  val      };
-                       return { above: +Infinity, below: -Infinity };
+    if   (val > mid)   return { above: { cnt: 1, val            }, below: { cnt: 0, val: -Infinity } };
+    if   (val < mid)   return { above: { cnt: 0, val: +Infinity }, below: { cnt: 1, val            } };
+                       return { above: { cnt: 0, val: +Infinity }, below: { cnt: 0, val: -Infinity } };
   }
   if ((cnt + cnt) > rel_len) {
     cnt = Math.floor(rel_len / 2);
@@ -130,12 +130,12 @@ function get_marks(rel, cnt, mid) {
     below_cnt++; // Count it
 
     above_cnt--; // Use place
-    if (above_cnt === 0) break; // Above side is empty
+    if (!above_cnt) break; // Above side is empty
     above_idx++; // Move above side to right
     above_val = rel[above_idx]; // Update its value
   }
   while (below_val >= mid) { // Below value is in above side, or at mid
-    if (above_cnt > 0) { // Above side not empty
+    if (above_cnt) { // Above side is not empty
       if (rel[above_idx - 1] > mid) { // And something is present there to add to above side
         above_val = rel[above_idx - 1]; // Update its value
         above_cnt++; // Count it
@@ -143,12 +143,14 @@ function get_marks(rel, cnt, mid) {
       }
     }
     below_cnt--; // Use place
-    if (below_cnt === 0) break; // Below side is empty
+    if (!below_cnt) break; // Below side is empty
     below_idx--; // Move below side to left
     below_val = rel[below_idx]; // Update its value
   }
-  return { above: above_cnt > 0 ? above_val : +Infinity, // Possible array of all mid's is handled here
-           below: below_cnt > 0 ? below_val : -Infinity  // Because both above_cnt and below_cnt will be 0
+  // Possible array of all mid's is handled in return
+  // Because both above_cnt and below_cnt will be zeroes
+  return { above: { cnt: above_cnt, val: above_cnt ? above_val : +Infinity },
+           below: { cnt: below_cnt, val: below_cnt ? below_val : -Infinity }
   };
 }
 
@@ -619,26 +621,26 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by) {
   // 1:0, 3:0, 4:1, 10:1, 20:2, 30:3, 50:4, 75:5, 100:6, 125:7, 150:8, 200:10, 300:12, 500:16, 800:21, 826:21
   const horz_marks_cnt = Math.floor(Math.pow(horz_curr_prev .length, 0.551) / 1.841);
   const horz_marks     =  get_marks         (horz_curr_prev, horz_marks_cnt, 0);
-//const mark_grow_old  = horz_marks.above;
-//const mark_fall_old  = horz_marks.below;
+//const mark_grow_old  = horz_marks.above.val;
+//const mark_fall_old  = horz_marks.below.val;
 
   // 1:0, 3:0, 4:1, 10:1, 20:2, 30:3, 50:3, 75:4, 100:5, 125:6, 150:6, 200: 7, 300: 9, 500:11, 800:14, 826:14
   const vert_marks_cnt = Math.floor(Math.pow(vert_all_old   .length, 0.482) / 1.699);
   const vert_marks     =  get_marks         (vert_all_old,   vert_marks_cnt, 0);
-//const mark_grow_23_7 = vert_marks.above;
-//const mark_fall_23_7 = vert_marks.below;
+//const mark_grow_23_7 = vert_marks.above.val;
+//const mark_fall_23_7 = vert_marks.below.val;
 
   // 1:0, 3:0, 4:1, 10:1, 20:2, 30:3, 50:4, 75:5, 100:6, 125:7, 150:8, 200:10, 300:12, 500:16, 800:21, 826:21
   const rank_marks_cnt = Math.floor(Math.pow(rank_up_dn     .length, 0.551) / 1.841);
   const rank_marks     =  get_marks         (rank_up_dn,     rank_marks_cnt, 0);
-//const mark_rank_up   = rank_marks.above;
-//const mark_rank_dn   = rank_marks.below;
+//const mark_rank_up   = rank_marks.above.val;
+//const mark_rank_dn   = rank_marks.below.val;
 
   // 1:1, 3:1, 4:1, 10:2, 20:2, 30:3, 50:4, 75:4, 100:5, 125:5, 150:6, 200: 7, 300: 8, 500:10, 800:12, 826:12
   const mood_marks_cnt = Math.ceil (Math.pow(mood_pos_neg   .length, 0.487) / 2.195);
   const mood_marks     =  get_marks         (mood_pos_neg,   mood_marks_cnt, 0);
-//const mark_mood_pos  = mood_marks.above;
-//const mark_mood_neg  = mood_marks.below;
+//const mark_mood_pos  = mood_marks.above.val;
+//const mark_mood_neg  = mood_marks.below.val;
 
   return {
     horz_marks,

@@ -223,11 +223,37 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
                   format_num_str(curr_exp_totals.favorited, 'Item'));
   container.appendChild(totals_div);
 
+  ////////////////////////
   // Both stats displaying
+  //
   render_stats(results_prev, date_prev, "prev", show_by, sort_by, container); // Also sorts results_prev
   render_stats(results_curr, date_curr, "curr", show_by, sort_by, container); // Also sorts results_curr
 
+  /////////////////////////////////////////////////////////////////////////
+  // Compose items and calculate parameters for substantial changes marking
+  //
+  const {
+    horz_marks,
+    vert_marks,
+    rank_marks,
+    mood_marks
+  } = compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by);
+
+  const mark_grow_old  = horz_marks.above.val;
+  const mark_fall_old  = horz_marks.below.val;
+
+  const mark_grow_23_7 = vert_marks.above.val;
+  const mark_fall_23_7 = vert_marks.below.val;
+
+  const mark_rank_up   = rank_marks.above.val;
+  const mark_rank_dn   = rank_marks.below.val;
+
+  const mark_mood_pos  = mood_marks.above.val;
+  const mark_mood_neg  = mood_marks.below.val;
+
+  //////////////////////
   // Which items to show
+  //
   const pre_chk_html = (id) => {
     return '<label for="' + id + '" style="cursor: pointer;">';
   };
@@ -281,11 +307,11 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   container.appendChild(sets_div);
 
   // Which items to show
-  const show_div = document.createElement("div");
-  show_div.className = "text-center text-comment";
+  const subst_chk_div = document.createElement("div");
+  subst_chk_div.className = "text-center text-comment";
 
   // For spans and checkboxes see above
-  show_div.innerHTML =
+  subst_chk_div.innerHTML =
     format_nowrap(
       pre_chk_html('show-plain')     + 'Plain Items' +
       suf_chk_html('show-plain',   show_plain, 'inp_plain'))        + ' ' +
@@ -306,7 +332,42 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       pre_chk_html('show-mood-pos' ) + 'Mood' + '</label>' +
       s_h_chk_html('show-mood-pos' ,   'mood-pos' )  +
       s_h_chk_html('show-mood-neg' ,   'mood-neg' ));
-  container.appendChild(show_div);
+  container.appendChild(subst_chk_div);
+
+  // Substantial changes counts
+  const subst_cnt_div = document.createElement("div");
+  subst_cnt_div.className = "text-center text-comment";
+
+  const subst_cnt_span = document.createElement("span");
+  subst_cnt_span.className = "text-nowrap";
+  subst_cnt_span.textContent = "Substantial Items in:";
+  subst_cnt_div.appendChild(subst_cnt_span);
+  subst_cnt_div.appendChild(document.createTextNode(' '));
+
+  const subst_cnt_rank = document.createElement("span");
+  subst_cnt_rank.className = "text-nowrap";
+  subst_cnt_rank.textContent = "Rank: " + rank_marks.above.cnt + '/' + rank_marks.below.cnt + ',';
+  subst_cnt_div.appendChild(subst_cnt_rank);
+  subst_cnt_div.appendChild(document.createTextNode(' '));
+
+  const subst_cnt_horz = document.createElement("span");
+  subst_cnt_horz.className = "text-nowrap";
+  subst_cnt_horz.textContent = "Horz: " + horz_marks.above.cnt + '/' + horz_marks.below.cnt + ',';
+  subst_cnt_div.appendChild(subst_cnt_horz);
+  subst_cnt_div.appendChild(document.createTextNode(' '));
+
+  const subst_cnt_vert = document.createElement("span");
+  subst_cnt_vert.className = "text-nowrap";
+  subst_cnt_vert.textContent = "Vert: " + vert_marks.above.cnt + '/' + vert_marks.below.cnt + ',';
+  subst_cnt_div.appendChild(subst_cnt_vert);
+  subst_cnt_div.appendChild(document.createTextNode(' '));
+
+  const subst_cnt_mood = document.createElement("span");
+  subst_cnt_mood.className = "text-nowrap";
+  subst_cnt_mood.textContent = "Mood: " + mood_marks.above.cnt + '/' + mood_marks.below.cnt;
+  subst_cnt_div.appendChild(subst_cnt_mood);
+
+  container.appendChild(subst_cnt_div);
 
   // Marks displaying
   const chk_nomark    =  marks_count && nomarked_items;
@@ -483,26 +544,6 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
   // Spacing
   container.lastElementChild.style.marginBottom = "1em"; // Add space before item list
-
-  // Compose
-  const {
-    horz_marks,
-    vert_marks,
-    rank_marks,
-    mood_marks
-  } = compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by);
-
-  const mark_grow_old  = horz_marks.above;
-  const mark_fall_old  = horz_marks.below;
-
-  const mark_grow_23_7 = vert_marks.above;
-  const mark_fall_23_7 = vert_marks.below;
-
-  const mark_rank_up   = rank_marks.above;
-  const mark_rank_dn   = rank_marks.below;
-
-  const mark_mood_pos  = mood_marks.above;
-  const mark_mood_neg  = mood_marks.below;
 
   /////////////////////////////////////
   // Show item list with flex alignment
@@ -761,7 +802,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     stat_prev_7.className = "item-stat-prev-7";
     stat_prev_7.textContent = item.prev._7;
 
-    // Rank changes marking
+    // Rank substantial changes marking: up and dn
     if      (is_rank_up) {
       stat_prev_old.classList.add("item-mark-up");
       stat_prev_23 .classList.add("item-mark-up");
@@ -841,7 +882,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     stat_grow_7.className = "item-grow-7";
     stat_grow_7.textContent = item.grow._7;
 
-    // Grow mood marking: positive and negative
+    // Grow mood substantial changes marking: positive and negative
     if      (is_mood_pos) {
       stat_grow_old.classList.add("item-mark-grow");
       stat_grow_23 .classList.add("item-mark-grow");
