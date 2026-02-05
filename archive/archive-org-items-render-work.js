@@ -1,8 +1,9 @@
 /* How to show and sort items */
 
-let show_by          = "old-23-7";   // "old-23-7"   / "all-30-7"
-let sort_by          = "ratio";      // "ratio"      / "views"
-let mood_by          = "same-signs"; // "same-signs" / "diff-signs"
+let title_is         = "title";      // "title"      / "identifier"
+let  show_by         = "old-23-7";   // "old-23-7"   / "all-30-7"
+let  sort_by         = "ratio";      // "ratio"      / "views"
+let  mood_by         = "same-signs"; // "same-signs" / "diff-signs"
 
 /* Which items to show */
 
@@ -560,11 +561,35 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   header_inner.className = "header-inner";
   //
   const header_title_wrapper = document.createElement("div");
-  header_title_wrapper.className = "header-title-wrapper bg-fall";
+  header_title_wrapper.className = "header-title-wrapper bg-fall is-button";
   const header_title_inner = document.createElement("div");
   header_title_inner.className = "header-title-inner subtitle text-ellipsis";
   header_title_inner.textContent = "Internet Archive Item";
   header_title_wrapper.appendChild(header_title_inner);
+  //
+  header_title_wrapper.setAttribute("role", "button");
+  header_title_wrapper.style.cursor = "pointer";
+  header_title_wrapper.style.outlineOffset = "-2px";
+  header_title_wrapper.tabIndex = 0;
+  //
+  header_title_wrapper.onclick = () => {
+    title_is = (title_is === "title") ? "identifier" : "title";
+    process_filter();
+  };
+  //
+  header_title_wrapper.onkeyup = (event) => {
+    const key = event.key;
+    if ((key === 'Enter') || (key === ' ')) {
+      header_title_wrapper.click();
+    }
+  };
+  //
+  header_title_wrapper.onkeydown = (event) => {
+    const key = event.key;
+    if ((key === 'Enter') || (key === ' ')) {
+      event.preventDefault();
+    }
+  };
   //
   const header_stat_prev_wrapper = document.createElement("div");
   header_stat_prev_wrapper.className = "header-stat-wrapper bg-grow is-button";
@@ -667,7 +692,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   header_wrapper.appendChild(header_inner  );
   container     .appendChild(header_wrapper);
   //
-  let shown_cnt = 0;
+  const title_is_title = (title_is === "title"); // Else is "identifier"
+  let   shown_cnt      = 0;
   //
   for (let index = 0; index < results_curr_exp.length; index++) {
     const item = results_curr_exp[index];
@@ -774,7 +800,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     item_link.href = "https://archive.org/details/" + item.identifier;
     item_link.rel = "noopener"; // Safe for _blank
     item_link.target = "_blank";
-    item_link.textContent = (shown_cnt === index ? "" : (shown_cnt + 1) + " / ") + (index + 1) + ". " + item.title;
+    item_link.textContent = (shown_cnt === index ? "" : (shown_cnt + 1) + " / ") + (index + 1) + ". " +
+      (title_is_title ? item.title : item.identifier);
     item_title.appendChild(item_link);
 
     /*

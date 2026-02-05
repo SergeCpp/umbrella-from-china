@@ -539,7 +539,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
     if (!item.is_prev) { // Item is markable
       vert_change = (item.ratio_all && item.ratio_old) // The same change for both show_by values
           ? Math.log(item.ratio_all /  item.ratio_old) // "30 / old" not suits here because of
-          : 0;                                         // possible zeroes in ratio_30 values
+          : 0;                                         // Possible zeroes in ratio_30 values
       if (vert_change) {
 //      const vert_scale = get_scale_log(index_curr, curr_log_base, vert_log_steep, vert_decay);
         const vert_scale = get_scale_sig(index_curr, curr_length,

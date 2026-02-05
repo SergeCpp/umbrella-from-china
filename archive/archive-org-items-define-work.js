@@ -968,7 +968,8 @@ function conv_stat_docs(docs) {
 
     const collection_arr = get_node_arr(doc, "collection");
     const    creator_arr = get_node_arr(doc, "creator"   );
-    const      title_arr = title ? [title.toLowerCase()] : []; // Lowercased as array for filtering
+    const      title_arr = title      ? [title     .toLowerCase()] : []; // Lowercased as array for filtering
+    const identifier_arr = identifier ? [identifier.toLowerCase()] : []; // Lowercased as array for filtering
 
     stats.push({
       identifier,
@@ -982,7 +983,8 @@ function conv_stat_docs(docs) {
       week      ,
       collection_arr,
          creator_arr,
-           title_arr
+           title_arr,
+      identifier_arr
     });
   }
 

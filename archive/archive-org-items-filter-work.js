@@ -13,6 +13,8 @@ const err_chars =
   'Creators: =5 finds items (two) with exactly five creators<br />' +
   'Creators: Xiao >1 finds items (three) where more than one creator has Xiao in name<br />' +
   'Subjects: Dance >4 finds items (14) where more than four subjects contain Dance<br />' +
+  'Title: \' Xiaodan \' finds items (10) with name Xiaodan surrounded by spaces in title<br />' +
+  'Title: /-xiaodan- finds items (same 10) with string -xiaodan- in identifier (not in title)<br />' +
   'Description: \'p=2\' finds items (102) with string p=2 in description (no counting)' +
   '</p><p>' +
   'Conditionals are: = or ==, ! or !=, &lt;, &lt;=, &gt;, &gt;=<br />' +
@@ -603,8 +605,12 @@ function filter_route(base_prev_items, base_prev_date,
   const collections_str = input_values["collections"];
   const    creators_str = input_values["creators"   ];
   const    subjects_str = input_values["subjects"   ];
-  const       title_str = input_values["title"      ];
+  let         title_str = input_values["title"      ].trim();
   const description_str = input_values["description"];
+
+  // Title: field prefix
+  let is_title_identifier = false; // Use identifier instead title
+  [is_title_identifier, title_str] = get_title_prefix(title_str);
 
   if (!input_allowed_chars(collections_str) ||
       !input_allowed_chars(   creators_str) ||
@@ -871,10 +877,10 @@ function filter_route(base_prev_items, base_prev_date,
   // 1. Checking and Initial Filtering Items, and Calculating Stats
   let results_prev = filter_base(base_prev_items, base_prev_date,
     archived_min_range, archived_max_range, created_min_range, created_max_range,
-    collections, creators, title);
+    collections, creators, title, is_title_identifier);
   let results_curr = filter_base(base_curr_items, base_curr_date,
     archived_min_range, archived_max_range, created_min_range, created_max_range,
-    collections, creators, title);
+    collections, creators, title, is_title_identifier);
 
   // 2. Subjects
   const filtered_subjects = filter_section(results_prev, results_curr,

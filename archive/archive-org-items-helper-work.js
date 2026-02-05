@@ -2,7 +2,7 @@
 
 function filter_base(stats_items, stats_date,
   archived_min, archived_max, created_min, created_max,
-  collections, creators, title) {
+  collections, creators, title, is_title_identifier) {
   const filtered_items = [];
 
   for (let i = 0; i < stats_items.length; i++) {
@@ -73,9 +73,8 @@ function filter_base(stats_items, stats_date,
     const matches_creators = filter_matches(doc, "creator", creators);
     if  (!matches_creators) continue;
 
-    // Title
-    const matches_title = filter_matches(doc, "title", title);
-    if  (!matches_title) continue;
+    // Title / Identifier
+    if (!filter_matches(doc, is_title_identifier ? "identifier" : "title", title)) continue;
 
     /////////////////////
     // Item passed filter
@@ -137,6 +136,15 @@ function filter_base(stats_items, stats_date,
 }
 
 /* Filter Count Input Processing */
+
+// Syntax: [/] [input]
+function get_title_prefix(title_str) {
+  const is_title_prefix = title_str.startsWith('/');
+
+  if (is_title_prefix) title_str = title_str.slice(1).trimStart();
+
+  return [ is_title_prefix, title_str ];
+}
 
 // Syntax: [^] [input]
 function get_views_prefix(min_str, max_str) {
