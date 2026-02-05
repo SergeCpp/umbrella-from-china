@@ -435,6 +435,9 @@ input[type="checkbox"].changed.tab-e {
 .header-stat-wrapper.bg-fall.is-button:hover {
   background-color: hsl(0.58turn 75% 92%); /* Lower Lightness by 3 from 95 */
 }
+.header-grow-wrapper.bg-grow.is-button:hover {
+  background-color: hsl(0.42turn 75% 89%); /* Lower Lightness by 3 from 92 */
+}
 
 /* Item */
 

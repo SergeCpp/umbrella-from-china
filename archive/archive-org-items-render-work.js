@@ -1,7 +1,8 @@
 /* How to show and sort items */
 
-let show_by          = "old-23-7"; // "old-23-7" / "all-30-7"
-let sort_by          = "ratio";    // "ratio"    / "views"
+let show_by          = "old-23-7";   // "old-23-7"   / "all-30-7"
+let sort_by          = "ratio";      // "ratio"      / "views"
+let mood_by          = "same-signs"; // "same-signs" / "diff-signs"
 
 /* Which items to show */
 
@@ -237,7 +238,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     vert_marks,
     rank_marks,
     mood_marks
-  } = compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by);
+  } = compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, mood_by);
 
   const mark_grow_old  = horz_marks.above.val;
   const mark_fall_old  = horz_marks.below.val;
@@ -628,11 +629,35 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   };
   //
   const header_stat_grow_wrapper = document.createElement("div");
-  header_stat_grow_wrapper.className = "header-grow-wrapper bg-grow";
+  header_stat_grow_wrapper.className = "header-grow-wrapper bg-grow is-button";
   const header_stat_grow_inner = document.createElement("div");
   header_stat_grow_inner.className = "header-grow-inner subtitle";
   header_stat_grow_inner.innerHTML = "&plus;&minus;";
   header_stat_grow_wrapper.appendChild(header_stat_grow_inner);
+  //
+  header_stat_grow_wrapper.setAttribute("role", "button");
+  header_stat_grow_wrapper.style.cursor = "pointer";
+  header_stat_grow_wrapper.style.outlineOffset = "-2px";
+  header_stat_grow_wrapper.tabIndex = 0;
+  //
+  header_stat_grow_wrapper.onclick = () => {
+    mood_by = (mood_by === "same-signs") ? "diff-signs" : "same-signs";
+    process_filter();
+  };
+  //
+  header_stat_grow_wrapper.onkeyup = (event) => {
+    const key = event.key;
+    if ((key === 'Enter') || (key === ' ')) {
+      header_stat_grow_wrapper.click();
+    }
+  };
+  //
+  header_stat_grow_wrapper.onkeydown = (event) => {
+    const key = event.key;
+    if ((key === 'Enter') || (key === ' ')) {
+      event.preventDefault();
+    }
+  };
   //
   header_inner.appendChild(header_title_wrapper    );
   header_inner.appendChild(header_stat_prev_wrapper);

@@ -89,13 +89,18 @@ function get_grow_value(grow) {
   return grow_values[grow] || 0;
 }
 
-function get_grow_mood(grow_old, grow_23, grow_7) {
+function get_grow_mood(grow_old, grow_23, grow_7, mood_by) {
   const v_old = get_grow_value(grow_old);
   const v_23  = get_grow_value(grow_23 );
   const v_7   = get_grow_value(grow_7  );
 
-  if ((v_old >= 0) && (v_23 >= 0) && (v_7 >= 0)) return v_old + v_23 + v_7;
-  if ((v_old <= 0) && (v_23 <= 0) && (v_7 <= 0)) return v_old + v_23 + v_7;
+  const mood  = v_old + v_23 + v_7;
+
+  if (mood_by === "diff-signs") return mood;
+
+  // "same-signs"
+  if ((v_old >= 0) && (v_23 >= 0) && (v_7 >= 0)) return mood;
+  if ((v_old <= 0) && (v_23 <= 0) && (v_7 <= 0)) return mood;
 
   return 0;
 }
@@ -372,7 +377,7 @@ const  stat_23     = " /   23 =";
 const  stat_7      = " /    7 =";
 const  stat_eq     =        " =";
 
-function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by) {
+function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, mood_by) {
   const show_by_old = (show_by === "old-23-7"); // Else by "all-30-7"
 
   ////////////////////////
@@ -580,7 +585,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by) {
       _grow._23  = grow_23;
       _grow._7   = grow_7;
 
-      const grow_mood = get_grow_mood(grow_old, grow_23, grow_7);
+      const grow_mood = get_grow_mood(grow_old, grow_23, grow_7, mood_by);
       if   (grow_mood) {
 //      const mood_scale = get_scale_log(index_curr, curr_log_base, mood_log_steep, mood_decay);
         const mood_scale = get_scale_sig(index_curr, curr_length,
