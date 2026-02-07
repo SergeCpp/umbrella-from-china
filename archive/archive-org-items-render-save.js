@@ -1,27 +1,28 @@
 /* How to show and sort items */
 
-let title_is         = "title";      // "title"      / "identifier"
-let  show_by         = "old-23-7";   // "old-23-7"   / "all-30-7"
-let  sort_by         = "ratio";      // "ratio"      / "views"
-let  mood_by         = "same-signs"; // "same-signs" / "diff-signs"
+let title_is          = "title";      // "title"      / "identifier"
+let  show_by          = "old-23-7";   // "old-23-7"   / "all-30-7"
+let  sort_by          = "ratio";      // "ratio"      / "views"
+let  mood_by          = "same-signs"; // "same-signs" / "diff-signs"
 
 /* Which items to show */
 
-let show_prev        = true; function inp_prev  (chk) { show_prev  = chk.checked; }
-let show_curr        = true; function inp_curr  (chk) { show_curr  = chk.checked; }
-let show_both        = true; function inp_both  (chk) { show_both  = chk.checked; }
+let show_prev         = true; function inp_prev  (chk) { show_prev  = chk.checked; }
+let show_curr         = true; function inp_curr  (chk) { show_curr  = chk.checked; }
+let show_both         = true; function inp_both  (chk) { show_both  = chk.checked; }
 
-let show_plain       = true; function inp_plain (chk) { show_plain = chk.checked; }
+let show_plain        = true; function inp_plain (chk) { show_plain = chk.checked; }
 
-const show_noplain   = {}; // [noplain] = true / false
-const hide_noplain   = {}; // [noplain] = false / true
+const show_noplain    = {}; // [noplain] = true / false
+const hide_noplain    = {}; // [noplain] = false / true
 
-let show_nomark      = true;
+let show_nomark       = true;
+let show_plain_nomark = true;
 
-const show_mark      = {}; // [mark] = true / false
-const hide_mark      = {}; // [mark] = false / true
+const show_mark       = {}; // [mark] = true / false
+const hide_mark       = {}; // [mark] = false / true
 
-const show_marked_by = {}; // [num] = undefined (means true) / true / false
+const show_marked_by  = {}; // [num] = undefined (means true) / true / false
 
 function inp_show_hide(chk, accent) {
   if (show_noplain[accent]) {
@@ -82,18 +83,27 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   for (const item of results_curr) {
     results_curr_ids[item.identifier] = true;
     results_curr_exp.push({ ...item,
-      is_prev    : false,
-      no_prev    : null,
-      is_both    : null,
-      prev       : null,
-      curr       : null,
-      index_prev : null,
-      horz_change: 0,
-      vert_change: 0,
-      rank_change: 0,
-      grow       : null,
-      gauges     : null,
-      marks      : null });
+      is_prev      : false,
+      no_prev      : null,
+      is_both      : null,
+      prev         : null,
+      curr         : null,
+      index_prev   : null,
+      horz_change  : 0,
+      vert_change  : 0,
+      rank_change  : 0,
+      grow         : null,
+      gauges       : null,
+      marks        : null,
+      is_rank_up   : null,
+      is_rank_dn   : null,
+      is_horz_grow : null,
+      is_horz_fall : null,
+      is_vert_grow : null,
+      is_vert_fall : null,
+      is_mood_pos  : null,
+      is_mood_neg  : null,
+      is_plain     : null });
   }
 
   // Add items from  results_prev that absent in results_curr
@@ -103,18 +113,27 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     if (!results_curr_ids[item.identifier]) {
       only_prev++;
       results_curr_exp.push({ ...item,
-        is_prev    : true,
-        no_prev    : null,
-        is_both    : null,
-        prev       : null,
-        curr       : null,
-        index_prev : null,
-        horz_change: 0,
-        vert_change: 0,
-        rank_change: 0,
-        grow       : null,
-        gauges     : null,
-        marks      : null });
+        is_prev      : true,
+        no_prev      : null,
+        is_both      : null,
+        prev         : null,
+        curr         : null,
+        index_prev   : null,
+        horz_change  : 0,
+        vert_change  : 0,
+        rank_change  : 0,
+        grow         : null,
+        gauges       : null,
+        marks        : null,
+        is_rank_up   : null,
+        is_rank_dn   : null,
+        is_horz_grow : null,
+        is_horz_fall : null,
+        is_vert_grow : null,
+        is_vert_fall : null,
+        is_mood_pos  : null,
+        is_mood_neg  : null,
+        is_plain     : null });
     }
     map_prev[item.identifier] = item;
   }
@@ -253,6 +272,46 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   const mark_mood_pos  = mood_marks.above.val;
   const mark_mood_neg  = mood_marks.below.val;
 
+  // Set substantial changes flags for items
+  // Count substantially changed and plain items, also plain nomarked items
+  let subst_items    = 0;
+  let plain_nomarked = 0;
+
+  for (const item of results_curr_exp) {
+    const is_rank_up   =  item.is_both && (item.rank_change >= mark_rank_up); // item.index_prev > index
+    const is_rank_dn   =  item.is_both && (item.rank_change <= mark_rank_dn); // item.index_prev < index
+
+    const is_horz_grow =  item.is_both && (item.horz_change >= mark_grow_old);
+    const is_horz_fall =  item.is_both && (item.horz_change <= mark_fall_old);
+
+    const is_vert_grow = !item.is_prev && (item.vert_change >= mark_grow_23_7);
+    const is_vert_fall = !item.is_prev && (item.vert_change <= mark_fall_23_7);
+
+    const is_mood_pos  =  item.is_both && (item.grow._mood  >= mark_mood_pos);
+    const is_mood_neg  =  item.is_both && (item.grow._mood  <= mark_mood_neg);
+
+    const is_subst     =  is_rank_up || is_horz_grow || is_vert_grow || is_mood_pos ||
+                          is_rank_dn || is_horz_fall || is_vert_fall || is_mood_neg;
+
+    item.is_rank_up    =  is_rank_up;
+    item.is_rank_dn    =  is_rank_dn;
+
+    item.is_horz_grow  =  is_horz_grow;
+    item.is_horz_fall  =  is_horz_fall;
+
+    item.is_vert_grow  =  is_vert_grow;
+    item.is_vert_fall  =  is_vert_fall;
+
+    item.is_mood_pos   =  is_mood_pos;
+    item.is_mood_neg   =  is_mood_neg;
+
+    item.is_plain      = !is_subst;
+    subst_items       +=  is_subst;
+    plain_nomarked    += !is_subst && !item.marks;
+  }
+
+  const plain_items = results_curr_exp.length - subst_items;
+
   //////////////////////
   // Which items to show
   //
@@ -315,7 +374,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   // For spans and checkboxes see above
   subst_chk_div.innerHTML =
     format_nowrap(
-      pre_chk_html('show-plain')     + 'Plain Items' +
+      pre_chk_html('show-plain')     + 'Plain: ' + format_num_str(plain_items, "Item") +
       suf_chk_html('show-plain',   show_plain, 'inp_plain'))        + ' ' +
     format_nowrap(                     'Substantially changed in:') + ' ' +
     format_nowrap(
@@ -342,7 +401,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
   const subst_cnt_span = document.createElement("span");
   subst_cnt_span.className = "text-nowrap";
-  subst_cnt_span.textContent = "Substantial Items in:";
+  subst_cnt_span.textContent = "Substantial: " + format_num_str(subst_items, "Item") + " in:";
   subst_cnt_div.appendChild(subst_cnt_span);
   subst_cnt_div.appendChild(document.createTextNode(' '));
 
@@ -372,8 +431,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   container.appendChild(subst_cnt_div);
 
   // Marks displaying
-  const chk_nomark    =  marks_count && nomarked_items;
-  const chk_marked_by = (marks_populated > 1);
+  const chk_nomark       =  marks_count && nomarked_items;
+  const chk_marked_by    = (marks_populated > 1);
+  const chk_plain_nomark =  marks_count;
 
   if (marks_count) {
     const marks_div = document.createElement("div");
@@ -404,9 +464,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       };
 
       nomark_span.appendChild(nomark_label);
-      nomark_span.appendChild(nomark_chk);
-      marks_div.appendChild(nomark_span);
-      marks_div.appendChild(document.createTextNode(' '));
+      nomark_span.appendChild(nomark_chk  );
+      marks_div  .appendChild(nomark_span );
+      marks_div  .appendChild(document.createTextNode(' '));
     }
 
     // Marked
@@ -480,8 +540,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
           }
         };
 
-        mark_label.appendChild(mark_span);
-        nowrap_span.appendChild(mark_label);
+        mark_label .appendChild(mark_span    );
+        nowrap_span.appendChild(mark_label   );
         nowrap_span.appendChild(mark_chk_show);
         nowrap_span.appendChild(mark_chk_hide);
       }
@@ -535,13 +595,43 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
           }
         };
 
-        by_span.appendChild(by_label);
-        by_span.appendChild(by_chk);
-        marked_by_div.appendChild(by_span);
+        by_span      .appendChild(by_label);
+        by_span      .appendChild(by_chk  );
+        marked_by_div.appendChild(by_span );
         if (n < num_last) marked_by_div.appendChild(document.createTextNode(' '));
       }
       container.appendChild(marked_by_div);
     }
+
+    const plain_nomark_div = document.createElement("div");
+    plain_nomark_div.className = "text-center text-comment";
+
+    const plain_nomark_span = document.createElement("span");
+    plain_nomark_span.className = "text-nowrap";
+
+    const plain_nomark_label = document.createElement("label");
+    plain_nomark_label.htmlFor = "plain-nomark";
+    plain_nomark_label.style.cursor = "pointer";
+    plain_nomark_label.textContent = "Plain and not marked: " + format_num_str(plain_nomarked, "Item");
+
+    const plain_nomark_chk = document.createElement("input");
+    plain_nomark_chk.checked = show_plain_nomark;
+    plain_nomark_chk.className = "in-chk";
+    plain_nomark_chk.id = "plain-nomark";
+    plain_nomark_chk.type = "checkbox";
+
+    plain_nomark_chk.oninput = () => { show_plain_nomark = plain_nomark_chk.checked; };
+
+    plain_nomark_chk.onkeyup = (event) => {
+      if (event.key === 'Enter') {
+        process_filter();
+      }
+    };
+
+    plain_nomark_span.appendChild(plain_nomark_label);
+    plain_nomark_span.appendChild(plain_nomark_chk  );
+    plain_nomark_div .appendChild(plain_nomark_span );
+    container        .appendChild(plain_nomark_div  );
   }
 
   // Spacing
@@ -657,7 +747,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   header_stat_grow_wrapper.className = "header-grow-wrapper bg-grow is-button";
   const header_stat_grow_inner = document.createElement("div");
   header_stat_grow_inner.className = "header-grow-inner subtitle";
-  header_stat_grow_inner.innerHTML = "&plus;&minus;";
+  header_stat_grow_inner.innerHTML = "&plus;&hairsp;&minus;";
   header_stat_grow_wrapper.appendChild(header_stat_grow_inner);
   //
   header_stat_grow_wrapper.setAttribute("role", "button");
@@ -684,10 +774,10 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     }
   };
   //
-  header_inner.appendChild(header_title_wrapper    );
-  header_inner.appendChild(header_stat_prev_wrapper);
-  header_inner.appendChild(header_stat_curr_wrapper);
-  header_inner.appendChild(header_stat_grow_wrapper);
+  header_inner  .appendChild(header_title_wrapper    );
+  header_inner  .appendChild(header_stat_prev_wrapper);
+  header_inner  .appendChild(header_stat_curr_wrapper);
+  header_inner  .appendChild(header_stat_grow_wrapper);
   //
   header_wrapper.appendChild(header_inner  );
   container     .appendChild(header_wrapper);
@@ -698,10 +788,29 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   for (let index = 0; index < results_curr_exp.length; index++) {
     const item = results_curr_exp[index];
 
+    const is_prev = item.is_prev;
+    const no_prev = item.no_prev;
+    const is_both = item.is_both;
+
     // Which items to show
-    if (item.is_prev && chk_prev && !show_prev) continue;
-    if (item.no_prev && chk_curr && !show_curr) continue;
-    if (item.is_both && chk_both && !show_both) continue;
+    if (is_prev && chk_prev && !show_prev) continue;
+    if (no_prev && chk_curr && !show_curr) continue;
+    if (is_both && chk_both && !show_both) continue;
+
+    // Substantial changes marking
+    const is_rank_up   = item.is_rank_up;
+    const is_rank_dn   = item.is_rank_dn;
+
+    const is_horz_grow = item.is_horz_grow;
+    const is_horz_fall = item.is_horz_fall;
+
+    const is_vert_grow = item.is_vert_grow;
+    const is_vert_fall = item.is_vert_fall;
+
+    const is_mood_pos  = item.is_mood_pos;
+    const is_mood_neg  = item.is_mood_neg;
+
+    const is_plain     = item.is_plain;
 
     // Which items to show
     if (item.marks) {
@@ -723,26 +832,12 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       if ( to_hide_mark) continue;
     }
     else { // Item not marked
-      if (chk_nomark && !show_nomark) continue;
+      if (chk_nomark       && !show_nomark) continue;
+      if (chk_plain_nomark && !show_plain_nomark && is_plain) continue;
     }
 
-    // Marking
-    const is_rank_up   =  item.is_both && (item.rank_change >= mark_rank_up); // item.index_prev > index
-    const is_rank_dn   =  item.is_both && (item.rank_change <= mark_rank_dn); // item.index_prev < index
-
-    const is_horz_grow =  item.is_both && (item.horz_change >= mark_grow_old);
-    const is_horz_fall =  item.is_both && (item.horz_change <= mark_fall_old);
-
-    const is_vert_grow = !item.is_prev && (item.vert_change >= mark_grow_23_7);
-    const is_vert_fall = !item.is_prev && (item.vert_change <= mark_fall_23_7);
-
-    const is_mood_pos  =  item.is_both && (item.grow._mood  >= mark_mood_pos);
-    const is_mood_neg  =  item.is_both && (item.grow._mood  <= mark_mood_neg);
-
     // Which items to show
-    const is_plain = !is_rank_up && !is_horz_grow && !is_vert_grow && !is_mood_pos &&
-                     !is_rank_dn && !is_horz_fall && !is_vert_fall && !is_mood_neg;
-    if   (is_plain) {
+    if (is_plain) {
       if (!show_plain) continue;
     }
     else {
@@ -786,7 +881,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     item_gauge_above_b.className = "item-gauge-above-b";
 
     // Display ratios old and all for curr on the above gauges
-    if (!item.is_prev) {
+    if (!is_prev) {
       item_gauge_above_a.style.width = item.gauges.above_a_w;
       item_gauge_above_b.style.width = item.gauges.above_b_w;
     }
@@ -819,11 +914,11 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     item_gauge_below_b.className = "item-gauge-below-b";
 
     // Display favorites prev and curr counts on the below gauges
-    if (!item.no_prev) {
+    if (!no_prev) {
       item_gauge_below_a.style.width = item.gauges.below_a_w;
     }
 
-    if (!item.is_prev) {
+    if (!is_prev) {
       item_gauge_below_b.style.width = item.gauges.below_b_w;
     }
 

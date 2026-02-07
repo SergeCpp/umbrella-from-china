@@ -411,8 +411,8 @@ input[type="checkbox"].changed.tab-e {
   padding: 0.5rem calc(0.5rem - 0.5ch); /* Lessen by 1ch added above */
 }
 .header-grow-inner { /* For bold subtitle of other font */
-  font-family: Verdana;
-  text-align: center; /* No letter-spacing here, for equal left and right space */
+  font-family: Verdana; /* No letter-spacing here, for equal left and right space */
+  text-align: center; /* Because letter-spacing adds space to the very last character also */
 }
 
 .bg-grow {
