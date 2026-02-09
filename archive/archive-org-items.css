@@ -41,6 +41,14 @@
   background-color: hsl(0.91turn 75% 95%);
 }
 
+.tab-a:focus-visible,
+.tab-b:focus-visible,
+.tab-c:focus-visible,
+.tab-d:focus-visible,
+.tab-e:focus-visible {
+  border-radius: 3px; /* To hide outside corners */
+}
+
 .tab-a:hover {
   background-color: hsl(0.07turn 75% 92%);
   color: #4a4a4a; /* Gray29 */
@@ -379,13 +387,15 @@ input[type="checkbox"].changed.tab-e {
 
 .header-inner {
   align-items: center; /* Vertically center title, stats, and grow */
-  border-radius: 0.5rem;
+/*border-radius: 0.5rem; */ /* No border-radius for header (as for item-inner) */
   display: flex;
   justify-content: space-between;
 }
 
 .header-title-wrapper {
+  cursor: pointer;
   flex: 1 1 auto;
+  outline-offset: -2px; /* For outline not to be clipped, to be within padding */
   overflow-x: hidden; /* To constrain the child, to use ellipsis there. Value "clip" not works here */
   padding: 0.5rem 0.5rem;
 }
@@ -396,8 +406,10 @@ input[type="checkbox"].changed.tab-e {
 }
 
 .header-stat-wrapper { /* For 22ch of non-bold monospaced */
+  cursor: pointer;
   flex: 0 0 22ch;
   font-family: monospace;
+  outline-offset: -2px; /* For outline not to be clipped, to be within padding */
   padding: 0.5rem 0 0.5rem 0.5rem;
 }
 .header-stat-inner { /* For bold subtitle of other font */
@@ -406,8 +418,10 @@ input[type="checkbox"].changed.tab-e {
 }
 
 .header-grow-wrapper { /* For 3ch of non-bold monospaced */
+  cursor: pointer;
   flex: 0 0 4ch; /* 3ch + 1ch extra to ease fit header text */
   font-family: monospace;
+  outline-offset: -2px; /* For outline not to be clipped, to be within padding */
   padding: 0.5rem calc(0.5rem - 0.5ch); /* Lessen by 1ch added above */
 }
 .header-grow-inner { /* For bold subtitle of other font */
@@ -429,16 +443,23 @@ input[type="checkbox"].changed.tab-e {
   background-color: hsl(0.58turn 75% 95%); /* Lower Lightness by 3 from 98 */
 }
 
-.header-title-wrapper.bg-fall.is-button:hover {
+.header-title-wrapper.bg-fall:focus-visible,
+.header-stat-wrapper.bg-grow:focus-visible,
+.header-stat-wrapper.bg-fall:focus-visible,
+.header-grow-wrapper.bg-grow:focus-visible {
+  border-radius: 3px; /* To hide outside corners */
+}
+
+.header-title-wrapper.bg-fall:hover {
   background-color: hsl(0.58turn 75% 92%); /* Lower Lightness by 3 from 95 */
 }
-.header-stat-wrapper.bg-grow.is-button:hover {
+.header-stat-wrapper.bg-grow:hover {
   background-color: hsl(0.42turn 75% 89%); /* Lower Lightness by 3 from 92 */
 }
-.header-stat-wrapper.bg-fall.is-button:hover {
+.header-stat-wrapper.bg-fall:hover {
   background-color: hsl(0.58turn 75% 92%); /* Lower Lightness by 3 from 95 */
 }
-.header-grow-wrapper.bg-grow.is-button:hover {
+.header-grow-wrapper.bg-grow:hover {
   background-color: hsl(0.42turn 75% 89%); /* Lower Lightness by 3 from 92 */
 }
 

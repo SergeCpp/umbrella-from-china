@@ -646,20 +646,17 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   //
   const header_wrapper = document.createElement("div");
   header_wrapper.className = "header-wrapper";
-  //
   const header_inner = document.createElement("div");
   header_inner.className = "header-inner";
   //
   const header_title_wrapper = document.createElement("div");
-  header_title_wrapper.className = "header-title-wrapper bg-fall is-button";
+  header_title_wrapper.className = "header-title-wrapper bg-fall";
   const header_title_inner = document.createElement("div");
   header_title_inner.className = "header-title-inner subtitle text-ellipsis";
   header_title_inner.textContent = "Internet Archive Item";
   header_title_wrapper.appendChild(header_title_inner);
   //
   header_title_wrapper.setAttribute("role", "button");
-  header_title_wrapper.style.cursor = "pointer";
-  header_title_wrapper.style.outlineOffset = "-2px";
   header_title_wrapper.tabIndex = 0;
   //
   header_title_wrapper.onclick = () => {
@@ -678,19 +675,26 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     const key = event.key;
     if ((key === 'Enter') || (key === ' ')) {
       event.preventDefault();
+      return;
     }
+
+    if ((key !== 'ArrowLeft') && (key !== 'ArrowRight')) return;
+    event.preventDefault();
+
+    if (key === 'ArrowLeft')
+      header_stat_grow_wrapper.focus();
+    else     //  ArrowRight
+      header_stat_prev_wrapper.focus();
   };
   //
   const header_stat_prev_wrapper = document.createElement("div");
-  header_stat_prev_wrapper.className = "header-stat-wrapper bg-grow is-button";
+  header_stat_prev_wrapper.className = "header-stat-wrapper bg-grow";
   const header_stat_prev_inner = document.createElement("div");
   header_stat_prev_inner.className = "header-stat-inner subtitle";
   header_stat_prev_inner.textContent = "Prev";
   header_stat_prev_wrapper.appendChild(header_stat_prev_inner);
   //
   header_stat_prev_wrapper.setAttribute("role", "button");
-  header_stat_prev_wrapper.style.cursor = "pointer";
-  header_stat_prev_wrapper.style.outlineOffset = "-2px";
   header_stat_prev_wrapper.tabIndex = 0;
   //
   header_stat_prev_wrapper.onclick = () => {
@@ -709,19 +713,26 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     const key = event.key;
     if ((key === 'Enter') || (key === ' ')) {
       event.preventDefault();
+      return;
     }
+
+    if ((key !== 'ArrowLeft') && (key !== 'ArrowRight')) return;
+    event.preventDefault();
+
+    if (key === 'ArrowLeft')
+      header_title_wrapper.focus();
+    else     //  ArrowRight
+      header_stat_curr_wrapper.focus();
   };
   //
   const header_stat_curr_wrapper = document.createElement("div");
-  header_stat_curr_wrapper.className = "header-stat-wrapper bg-fall is-button";
+  header_stat_curr_wrapper.className = "header-stat-wrapper bg-fall";
   const header_stat_curr_inner = document.createElement("div");
   header_stat_curr_inner.className = "header-stat-inner subtitle";
   header_stat_curr_inner.textContent = "Curr";
   header_stat_curr_wrapper.appendChild(header_stat_curr_inner);
   //
   header_stat_curr_wrapper.setAttribute("role", "button");
-  header_stat_curr_wrapper.style.cursor = "pointer";
-  header_stat_curr_wrapper.style.outlineOffset = "-2px";
   header_stat_curr_wrapper.tabIndex = 0;
   //
   header_stat_curr_wrapper.onclick = () => {
@@ -740,19 +751,26 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     const key = event.key;
     if ((key === 'Enter') || (key === ' ')) {
       event.preventDefault();
+      return;
     }
+
+    if ((key !== 'ArrowLeft') && (key !== 'ArrowRight')) return;
+    event.preventDefault();
+
+    if (key === 'ArrowLeft')
+      header_stat_prev_wrapper.focus();
+    else     //  ArrowRight
+      header_stat_grow_wrapper.focus();
   };
   //
   const header_stat_grow_wrapper = document.createElement("div");
-  header_stat_grow_wrapper.className = "header-grow-wrapper bg-grow is-button";
+  header_stat_grow_wrapper.className = "header-grow-wrapper bg-grow";
   const header_stat_grow_inner = document.createElement("div");
   header_stat_grow_inner.className = "header-grow-inner subtitle";
   header_stat_grow_inner.innerHTML = "&plus;&hairsp;&minus;";
   header_stat_grow_wrapper.appendChild(header_stat_grow_inner);
   //
   header_stat_grow_wrapper.setAttribute("role", "button");
-  header_stat_grow_wrapper.style.cursor = "pointer";
-  header_stat_grow_wrapper.style.outlineOffset = "-2px";
   header_stat_grow_wrapper.tabIndex = 0;
   //
   header_stat_grow_wrapper.onclick = () => {
@@ -771,7 +789,16 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     const key = event.key;
     if ((key === 'Enter') || (key === ' ')) {
       event.preventDefault();
+      return;
     }
+
+    if ((key !== 'ArrowLeft') && (key !== 'ArrowRight')) return;
+    event.preventDefault();
+
+    if (key === 'ArrowLeft')
+      header_stat_curr_wrapper.focus();
+    else     //  ArrowRight
+      header_title_wrapper.focus();
   };
   //
   header_inner  .appendChild(header_title_wrapper    );
