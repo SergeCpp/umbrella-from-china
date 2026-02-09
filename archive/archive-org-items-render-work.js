@@ -650,7 +650,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   header_inner.className = "header-inner";
   //
   const header_title_wrapper = document.createElement("div");
-  header_title_wrapper.className = "header-title-wrapper bg-fall";
+  header_title_wrapper.className = "header-title-wrapper";
+  header_title_wrapper.classList.add(title_is === "title" ? "bg-fall" : "bg-dn");
   const header_title_inner = document.createElement("div");
   header_title_inner.className = "header-title-inner subtitle text-ellipsis";
   header_title_inner.textContent = "Internet Archive Item";
@@ -688,7 +689,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   };
   //
   const header_stat_prev_wrapper = document.createElement("div");
-  header_stat_prev_wrapper.className = "header-stat-wrapper bg-grow";
+  header_stat_prev_wrapper.className = "header-stat-wrapper";
+  header_stat_prev_wrapper.classList.add(show_by === "old-23-7" ? "bg-grow" : "bg-up");
   const header_stat_prev_inner = document.createElement("div");
   header_stat_prev_inner.className = "header-stat-inner subtitle";
   header_stat_prev_inner.textContent = "Prev";
@@ -726,7 +728,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   };
   //
   const header_stat_curr_wrapper = document.createElement("div");
-  header_stat_curr_wrapper.className = "header-stat-wrapper bg-fall";
+  header_stat_curr_wrapper.className = "header-stat-wrapper";
+  header_stat_curr_wrapper.classList.add(sort_by === "ratio" ? "bg-fall" : "bg-dn");
   const header_stat_curr_inner = document.createElement("div");
   header_stat_curr_inner.className = "header-stat-inner subtitle";
   header_stat_curr_inner.textContent = "Curr";
@@ -764,7 +767,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   };
   //
   const header_stat_grow_wrapper = document.createElement("div");
-  header_stat_grow_wrapper.className = "header-grow-wrapper bg-grow";
+  header_stat_grow_wrapper.className = "header-grow-wrapper";
+  header_stat_grow_wrapper.classList.add(mood_by === "same-signs" ? "bg-grow" : "bg-up");
   const header_stat_grow_inner = document.createElement("div");
   header_stat_grow_inner.className = "header-grow-inner subtitle";
   header_stat_grow_inner.innerHTML = "&plus;&hairsp;&minus;";

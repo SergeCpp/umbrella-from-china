@@ -387,7 +387,7 @@ input[type="checkbox"].changed.tab-e {
 
 .header-inner {
   align-items: center; /* Vertically center title, stats, and grow */
-/*border-radius: 0.5rem; */ /* No border-radius for header (as for item-inner) */
+/*border-radius: 0.5rem; */ /* No border-radius for header (unlike item-inner) */
   display: flex;
   justify-content: space-between;
 }
@@ -435,6 +435,12 @@ input[type="checkbox"].changed.tab-e {
 .bg-fall {
   background-color: hsl(0.58turn 75% 98%);
 }
+.bg-up {
+  background-color: hsl(0.07turn 75% 98%); /* Perceived lighter than dn:98 */
+}
+.bg-dn {
+  background-color: hsl(0.91turn 75% 98%);
+}
 
 .header-inner:hover .bg-grow {
   background-color: hsl(0.42turn 75% 92%); /* Lower Lightness by 3 from 95 */
@@ -442,25 +448,46 @@ input[type="checkbox"].changed.tab-e {
 .header-inner:hover .bg-fall {
   background-color: hsl(0.58turn 75% 95%); /* Lower Lightness by 3 from 98 */
 }
+.header-inner:hover .bg-up {
+  background-color: hsl(0.07turn 75% 95%); /* Lower Lightness by 3 from 98 */
+}
+.header-inner:hover .bg-dn {
+  background-color: hsl(0.91turn 75% 95%); /* Lower Lightness by 3 from 98 */
+}
 
-.header-title-wrapper.bg-fall:focus-visible,
-.header-stat-wrapper.bg-grow:focus-visible,
-.header-stat-wrapper.bg-fall:focus-visible,
-.header-grow-wrapper.bg-grow:focus-visible {
+.header-title-wrapper:focus-visible,
+.header-stat-wrapper:focus-visible,
+.header-stat-wrapper:focus-visible,
+.header-grow-wrapper:focus-visible {
   border-radius: 3px; /* To hide outside corners */
 }
 
 .header-title-wrapper.bg-fall:hover {
   background-color: hsl(0.58turn 75% 92%); /* Lower Lightness by 3 from 95 */
 }
+.header-title-wrapper.bg-dn:hover {
+  background-color: hsl(0.91turn 75% 92%); /* Lower Lightness by 3 from 95 */
+}
+
 .header-stat-wrapper.bg-grow:hover {
   background-color: hsl(0.42turn 75% 89%); /* Lower Lightness by 3 from 92 */
 }
 .header-stat-wrapper.bg-fall:hover {
   background-color: hsl(0.58turn 75% 92%); /* Lower Lightness by 3 from 95 */
 }
+
+.header-stat-wrapper.bg-up:hover {
+  background-color: hsl(0.07turn 75% 92%); /* Lower Lightness by 3 from 95 */
+}
+.header-stat-wrapper.bg-dn:hover {
+  background-color: hsl(0.91turn 75% 92%); /* Lower Lightness by 3 from 95 */
+}
+
 .header-grow-wrapper.bg-grow:hover {
   background-color: hsl(0.42turn 75% 89%); /* Lower Lightness by 3 from 92 */
+}
+.header-grow-wrapper.bg-up:hover {
+  background-color: hsl(0.07turn 75% 92%); /* Lower Lightness by 3 from 95 */
 }
 
 /* Item */
