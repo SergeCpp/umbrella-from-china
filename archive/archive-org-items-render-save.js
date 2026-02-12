@@ -433,7 +433,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   // Marks displaying
   const chk_nomark       =  marks_count && nomarked_items;
   const chk_marked_by    = (marks_populated > 1);
-  const chk_plain_nomark =  marks_count;
+  const chk_plain_nomark =  marks_count && plain_nomarked;
 
   if (marks_count) {
     const marks_div = document.createElement("div");
@@ -555,6 +555,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     }
     container.appendChild(marks_div);
 
+    // Marked by # marks
     if (chk_marked_by) {
       const marked_by_div = document.createElement("div");
       marked_by_div.className = "text-center text-comment";
@@ -603,36 +604,39 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       container.appendChild(marked_by_div);
     }
 
-    const plain_nomark_div = document.createElement("div");
-    plain_nomark_div.className = "text-center text-comment";
+    // Plain nomarked
+    if (chk_plain_nomark) {
+      const plain_nomark_div = document.createElement("div");
+      plain_nomark_div.className = "text-center text-comment";
 
-    const plain_nomark_span = document.createElement("span");
-    plain_nomark_span.className = "text-nowrap";
+      const plain_nomark_span = document.createElement("span");
+      plain_nomark_span.className = "text-nowrap";
 
-    const plain_nomark_label = document.createElement("label");
-    plain_nomark_label.htmlFor = "plain-nomark";
-    plain_nomark_label.style.cursor = "pointer";
-    plain_nomark_label.textContent = "Plain and not marked: " + format_num_str(plain_nomarked, "Item");
+      const plain_nomark_label = document.createElement("label");
+      plain_nomark_label.htmlFor = "plain-nomark";
+      plain_nomark_label.style.cursor = "pointer";
+      plain_nomark_label.textContent = "Plain and not marked: " + format_num_str(plain_nomarked, "Item");
 
-    const plain_nomark_chk = document.createElement("input");
-    plain_nomark_chk.checked = show_plain_nomark;
-    plain_nomark_chk.className = "in-chk";
-    plain_nomark_chk.id = "plain-nomark";
-    plain_nomark_chk.type = "checkbox";
+      const plain_nomark_chk = document.createElement("input");
+      plain_nomark_chk.checked = show_plain_nomark;
+      plain_nomark_chk.className = "in-chk";
+      plain_nomark_chk.id = "plain-nomark";
+      plain_nomark_chk.type = "checkbox";
 
-    plain_nomark_chk.oninput = () => { show_plain_nomark = plain_nomark_chk.checked; };
+      plain_nomark_chk.oninput = () => { show_plain_nomark = plain_nomark_chk.checked; };
 
-    plain_nomark_chk.onkeyup = (event) => {
-      if (event.key === 'Enter') {
-        process_filter();
-      }
-    };
+      plain_nomark_chk.onkeyup = (event) => {
+        if (event.key === 'Enter') {
+          process_filter();
+        }
+      };
 
-    plain_nomark_span.appendChild(plain_nomark_label);
-    plain_nomark_span.appendChild(plain_nomark_chk  );
-    plain_nomark_div .appendChild(plain_nomark_span );
-    container        .appendChild(plain_nomark_div  );
-  }
+      plain_nomark_span.appendChild(plain_nomark_label);
+      plain_nomark_span.appendChild(plain_nomark_chk  );
+      plain_nomark_div .appendChild(plain_nomark_span );
+      container        .appendChild(plain_nomark_div  );
+    }
+  } // if (marks_count) closing
 
   // Spacing
   container.lastElementChild.style.marginBottom = "1em"; // Add space before item list
