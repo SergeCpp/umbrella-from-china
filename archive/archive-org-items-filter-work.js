@@ -8,10 +8,12 @@ const err_end = '</div>';
 
 const err_chars =
   err_beg +
-  err_bds + 'Allowed characters are: a-z, 0-9, =!&lt;&gt;, (), _-, period, comma, quote, and space' +
+  err_bds + 'Allowed characters are: a-z, 0-9, =!&lt;&gt;, (), [], _-, period, comma, quote, and space' +
   err_es  +
   'Creators: =5 finds items (two) with exactly five creators<br />' +
   'Creators: Xiao >1 finds items (three) where more than one creator has Xiao in name<br />' +
+  'Creators: Xiao] finds Xiao Wu, and not finds Xiaodan<br />' +
+  'Creators: Xiao[ finds Xiaodan, and not finds Xiao Wu<br />' +
   'Subjects: Dance >4 finds items (14) where more than four subjects contain Dance<br />' +
   'Title: \' Xiaodan \' finds items (10) with name Xiaodan surrounded by spaces in title<br />' +
   'Title: /-xiaodan- finds items (same 10) with string -xiaodan- in identifier (not in title)<br />' +
@@ -288,12 +290,39 @@ function evaluate_term(term, values) {
         default  : return false; // Unknown conditional
       }
     }
+    case "B_TEXT_B":
+      return values.some(value => is_b_text_b_in_value(term.bpre, term.text, term.bsuf, value));
+
     case "TEXT":
       return values.some(value => value.includes(term.text));
 
     default:
       return false; // Unknown type of term
   }
+}
+
+function is_b_text_b_in_value(bpre, text, bsuf, value) {
+  if (!text.length) return false;
+
+  let index = 0;
+
+  do {
+    index = value.indexOf(text, index);
+    if (index === -1) return false;
+
+    const inext = index + text.length;
+
+    const vpre = index === 0            ? "no_alnum" : is_alnum(value[index - 1]) ? "alnum" : "no_alnum";
+    const vsuf = inext === value.length ? "no_alnum" : is_alnum(value[inext    ]) ? "alnum" : "no_alnum";
+
+    if (bpre && (bpre !== vpre)) { index = inext; continue; }
+    if (bsuf && (bsuf !== vsuf)) { index = inext; continue; }
+
+    return true;
+  }
+  while ((index + text.length) <= value.length);
+
+  return false;
 }
 
 function paren_depth(term, index) {
@@ -324,7 +353,7 @@ function is_alnum(char) {
 }
 
 function parse_find_op(term, op, index) {
-  let found = false;
+  if (!op.length) return -1;
 
   do {
     index = term.indexOf(op, index);
@@ -332,17 +361,14 @@ function parse_find_op(term, op, index) {
 
     const inext = index + op.length;
 
-    if (((index === 0)           || !is_alnum(term[index - 1])) &&
-        ((inext === term.length) || !is_alnum(term[inext]))) {
-      found = true;
-      break;
-    }
+    if ((index > 0)           && is_alnum(term[index - 1])) { index = inext; continue; }
+    if ((inext < term.length) && is_alnum(term[inext    ])) { index = inext; continue; }
 
-    index = inext;
+    return index;
   }
   while ((index + op.length) <= term.length);
 
-  return found ? index : -1;
+  return -1;
 }
 
 function parse_node_split(term, op) {
@@ -485,15 +511,56 @@ function parse_term(term) {
     }
   }
 
-  return term2text(term);
+  // Check for B_TEXT_B next
+  node = parse_b_text_b(term);
+  if (node) return node;
+
+  // TEXT
+  // Plain text term (OR behavior of comma-separated terms)
+  return {
+    type: "TEXT",
+    text: term2text(term)
+  };
 }
 
-// Plain text term (OR behavior of comma-separated terms)
-function term2text(term) {
+function parse_b_text_b(term) {
+  if (term.length < 2) return null;
+
+  const is_pre_opn = term.startsWith(']'); // Open   boundary: same is_alnum before
+  const is_pre_cls = term.startsWith('['); // Closed boundary: diff is_alnum before
+
+  const is_suf_opn = term.endsWith  ('['); // Open   (see above)
+  const is_suf_cls = term.endsWith  (']'); // Closed (see above)
+
+  if (!is_pre_opn && !is_pre_cls && !is_suf_opn && !is_suf_cls) return null;
+
+  if (is_pre_opn || is_pre_cls) term = term.slice(1);
+  if (is_suf_opn || is_suf_cls) term = term.slice(0, -1);
+
+  term = term2text(term); // To see actual chars not hidden by quotes
+  if (!term.length) return null;
+
+  const is_pre_alnum = is_alnum(term.at( 0));
+  const is_suf_alnum = is_alnum(term.at(-1));
+
+  const bpre = is_pre_opn ? (is_pre_alnum ?    "alnum" : "no_alnum") :
+               is_pre_cls ? (is_pre_alnum ? "no_alnum" :    "alnum") :
+               null;
+  const bsuf = is_suf_opn ? (is_suf_alnum ?    "alnum" : "no_alnum") :
+               is_suf_cls ? (is_suf_alnum ? "no_alnum" :    "alnum") :
+               null;
+
   return {
-    type: "TEXT", // Quote allows leading/trailing space, also ' ' possible for term
-    text: term.replace(/['"]/g, "").toLowerCase()
+    type: "B_TEXT_B",
+    bpre,
+    text: term,
+    bsuf
   };
+}
+
+function term2text(term) {
+  // Quote allows leading/trailing space, also ' ' possible for term
+  return term.replace(/['"]/g, "").toLowerCase();
 }
 
 /* Filter Input Check */
@@ -531,7 +598,7 @@ function input_parens_match(input) {
 }
 
 function input_allowed_chars(input) {
-  return !/[^a-zA-Z0-9._\-'" =!<>(),]/.test(input);
+  return !/[^a-zA-Z0-9._\-'" =!<>()\[\],]/.test(input);
 }
 
 function input_allowed_keys(input) {
