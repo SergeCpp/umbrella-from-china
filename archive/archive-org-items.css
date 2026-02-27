@@ -339,16 +339,29 @@ input[type="checkbox"].changed.tab-e {
   padding: 0 2.5ch;
 }
 .in-btn:hover {
-  background-color: #ebebeb; /* Gray92, the same as for text input */
-  border-color: #cccccc; /* Gray80, the same as for text input */
+  background-color: #ebebeb; /* Gray92, the same as for text input changed hover */
+  border-color: #cccccc; /* Gray80, the same as for text input changed hover */
   border-radius: 3px; /* The same as for text input */
   border-style: solid;
 }
 .in-btn:active {
-  background-color: #f2f2f2; /* Gray95, the same as for text input */
-  border-color: #d4d4d4; /* Gray83, the same as for text input */
+  background-color: #f2f2f2; /* Gray95, the same as for text input changed */
+  border-color: #d4d4d4; /* Gray83, the same as for text input changed */
   border-radius: 3px; /* The same as for text input */
   border-style: solid;
+}
+
+.span-btn {
+  border-color: white; /* Invisible border */
+  border-radius: 3px; /* The same as for text input */
+  border-style: solid;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.span-btn:hover {
+  background-color: #f2f2f2; /* Gray95, the same as for in-btn active */
+  border-color: #d4d4d4; /* Gray83, the same as for in-btn active */
+  color: #4a4a4a; /* Gray29 */
 }
 
 /* Menu */
@@ -400,7 +413,7 @@ input[type="checkbox"].changed.tab-e {
   padding: 0.5rem 0.5rem;
 }
 .header-title-inner { /* Title holder */
-  font-family: Verdana;
+  font-family: sans-serif;
   letter-spacing: 1px;
   word-spacing: 0.15em;
 }
@@ -413,7 +426,7 @@ input[type="checkbox"].changed.tab-e {
   padding: 0.5rem 0 0.5rem 0.5rem;
 }
 .header-stat-inner { /* For bold subtitle of other font */
-  font-family: Verdana;
+  font-family: sans-serif;
   letter-spacing: 1px;
 }
 
@@ -425,7 +438,7 @@ input[type="checkbox"].changed.tab-e {
   padding: 0.5rem calc(0.5rem - 0.5ch); /* Lessen by 1ch added above */
 }
 .header-grow-inner { /* For bold subtitle of other font */
-  font-family: Verdana; /* No letter-spacing here, for equal left and right space */
+  font-family: sans-serif; /* No letter-spacing here, for equal left and right space */
   text-align: center; /* Because letter-spacing adds space to the very last character also */
 }
 

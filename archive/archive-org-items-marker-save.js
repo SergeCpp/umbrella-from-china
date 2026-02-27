@@ -342,20 +342,20 @@ function render_stats(results, date, what, show_by, sort_by, container) {
   const percentile90 = get_percentile(90);
 
   stats_text.innerHTML =
-    format_nowrap(cap_first(what) + ' ' +
+    format_nowrap(cap_first(what) + '&thinsp;' +
       '<span ' +
-      'role="button" style="cursor: pointer;" tabindex="0" ' +
+      'class="span-btn" role="button" tabindex="0" ' +
       'onkeydown="if ((event.key === \'Enter\') || (event.key === \' \')) event.preventDefault();" ' +
       'onkeyup  ="if ((event.key === \'Enter\') || (event.key === \' \')) ' +
                  'date_change_menu(event, \'' + what + '\');" ' +
       'onclick  ="date_change_menu(event, \'' + what + '\')" ' +
-      '>' + date + '</span>' + ':')            + '&ensp;' +
-    format_nowrap('Min ' + min          + ',') + '&ensp;' +
-    format_nowrap('10% ' + percentile10 + ',') + '&ensp;' +
-    format_nowrap('25% ' + quartile1    + ',') + '&ensp;' +
-    format_nowrap('50% ' + median       + ',') + '&ensp;' +
-    format_nowrap('75% ' + quartile3    + ',') + '&ensp;' +
-    format_nowrap('90% ' + percentile90 + ',') + '&ensp;' +
+      '>' + date + '</span>' + '&thinsp;' + ':') + '&ensp;' +
+    format_nowrap('Min ' + min            + ',') + '&ensp;' +
+    format_nowrap('10% ' + percentile10   + ',') + '&ensp;' +
+    format_nowrap('25% ' + quartile1      + ',') + '&ensp;' +
+    format_nowrap('50% ' + median         + ',') + '&ensp;' +
+    format_nowrap('75% ' + quartile3      + ',') + '&ensp;' +
+    format_nowrap('90% ' + percentile90   + ',') + '&ensp;' +
     format_nowrap('Max ' + max);
 
   container.appendChild(stats_text);
