@@ -783,6 +783,7 @@ function process_filter() {
 /* Date Change */
 
 // Uses global: stat_file_dates
+// what: "prev" / "curr"
 function date_change_menu(event, what) {
   const menu_old = document.getElementById('date-change-menu');
   if   (menu_old) { menu_old.remove_ex(); }
@@ -802,24 +803,17 @@ function date_change_menu(event, what) {
       i_beg = Math.max(i_beg - (i_end - i_max), i_min);
       i_end = i_max; }
 
-  const d_count  = i_end - i_beg + 1;
-  const rect     = event.target.getBoundingClientRect();
-  let   menu_top = rect.top    + window.scrollY - (11 + 32 * d_count);
-  if   (menu_top <               window.scrollY)     {
-        menu_top = rect.bottom + window.scrollY + 2; }
-
-  const menu_caller   = document.activeElement;
-  const menu          = document.createElement('div');
-  menu.className      = 'menu';
-  menu.id             = 'date-change-menu';
-  menu.setAttribute    ('role', 'menu');
-  menu.style.position = 'absolute';
-  menu.style.left     = (rect.left + window.scrollX - 2) + 'px';
-  menu.style.top      =  menu_top                        + 'px';
+  const  btn_other  = document.querySelector('.span-btn-' + (what === "curr" ? "prev" : "curr"));
+  const menu_caller = document.activeElement;
+  const menu        = document.createElement('div');
+  menu.className    = 'menu';
+  menu.id           = 'date-change-menu';
+  menu.setAttribute  ('role', 'menu');
 
   menu.remove_ex = () => {
     document.removeEventListener('click', menu.outside_click);
     menu.remove();
+    if ( btn_other  && document.body.contains( btn_other )) {  btn_other .style.pointerEvents = 'auto'; }
     if (menu_caller && document.body.contains(menu_caller)) { menu_caller.focus(); }
   };
 
@@ -886,8 +880,34 @@ function date_change_menu(event, what) {
     menu.appendChild(opt);
   }
 
+  menu.style.visibility = 'hidden';
   document.body.appendChild(menu);
-  menu.children[i_date - i_beg].focus();
+
+  const b_rect = event.target.getBoundingClientRect();
+  const m_rect = menu        .getBoundingClientRect();
+
+  const b_mid  = b_rect.left + b_rect.width / 2;
+  const m_half =               m_rect.width / 2;
+  const m_left = b_mid - m_half + window.scrollX;
+
+  let   m_top  = b_rect.top     + window.scrollY - 2 - m_rect.height;
+  if   (m_top  <                  window.scrollY)     {
+        m_top  = b_rect.bottom  + window.scrollY + 2; }
+
+  menu.style.left       = m_left + 'px';
+  menu.style.top        = m_top  + 'px';
+  menu.style.visibility = 'visible';
+  menu.children [i_date - i_beg] .focus();
+
+  if (btn_other) {
+    const b_rect = btn_other.getBoundingClientRect();
+    const m_rect = menu     .getBoundingClientRect();
+
+    const is_overlap = (m_rect.bottom >= b_rect.top   ) &&
+                       (m_rect.top    <= b_rect.bottom);
+
+    if   (is_overlap) { btn_other.style.pointerEvents = 'none'; }
+  }
 }
 
 /* Dates */

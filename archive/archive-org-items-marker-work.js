@@ -299,6 +299,7 @@ function sort_results(results, show_by, sort_by) {
 
 /* Render */
 
+// what: "prev" / "curr"
 function render_stats(results, date, what, show_by, sort_by, container) {
   let field = null;
 
@@ -344,7 +345,7 @@ function render_stats(results, date, what, show_by, sort_by, container) {
   stats_text.innerHTML =
     format_nowrap(cap_first(what) + '&thinsp;' +
       '<span ' +
-      'class="span-btn" role="button" tabindex="0" ' +
+      'class="span-btn span-btn-' + what + '" role="button" tabindex="0" ' +
       'onkeydown="if ((event.key === \'Enter\') || (event.key === \' \')) event.preventDefault();" ' +
       'onkeyup  ="if ((event.key === \'Enter\') || (event.key === \' \')) ' +
                  'date_change_menu(event, \'' + what + '\');" ' +

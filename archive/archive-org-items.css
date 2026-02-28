@@ -368,10 +368,15 @@ input[type="checkbox"].changed.tab-e {
 
 .menu {
   background-color: #fafafa; /* Gray98 */
-  border: #ebebeb solid 3px; /* Gray92 */
+  border: #ebebeb solid 3px; /* Gray92, 6 less from 98 */
   border-radius: 6px;
-  box-shadow: 3px 3px 6px rgb(0 0 0 / 0.3);
+  box-shadow: 3px 3px 6px rgb(0 0 0 / 0.27);
   color: #696969; /* DimGray, L41 */
+  position: absolute;
+}
+.menu:hover {
+  border-color: #dbdbdb;  /* Gray86, 6 less from 92 */
+  box-shadow: 3px 3px 6px rgb(0 0 0 / 0.33);
 }
 .menu-opt {
   border-radius: 6px;
