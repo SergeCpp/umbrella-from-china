@@ -364,6 +364,10 @@ function render_stats(results, date, what, show_by, sort_by, container) {
 
 /* Compose */
 
+//
+// Items
+//
+
 // Stat data sizes and templates
 const views_length = 6; // 123456
 const  days_length = 5; // 12345
@@ -654,6 +658,133 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
     rank_marks,
     mood_marks
   };
+}
+
+//
+// Header
+//
+
+function header_onkeyup(cell) {
+  cell.onkeyup = (event) => {
+    const key = event.key;
+    if ((key === 'Enter') || (key === ' ')) {
+      cell.click();
+    }
+  };
+}
+
+function header_onkeydown(cell, cell_prev, cell_next) {
+  cell.onkeydown = (event) => {
+    const key = event.key;
+    if ((key === 'Enter') || (key === ' ')) {
+      event.preventDefault();
+      return;
+    }
+
+    if ((key !== 'ArrowLeft') && (key !== 'ArrowRight')) return;
+    event.preventDefault();
+
+    if (key === 'ArrowLeft')
+      cell_prev.focus();
+    else     //  ArrowRight
+      cell_next.focus();
+  };
+}
+
+function compose_header(title_is, title_is_set,
+                         show_by,  show_by_set,
+                         sort_by,  sort_by_set,
+                         mood_by,  mood_by_set,
+  container) {
+
+  const header_wrapper = document.createElement("div");
+  header_wrapper.className = "header-wrapper";
+  const header_inner = document.createElement("div");
+  header_inner.className = "header-inner";
+
+  const header_title_wrapper = document.createElement("div");
+  header_title_wrapper.className = "header-title-wrapper";
+  header_title_wrapper.classList.add(title_is === "title" ? "bg-fall" : "bg-dn");
+  const header_title_inner = document.createElement("div");
+  header_title_inner.className = "header-title-inner subtitle text-ellipsis";
+  header_title_inner.textContent = "Internet Archive Item";
+  header_title_wrapper.appendChild(header_title_inner);
+  //
+  header_title_wrapper.setAttribute("role", "button");
+  header_title_wrapper.tabIndex = 0;
+  //
+  header_title_wrapper.onclick = () => {
+    title_is_set(title_is === "title" ? "identifier" : "title");
+    process_filter();
+  };
+
+  const header_stat_prev_wrapper = document.createElement("div");
+  header_stat_prev_wrapper.className = "header-stat-wrapper";
+  header_stat_prev_wrapper.classList.add(show_by === "old-23-7" ? "bg-grow" : "bg-up");
+  const header_stat_prev_inner = document.createElement("div");
+  header_stat_prev_inner.className = "header-stat-inner subtitle";
+  header_stat_prev_inner.textContent = "Prev";
+  header_stat_prev_wrapper.appendChild(header_stat_prev_inner);
+  //
+  header_stat_prev_wrapper.setAttribute("role", "button");
+  header_stat_prev_wrapper.tabIndex = 0;
+  //
+  header_stat_prev_wrapper.onclick = () => {
+    show_by_set(show_by === "old-23-7" ? "all-30-7" : "old-23-7");
+    process_filter();
+  };
+
+  const header_stat_curr_wrapper = document.createElement("div");
+  header_stat_curr_wrapper.className = "header-stat-wrapper";
+  header_stat_curr_wrapper.classList.add(sort_by === "ratio" ? "bg-fall" : "bg-dn");
+  const header_stat_curr_inner = document.createElement("div");
+  header_stat_curr_inner.className = "header-stat-inner subtitle";
+  header_stat_curr_inner.textContent = "Curr";
+  header_stat_curr_wrapper.appendChild(header_stat_curr_inner);
+  //
+  header_stat_curr_wrapper.setAttribute("role", "button");
+  header_stat_curr_wrapper.tabIndex = 0;
+  //
+  header_stat_curr_wrapper.onclick = () => {
+    sort_by_set(sort_by === "ratio" ? "views" : "ratio");
+    process_filter();
+  };
+
+  const header_stat_grow_wrapper = document.createElement("div");
+  header_stat_grow_wrapper.className = "header-grow-wrapper";
+  header_stat_grow_wrapper.classList.add(mood_by === "same-signs" ? "bg-grow" : "bg-up");
+  const header_stat_grow_inner = document.createElement("div");
+  header_stat_grow_inner.className = "header-grow-inner subtitle";
+  header_stat_grow_inner.innerHTML = "&plus;&hairsp;&minus;";
+  header_stat_grow_wrapper.appendChild(header_stat_grow_inner);
+  //
+  header_stat_grow_wrapper.setAttribute("role", "button");
+  header_stat_grow_wrapper.tabIndex = 0;
+  //
+  header_stat_grow_wrapper.onclick = () => {
+    mood_by_set(mood_by === "same-signs" ? "diff-signs" : "same-signs");
+    process_filter();
+  };
+
+  header_onkeyup  (header_title_wrapper);
+  header_onkeydown(header_title_wrapper,     header_stat_grow_wrapper, header_stat_prev_wrapper);
+  //
+  header_onkeyup  (header_stat_prev_wrapper);
+  header_onkeydown(header_stat_prev_wrapper, header_title_wrapper,     header_stat_curr_wrapper);
+  //
+  header_onkeyup  (header_stat_curr_wrapper);
+  header_onkeydown(header_stat_curr_wrapper, header_stat_prev_wrapper, header_stat_grow_wrapper);
+  //
+  header_onkeyup  (header_stat_grow_wrapper);
+  header_onkeydown(header_stat_grow_wrapper, header_stat_curr_wrapper, header_title_wrapper);
+
+  header_inner  .appendChild(header_title_wrapper    );
+  header_inner  .appendChild(header_stat_prev_wrapper);
+  header_inner  .appendChild(header_stat_curr_wrapper);
+  header_inner  .appendChild(header_stat_grow_wrapper);
+  //
+  header_wrapper.appendChild(header_inner  );
+  container     .appendChild(header_wrapper);
 }
 
 // EOF
