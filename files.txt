@@ -12,6 +12,7 @@ https://umbrella-from-china.neocities.org/archive/archive-org-items-marker-save.
 https://umbrella-from-china.neocities.org/archive/archive-org-items-marker-work.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-render-save.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-render-work.js
+
 https://umbrella-from-china.neocities.org/archive/archive-org-items-runner-save.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-runner-work.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items.css
@@ -31,6 +32,7 @@ https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-202
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-08-31.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-09-15.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-09-30.xml.txt
+
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-10-15.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-10-19-subjects.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-10-31.xml.txt
@@ -41,8 +43,10 @@ https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-202
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2025-12-31.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2026-01-15.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2026-02-01.xml.txt
+
+https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2026-03-01.xml.txt
 -----------------------------------------------------------
-1 dates + 17 stats + 1 subjects + 1 descriptions = 20 files
+1 dates + 18 stats + 1 subjects + 1 descriptions = 21 files
 
 All images listed are used actually
 -----------------------------------
@@ -326,7 +330,7 @@ https://umbrella-from-china.neocities.org/ziyan-dancer.txt
 -------------------------------------------
 1 css + 27 html + 29 txt + 1 xml = 58 files
 
-The total size of the site files is less than 72 megabytes
+The total size of the site files is less than 73 megabytes
 
 No external images hotlinking, all images are hosted on this site
 
