@@ -35,9 +35,9 @@ function get_grow_ratio(curr, prev) {
                       return "^^^";
   }
   //    ratio < 1
-  if   (ratio > 0.99) return "-  ";
-  if   (ratio > 0.98) return "-- ";
-  if   (ratio > 0.96) return "---";
+  if   (ratio > 0.99) return '\u2212\u0020\u0020'; // \u2212 is &minus;
+  if   (ratio > 0.98) return '\u2212\u2212\u0020';
+  if   (ratio > 0.96) return '\u2212\u2212\u2212';
 
   if   (ratio > 0.94) return "v  ";
   if   (ratio > 0.90) return "vv ";
@@ -60,9 +60,9 @@ function get_grow_fixed(curr, prev) {
                         return "^^^";
   }
   //    diff < 0
-  if   (diff_abs === 1) return "-  ";
-  if   (diff_abs === 2) return "-- ";
-  if   (diff_abs === 3) return "---";
+  if   (diff_abs === 1) return '\u2212\u0020\u0020';
+  if   (diff_abs === 2) return '\u2212\u2212\u0020';
+  if   (diff_abs === 3) return '\u2212\u2212\u2212';
 
   if   (diff_abs <=  5) return "v  ";
   if   (diff_abs <= 10) return "vv ";
@@ -70,19 +70,23 @@ function get_grow_fixed(curr, prev) {
 }
 
 const grow_values = {
-  "^^^":  18,
-  "^^ ":  12,
-  "^  ":   6,
-  "+++":   3,
-  "++ ":   2,
-  "+  ":   1,
-  "   ":   0,
-  "-  ":  -1,
-  "-- ":  -2,
-  "---":  -3,
-  "v  ":  -6,
-  "vv ": -12,
-  "vvv": -18
+  "^^^"             :  18,
+  "^^ "             :  12,
+  "^  "             :   6,
+
+  "+++"             :   3,
+  "++ "             :   2,
+  "+  "             :   1,
+
+  "   "             :   0,
+
+'\u2212\u0020\u0020':  -1,
+'\u2212\u2212\u0020':  -2,
+'\u2212\u2212\u2212':  -3,
+
+  "v  "             :  -6,
+  "vv "             : -12,
+  "vvv"             : -18
 };
 
 function get_grow_value(grow) {
@@ -766,7 +770,7 @@ function compose_header(title_is, title_is_set,
     process_filter();
   };
 
-  header_onkeyup  (header_title_wrapper);
+  header_onkeyup  (header_title_wrapper    );
   header_onkeydown(header_title_wrapper,     header_stat_grow_wrapper, header_stat_prev_wrapper);
   //
   header_onkeyup  (header_stat_prev_wrapper);
@@ -776,7 +780,7 @@ function compose_header(title_is, title_is_set,
   header_onkeydown(header_stat_curr_wrapper, header_stat_prev_wrapper, header_stat_grow_wrapper);
   //
   header_onkeyup  (header_stat_grow_wrapper);
-  header_onkeydown(header_stat_grow_wrapper, header_stat_curr_wrapper, header_title_wrapper);
+  header_onkeydown(header_stat_grow_wrapper, header_stat_curr_wrapper, header_title_wrapper    );
 
   header_inner  .appendChild(header_title_wrapper    );
   header_inner  .appendChild(header_stat_prev_wrapper);
