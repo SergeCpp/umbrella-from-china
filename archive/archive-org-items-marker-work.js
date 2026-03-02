@@ -410,17 +410,17 @@ function render_diffs(results_prev, results_curr, show_by, container) {
   const views_favs_curr = get_views_favs(results_curr);
 
   diffs_text.innerHTML =
-    format_nowrap('Differences in:') + '&ensp;' +
+    format_nowrap('Differences in:') + ' ' +
     format_nowrap('Views: ' +
       format_num_sign(show_by_old
                     ? views_favs_curr.views_old - views_favs_prev.views_old
-                    : views_favs_curr.views_all - views_favs_prev.views_all) + ' / ' +
+                    : views_favs_curr.views_all - views_favs_prev.views_all) + '&hairsp;/&hairsp;' +
       format_num_sign(show_by_old
                     ? views_favs_curr.views_23  - views_favs_prev.views_23
-                    : views_favs_curr.views_30  - views_favs_prev.views_30 ) + ' / ' +
-      format_num_sign(views_favs_curr.views_7   - views_favs_prev.views_7  ) +  ',') + '&ensp;' +
+                    : views_favs_curr.views_30  - views_favs_prev.views_30 ) + '&hairsp;/&hairsp;' +
+      format_num_sign(views_favs_curr.views_7   - views_favs_prev.views_7  ) + ',') + ' ' +
     format_nowrap('Favs: ' +
-      format_num_sign(views_favs_curr.favorites - views_favs_prev.favorites) + ' / ' +
+      format_num_sign(views_favs_curr.favorites - views_favs_prev.favorites) + '&hairsp;/&hairsp;' +
       format_num_sign(views_favs_curr.favorited - views_favs_prev.favorited));
 
   container.appendChild(diffs_text);

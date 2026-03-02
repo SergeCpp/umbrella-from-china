@@ -418,26 +418,26 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   subst_cnt_div.appendChild(document.createTextNode(' '));
 
   const subst_cnt_rank = document.createElement("span");
-  subst_cnt_rank.className = "text-nowrap";
-  subst_cnt_rank.textContent = "Rank: " + rank_marks.above.cnt + '/' + rank_marks.below.cnt + ',';
+  subst_cnt_rank.className = "text-nowrap";                    // \u200a is &hairsp;
+  subst_cnt_rank.textContent = "Rank: " + rank_marks.above.cnt + '\u200a/\u200a' + rank_marks.below.cnt + ',';
   subst_cnt_div.appendChild(subst_cnt_rank);
   subst_cnt_div.appendChild(document.createTextNode(' '));
 
   const subst_cnt_horz = document.createElement("span");
   subst_cnt_horz.className = "text-nowrap";
-  subst_cnt_horz.textContent = "Horz: " + horz_marks.above.cnt + '/' + horz_marks.below.cnt + ',';
+  subst_cnt_horz.textContent = "Horz: " + horz_marks.above.cnt + '\u200a/\u200a' + horz_marks.below.cnt + ',';
   subst_cnt_div.appendChild(subst_cnt_horz);
   subst_cnt_div.appendChild(document.createTextNode(' '));
 
   const subst_cnt_vert = document.createElement("span");
   subst_cnt_vert.className = "text-nowrap";
-  subst_cnt_vert.textContent = "Vert: " + vert_marks.above.cnt + '/' + vert_marks.below.cnt + ',';
+  subst_cnt_vert.textContent = "Vert: " + vert_marks.above.cnt + '\u200a/\u200a' + vert_marks.below.cnt + ',';
   subst_cnt_div.appendChild(subst_cnt_vert);
   subst_cnt_div.appendChild(document.createTextNode(' '));
 
   const subst_cnt_mood = document.createElement("span");
   subst_cnt_mood.className = "text-nowrap";
-  subst_cnt_mood.textContent = "Mood: " + mood_marks.above.cnt + '/' + mood_marks.below.cnt;
+  subst_cnt_mood.textContent = "Mood: " + mood_marks.above.cnt + '\u200a/\u200a' + mood_marks.below.cnt;
   subst_cnt_div.appendChild(subst_cnt_mood);
 
   container.appendChild(subst_cnt_div);
