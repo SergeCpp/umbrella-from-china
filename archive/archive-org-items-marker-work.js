@@ -17,9 +17,11 @@
 // vv     0      2      0      0 >    14
 // vvv    0      0      0      0 >     6
 
-function get_grow_ratio(curr, prev) {
-  if (!curr && !prev) return "   ";
-  if (!curr || !prev) return "ooo";
+function get_grow_ratio(prev, curr) {
+  if (!prev && !curr) return "   "; // Nothing at all
+  if (!prev || !curr) return curr
+                           ? "***"  // Grow from zero
+                           : "ooo"; // Fall to   zero
 
   const ratio = curr / prev;
 
@@ -44,7 +46,7 @@ function get_grow_ratio(curr, prev) {
                       return "vvv";
 }
 
-function get_grow_fixed(curr, prev) {
+function get_grow_fixed(prev, curr) {
   const diff = curr - prev;
   if   (diff === 0)     return "   ";
 
@@ -60,7 +62,7 @@ function get_grow_fixed(curr, prev) {
                         return "^^^";
   }
   //    diff < 0
-  if   (diff_abs === 1) return '\u2212\u0020\u0020';
+  if   (diff_abs === 1) return '\u2212\u0020\u0020'; // \u2212 is &minus;
   if   (diff_abs === 2) return '\u2212\u2212\u0020';
   if   (diff_abs === 3) return '\u2212\u2212\u2212';
 
@@ -70,23 +72,27 @@ function get_grow_fixed(curr, prev) {
 }
 
 const grow_values = {
-  "^^^"             :  18,
-  "^^ "             :  12,
-  "^  "             :   6,
+               "***": 999,
 
-  "+++"             :   3,
-  "++ "             :   2,
-  "+  "             :   1,
+               "^^^":  18,
+               "^^ ":  12,
+               "^  ":   6,
 
-  "   "             :   0,
+               "+++":   3,
+               "++ ":   2,
+               "+  ":   1,
 
-'\u2212\u0020\u0020':  -1,
+               "   ":   0,
+
+'\u2212\u0020\u0020':  -1, // \u2212 is &minus;
 '\u2212\u2212\u0020':  -2,
 '\u2212\u2212\u2212':  -3,
 
-  "v  "             :  -6,
-  "vv "             : -12,
-  "vvv"             : -18
+               "v  ":  -6,
+               "vv ": -12,
+               "vvv": -18,
+
+               "ooo":-999
 };
 
 function get_grow_value(grow) {
@@ -220,6 +226,26 @@ function get_totals(results) {
   return totals;
 }
 
+function get_views_favs(results) {
+  const views_favs = { views_all: 0, views_old: 0, views_30: 0, views_23: 0, views_7: 0,
+                       favorites: 0, favorited: 0 };
+
+  for (let i = 0; i < results.length; i++) {
+    const item = results[i];
+
+    views_favs.views_all += item.views_all;
+    views_favs.views_old += item.views_old;
+    views_favs.views_30  += item.views_30;
+    views_favs.views_23  += item.views_23;
+    views_favs.views_7   += item.views_7;
+
+    views_favs.favorites +=  item.favorites;
+    views_favs.favorited += (item.favorites > 0);
+  }
+
+  return views_favs;
+}
+
 /* Formatting */
 
 // bytes: non-negative integer
@@ -255,6 +281,14 @@ function format_number(number) {
   }
 
   return o_str;
+}
+
+// num: positive or negative integer, or zero
+function format_num_sign(num) {
+  const  n_pre = num > 0 ? '+'
+               : num < 0 ? '\u2212' : ""; // \u2212 is &minus;
+
+  return n_pre + format_number(Math.abs(num));
 }
 
 // num: non-negative integer
@@ -366,6 +400,32 @@ function render_stats(results, date, what, show_by, sort_by, container) {
   container.appendChild(stats_text);
 }
 
+function render_diffs(results_prev, results_curr, show_by, container) {
+  const show_by_old = (show_by === "old-23-7"); // Else by "all-30-7"
+
+  const diffs_text = document.createElement("div");
+  diffs_text.className = "text-center text-comment";
+
+  const views_favs_prev = get_views_favs(results_prev);
+  const views_favs_curr = get_views_favs(results_curr);
+
+  diffs_text.innerHTML =
+    format_nowrap('Differences in:') + '&ensp;' +
+    format_nowrap('Views: ' +
+      format_num_sign(show_by_old
+                    ? views_favs_curr.views_old - views_favs_prev.views_old
+                    : views_favs_curr.views_all - views_favs_prev.views_all) + ' / ' +
+      format_num_sign(show_by_old
+                    ? views_favs_curr.views_23  - views_favs_prev.views_23
+                    : views_favs_curr.views_30  - views_favs_prev.views_30 ) + ' / ' +
+      format_num_sign(views_favs_curr.views_7   - views_favs_prev.views_7  ) +  ',') + '&ensp;' +
+    format_nowrap('Favs: ' +
+      format_num_sign(views_favs_curr.favorites - views_favs_prev.favorites) + ' / ' +
+      format_num_sign(views_favs_curr.favorited - views_favs_prev.favorited));
+
+  container.appendChild(diffs_text);
+}
+
 /* Compose */
 
 //
@@ -395,8 +455,8 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
   const max_ratio      = Math.max(curr_exp_totals.max_ratio_old, curr_exp_totals.max_ratio_all);
   const max_favorites  = curr_exp_totals.max_favorites;
   //
-  const base_ratio     = 100 / Math.log(max_ratio     + 1);
-  const base_favorites = 100 / Math.log(max_favorites + 1);
+  const base_ratio     = (max_ratio     <= 0) ? 0 : 100 / Math.log(max_ratio     + 1);
+  const base_favorites = (max_favorites <= 0) ? 0 : 100 / Math.log(max_favorites + 1);
   //
   function get_percentage(value, max, base) {
     return (value <=   0) ?   '0%' :
@@ -583,12 +643,12 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
     //
     if (item.is_both) { // Item is markable
       const grow_old = show_by_old
-                     ? get_grow_ratio(item.ratio_old, item_prev.ratio_old)
-                     : get_grow_ratio(item.ratio_all, item_prev.ratio_all);
+                     ? get_grow_ratio(item_prev.ratio_old, item.ratio_old)
+                     : get_grow_ratio(item_prev.ratio_all, item.ratio_all);
       const grow_23  = show_by_old
-                     ? get_grow_fixed(item.views_23 , item_prev.views_23 )
-                     : get_grow_fixed(item.views_30 , item_prev.views_30 );
-      const grow_7   = get_grow_fixed(item.views_7  , item_prev.views_7  );
+                     ? get_grow_fixed(item_prev.views_23,  item.views_23 )
+                     : get_grow_fixed(item_prev.views_30,  item.views_30 );
+      const grow_7   = get_grow_fixed(item_prev.views_7,   item.views_7  );
 
       _grow._old = grow_old;
       _grow._23  = grow_23;

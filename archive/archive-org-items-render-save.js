@@ -257,6 +257,11 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   render_stats(results_prev, date_prev, "prev", show_by, sort_by, container); // Also sorts results_prev
   render_stats(results_curr, date_curr, "curr", show_by, sort_by, container); // Also sorts results_curr
 
+  ///////////////////
+  // Diffs displaying
+  //
+  render_diffs(results_prev, results_curr, show_by, container);
+
   /////////////////////////////////////////////////////////////////////////
   // Compose items and calculate parameters for substantial changes marking
   //
