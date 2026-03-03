@@ -428,12 +428,13 @@ function render_stats(results, date, what, show_by, sort_by, container) {
 let diffs_text       = null;
 let diffs_text_inner = null;
 
-function create_diffs_inner(views_favs_prev, views_favs_curr, show_by) {
+function create_diffs_inner(views_favs_prev, views_favs_curr, shown_cnt, show_by) {
   const show_by_old = (show_by === "old-23-7"); // Else by "all-30-7"
 
   return "" +
-    format_nowrap('Differences in:') + ' ' +
-    format_nowrap('Views: ' +
+    format_nowrap    ('Differences for ' +
+      format_num_str (shown_cnt, 'Item') + ' in:') + ' ' +
+    format_nowrap    ('Views: ' +
       format_num_sign(show_by_old
                     ? views_favs_curr.views_old - views_favs_prev.views_old  // \u200a is &hairsp;
                     : views_favs_curr.views_all - views_favs_prev.views_all) + '\u200a/\u200a' +
@@ -441,26 +442,26 @@ function create_diffs_inner(views_favs_prev, views_favs_curr, show_by) {
                     ? views_favs_curr.views_23  - views_favs_prev.views_23
                     : views_favs_curr.views_30  - views_favs_prev.views_30 ) + '\u200a/\u200a' +
       format_num_sign(views_favs_curr.views_7   - views_favs_prev.views_7  ) + ',') + ' ' +
-    format_nowrap('Favs: ' +
+    format_nowrap    ('Favs: ' +
       format_num_sign(views_favs_curr.favorites - views_favs_prev.favorites) + '\u200a/\u200a' +
       format_num_sign(views_favs_curr.favorited - views_favs_prev.favorited));
 }
 
-function render_diffs(results_prev, results_curr, show_by, container) {
+function render_diffs(results_prev, results_curr, shown_cnt, show_by, container) {
   diffs_text = document.createElement("div");
   diffs_text.className  = "text-center text-comment";
 
   const views_favs_prev = get_views_favs(results_prev);
   const views_favs_curr = get_views_favs(results_curr);
 
-  diffs_text_inner      = create_diffs_inner(views_favs_prev, views_favs_curr, show_by);
+  diffs_text_inner      = create_diffs_inner(views_favs_prev, views_favs_curr, shown_cnt, show_by);
   diffs_text.innerHTML  = diffs_text_inner;
 
   container.appendChild(diffs_text);
 }
 
-function update_diffs(show_by) {
-  const  updated_inner = create_diffs_inner(views_favs_shown.prev, views_favs_shown.curr, show_by);
+function update_diffs(shown_cnt, show_by) {
+  const  updated_inner = create_diffs_inner(views_favs_shown.prev, views_favs_shown.curr, shown_cnt, show_by);
 
   if (diffs_text_inner   !== updated_inner) {
       diffs_text.innerHTML = updated_inner;

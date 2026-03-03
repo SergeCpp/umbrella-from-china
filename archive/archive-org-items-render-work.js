@@ -148,8 +148,12 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     }
   }
 
+  // For use below
+  const prev_length = results_prev_exp.length;
+  const curr_length = results_curr_exp.length;
+
   // Sets
-  only_both = results_curr_exp.length - only_curr - only_prev;
+  only_both = curr_length - only_curr - only_prev;
 
   // Sort expanded arrays for show in list (curr) and rank changes calculations (both)
   sort_results(results_curr_exp, show_by, sort_by);
@@ -166,7 +170,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   }
 
   // Traverse prev expanded and set index_prev in curr expanded
-  for (let index = 0; index < results_prev_exp.length; index++) {
+  for (let index = 0; index < prev_length; index++) {
     const item = results_prev_exp[index];
     map_curr_exp[item.identifier].index_prev = index;
   }
@@ -180,7 +184,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   let marks_zero      = 0; // Mark present, but no items marked by this mark
   let marked_by       = null;
   let marked_items    = 0;
-  let nomarked_items  = results_curr_exp.length;
+  let nomarked_items  = curr_length;
 
   if (results_mark) {
     for (const rm of results_mark) {
@@ -260,7 +264,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   ///////////////////
   // Diffs displaying
   //
-  render_diffs(results_prev, results_curr, show_by, container);
+  render_diffs(results_prev, results_curr, curr_length, show_by, container);
 
   /////////////////////////////////////////////////////////////////////////
   // Compose items and calculate parameters for substantial changes marking
@@ -322,7 +326,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     plain_nomarked    += !is_subst && !item.marks;
   }
 
-  const plain_items = results_curr_exp.length - subst_items;
+  const plain_items = curr_length - subst_items;
 
   //////////////////////
   // Which items to show
@@ -669,7 +673,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   //
   clr_views_favs_shown();
   //
-  for (let index = 0; index < results_curr_exp.length; index++) {
+  for (let index = 0; index < curr_length; index++) {
     const item = results_curr_exp[index];
 
     const is_prev = item.is_prev;
@@ -960,11 +964,11 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     shown_cnt++;
 
     // 8.4. Count vievs and favorites for shown items
-    add_views_favs_shown(no_prev ? null : map_prev[item.identifier],
-                         is_prev ? null :          item);
+    add_views_favs_shown(no_prev ? null : is_prev ? item : map_prev[item.identifier],
+                         is_prev ? null : item);
   }
 
-  update_diffs(show_by);
+  if (shown_cnt !== curr_length) update_diffs(shown_cnt, show_by);
 
   return { pre: time_1 - time_0, dom: performance.now() - time_1 };
 }
