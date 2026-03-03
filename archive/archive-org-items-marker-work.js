@@ -36,6 +36,7 @@ function get_grow_ratio(prev, curr) {
     if (ratio < 1.24) return "^^ ";
                       return "^^^";
   }
+
   //    ratio < 1
   if   (ratio > 0.99) return '\u2212\u0020\u0020'; // \u2212 is &minus;
   if   (ratio > 0.98) return '\u2212\u2212\u0020';
@@ -61,6 +62,7 @@ function get_grow_fixed(prev, curr) {
     if (diff_abs <= 10) return "^^ ";
                         return "^^^";
   }
+
   //    diff < 0
   if   (diff_abs === 1) return '\u2212\u0020\u0020'; // \u2212 is &minus;
   if   (diff_abs === 2) return '\u2212\u2212\u0020';
@@ -130,6 +132,7 @@ function get_marks(rel, cnt, mid) {
   if ((cnt + cnt) > rel_len) {
     cnt = Math.floor(rel_len / 2);
   }
+
   rel.sort((above, below) => above - below); // Ascending
 
   let above_cnt = cnt;
@@ -149,6 +152,7 @@ function get_marks(rel, cnt, mid) {
     above_idx++; // Move above side to right
     above_val = rel[above_idx]; // Update its value
   }
+
   while (below_val >= mid) { // Below value is in above side, or at mid
     if (above_cnt) { // Above side is not empty
       if (rel[above_idx - 1] > mid) { // And something is present there to add to above side
@@ -157,16 +161,17 @@ function get_marks(rel, cnt, mid) {
         above_idx--; // Move above side to left
       }
     }
+
     below_cnt--; // Use place
     if (!below_cnt) break; // Below side is empty
     below_idx--; // Move below side to left
     below_val = rel[below_idx]; // Update its value
   }
+
   // Possible array of all mid's is handled in return
   // Because both above_cnt and below_cnt will be zeroes
   return { above: { cnt: above_cnt, val: above_cnt ? above_val : +Infinity },
-           below: { cnt: below_cnt, val: below_cnt ? below_val : -Infinity }
-  };
+           below: { cnt: below_cnt, val: below_cnt ? below_val : -Infinity } };
 }
 
 // index: 0..length-1, base: log(length), steep: 1..9, decay: max value (min value: 1)
@@ -226,24 +231,42 @@ function get_totals(results) {
   return totals;
 }
 
+// Views and Favorites
+
+const views_favs_empty = { views_all: 0, views_old: 0, views_30: 0, views_23: 0, views_7: 0,
+                           favorites: 0, favorited: 0 };
+
+function add_views_favs(item, views_favs) {
+  if (!item) return;
+
+  views_favs.views_all += item.views_all;
+  views_favs.views_old += item.views_old;
+  views_favs.views_30  += item.views_30;
+  views_favs.views_23  += item.views_23;
+  views_favs.views_7   += item.views_7;
+
+  views_favs.favorites +=  item.favorites;
+  views_favs.favorited += (item.favorites > 0);
+}
+
 function get_views_favs(results) {
-  const views_favs = { views_all: 0, views_old: 0, views_30: 0, views_23: 0, views_7: 0,
-                       favorites: 0, favorited: 0 };
+  const views_favs = { ...views_favs_empty };
 
-  for (let i = 0; i < results.length; i++) {
-    const item = results[i];
-
-    views_favs.views_all += item.views_all;
-    views_favs.views_old += item.views_old;
-    views_favs.views_30  += item.views_30;
-    views_favs.views_23  += item.views_23;
-    views_favs.views_7   += item.views_7;
-
-    views_favs.favorites +=  item.favorites;
-    views_favs.favorited += (item.favorites > 0);
-  }
+  for (const item of results) add_views_favs(item, views_favs);
 
   return views_favs;
+}
+
+const views_favs_shown = {};
+
+function clr_views_favs_shown() {
+  views_favs_shown.prev = { ...views_favs_empty };
+  views_favs_shown.curr = { ...views_favs_empty };
+}
+
+function add_views_favs_shown(item_prev, item_curr) {
+  add_views_favs(item_prev, views_favs_shown.prev);
+  add_views_favs(item_curr, views_favs_shown.curr);
 }
 
 /* Formatting */
@@ -400,30 +423,49 @@ function render_stats(results, date, what, show_by, sort_by, container) {
   container.appendChild(stats_text);
 }
 
-function render_diffs(results_prev, results_curr, show_by, container) {
+// Diffs
+
+let diffs_text       = null;
+let diffs_text_inner = null;
+
+function create_diffs_inner(views_favs_prev, views_favs_curr, show_by) {
   const show_by_old = (show_by === "old-23-7"); // Else by "all-30-7"
 
-  const diffs_text = document.createElement("div");
-  diffs_text.className = "text-center text-comment";
+  return "" +
+    format_nowrap('Differences in:') + ' ' +
+    format_nowrap('Views: ' +
+      format_num_sign(show_by_old
+                    ? views_favs_curr.views_old - views_favs_prev.views_old  // \u200a is &hairsp;
+                    : views_favs_curr.views_all - views_favs_prev.views_all) + '\u200a/\u200a' +
+      format_num_sign(show_by_old
+                    ? views_favs_curr.views_23  - views_favs_prev.views_23
+                    : views_favs_curr.views_30  - views_favs_prev.views_30 ) + '\u200a/\u200a' +
+      format_num_sign(views_favs_curr.views_7   - views_favs_prev.views_7  ) + ',') + ' ' +
+    format_nowrap('Favs: ' +
+      format_num_sign(views_favs_curr.favorites - views_favs_prev.favorites) + '\u200a/\u200a' +
+      format_num_sign(views_favs_curr.favorited - views_favs_prev.favorited));
+}
+
+function render_diffs(results_prev, results_curr, show_by, container) {
+  diffs_text = document.createElement("div");
+  diffs_text.className  = "text-center text-comment";
 
   const views_favs_prev = get_views_favs(results_prev);
   const views_favs_curr = get_views_favs(results_curr);
 
-  diffs_text.innerHTML =
-    format_nowrap('Differences in:') + ' ' +
-    format_nowrap('Views: ' +
-      format_num_sign(show_by_old
-                    ? views_favs_curr.views_old - views_favs_prev.views_old
-                    : views_favs_curr.views_all - views_favs_prev.views_all) + '&hairsp;/&hairsp;' +
-      format_num_sign(show_by_old
-                    ? views_favs_curr.views_23  - views_favs_prev.views_23
-                    : views_favs_curr.views_30  - views_favs_prev.views_30 ) + '&hairsp;/&hairsp;' +
-      format_num_sign(views_favs_curr.views_7   - views_favs_prev.views_7  ) + ',') + ' ' +
-    format_nowrap('Favs: ' +
-      format_num_sign(views_favs_curr.favorites - views_favs_prev.favorites) + '&hairsp;/&hairsp;' +
-      format_num_sign(views_favs_curr.favorited - views_favs_prev.favorited));
+  diffs_text_inner      = create_diffs_inner(views_favs_prev, views_favs_curr, show_by);
+  diffs_text.innerHTML  = diffs_text_inner;
 
   container.appendChild(diffs_text);
+}
+
+function update_diffs(show_by) {
+  const  updated_inner = create_diffs_inner(views_favs_shown.prev, views_favs_shown.curr, show_by);
+
+  if (diffs_text_inner   !== updated_inner) {
+      diffs_text.innerHTML = updated_inner;
+      diffs_text_inner     = updated_inner;
+  }
 }
 
 /* Compose */

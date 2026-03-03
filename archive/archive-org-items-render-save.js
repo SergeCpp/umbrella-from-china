@@ -667,6 +667,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   const title_is_title = (title_is === "title"); // Else is "identifier"
   let   shown_cnt      = 0;
   //
+  clr_views_favs_shown();
+  //
   for (let index = 0; index < results_curr_exp.length; index++) {
     const item = results_curr_exp[index];
 
@@ -956,7 +958,13 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     // 8.3. Add item to the page
     container.appendChild(item_wrapper);
     shown_cnt++;
+
+    // 8.4. Count vievs and favorites for shown items
+    add_views_favs_shown(no_prev ? null : map_prev[item.identifier],
+                         is_prev ? null :          item);
   }
+
+  update_diffs(show_by);
 
   return { pre: time_1 - time_0, dom: performance.now() - time_1 };
 }
