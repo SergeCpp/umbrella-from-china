@@ -351,7 +351,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       'class="in-chk' + (accent && !hide ? ' ' + accent : "") + '" ' +
       'type="checkbox" ' + (show || hide ? 'checked ' : "") +
       'oninput="' + input + '(this, \'' + accent + '\')" ' +
-      'onkeyup="if (event.key === \'Enter\') process_filter();">';
+      'onkeyup="if (event.key === \'Enter\') { save_focus(\'' + id + '\'); process_filter(); }">';
   };
 
   const s_h_chk_html = (id, accent) => {
@@ -405,9 +405,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       suf_chk_html('show-plain',   show_plain, 'inp_plain'))        + ' ' +
     format_nowrap(                     'Substantially changed in:') + ' ' +
     format_nowrap(
-      pre_chk_html('show-rank-up'  ) + 'Rank' + '</label>' +
-      s_h_chk_html('show-rank-up'  ,   'rank-up'  )  +
-      s_h_chk_html('show-rank-dn'  ,   'rank-dn'  )) + ' ' +
+      pre_chk_html('show-rank-up')   + 'Rank' + '</label>' +
+      s_h_chk_html('show-rank-up',     'rank-up'  )  +
+      s_h_chk_html('show-rank-dn',     'rank-dn'  )) + ' ' +
     format_nowrap(
       pre_chk_html('show-horz-grow') + 'Horz' + '</label>' +
       s_h_chk_html('show-horz-grow',   'horz-grow')  +
@@ -417,9 +417,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       s_h_chk_html('show-vert-grow',   'vert-grow')  +
       s_h_chk_html('show-vert-fall',   'vert-fall')) + ' ' +
     format_nowrap(
-      pre_chk_html('show-mood-pos' ) + 'Mood' + '</label>' +
-      s_h_chk_html('show-mood-pos' ,   'mood-pos' )  +
-      s_h_chk_html('show-mood-neg' ,   'mood-neg' ));
+      pre_chk_html('show-mood-pos')  + 'Mood' + '</label>' +
+      s_h_chk_html('show-mood-pos',    'mood-pos' )  +
+      s_h_chk_html('show-mood-neg',    'mood-neg' ));
   container.appendChild(subst_chk_div);
 
   // Substantial changes counts
@@ -486,6 +486,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
       nomark_chk.onkeyup = (event) => {
         if (event.key === 'Enter') {
+          save_focus("show-nomark");
           process_filter();
         }
       };
@@ -542,6 +543,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
         mark_chk_show.onkeyup = (event) => {
           if (event.key === 'Enter') {
+            save_focus("show-mark-" + m_mark);
             process_filter();
           }
         };
@@ -563,6 +565,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
         mark_chk_hide.onkeyup = (event) => {
           if (event.key === 'Enter') {
+            save_focus("hide-mark-" + m_mark);
             process_filter();
           }
         };
@@ -619,6 +622,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
         by_chk.onkeyup = (event) => {
           if (event.key === 'Enter') {
+            save_focus("show-marked-by-" + num);
             process_filter();
           }
         };
@@ -654,6 +658,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
       plain_nomark_chk.onkeyup = (event) => {
         if (event.key === 'Enter') {
+          save_focus("plain-nomark");
           process_filter();
         }
       };
@@ -991,6 +996,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   }
 
   if (shown_cnt !== curr_length) update_diffs(shown_cnt, show_by);
+
+  restore_focus();
 
   return { pre: time_1 - time_0, dom: performance.now() - time_1 };
 }

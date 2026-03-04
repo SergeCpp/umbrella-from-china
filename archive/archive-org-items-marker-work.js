@@ -1,5 +1,20 @@
 /* Display */
 
+let saved_focus_id = null;
+
+function save_focus(id) {
+  saved_focus_id = id;
+}
+
+function restore_focus() {
+  if (!saved_focus_id) return;
+
+  const element = document.getElementById(saved_focus_id);
+  if   (element) element.focus();
+
+  saved_focus_id = null;
+}
+
 //    07-21  07-23  07-31  08-07 > 07-21
 //    07-27  07-31  08-07  08-14 > 08-14
 //
@@ -406,7 +421,7 @@ function render_stats(results, date, what, show_by, sort_by, container) {
   stats_text.innerHTML =
     format_nowrap(cap_first(what) + '&thinsp;' +
       '<span ' +
-      'class="span-btn span-btn-' + what + '" role="button" tabindex="0" ' +
+      'class="span-btn" id="span-btn-' + what + '" role="button" tabindex="0" ' +
       'onkeydown="if ((event.key === \'Enter\') || (event.key === \' \')) event.preventDefault();" ' +
       'onkeyup  ="if ((event.key === \'Enter\') || (event.key === \' \')) ' +
                  'date_change_menu(event, \'' + what + '\');" ' +
@@ -810,8 +825,9 @@ function compose_header(title_is, title_is_set,
   header_inner.className = "header-inner";
 
   const header_title_wrapper = document.createElement("div");
-  header_title_wrapper.className = "header-title-wrapper";
-  header_title_wrapper.classList.add(title_is === "title" ? "bg-fall" : "bg-dn");
+  const add_title_class = (title_is === "title") ? "bg-fall" : "bg-dn";
+  header_title_wrapper.className = "header-title-wrapper" + ' ' + add_title_class;
+  header_title_wrapper.id = "header-title-wrapper";
   const header_title_inner = document.createElement("div");
   header_title_inner.className = "header-title-inner subtitle text-ellipsis";
   header_title_inner.textContent = "Internet Archive Item";
@@ -822,12 +838,14 @@ function compose_header(title_is, title_is_set,
   //
   header_title_wrapper.onclick = () => {
     title_is_set(title_is === "title" ? "identifier" : "title");
+    save_focus("header-title-wrapper");
     process_filter();
   };
 
   const header_stat_prev_wrapper = document.createElement("div");
-  header_stat_prev_wrapper.className = "header-stat-wrapper";
-  header_stat_prev_wrapper.classList.add(show_by === "old-23-7" ? "bg-grow" : "bg-up");
+  const add_stat_prev_class = (show_by === "old-23-7") ? "bg-grow" : "bg-up";
+  header_stat_prev_wrapper.className = "header-stat-wrapper" + ' ' + add_stat_prev_class;
+  header_stat_prev_wrapper.id = "header-stat-prev-wrapper";
   const header_stat_prev_inner = document.createElement("div");
   header_stat_prev_inner.className = "header-stat-inner subtitle";
   header_stat_prev_inner.textContent = "Prev";
@@ -838,12 +856,14 @@ function compose_header(title_is, title_is_set,
   //
   header_stat_prev_wrapper.onclick = () => {
     show_by_set(show_by === "old-23-7" ? "all-30-7" : "old-23-7");
+    save_focus("header-stat-prev-wrapper");
     process_filter();
   };
 
   const header_stat_curr_wrapper = document.createElement("div");
-  header_stat_curr_wrapper.className = "header-stat-wrapper";
-  header_stat_curr_wrapper.classList.add(sort_by === "ratio" ? "bg-fall" : "bg-dn");
+  const add_stat_curr_class = (sort_by === "ratio") ? "bg-fall" : "bg-dn";
+  header_stat_curr_wrapper.className = "header-stat-wrapper" + ' ' + add_stat_curr_class;
+  header_stat_curr_wrapper.id = "header-stat-curr-wrapper";
   const header_stat_curr_inner = document.createElement("div");
   header_stat_curr_inner.className = "header-stat-inner subtitle";
   header_stat_curr_inner.textContent = "Curr";
@@ -854,12 +874,14 @@ function compose_header(title_is, title_is_set,
   //
   header_stat_curr_wrapper.onclick = () => {
     sort_by_set(sort_by === "ratio" ? "views" : "ratio");
+    save_focus("header-stat-curr-wrapper");
     process_filter();
   };
 
   const header_stat_grow_wrapper = document.createElement("div");
-  header_stat_grow_wrapper.className = "header-grow-wrapper";
-  header_stat_grow_wrapper.classList.add(mood_by === "same-signs" ? "bg-grow" : "bg-up");
+  const add_stat_grow_class = (mood_by === "same-signs") ? "bg-grow" : "bg-up";
+  header_stat_grow_wrapper.className = "header-grow-wrapper" + ' ' + add_stat_grow_class;
+  header_stat_grow_wrapper.id = "header-stat-grow-wrapper";
   const header_stat_grow_inner = document.createElement("div");
   header_stat_grow_inner.className = "header-grow-inner subtitle";
   header_stat_grow_inner.innerHTML = "&plus;&hairsp;&minus;";
@@ -870,6 +892,7 @@ function compose_header(title_is, title_is_set,
   //
   header_stat_grow_wrapper.onclick = () => {
     mood_by_set(mood_by === "same-signs" ? "diff-signs" : "same-signs");
+    save_focus("header-stat-grow-wrapper");
     process_filter();
   };
 

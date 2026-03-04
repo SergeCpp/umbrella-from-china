@@ -803,7 +803,7 @@ function date_change_menu(event, what) {
       i_beg = Math.max(i_beg - (i_end - i_max), i_min);
       i_end = i_max; }
 
-  const  btn_other  = document.querySelector('.span-btn-' + (what === "curr" ? "prev" : "curr"));
+  const  btn_other  = document.getElementById('span-btn-' + (what === "curr" ? "prev" : "curr"));
   const menu_caller = document.activeElement;
   const menu        = document.createElement('div');
   menu.className    = 'menu';
@@ -838,6 +838,7 @@ function date_change_menu(event, what) {
 
     opt.onclick = () => {
       menu.remove_ex();
+      save_focus('span-btn-' + what);
       requestAnimationFrame(() => setTimeout(load_stat, 0, date, what));
     };
 
