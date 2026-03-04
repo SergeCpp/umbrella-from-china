@@ -44,9 +44,20 @@ function inp_show_hide(chk, accent) {
   show_noplain[accent] = true;
 }
 
+const list_noplain = ['rank-up', 'horz-grow', 'vert-grow', 'mood-pos',
+                      'rank-dn', 'horz-fall', 'vert-fall', 'mood-neg'];
+
+function get_filtering_noplain() {
+  for (const noplain of list_noplain) {
+    if (!show_noplain[noplain]) return true;
+    if ( hide_noplain[noplain]) return true;
+  }
+
+  return false;
+}
+
 function init_render() {
-  for (const noplain of ['rank-up', 'horz-grow', 'vert-grow', 'mood-pos',
-                         'rank-dn', 'horz-fall', 'vert-fall', 'mood-neg']) {
+  for (const noplain of list_noplain) {
     show_noplain[noplain] = true;
     hide_noplain[noplain] = false;
   }
@@ -654,8 +665,35 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     }
   } // if (marks_count) closing
 
-  // Spacing
-  container.lastElementChild.style.marginBottom = "1em"; // Add space before item list
+  // Add space before item list
+  container.lastElementChild.style.marginBottom = "1em";
+
+  // Whether internal filtering (by checkboxes) is active
+  const get_filtering = () => {
+    if (chk_prev && !show_prev) return true;
+    if (chk_curr && !show_curr) return true;
+    if (chk_both && !show_both) return true;
+
+    if (chk_marked_by)
+      for (const marks_num in marked_by)
+        if (!show_marked_by[marks_num]) return true;
+
+    if (mark_counts) {
+      for (const mc of mark_counts) {
+        if (!show_mark[mc.mark]) return true;
+        if ( hide_mark[mc.mark]) return true;
+      }
+    }
+
+    if (chk_nomark       && !show_nomark      ) return true;
+    if (chk_plain_nomark && !show_plain_nomark) return true;
+
+    if (!show_plain) return true;
+    if (get_filtering_noplain()) return true;
+
+    return false;
+  };
+  const is_filtering = get_filtering();
 
   /////////////////////////////////////
   // Show item list with flex alignment
@@ -671,7 +709,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   const title_is_title = (title_is === "title"); // Else is "identifier"
   let   shown_cnt      = 0;
   //
-  clr_views_favs_shown();
+  if (is_filtering) clr_views_favs_shown();
   //
   for (let index = 0; index < curr_length; index++) {
     const item = results_curr_exp[index];
@@ -681,9 +719,40 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     const is_both = item.is_both;
 
     // Which items to show
-    if (is_prev && chk_prev && !show_prev) continue;
-    if (no_prev && chk_curr && !show_curr) continue;
-    if (is_both && chk_both && !show_both) continue;
+    if (is_filtering) {
+      if (is_prev && chk_prev && !show_prev) continue;
+      if (no_prev && chk_curr && !show_curr) continue;
+      if (is_both && chk_both && !show_both) continue;
+    }
+
+    // Whether item is plain (not marked as substantially changed)
+    const is_plain = item.is_plain;
+
+    // Which items to show
+    if (is_filtering) {
+      if (item.marks) {
+        const marks_num  = item.marks.length;
+
+        if (chk_marked_by && !show_marked_by[marks_num]) continue;
+
+        let to_show_mark = false;
+        let to_hide_mark = false;
+
+        for (let m = 0; m < marks_num; m++) {
+          const m_mark = item.marks[m];
+
+          if (show_mark[m_mark])   to_show_mark = true;
+          if (hide_mark[m_mark]) { to_hide_mark = true; break; }
+        }
+
+        if (!to_show_mark) continue;
+        if ( to_hide_mark) continue;
+      }
+      else { // Item not marked
+        if (chk_nomark       && !show_nomark) continue;
+        if (chk_plain_nomark && !show_plain_nomark && is_plain) continue;
+      }
+    }
 
     // Substantial changes marking
     const is_rank_up   = item.is_rank_up;
@@ -698,54 +767,30 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     const is_mood_pos  = item.is_mood_pos;
     const is_mood_neg  = item.is_mood_neg;
 
-    const is_plain     = item.is_plain;
-
     // Which items to show
-    if (item.marks) {
-      const marks_num  = item.marks.length;
-
-      if (chk_marked_by && !show_marked_by[marks_num]) continue;
-
-      let to_show_mark = false;
-      let to_hide_mark = false;
-
-      for (let m = 0; m < marks_num; m++) {
-        const m_mark = item.marks[m];
-
-        if (show_mark[m_mark])   to_show_mark = true;
-        if (hide_mark[m_mark]) { to_hide_mark = true; break; }
+    if (is_filtering) {
+      if (is_plain) {
+        if (!show_plain) continue;
       }
+      else {
+        if (!(is_rank_up   && show_noplain['rank-up'  ]) &&
+            !(is_rank_dn   && show_noplain['rank-dn'  ]) &&
+            !(is_horz_grow && show_noplain['horz-grow']) &&
+            !(is_horz_fall && show_noplain['horz-fall']) &&
+            !(is_vert_grow && show_noplain['vert-grow']) &&
+            !(is_vert_fall && show_noplain['vert-fall']) &&
+            !(is_mood_pos  && show_noplain['mood-pos' ]) &&
+            !(is_mood_neg  && show_noplain['mood-neg' ])) continue;
 
-      if (!to_show_mark) continue;
-      if ( to_hide_mark) continue;
-    }
-    else { // Item not marked
-      if (chk_nomark       && !show_nomark) continue;
-      if (chk_plain_nomark && !show_plain_nomark && is_plain) continue;
-    }
-
-    // Which items to show
-    if (is_plain) {
-      if (!show_plain) continue;
-    }
-    else {
-      if (!(is_rank_up   && show_noplain['rank-up'  ]) &&
-          !(is_rank_dn   && show_noplain['rank-dn'  ]) &&
-          !(is_horz_grow && show_noplain['horz-grow']) &&
-          !(is_horz_fall && show_noplain['horz-fall']) &&
-          !(is_vert_grow && show_noplain['vert-grow']) &&
-          !(is_vert_fall && show_noplain['vert-fall']) &&
-          !(is_mood_pos  && show_noplain['mood-pos' ]) &&
-          !(is_mood_neg  && show_noplain['mood-neg' ])) continue;
-
-      if ( (is_rank_up   && hide_noplain['rank-up'  ]) ||
-           (is_rank_dn   && hide_noplain['rank-dn'  ]) ||
-           (is_horz_grow && hide_noplain['horz-grow']) ||
-           (is_horz_fall && hide_noplain['horz-fall']) ||
-           (is_vert_grow && hide_noplain['vert-grow']) ||
-           (is_vert_fall && hide_noplain['vert-fall']) ||
-           (is_mood_pos  && hide_noplain['mood-pos' ]) ||
-           (is_mood_neg  && hide_noplain['mood-neg' ])) continue;
+        if ( (is_rank_up   && hide_noplain['rank-up'  ]) ||
+             (is_rank_dn   && hide_noplain['rank-dn'  ]) ||
+             (is_horz_grow && hide_noplain['horz-grow']) ||
+             (is_horz_fall && hide_noplain['horz-fall']) ||
+             (is_vert_grow && hide_noplain['vert-grow']) ||
+             (is_vert_fall && hide_noplain['vert-fall']) ||
+             (is_mood_pos  && hide_noplain['mood-pos' ]) ||
+             (is_mood_neg  && hide_noplain['mood-neg' ])) continue;
+      }
     }
 
     // 1. Outer wrapper, for border/divider and spacing
@@ -822,32 +867,24 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     const stat_prev_container = document.createElement("div");
     stat_prev_container.className = "item-stat-container"; // flex: 0 0 22ch;
 
+    // Rank substantial changes marking: up and dn
+    const add_rank_class = is_rank_up ? " item-mark-up"
+                         : is_rank_dn ? " item-mark-dn" : "";
+
     // 4.2. Prev: old stat line
     const stat_prev_old = document.createElement("div");
-    stat_prev_old.className = "item-stat-prev-old";
+    stat_prev_old.className = "item-stat-prev-old" + add_rank_class;
     stat_prev_old.textContent = item.prev._old;
 
     // 4.3. Prev: 23-day stat line
     const stat_prev_23 = document.createElement("div");
-    stat_prev_23.className = "item-stat-prev-23";
+    stat_prev_23.className = "item-stat-prev-23" + add_rank_class;
     stat_prev_23.textContent = item.prev._23;
 
     // 4.4. Prev: 7-day stat line
     const stat_prev_7 = document.createElement("div");
-    stat_prev_7.className = "item-stat-prev-7";
+    stat_prev_7.className = "item-stat-prev-7" + add_rank_class;
     stat_prev_7.textContent = item.prev._7;
-
-    // Rank substantial changes marking: up and dn
-    if      (is_rank_up) {
-      stat_prev_old.classList.add("item-mark-up");
-      stat_prev_23 .classList.add("item-mark-up");
-      stat_prev_7  .classList.add("item-mark-up");
-    }
-    else if (is_rank_dn) {
-      stat_prev_old.classList.add("item-mark-dn");
-      stat_prev_23 .classList.add("item-mark-dn");
-      stat_prev_7  .classList.add("item-mark-dn");
-    }
 
     // 4.5. Prev: assemble the hierarchy
     stat_prev_container.appendChild(stat_prev_old);
@@ -859,38 +896,28 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     const stat_curr_container = document.createElement("div");
     stat_curr_container.className = "item-stat-container"; // flex: 0 0 22ch;
 
+    // Substantial changes marking: horizontal impact of old from prev to curr
+    const add_horz_class = is_horz_grow ? " item-mark-grow"
+                         : is_horz_fall ? " item-mark-fall" : "";
+
+    // Substantial changes marking: vertical impact of 23 and 7 into all within curr
+    const add_vert_class = is_vert_grow ? " item-mark-grow"
+                         : is_vert_fall ? " item-mark-fall" : "";
+
     // 5.2. Curr: old stat line
     const stat_curr_old = document.createElement("div");
-    stat_curr_old.className = "item-stat-curr-old";
+    stat_curr_old.className = "item-stat-curr-old" + add_horz_class;
     stat_curr_old.textContent = item.curr._old;
 
     // 5.3. Curr: 23-day stat line
     const stat_curr_23 = document.createElement("div");
-    stat_curr_23.className = "item-stat-curr-23";
+    stat_curr_23.className = "item-stat-curr-23" + add_vert_class;
     stat_curr_23.textContent = item.curr._23;
 
     // 5.4. Curr: 7-day stat line
     const stat_curr_7 = document.createElement("div");
-    stat_curr_7.className = "item-stat-curr-7";
+    stat_curr_7.className = "item-stat-curr-7" + add_vert_class;
     stat_curr_7.textContent = item.curr._7;
-
-    // Substantial changes marking: horizontal impact of old from prev to curr
-    if      (is_horz_grow) {
-      stat_curr_old.classList.add("item-mark-grow");
-    }
-    else if (is_horz_fall) {
-      stat_curr_old.classList.add("item-mark-fall");
-    }
-
-    // Substantial changes marking: vertical impact of 23 and 7 into all within curr
-    if      (is_vert_grow) {
-      stat_curr_23.classList.add("item-mark-grow");
-      stat_curr_7 .classList.add("item-mark-grow");
-    }
-    else if (is_vert_fall) {
-      stat_curr_23.classList.add("item-mark-fall");
-      stat_curr_7 .classList.add("item-mark-fall");
-    }
 
     // 5.5. Curr: assemble the hierarchy
     stat_curr_container.appendChild(stat_curr_old);
@@ -902,32 +929,24 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     const stat_grow_container = document.createElement("div");
     stat_grow_container.className = "item-grow-container"; // flex: 0 0 3ch;
 
+    // Grow mood substantial changes marking: positive and negative
+    const add_mood_class = is_mood_pos ? " item-mark-grow"
+                         : is_mood_neg ? " item-mark-fall" : "";
+
     // 6.2. Grow: old
     const stat_grow_old = document.createElement("div");
-    stat_grow_old.className = "item-grow-old";
+    stat_grow_old.className = "item-grow-old" + add_mood_class;
     stat_grow_old.textContent = item.grow._old;
 
     // 6.3. Grow: 23
     const stat_grow_23 = document.createElement("div");
-    stat_grow_23.className = "item-grow-23";
+    stat_grow_23.className = "item-grow-23" + add_mood_class;
     stat_grow_23.textContent = item.grow._23;
 
     // 6.4. Grow: 7
     const stat_grow_7 = document.createElement("div");
-    stat_grow_7.className = "item-grow-7";
+    stat_grow_7.className = "item-grow-7" + add_mood_class;
     stat_grow_7.textContent = item.grow._7;
-
-    // Grow mood substantial changes marking: positive and negative
-    if      (is_mood_pos) {
-      stat_grow_old.classList.add("item-mark-grow");
-      stat_grow_23 .classList.add("item-mark-grow");
-      stat_grow_7  .classList.add("item-mark-grow");
-    }
-    else if (is_mood_neg) {
-      stat_grow_old.classList.add("item-mark-fall");
-      stat_grow_23 .classList.add("item-mark-fall");
-      stat_grow_7  .classList.add("item-mark-fall");
-    }
 
     // 6.5. Grow: assemble the hierarchy
     stat_grow_container.appendChild(stat_grow_old);
@@ -964,8 +983,11 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     shown_cnt++;
 
     // 8.4. Count vievs and favorites for shown items
-    add_views_favs_shown(no_prev ? null : is_prev ? item : map_prev[item.identifier],
-                         is_prev ? null : item);
+    if (is_filtering) {
+      add_views_favs_shown(
+        no_prev ? null : is_prev ? item : map_prev[item.identifier],
+        is_prev ? null : item);
+    }
   }
 
   if (shown_cnt !== curr_length) update_diffs(shown_cnt, show_by);
