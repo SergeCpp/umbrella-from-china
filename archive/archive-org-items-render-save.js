@@ -644,21 +644,21 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       plain_nomark_span.className = "text-nowrap";
 
       const plain_nomark_label = document.createElement("label");
-      plain_nomark_label.htmlFor = "plain-nomark";
+      plain_nomark_label.htmlFor = "show-plain-nomark";
       plain_nomark_label.style.cursor = "pointer";
       plain_nomark_label.textContent = "Plain and not marked: " + format_num_str(plain_nomarked, "Item");
 
       const plain_nomark_chk = document.createElement("input");
       plain_nomark_chk.checked = show_plain_nomark;
       plain_nomark_chk.className = "in-chk";
-      plain_nomark_chk.id = "plain-nomark";
+      plain_nomark_chk.id = "show-plain-nomark";
       plain_nomark_chk.type = "checkbox";
 
       plain_nomark_chk.oninput = () => { show_plain_nomark = plain_nomark_chk.checked; };
 
       plain_nomark_chk.onkeyup = (event) => {
         if (event.key === 'Enter') {
-          save_focus("plain-nomark");
+          save_focus("show-plain-nomark");
           process_filter();
         }
       };
