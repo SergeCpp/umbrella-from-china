@@ -896,17 +896,20 @@ function compose_header(title_is, title_is_set,
     process_filter();
   };
 
-  header_onkeyup  (header_title_wrapper    );
-  header_onkeydown(header_title_wrapper,     header_stat_grow_wrapper, header_stat_prev_wrapper);
-  //
-  header_onkeyup  (header_stat_prev_wrapper);
-  header_onkeydown(header_stat_prev_wrapper, header_title_wrapper,     header_stat_curr_wrapper);
-  //
-  header_onkeyup  (header_stat_curr_wrapper);
-  header_onkeydown(header_stat_curr_wrapper, header_stat_prev_wrapper, header_stat_grow_wrapper);
-  //
-  header_onkeyup  (header_stat_grow_wrapper);
-  header_onkeydown(header_stat_grow_wrapper, header_stat_curr_wrapper, header_title_wrapper    );
+  const headers     = [header_title_wrapper,
+                       header_stat_prev_wrapper,
+                       header_stat_curr_wrapper,
+                       header_stat_grow_wrapper];
+  const headers_cnt = headers.length;
+
+  for (let index = 0; index < headers_cnt; index++) {
+    const header = headers[index];
+
+    header_onkeyup  (header);
+    header_onkeydown(header, headers[(index - 1  + headers_cnt)
+                                                 % headers_cnt],
+                             headers[(index + 1) % headers_cnt]);
+  }
 
   header_inner  .appendChild(header_title_wrapper    );
   header_inner  .appendChild(header_stat_prev_wrapper);

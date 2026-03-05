@@ -162,7 +162,7 @@ function init_controls() {
     button.onkeyup = (event) => {
       const key = event.key;
       if ((key === 'Enter') || (key === ' ')) {
-        process_filter();
+        button.click();
       }
     };
 
