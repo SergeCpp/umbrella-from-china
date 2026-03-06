@@ -1,4 +1,4 @@
-/* Display */
+/* Focus State */
 
 let saved_focus_id = null;
 
@@ -9,10 +9,191 @@ function save_focus(id) {
 function restore_focus() {
   if (!saved_focus_id) return;
 
-  const element = document.getElementById(saved_focus_id);
-  if   (element) element.focus();
+  const elem = document.getElementById(saved_focus_id);
+  if   (elem) elem.focus();
 
   saved_focus_id = null;
+}
+
+/* Chain Arrows : China Rose */
+
+function set_elem_arrows(index, chain, coord) {
+  const count  = chain.length;
+
+  const elem   = chain[index];
+  const elem_x = coord[index].x;
+  const elem_y = coord[index].y;
+
+  let to_left  = null;
+  let to_right = null;
+  let to_up    = null;
+  let to_down  = null;
+
+  const tolerance_y = 6;
+
+  // Left
+  if (index > 0)
+    if (coord[index - 1].x < elem_x)
+      to_left = chain[index - 1]; // Can be on prev row, it is ok
+
+  if (!to_left) { // Else check both prev and next rows (only)
+    let prev_i = -1;
+    let next_i = -1;
+
+    if (index > 0) { // Prev row ends at index - 1 (and not to left from elem)
+      const prev_y = coord[index - 1].y;
+
+      for (let i = index - 2; i >= 0; i--) { // Find first to left from elem
+        if (Math.abs(coord[i].y - prev_y) > tolerance_y) break; // Other row
+
+        if (coord[i].x < elem_x) {
+          prev_i = i;
+          break;
+        }
+      }
+    }
+
+    for (let i = index + 1; i < count; i++) { // Next row find and check
+      if (coord[i].y > (elem_y + tolerance_y)) { // Next row found
+        let next_y = coord[i].y;
+
+        for (let j = i; j < count; j++) {
+          if (Math.abs(coord[j].y - next_y) > tolerance_y) break; // Other row
+          if (coord[j].x >= elem_x) break; // Not to left from elem
+
+          next_i = j; // Each further [j] is closer to elem
+          next_y = coord[j].y; // Some vertical drift allowed
+        }
+        break; // Next row processed
+      }
+    }
+
+    if ((prev_i !== -1) && (next_i !== -1)) { // To more right of found
+      to_left = coord[prev_i].x > coord[next_i].x
+              ? chain[prev_i]   : chain[next_i];
+    }
+    else if (prev_i !== -1) to_left = chain[prev_i];
+    else if (next_i !== -1) to_left = chain[next_i];
+  }
+
+  // Right
+  if (index < (count - 1))
+    if (coord[index + 1].x > elem_x)
+      to_right = chain[index + 1]; // Can be on next row, it is ok
+
+  if (!to_right) { // Else check both prev and next rows (only)
+    let prev_i = -1;
+    let next_i = -1;
+
+    if (index < (count - 1)) { // Next row begins at index + 1 (and not to right from elem)
+      const next_y = coord[index + 1].y;
+
+      for (let i = index + 2; i < count; i++) { // Find first to right from elem
+        if (Math.abs(coord[i].y - next_y) > tolerance_y) break; // Other row
+
+        if (coord[i].x > elem_x) {
+          next_i = i;
+          break;
+        }
+      }
+    }
+
+    for (let i = index - 1; i >= 0; i--) { // Prev row find and check
+      if (coord[i].y < (elem_y - tolerance_y)) { // Prev row found
+        let prev_y = coord[i].y;
+
+        for (let j = i; j >= 0; j--) {
+          if (Math.abs(coord[j].y - prev_y) > tolerance_y) break; // Other row
+          if (coord[j].x <= elem_x) break; // Not to right from elem
+
+          prev_i = j; // Each further [j] is closer to elem
+          prev_y = coord[j].y; // Some vertical drift allowed
+        }
+        break; // Prev row processed
+      }
+    }
+
+    if ((prev_i !== -1) && (next_i !== -1)) { // To more left of found
+      to_right = coord[prev_i].x < coord[next_i].x
+               ? chain[prev_i]   : chain[next_i];
+    }
+    else if (prev_i !== -1) to_right = chain[prev_i];
+    else if (next_i !== -1) to_right = chain[next_i];
+  }
+
+  // Up
+  for (let i = index - 1; i >= 0; i--) {
+    if (coord[i].y < (elem_y - tolerance_y)) { // Prev row found
+          to_up   = chain[i];
+      let to_up_x = coord[i].x - elem_x;
+      let to_up_y = coord[i].y;
+
+      for (let j = i - 1; j >= 0; j--) {
+        if (Math.abs(coord[j].y - to_up_y) > tolerance_y) break; // Other row
+
+        if (Math.abs(coord[j].x - elem_x) < Math.abs(to_up_x)) {
+           to_up   = chain[j];
+           to_up_x = coord[j].x - elem_x;
+           to_up_y = coord[j].y; // Some vertical drift allowed
+        }
+      }
+      break; // Prev row processed
+    }
+  }
+
+  // Down
+  for (let i = index + 1; i < count; i++) {
+    if (coord[i].y > (elem_y + tolerance_y)) { // Next row found
+          to_down   = chain[i];
+      let to_down_x = coord[i].x - elem_x;
+      let to_down_y = coord[i].y;
+
+      for (let j = i + 1; j < count; j++) {
+        if (Math.abs(coord[j].y - to_down_y) > tolerance_y) break; // Other row
+
+        if (Math.abs(coord[j].x - elem_x) < Math.abs(to_down_x)) {
+         to_down   = chain[j];
+         to_down_x = coord[j].x - elem_x;
+         to_down_y = coord[j].y; // Some vertical drift allowed
+        }
+      }
+      break; // Next row processed
+    }
+  }
+
+  elem.onkeydown = (event) => {
+    const key = event.key;
+    const to  = key === 'ArrowLeft'  ? to_left
+              : key === 'ArrowRight' ? to_right
+              : key === 'ArrowUp'    ? to_up
+              : key === 'ArrowDown'  ? to_down
+                                     : null;
+    if (to) {
+      event.preventDefault();
+      to.focus();
+    }
+  };
+}
+
+function set_chain_arrows(chain) {
+  const count = chain.length;
+  const coord = [];
+
+  for (let index = 0; index < count; index++) {
+    let elem = chain[index];
+
+    if (typeof elem === "string") {
+      elem = document.getElementById(elem);
+      chain[index] = elem;
+    }
+
+    const rect = elem.getBoundingClientRect();
+    coord.push({ x: rect.left, y: rect.top });
+  }
+
+  for (let index = 0; index < count; index++) {
+    set_elem_arrows(index, chain, coord);
+  }
 }
 
 //    07-21  07-23  07-31  08-07 > 07-21

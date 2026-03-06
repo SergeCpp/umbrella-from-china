@@ -339,6 +339,11 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
   const plain_items = curr_length - subst_items;
 
+  ////////////////////////////////////////
+  // Checkboxes chain (for arrows setting)
+  //
+  const chks_chain = [];
+
   //////////////////////
   // Which items to show
   //
@@ -347,6 +352,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   };
 
   const set_chk_html = (id, accent, show, hide, input) => {
+    chks_chain.push(id);
     return '<input id="' + id + '" ' +
       'class="in-chk' + (accent && !hide ? ' ' + accent : "") + '" ' +
       'type="checkbox" ' + (show || hide ? 'checked ' : "") +
@@ -477,6 +483,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       nomark_label.textContent = "Not marked: " + format_num_str(nomarked_items, "Item");
 
       const nomark_chk = document.createElement("input");
+      chks_chain.push(nomark_chk);
       nomark_chk.checked = show_nomark;
       nomark_chk.className = "in-chk";
       nomark_chk.id = "show-nomark";
@@ -527,6 +534,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
         mark_label.style.cursor = "pointer";
 
         const mark_chk_show = document.createElement("input");
+        chks_chain.push(mark_chk_show);
         mark_chk_show.checked = show_mark[m_mark];
         mark_chk_show.className = "in-chk" + ' ' + "show-mark-" + m_mark;
         mark_chk_show.id = "show-mark-" + m_mark;
@@ -549,6 +557,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
         };
 
         const mark_chk_hide = document.createElement("input");
+        chks_chain.push(mark_chk_hide);
         mark_chk_hide.checked = hide_mark[m_mark];
         mark_chk_hide.className = "in-chk";
         mark_chk_hide.id = "hide-mark-" + m_mark;
@@ -612,6 +621,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
         by_label.textContent = format_num_str(num, "Mark") + ": " + format_num_str(items, "Item");
 
         const by_chk = document.createElement("input");
+        chks_chain.push(by_chk);
         if (show_marked_by[num] === undefined) show_marked_by[num] = true; // Initialize
         by_chk.checked = show_marked_by[num];
         by_chk.className = "in-chk";
@@ -649,6 +659,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       plain_nomark_label.textContent = "Plain and not marked: " + format_num_str(plain_nomarked, "Item");
 
       const plain_nomark_chk = document.createElement("input");
+      chks_chain.push(plain_nomark_chk);
       plain_nomark_chk.checked = show_plain_nomark;
       plain_nomark_chk.className = "in-chk";
       plain_nomark_chk.id = "show-plain-nomark";
@@ -669,6 +680,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       container        .appendChild(plain_nomark_div  );
     }
   } // if (marks_count) closing
+
+  // Set arrows for checkboxes
+  set_chain_arrows(chks_chain);
 
   // Add space before item list
   container.lastElementChild.style.marginBottom = "1em";
