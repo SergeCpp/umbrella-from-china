@@ -17,6 +17,9 @@ function restore_focus() {
 
 /* Chain Arrows : China Rose */
 
+// index: in chain
+// chain: in book read order (left to right, down, left to right, etc.)
+// coord: matches chain
 function set_elem_arrows(index, chain, coord) {
   const count  = chain.length;
 
@@ -33,39 +36,32 @@ function set_elem_arrows(index, chain, coord) {
 
   // Left
   if (index > 0)
-    if (coord[index - 1].x < elem_x)
-      to_left = chain[index - 1]; // Can be on prev row, it is ok
+    if ((coord[index - 1].x < elem_x) && (Math.abs(coord[index - 1].y - elem_y) <= tolerance_y))
+      to_left = chain[index - 1]; // On the same row
 
-  if (!to_left) { // Else check both prev and next rows (only)
+  if (!to_left) { // Else check both prev and next rows
     let prev_i = -1;
     let next_i = -1;
 
-    if (index > 0) { // Prev row ends at index - 1 (and not to left from elem)
-      const prev_y = coord[index - 1].y;
-
-      for (let i = index - 2; i >= 0; i--) { // Find first to left from elem
-        if (Math.abs(coord[i].y - prev_y) > tolerance_y) break; // Other row
-
-        if (coord[i].x < elem_x) {
-          prev_i = i;
-          break;
-        }
+    // Prev row ends at index - 1 (because to_left not found on the same row)
+    for (let i = index - 1; i >= 0; i--) { // Find first to left from elem
+      if (coord[i].x < elem_x) {
+        prev_i = i;
+        break;
       }
     }
 
     for (let i = index + 1; i < count; i++) { // Next row find and check
-      if (coord[i].y > (elem_y + tolerance_y)) { // Next row found
-        let next_y = coord[i].y;
+      if (coord[i].x >= elem_x) continue;
 
-        for (let j = i; j < count; j++) {
-          if (Math.abs(coord[j].y - next_y) > tolerance_y) break; // Other row
-          if (coord[j].x >= elem_x) break; // Not to left from elem
+      // Next row found
+      for (let j = i; j < count; j++) {
+        if (coord[j].x >= elem_x) break; // Succession of "lefts" ended
 
-          next_i = j; // Each further [j] is closer to elem
-          next_y = coord[j].y; // Some vertical drift allowed
-        }
-        break; // Next row processed
+        next_i = j; // Each further "left" is closer to elem
       }
+
+      break; // Next row processed
     }
 
     if ((prev_i !== -1) && (next_i !== -1)) { // To more right of found
@@ -78,39 +74,32 @@ function set_elem_arrows(index, chain, coord) {
 
   // Right
   if (index < (count - 1))
-    if (coord[index + 1].x > elem_x)
-      to_right = chain[index + 1]; // Can be on next row, it is ok
+    if ((coord[index + 1].x > elem_x) && (Math.abs(coord[index + 1].y - elem_y) <= tolerance_y))
+      to_right = chain[index + 1]; // On the same row
 
-  if (!to_right) { // Else check both prev and next rows (only)
+  if (!to_right) { // Else check both prev and next rows
     let prev_i = -1;
     let next_i = -1;
 
-    if (index < (count - 1)) { // Next row begins at index + 1 (and not to right from elem)
-      const next_y = coord[index + 1].y;
-
-      for (let i = index + 2; i < count; i++) { // Find first to right from elem
-        if (Math.abs(coord[i].y - next_y) > tolerance_y) break; // Other row
-
-        if (coord[i].x > elem_x) {
-          next_i = i;
-          break;
-        }
+    // Next row begins at index + 1 (because to_right not found on the same row)
+    for (let i = index + 1; i < count; i++) { // Find first to right from elem
+      if (coord[i].x > elem_x) {
+        next_i = i;
+        break;
       }
     }
 
     for (let i = index - 1; i >= 0; i--) { // Prev row find and check
-      if (coord[i].y < (elem_y - tolerance_y)) { // Prev row found
-        let prev_y = coord[i].y;
+      if (coord[i].x <= elem_x) continue;
 
-        for (let j = i; j >= 0; j--) {
-          if (Math.abs(coord[j].y - prev_y) > tolerance_y) break; // Other row
-          if (coord[j].x <= elem_x) break; // Not to right from elem
+      // Prev row found
+      for (let j = i; j >= 0; j--) {
+        if (coord[j].x <= elem_x) break; // Succession of "rights" ended
 
-          prev_i = j; // Each further [j] is closer to elem
-          prev_y = coord[j].y; // Some vertical drift allowed
-        }
-        break; // Prev row processed
+        prev_i = j; // Each further "right" is closer to elem
       }
+
+      break; // Prev row processed
     }
 
     if ((prev_i !== -1) && (next_i !== -1)) { // To more left of found
