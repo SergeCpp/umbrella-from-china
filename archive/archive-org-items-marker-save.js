@@ -54,9 +54,12 @@ function set_elem_arrows(index, chain, coord) {
     for (let i = index + 1; i < count; i++) { // Next row find and check
       if (coord[i].x >= elem_x) continue;
 
-      // Next row found
+      // Next suitable row found (can be after immediate next row)
+      next_i = i; // First candidate
+
       for (let j = i; j < count; j++) {
         if (coord[j].x >= elem_x) break; // Succession of "lefts" ended
+        if ((coord[j].y - coord[next_i].y) > tolerance_y) break; // It is row after found
 
         next_i = j; // Each further "left" is closer to elem
       }
@@ -92,9 +95,12 @@ function set_elem_arrows(index, chain, coord) {
     for (let i = index - 1; i >= 0; i--) { // Prev row find and check
       if (coord[i].x <= elem_x) continue;
 
-      // Prev row found
+      // Prev suitable row found (can be before immediate prev row)
+      prev_i = i; // First candidate
+
       for (let j = i; j >= 0; j--) {
         if (coord[j].x <= elem_x) break; // Succession of "rights" ended
+        if ((coord[prev_i].y - coord[j].y) > tolerance_y) break; // It is row before found
 
         prev_i = j; // Each further "right" is closer to elem
       }
@@ -113,19 +119,17 @@ function set_elem_arrows(index, chain, coord) {
   // Up
   for (let i = index - 1; i >= 0; i--) {
     if (coord[i].y < (elem_y - tolerance_y)) { // Prev row found
-          to_up   = chain[i];
-      let to_up_x = coord[i].x - elem_x;
-      let to_up_y = coord[i].y;
+      let up_i = i; // First candidate
 
       for (let j = i - 1; j >= 0; j--) {
-        if (Math.abs(coord[j].y - to_up_y) > tolerance_y) break; // Other row
+        if ((coord[up_i].y - coord[j].y) > tolerance_y) break; // It is row before prev
 
-        if (Math.abs(coord[j].x - elem_x) < Math.abs(to_up_x)) {
-           to_up   = chain[j];
-           to_up_x = coord[j].x - elem_x;
-           to_up_y = coord[j].y; // Some vertical drift allowed
+        if (Math.abs(coord[j].x - elem_x) < Math.abs(coord[up_i].x - elem_x)) {
+          up_i = j;
         }
       }
+
+      to_up = chain[up_i];
       break; // Prev row processed
     }
   }
@@ -133,19 +137,17 @@ function set_elem_arrows(index, chain, coord) {
   // Down
   for (let i = index + 1; i < count; i++) {
     if (coord[i].y > (elem_y + tolerance_y)) { // Next row found
-          to_down   = chain[i];
-      let to_down_x = coord[i].x - elem_x;
-      let to_down_y = coord[i].y;
+      let down_i = i; // First candidate
 
       for (let j = i + 1; j < count; j++) {
-        if (Math.abs(coord[j].y - to_down_y) > tolerance_y) break; // Other row
+        if ((coord[j].y - coord[down_i].y) > tolerance_y) break; // It is row after next
 
-        if (Math.abs(coord[j].x - elem_x) < Math.abs(to_down_x)) {
-         to_down   = chain[j];
-         to_down_x = coord[j].x - elem_x;
-         to_down_y = coord[j].y; // Some vertical drift allowed
+        if (Math.abs(coord[j].x - elem_x) < Math.abs(coord[down_i].x - elem_x)) {
+          down_i = j;
         }
       }
+
+      to_down = chain[down_i];
       break; // Next row processed
     }
   }
