@@ -600,6 +600,7 @@ input[type="checkbox"].changed.tab-e {
   flex: 0 0 22ch;
   flex-direction: column;
   font-family: monospace;
+  outline-offset: -2px; /* For outline not to be clipped, to be within padding */
   white-space: pre;
 }
 
@@ -641,6 +642,7 @@ input[type="checkbox"].changed.tab-e {
   flex: 0 0 3ch;
   flex-direction: column;
   font-family: monospace;
+  outline-offset: -2px; /* For outline not to be clipped, to be within padding */
   white-space: pre;
 }
 

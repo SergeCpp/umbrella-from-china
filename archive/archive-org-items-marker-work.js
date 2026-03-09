@@ -17,10 +17,54 @@ function restore_focus() {
 
 /* Chain Arrows : China Rose */
 
+function set_elem_keyup(elem) {
+  elem.onkeyup = (event) => {
+    const key = event.key;
+    if ((key === 'Enter') || (key === ' ')) {
+      elem.click();
+    }
+  };
+}
+
+function set_elem_arrows_line(elem, elem_prev, elem_next, direction) {
+  elem.onkeydown = (event) => {
+    const key = event.key;
+    if ((key === 'Enter') || (key === ' ')) {
+      event.preventDefault();
+      return;
+    }
+
+    const [ key_prev,    key_next   ] = direction === "horz"
+        ? ['ArrowLeft', 'ArrowRight']
+        : ['ArrowUp',   'ArrowDown' ];             // "vert"
+
+    if ((key !== key_prev) && (key !== key_next)) return;
+    event.preventDefault();
+
+    if (key === key_prev)
+      elem_prev.focus();
+    else     // key_next
+      elem_next.focus();
+  };
+}
+
+function set_chain_arrows_line(chain, direction) {
+  const count = chain.length;
+
+  for (let index = 0; index < count; index++) {
+    const elem = chain[index];
+
+    set_elem_keyup      (elem);
+    set_elem_arrows_line(elem, chain[(index - 1  + count)
+                                                 % count],
+                               chain[(index + 1) % count], direction);
+  }
+}
+
 // index: in chain
 // chain: in book read order (left to right, down, left to right, etc.)
 // coord: matches chain
-function set_elem_arrows(index, chain, coord) {
+function set_elem_arrows_plane(index, chain, coord) {
   const count  = chain.length;
 
   const elem   = chain[index];
@@ -32,12 +76,13 @@ function set_elem_arrows(index, chain, coord) {
   let to_up    = null;
   let to_down  = null;
 
+  const tolerance_x = 3;
   const tolerance_y = 6;
 
   // Left
   if (index > 0)
     if ((coord[index - 1].x < elem_x) && (Math.abs(coord[index - 1].y - elem_y) <= tolerance_y))
-      to_left = chain[index - 1]; // On the same row
+      to_left = chain[index - 1]; // On the same row (no tolerance_x usage here)
 
   if (!to_left) { // Else check both prev and next rows
     let prev_i = -1;
@@ -45,20 +90,20 @@ function set_elem_arrows(index, chain, coord) {
 
     // Prev row ends at index - 1 (because to_left not found on the same row)
     for (let i = index - 1; i >= 0; i--) { // Find first to left from elem
-      if (coord[i].x < elem_x) {
+      if ((elem_x - coord[i].x) > tolerance_x) {
         prev_i = i;
         break;
       }
     }
 
     for (let i = index + 1; i < count; i++) { // Next row find and check
-      if (coord[i].x >= elem_x) continue;
+      if ((elem_x - coord[i].x) <= tolerance_x) continue;
 
       // Next suitable row found (can be after immediate next row)
       next_i = i; // First candidate
 
       for (let j = i; j < count; j++) {
-        if (coord[j].x >= elem_x) break; // Succession of "lefts" ended
+        if ((elem_x - coord[j].x) <= tolerance_x) break; // Succession of "lefts" ended
         if ((coord[j].y - coord[next_i].y) > tolerance_y) break; // It is row after found
 
         next_i = j; // Each further "left" is closer to elem
@@ -67,9 +112,13 @@ function set_elem_arrows(index, chain, coord) {
       break; // Next row processed
     }
 
-    if ((prev_i !== -1) && (next_i !== -1)) { // To more right of found
-      to_left = coord[prev_i].x > coord[next_i].x
-              ? chain[prev_i]   : chain[next_i];
+    if ((prev_i !== -1) && (next_i !== -1)) { // To more right of found or to closer vertically to elem
+      to_left = ( coord[prev_i].x           -           coord[next_i].x ) > tolerance_x
+              ?   chain[prev_i]
+              : ( coord[next_i].x           -           coord[prev_i].x ) > tolerance_x
+              ?   chain[next_i]
+              : ((coord[next_i].y - elem_y) - (elem_y - coord[prev_i].y)) > tolerance_y
+              ?   chain[prev_i]             :           chain[next_i];
     }
     else if (prev_i !== -1) to_left = chain[prev_i];
     else if (next_i !== -1) to_left = chain[next_i];
@@ -78,7 +127,7 @@ function set_elem_arrows(index, chain, coord) {
   // Right
   if (index < (count - 1))
     if ((coord[index + 1].x > elem_x) && (Math.abs(coord[index + 1].y - elem_y) <= tolerance_y))
-      to_right = chain[index + 1]; // On the same row
+      to_right = chain[index + 1]; // On the same row (no tolerance_x usage here)
 
   if (!to_right) { // Else check both prev and next rows
     let prev_i = -1;
@@ -86,20 +135,20 @@ function set_elem_arrows(index, chain, coord) {
 
     // Next row begins at index + 1 (because to_right not found on the same row)
     for (let i = index + 1; i < count; i++) { // Find first to right from elem
-      if (coord[i].x > elem_x) {
+      if ((coord[i].x - elem_x) > tolerance_x) {
         next_i = i;
         break;
       }
     }
 
     for (let i = index - 1; i >= 0; i--) { // Prev row find and check
-      if (coord[i].x <= elem_x) continue;
+      if ((coord[i].x - elem_x) <= tolerance_x) continue;
 
       // Prev suitable row found (can be before immediate prev row)
       prev_i = i; // First candidate
 
       for (let j = i; j >= 0; j--) {
-        if (coord[j].x <= elem_x) break; // Succession of "rights" ended
+        if ((coord[j].x - elem_x) <= tolerance_x) break; // Succession of "rights" ended
         if ((coord[prev_i].y - coord[j].y) > tolerance_y) break; // It is row before found
 
         prev_i = j; // Each further "right" is closer to elem
@@ -108,9 +157,13 @@ function set_elem_arrows(index, chain, coord) {
       break; // Prev row processed
     }
 
-    if ((prev_i !== -1) && (next_i !== -1)) { // To more left of found
-      to_right = coord[prev_i].x < coord[next_i].x
-               ? chain[prev_i]   : chain[next_i];
+    if ((prev_i !== -1) && (next_i !== -1)) { // To more left of found or to closer vertically to elem
+      to_right = ( coord[next_i].x           -           coord[prev_i].x ) > tolerance_x
+               ?   chain[prev_i]
+               : ( coord[prev_i].x           -           coord[next_i].x ) > tolerance_x
+               ?   chain[next_i]
+               : ((coord[next_i].y - elem_y) - (elem_y - coord[prev_i].y)) > tolerance_y
+               ?   chain[prev_i]             :           chain[next_i];
     }
     else if (prev_i !== -1) to_right = chain[prev_i];
     else if (next_i !== -1) to_right = chain[next_i];
@@ -124,6 +177,7 @@ function set_elem_arrows(index, chain, coord) {
       for (let j = i - 1; j >= 0; j--) {
         if ((coord[up_i].y - coord[j].y) > tolerance_y) break; // It is row before prev
 
+        // No tolerance_x usage here
         if (Math.abs(coord[j].x - elem_x) < Math.abs(coord[up_i].x - elem_x)) {
           up_i = j;
         }
@@ -142,6 +196,7 @@ function set_elem_arrows(index, chain, coord) {
       for (let j = i + 1; j < count; j++) {
         if ((coord[j].y - coord[down_i].y) > tolerance_y) break; // It is row after next
 
+        // No tolerance_x usage here
         if (Math.abs(coord[j].x - elem_x) < Math.abs(coord[down_i].x - elem_x)) {
           down_i = j;
         }
@@ -166,7 +221,7 @@ function set_elem_arrows(index, chain, coord) {
   };
 }
 
-function set_chain_arrows(chain) {
+function set_chain_arrows_plane(chain) {
   const count = chain.length;
   const coord = [];
 
@@ -183,7 +238,7 @@ function set_chain_arrows(chain) {
   }
 
   for (let index = 0; index < count; index++) {
-    set_elem_arrows(index, chain, coord);
+    set_elem_arrows_plane(index, chain, coord);
   }
 }
 
@@ -958,33 +1013,6 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
 // Header
 //
 
-function header_onkeyup(cell) {
-  cell.onkeyup = (event) => {
-    const key = event.key;
-    if ((key === 'Enter') || (key === ' ')) {
-      cell.click();
-    }
-  };
-}
-
-function header_onkeydown(cell, cell_prev, cell_next) {
-  cell.onkeydown = (event) => {
-    const key = event.key;
-    if ((key === 'Enter') || (key === ' ')) {
-      event.preventDefault();
-      return;
-    }
-
-    if ((key !== 'ArrowLeft') && (key !== 'ArrowRight')) return;
-    event.preventDefault();
-
-    if (key === 'ArrowLeft')
-      cell_prev.focus();
-    else     //  ArrowRight
-      cell_next.focus();
-  };
-}
-
 function compose_header(title_is, title_is_set,
                          show_by,  show_by_set,
                          sort_by,  sort_by_set,
@@ -1068,20 +1096,10 @@ function compose_header(title_is, title_is_set,
     process_filter();
   };
 
-  const headers     = [header_title_wrapper,
-                       header_stat_prev_wrapper,
-                       header_stat_curr_wrapper,
-                       header_stat_grow_wrapper];
-  const headers_cnt = headers.length;
-
-  for (let index = 0; index < headers_cnt; index++) {
-    const header = headers[index];
-
-    header_onkeyup  (header);
-    header_onkeydown(header, headers[(index - 1  + headers_cnt)
-                                                 % headers_cnt],
-                             headers[(index + 1) % headers_cnt]);
-  }
+  set_chain_arrows_line    ([header_title_wrapper,
+                             header_stat_prev_wrapper,
+                             header_stat_curr_wrapper,
+                             header_stat_grow_wrapper], "horz");
 
   header_inner  .appendChild(header_title_wrapper    );
   header_inner  .appendChild(header_stat_prev_wrapper);
