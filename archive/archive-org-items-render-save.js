@@ -896,7 +896,6 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
     if (add_rank_class) {
       stat_prev_container.tabIndex = -1;
-      stat_prev_container.style.cursor = "pointer";
       rank_chain.push(stat_prev_container);
     }
 
@@ -935,7 +934,6 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
     if (add_horz_class || add_vert_class) {
       stat_curr_container.tabIndex = -1;
-      stat_curr_container.style.cursor = "pointer";
       grow_chain.push(stat_curr_container);
     }
 
@@ -970,7 +968,6 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
     if (add_mood_class) {
       stat_grow_container.tabIndex = -1;
-      stat_grow_container.style.cursor = "pointer";
       mood_chain.push(stat_grow_container);
     }
 
@@ -1028,6 +1025,22 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       add_views_favs_shown(
         no_prev ? null : is_prev ? item : map_prev[item.identifier],
         is_prev ? null : item);
+    }
+
+    // 8.5. Link chains
+    if (add_rank_class) {
+      if (add_horz_class || add_vert_class) stat_prev_container.elem_right = stat_curr_container;
+      else if (add_mood_class)              stat_prev_container.elem_right = stat_grow_container;
+    }
+
+    if (add_horz_class || add_vert_class) {
+      if (add_rank_class)                   stat_curr_container.elem_left  = stat_prev_container;
+      if (add_mood_class)                   stat_curr_container.elem_right = stat_grow_container;
+    }
+
+    if (add_mood_class) {
+      if (add_horz_class || add_vert_class) stat_grow_container.elem_left  = stat_curr_container;
+      else if (add_rank_class)              stat_grow_container.elem_left  = stat_prev_container;
     }
   }
 
