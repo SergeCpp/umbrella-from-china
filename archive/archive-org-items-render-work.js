@@ -896,6 +896,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
     if (add_rank_class) {
       stat_prev_container.tabIndex = -1;
+      stat_prev_container.onclick = () =>
+        item_details(item_wrapper, item_inner, item.rank_details);
       rank_chain.push(stat_prev_container);
     }
 
@@ -934,6 +936,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
     if (add_horz_class || add_vert_class) {
       stat_curr_container.tabIndex = -1;
+      stat_curr_container.onclick = () =>
+        item_details(item_wrapper, item_inner, item.horz_details, item.vert_details);
       grow_chain.push(stat_curr_container);
     }
 
@@ -968,6 +972,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
     if (add_mood_class) {
       stat_grow_container.tabIndex = -1;
+      stat_grow_container.onclick = () =>
+        item_details(item_wrapper, item_inner, item.mood_details);
       mood_chain.push(stat_grow_container);
     }
 

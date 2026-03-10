@@ -366,22 +366,28 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
     //
     let horz_change = 0;
     if (item.is_both) { // Item is markable
+      let horz_impact = 0;
       if (show_by_old) {
-        horz_change = (item.ratio_old && item_prev.ratio_old)
+        horz_impact = (item.ratio_old && item_prev.ratio_old)
             ? Math.log(item.ratio_old /  item_prev.ratio_old)
             : 0;
       }
       else {
-        horz_change = (item.ratio_all && item_prev.ratio_all)
+        horz_impact = (item.ratio_all && item_prev.ratio_all)
             ? Math.log(item.ratio_all /  item_prev.ratio_all)
             : 0;
       }
-      if (horz_change) {
-//      const horz_scale = get_scale_log(index_curr, curr_log_base, horz_log_steep, horz_decay);
-        const horz_scale = get_scale_sig(index_curr, curr_length,
+      if (horz_impact) {
+//      const horz_scale  = get_scale_log(index_curr, curr_log_base, horz_log_steep, horz_decay);
+        const horz_scale  = get_scale_sig(index_curr, curr_length,
           horz_sig_base, horz_sig_steep, horz_decay, horz_sig_min, horz_sig_max);
-        horz_change *= (horz_decay / horz_scale); // More suitable for log(close-to-one) result
-        item.horz_change = horz_change; // Needed in markable item only, and if not 0 only
+        const horz_factor = horz_decay / horz_scale; // More suitable for log(close-to-one) result
+        horz_change = horz_impact * horz_factor;
+        item.horz_change  = horz_change; // Needed in markable item only, and if not 0 only
+        item.horz_details =
+          "Horizontal impact: " + format_num_sign(horz_impact.toFixed(6)) + ", " +
+          "scale multiplier: "  + format_number  (horz_factor.toFixed(6)) + ", " +
+          "scaled: "            + format_num_sign(horz_change.toFixed(6));
       }
     }
     horz_curr_prev.push(horz_change); // Needed in array anyway
@@ -390,15 +396,21 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
     //
     let vert_change = 0;
     if (!item.is_prev) { // Item is markable
-      vert_change = (item.ratio_all && item.ratio_old) // The same change for both show_by values
-          ? Math.log(item.ratio_all /  item.ratio_old) // "30 / old" not suits here because of
-          : 0;                                         // Possible zeroes in ratio_30 values
-      if (vert_change) {
-//      const vert_scale = get_scale_log(index_curr, curr_log_base, vert_log_steep, vert_decay);
-        const vert_scale = get_scale_sig(index_curr, curr_length,
+      const vert_impact =
+                  (item.ratio_all && item.ratio_old) // The same change for both show_by values
+        ? Math.log(item.ratio_all /  item.ratio_old) // "30 / old" not suits here because of
+        : 0;                                         // Possible zeroes in ratio_30 values
+      if (vert_impact) {
+//      const vert_scale  = get_scale_log(index_curr, curr_log_base, vert_log_steep, vert_decay);
+        const vert_scale  = get_scale_sig(index_curr, curr_length,
           vert_sig_base, vert_sig_steep, vert_decay, vert_sig_min, vert_sig_max);
-        vert_change *= (vert_decay / vert_scale); // More suitable for log(close-to-one) result
-        item.vert_change = vert_change; // Needed in markable item only, and if not 0 only
+        const vert_factor = vert_decay / vert_scale; // More suitable for log(close-to-one) result
+        vert_change = vert_impact * vert_factor;
+        item.vert_change  = vert_change; // Needed in markable item only, and if not 0 only
+        item.vert_details =
+          "Vertical impact: "  + format_num_sign(vert_impact.toFixed(6)) + ", " +
+          "scale multiplier: " + format_number  (vert_factor.toFixed(6)) + ", " +
+          "scaled: "           + format_num_sign(vert_change.toFixed(6));
       }
     }
     vert_all_old.push(vert_change); // Needed in array anyway
@@ -410,11 +422,17 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
     const rank_diff = item.index_prev - index_curr; // No abs
     if   (rank_diff) { // Also if length === 1 then index_prev === index_curr
       if (item.is_both) { // Item is markable
-//      const rank_scale = get_scale_log(index_curr, curr_log_base, rank_log_steep, rank_decay);
-        const rank_scale = get_scale_sig(index_curr, curr_length,
+//      const rank_scale  = get_scale_log(index_curr, curr_log_base, rank_log_steep, rank_decay);
+        const rank_scale  = get_scale_sig(index_curr, curr_length,
           rank_sig_base, rank_sig_steep, rank_decay, rank_sig_min, rank_sig_max);
-        rank_change      = rank_diff / rank_scale;
-        item.rank_change = rank_change; // Needed in markable item only, and if rank_diff is not 0 only
+        rank_change       = rank_diff / rank_scale;
+        item.rank_change  = rank_change; // Needed in markable item only, and if rank_diff is not 0 only
+        item.rank_details =
+          "Rank change: "   + format_num_sign(rank_diff)              + ", " +
+          "from "           + format_number  (item.index_prev + 1)    +  ' ' +
+          "to "             + format_number  (     index_curr + 1)    + ", " +
+          "scale divisor: " + format_number  (rank_scale .toFixed(6)) + ", " +
+          "scaled: "        + format_num_sign(rank_change.toFixed(6));
       }
     }
     rank_up_dn.push(rank_change); // Needed in array anyway
@@ -444,6 +462,10 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
         const mood_scale = get_scale_sig(index_curr, curr_length,
           mood_sig_base, mood_sig_steep, mood_decay, mood_sig_min, mood_sig_max);
         _mood = grow_mood / mood_scale;
+        item.mood_details =
+          "Mood: "          + format_num_sign( grow_mood)             + ", " +
+          "scale divisor: " + format_number  ( mood_scale.toFixed(6)) + ", " +
+          "scaled: "        + format_num_sign(_mood      .toFixed(6));
       }
       _grow._mood = _mood; // Needed in markable item only
     }
@@ -506,6 +528,28 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
     rank_marks,
     mood_marks
   };
+}
+
+/* Item details */
+
+function item_details(wrapper, inner, details_a, details_b) {
+  const details = details_a && details_b ? details_a + '\n' + details_b
+                : details_a              ? details_a
+                :              details_b ?                    details_b : "No details";
+
+  let details_div = wrapper.querySelector(".item-details");
+  if (details_div) {
+    if (details_div.textContent === details) { details_div.classList.toggle("collapse"); return; }
+
+    details_div.textContent = details;
+    details_div.classList.remove("collapse");
+    return;
+  }
+
+  details_div = document.createElement("div");
+  details_div.className = "item-details text-right text-comment";
+  details_div.textContent = details;
+  inner.after(details_div);
 }
 
 // EOF

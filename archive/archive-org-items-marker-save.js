@@ -540,30 +540,35 @@ function format_bytes(bytes) {
   return value.toFixed(fract) + ' ' + units[index];
 }
 
-// number: non-negative integer
+// number: non-negative
 function format_number(number) {
-  const n_str = number.toString();
-  const n_len = n_str.length;
-  let   n_ind = (n_len - 1) % 3 + 1;
-  let   o_str = n_str.substring(0, n_ind);
+  const [n_str, f_str] = number.toString().split('.');
+  const  n_len = n_str.length;
+  let    n_ind = (n_len - 1) % 3 + 1;
+  let    o_str = n_str.substring(0, n_ind);
 
   while(n_ind < n_len) { // \u2009 is &thinsp;
     o_str += '\u2009' + n_str.substring(n_ind, n_ind + 3);
     n_ind += 3;
   }
 
-  return o_str;
+  return f_str ? o_str + '.' + f_str : o_str;
 }
 
-// num: positive or negative integer, or zero
+// num: positive or negative, or zero
 function format_num_sign(num) {
-  const  n_pre = num > 0 ? '+'
-               : num < 0 ? '\u2212' : ""; // \u2212 is &minus;
+  const n_pre = num > 0 ? '+'
+              : num < 0 ? '\u2212' : ""; // \u2212 is &minus;
+
+  if (typeof num === "string") {
+    if (num.startsWith('-')) num = num.slice(1); // Handles "-0"
+    return n_pre + format_number(num);
+  }
 
   return n_pre + format_number(Math.abs(num));
 }
 
-// num: non-negative integer
+// num: non-negative
 function format_num_str(num, str) {
   return format_number(num) + ' ' + str + (num === 1 ? "" : 's');
 }

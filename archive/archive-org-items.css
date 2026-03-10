@@ -810,6 +810,12 @@ input[type="checkbox"].changed.tab-e {
   color: hsl(0.91turn, 75%, 68%);
 }
 
+/* Item details */
+
+.item-details {
+  white-space: pre-line;
+}
+
 /* EOF */
 
 
