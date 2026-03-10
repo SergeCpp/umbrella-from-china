@@ -150,6 +150,9 @@ pre i {
 .text-pretty {
   text-wrap: pretty;
 }
+.text-right {
+  text-align: right;
+}
 .text-top-right {
   margin-top: 0;
   text-align: right;
