@@ -101,7 +101,8 @@ function render_diffs(results_prev, results_curr, shown_cnt, show_by, container)
 }
 
 function update_diffs(shown_cnt, show_by) {
-  const  updated_inner = create_diffs_inner(views_favs_shown.prev, views_favs_shown.curr, shown_cnt, show_by);
+  const views_favs    = get_views_favs_shown();
+  const updated_inner = create_diffs_inner(views_favs.prev, views_favs.curr, shown_cnt, show_by);
 
   if (diffs_text_inner   !== updated_inner) {
       diffs_text.innerHTML = updated_inner;
@@ -385,9 +386,9 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
         horz_change = horz_impact * horz_factor;
         item.horz_change  = horz_change; // Needed in markable item only, and if not 0 only
         item.horz_details =
-          "Horizontal impact: " + format_num_sign(horz_impact.toFixed(6)) + ", " +
-          "scale multiplier: "  + format_number  (horz_factor.toFixed(6)) + ", " +
-          "scaled: "            + format_num_sign(horz_change.toFixed(6));
+          format_nowrap("Horizontal impact: " + format_num_sign(horz_impact.toFixed(6)) + ',') + ' ' +
+          format_nowrap("Scale multiplier: "  + format_number  (horz_factor.toFixed(6)) + ',') + ' ' +
+          format_nowrap("Scaled: "            + format_num_sign(horz_change.toFixed(6)));
       }
     }
     horz_curr_prev.push(horz_change); // Needed in array anyway
@@ -408,9 +409,9 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
         vert_change = vert_impact * vert_factor;
         item.vert_change  = vert_change; // Needed in markable item only, and if not 0 only
         item.vert_details =
-          "Vertical impact: "  + format_num_sign(vert_impact.toFixed(6)) + ", " +
-          "scale multiplier: " + format_number  (vert_factor.toFixed(6)) + ", " +
-          "scaled: "           + format_num_sign(vert_change.toFixed(6));
+          format_nowrap("Vertical impact: "  + format_num_sign(vert_impact.toFixed(6)) + ',') + ' ' +
+          format_nowrap("Scale multiplier: " + format_number  (vert_factor.toFixed(6)) + ',') + ' ' +
+          format_nowrap("Scaled: "           + format_num_sign(vert_change.toFixed(6)));
       }
     }
     vert_all_old.push(vert_change); // Needed in array anyway
@@ -428,11 +429,11 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
         rank_change       = rank_diff / rank_scale;
         item.rank_change  = rank_change; // Needed in markable item only, and if rank_diff is not 0 only
         item.rank_details =
-          "Rank change: "   + format_num_sign(rank_diff)              + ", " +
-          "from "           + format_number  (item.index_prev + 1)    +  ' ' +
-          "to "             + format_number  (     index_curr + 1)    + ", " +
-          "scale divisor: " + format_number  (rank_scale .toFixed(6)) + ", " +
-          "scaled: "        + format_num_sign(rank_change.toFixed(6));
+          format_nowrap("Rank change: "   + format_num_sign(rank_diff)              + ','  + ' ' +
+                        "from "           + format_number  (item.index_prev + 1)           + ' ' +
+                        "to "             + format_number  (     index_curr + 1)    + ',') + ' ' +
+          format_nowrap("Scale divisor: " + format_number  (rank_scale .toFixed(6)) + ',') + ' ' +
+          format_nowrap("Scaled: "        + format_num_sign(rank_change.toFixed(6)));
       }
     }
     rank_up_dn.push(rank_change); // Needed in array anyway
@@ -463,9 +464,9 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
           mood_sig_base, mood_sig_steep, mood_decay, mood_sig_min, mood_sig_max);
         _mood = grow_mood / mood_scale;
         item.mood_details =
-          "Mood: "          + format_num_sign( grow_mood)             + ", " +
-          "scale divisor: " + format_number  ( mood_scale.toFixed(6)) + ", " +
-          "scaled: "        + format_num_sign(_mood      .toFixed(6));
+          format_nowrap("Mood: "          + format_num_sign( grow_mood)             + ',') + ' ' +
+          format_nowrap("Scale divisor: " + format_number  ( mood_scale.toFixed(6)) + ',') + ' ' +
+          format_nowrap("Scaled: "        + format_num_sign(_mood      .toFixed(6)));
       }
       _grow._mood = _mood; // Needed in markable item only
     }
@@ -532,23 +533,29 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
 
 /* Item details */
 
-function item_details(wrapper, inner, details_a, details_b) {
+let details_div_inners = {};
+
+function clr_details_div_inners() { details_div_inners = {}; }
+
+function item_details(index, wrapper, inner, details_a, details_b) {
   const details = details_a && details_b ? details_a + '\n' + details_b
                 : details_a              ? details_a
                 :              details_b ?                    details_b : "No details";
 
   let details_div = wrapper.querySelector(".item-details");
   if (details_div) {
-    if (details_div.textContent === details) { details_div.classList.toggle("collapse"); return; }
+    if (details === details_div_inners[index]) { details_div.classList.toggle("collapse"); return; }
 
-    details_div.textContent = details;
+    details_div.innerHTML     = details;
+    details_div_inners[index] = details;
     details_div.classList.remove("collapse");
     return;
   }
 
   details_div = document.createElement("div");
   details_div.className = "item-details text-right text-comment";
-  details_div.textContent = details;
+  details_div.innerHTML     = details;
+  details_div_inners[index] = details;
   inner.after(details_div);
 }
 

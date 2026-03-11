@@ -518,6 +518,10 @@ function add_views_favs_shown(item_prev, item_curr) {
   add_views_favs(item_curr, views_favs_shown.curr);
 }
 
+function get_views_favs_shown() {
+  return views_favs_shown;
+}
+
 /* Formatting */
 
 // bytes: non-negative integer
@@ -542,17 +546,30 @@ function format_bytes(bytes) {
 
 // number: non-negative
 function format_number(number) {
-  const [n_str, f_str] = number.toString().split('.');
-  const  n_len = n_str.length;
-  let    n_ind = (n_len - 1) % 3 + 1;
-  let    o_str = n_str.substring(0, n_ind);
+  const [i_str, f_str] = number.toString().split('.');
 
-  while(n_ind < n_len) { // \u2009 is &thinsp;
-    o_str += '\u2009' + n_str.substring(n_ind, n_ind + 3);
-    n_ind += 3;
+  const i_len =  i_str.length;
+  let   i_ind = (i_len - 1) % 3 + 1;
+  let  oi_str =  i_str.substring(0, i_ind);
+
+  while(i_ind < i_len) { // \u2009 is &thinsp;
+    oi_str += '\u2009' + i_str.substring(i_ind, i_ind + 3);
+     i_ind += 3;
   }
 
-  return f_str ? o_str + '.' + f_str : o_str;
+  let of_str = "";
+  if  (f_str) {
+    const f_len = f_str.length;
+    let   f_ind = 3;
+         of_str = f_str.substring(0, f_ind);
+
+    while (f_ind < f_len) { // \u2009 is &thinsp;
+      of_str += '\u2009' + f_str.substring(f_ind, f_ind + 3);
+       f_ind += 3;
+    }
+  }
+
+  return of_str ? oi_str + '.' + of_str : oi_str;
 }
 
 // num: positive or negative, or zero
