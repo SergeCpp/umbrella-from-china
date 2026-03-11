@@ -373,7 +373,7 @@ function get_marks(rel, cnt, mid) {
   const rel_len = rel.length;
   if   (rel_len === 0) return { above: { cnt: 0, val: +Infinity }, below: { cnt: 0, val: -Infinity } };
   if   (rel_len === 1) {
-    const val = rel[0];
+    const val = rel[0].value;
     if   (val > mid)   return { above: { cnt: 1, val            }, below: { cnt: 0, val: -Infinity } };
     if   (val < mid)   return { above: { cnt: 0, val: +Infinity }, below: { cnt: 1, val            } };
                        return { above: { cnt: 0, val: +Infinity }, below: { cnt: 0, val: -Infinity } };
@@ -382,30 +382,30 @@ function get_marks(rel, cnt, mid) {
     cnt = Math.floor(rel_len / 2);
   }
 
-  rel.sort((above, below) => above - below); // Ascending
+  rel.sort((above, below) => above.value - below.value); // Ascending
 
   let above_cnt = cnt;
   let below_cnt = cnt;
   let above_idx = rel_len - cnt;
   let below_idx = cnt     -   1;
-  let above_val = rel[above_idx];
-  let below_val = rel[below_idx];
+  let above_val = rel[above_idx].value;
+  let below_val = rel[below_idx].value;
 
   while (above_val <= mid) { // Above value is in below side, or at mid
     below_idx++; // Move below side to right
-    below_val = rel[below_idx]; // Update its value
+    below_val = rel[below_idx].value; // Update its value
     below_cnt++; // Count it
 
     above_cnt--; // Use place
     if (!above_cnt) break; // Above side is empty
     above_idx++; // Move above side to right
-    above_val = rel[above_idx]; // Update its value
+    above_val = rel[above_idx].value; // Update its value
   }
 
   while (below_val >= mid) { // Below value is in above side, or at mid
     if (above_cnt) { // Above side is not empty
-      if (rel[above_idx - 1] > mid) { // And something is present there to add to above side
-        above_val = rel[above_idx - 1]; // Update its value
+      if (rel[above_idx - 1].value > mid) { // And something is present there to add to above side
+        above_val = rel[above_idx - 1].value; // Update its value
         above_cnt++; // Count it
         above_idx--; // Move above side to left
       }
@@ -414,7 +414,7 @@ function get_marks(rel, cnt, mid) {
     below_cnt--; // Use place
     if (!below_cnt) break; // Below side is empty
     below_idx--; // Move below side to left
-    below_val = rel[below_idx]; // Update its value
+    below_val = rel[below_idx].value; // Update its value
   }
 
   // Possible array of all mid's is handled in return
@@ -574,20 +574,41 @@ function format_number(number) {
 
 // num: positive or negative, or zero
 function format_num_sign(num) {
-  const n_pre = num > 0 ? '+'
-              : num < 0 ? '\u2212' : ""; // \u2212 is &minus;
+  const pre = num > 0 ? '+'
+            : num < 0 ? '\u2212' : ""; // \u2212 is &minus;
 
   if (typeof num === "string") {
     if (num.startsWith('-')) num = num.slice(1); // Handles "-0"
-    return n_pre + format_number(num);
+    return pre + format_number(num);
   }
 
-  return n_pre + format_number(Math.abs(num));
+  return pre + format_number(Math.abs(num));
 }
 
 // num: non-negative
-function format_num_str(num, str) {
-  return format_number(num) + ' ' + str + (num === 1 ? "" : 's');
+function format_num_str(num, str) { // "==" to handle strings
+  return format_number (num) + ' ' + str + (num == 1 ? "" : 's');
+}
+
+// ord: non-negative integer, or zero
+function get_ord_suf(ord) {
+  if (ord < 1) return "th";
+
+  const mod100 = ord % 100;
+  if ((mod100 >= 11) && (mod100 <= 13)) return "th";
+
+  switch (ord % 10) {
+    case 1 : return "st";
+    case 2 : return "nd";
+    case 3 : return "rd";
+
+    default: return "th";
+  }
+}
+
+// num: positive or negative integer, or zero
+function format_num_ord (num) {
+  return format_num_sign(num) + get_ord_suf(Math.abs(num));
 }
 
 const nowrap_beg = '<span class="text-nowrap">';

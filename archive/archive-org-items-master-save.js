@@ -391,7 +391,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
           format_nowrap("Scaled: "            + format_num_sign(horz_change.toFixed(6)));
       }
     }
-    horz_curr_prev.push(horz_change); // Needed in array anyway
+    horz_curr_prev.push({ item, value:horz_change }); // Needed in array anyway
     //
     // Vert change
     //
@@ -414,7 +414,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
           format_nowrap("Scaled: "           + format_num_sign(vert_change.toFixed(6)));
       }
     }
-    vert_all_old.push(vert_change); // Needed in array anyway
+    vert_all_old.push({ item, value:vert_change }); // Needed in array anyway
 
     //////////////////////////////
     // Rank change, 0 is no change
@@ -436,7 +436,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
           format_nowrap("Scaled: "        + format_num_sign(rank_change.toFixed(6)));
       }
     }
-    rank_up_dn.push(rank_change); // Needed in array anyway
+    rank_up_dn.push({ item, value:rank_change }); // Needed in array anyway
 
     //////////////////////////////
     // Grow and Mood, 0 is no Mood
@@ -476,7 +476,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
       _grow._7   = "   ";
     }
     item.grow = _grow;
-    mood_pos_neg.push(_mood); // Needed in array anyway
+    mood_pos_neg.push({ item, value:_mood }); // Needed in array anyway
 
     /////////
     // Gauges
@@ -523,12 +523,68 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
 //const mark_mood_pos  = mood_marks.above.val;
 //const mark_mood_neg  = mood_marks.below.val;
 
+  set_marked_ordinals(
+    horz_curr_prev,
+    horz_marks,
+    (item)          => item.horz_details,
+    (item, details) => item.horz_details = details);
+
+  set_marked_ordinals(
+    vert_all_old,
+    vert_marks,
+    (item)          => item.vert_details,
+    (item, details) => item.vert_details = details);
+
+  set_marked_ordinals(
+    rank_up_dn,
+    rank_marks,
+    (item)          => item.rank_details,
+    (item, details) => item.rank_details = details);
+
+  set_marked_ordinals(
+    mood_pos_neg,
+    mood_marks,
+    (item)          => item.mood_details,
+    (item, details) => item.mood_details = details);
+
   return {
     horz_marks,
     vert_marks,
     rank_marks,
     mood_marks
   };
+}
+
+function set_details_ordinal(item, details_get, details_set, ordinal) {
+  const   term = "</span>";
+  let  details = details_get(item);
+  if (!details.endsWith(term)) return;
+
+  details = details.slice(0, -term.length) + ordinal + term;
+  details_set(item, details);
+}
+
+function set_marked_ordinals(marked, marks, details_get, details_set) {
+  const len = marked.length;
+  const { above, below } = marks;
+
+  if (above.cnt) {
+    for (let i = 0; i < above.cnt; i++) {
+      const item = marked[len - 1 - i].item; // From end to beg
+      const ordinal = ", " + format_num_ord(i + 1);
+
+      set_details_ordinal(item, details_get, details_set, ordinal);
+    }
+  }
+
+  if (below.cnt) {
+    for (let i = 0; i < below.cnt; i++) {
+      const item = marked[i].item; // From beg to end
+      const ordinal = ", " + format_num_ord(-(i + 1));
+
+      set_details_ordinal(item, details_get, details_set, ordinal);
+    }
+  }
 }
 
 /* Item details */
@@ -544,19 +600,24 @@ function item_details(index, wrapper, inner, details_a, details_b) {
 
   let details_div = wrapper.querySelector(".item-details");
   if (details_div) {
-    if (details === details_div_inners[index]) { details_div.classList.toggle("collapse"); return; }
-
+    if (details_div_inners[index] !== details) {
+        details_div.innerHTML       = details;
+        details_div_inners[index]   = details;
+        details_div.classList.remove("collapse");
+    }
+    else {
+      if (details_div.classList.toggle("collapse")) return; // Collapsed
+    }
+  }
+  else {
+    details_div = document.createElement("div");
+    details_div.className     = "item-details text-right text-comment";
     details_div.innerHTML     = details;
     details_div_inners[index] = details;
-    details_div.classList.remove("collapse");
-    return;
+    inner.after(details_div);
   }
 
-  details_div = document.createElement("div");
-  details_div.className = "item-details text-right text-comment";
-  details_div.innerHTML     = details;
-  details_div_inners[index] = details;
-  inner.after(details_div);
+  details_div.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 // EOF
