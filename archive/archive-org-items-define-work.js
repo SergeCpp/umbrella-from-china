@@ -227,7 +227,7 @@ function init_tabs() {
     button.onkeyup = (event) => {
       const key = event.key;
       if ((key === 'Enter') || (key === ' ')) {
-        tab_click(tab, event.shiftKey, event.ctrlKey);
+        tab_click(tab, event.shiftKey, event.ctrlKey); // button.click() not passes *Key modifiers
       }
     };
 
@@ -242,9 +242,10 @@ function init_tabs() {
       event.preventDefault();
 
       const all  = tab_names.length;
-      const next = (key === 'ArrowLeft') // else ArrowRight
-                 ? ((index - 1 + all) % all)
-                 : ((index + 1)       % all);
+      const next = ((key === 'ArrowLeft' ) && event.ctrlKey) ?           0 :
+                   ((key === 'ArrowRight') && event.ctrlKey) ?   all   - 1 :
+                    (key === 'ArrowLeft' )                   ? ((index - 1 + all) % all)
+                                                             : ((index + 1)       % all); // ArrowRight
 
       const button_next = document.getElementById('tab-' + tab_names[next]);
       if   (button_next) {
@@ -865,7 +866,11 @@ function date_change_menu(event, what) {
       const curr = opts.indexOf(opt);
       let   next;
 
-      if ((key === 'ArrowUp') || (key === 'ArrowLeft') || ((key === 'Tab') && event.shiftKey)) {
+      if        ((key === 'ArrowUp'  ) && event.ctrlKey) {
+        next =         0;
+      } else if ((key === 'ArrowDown') && event.ctrlKey) {
+        next =  all  - 1;
+      } else if ((key === 'ArrowUp') || (key === 'ArrowLeft') || ((key === 'Tab') && event.shiftKey)) {
         next = (curr - 1 + all) % all;
       } else { // ArrowDown or ArrowRight or Tab
         next = (curr + 1)       % all;

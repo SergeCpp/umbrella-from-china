@@ -199,7 +199,7 @@ function compose_header(title_is, title_is_set,
     process_filter();
   };
 
-  set_chain_arrows_line    ([header_title_wrapper,
+  set_chain_keys_line      ([header_title_wrapper,
                              header_stat_prev_wrapper,
                              header_stat_curr_wrapper,
                              header_stat_grow_wrapper], "horz");

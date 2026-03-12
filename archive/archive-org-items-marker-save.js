@@ -23,7 +23,7 @@ function set_elem_keyup(elem) {
   };
 }
 
-function set_elem_arrows_line(elem, elem_prev, elem_next, direction) {
+function set_elem_keydown_line(elem, elem_prev, elem_next, elem_beg, elem_end, direction) {
   const [ key_prev,    key_next   ] = direction === "horz"
       ? ['ArrowLeft', 'ArrowRight'] : direction === "vert"
       ? ['ArrowUp',   'ArrowDown' ] : [];
@@ -31,40 +31,37 @@ function set_elem_arrows_line(elem, elem_prev, elem_next, direction) {
   elem.onkeydown = (event) => {
     if ((event.key === 'Enter') || (event.key === ' ')) { event.preventDefault(); return; }
 
-    switch (event.key) {
-      case   key_prev:
-        if (elem_prev !== elem) { event.preventDefault(); elem_prev.focus(); }
-        return;
+    let elem_goto = null;
 
-      case   key_next:
-        if (elem_next !== elem) { event.preventDefault(); elem_next.focus(); }
-        return;
+    switch (event.key) {
+      case key_prev: elem_goto = event.ctrlKey ? elem_beg : elem_prev; break;
+      case key_next: elem_goto = event.ctrlKey ? elem_end : elem_next; break;
     }
 
     if (direction === "vert") {
       switch (event.key) {
-        case 'ArrowLeft':
-          if (elem.elem_left)  { event.preventDefault(); elem.elem_left .focus(); }
-          return;
-
-        case 'ArrowRight':
-          if (elem.elem_right) { event.preventDefault(); elem.elem_right.focus(); }
-          return;
+        case 'ArrowLeft' : elem_goto = elem.elem_left;  break;
+        case 'ArrowRight': elem_goto = elem.elem_right; break;
       }
     }
+
+    if (elem_goto && (elem_goto !== elem)) { event.preventDefault(); elem_goto.focus(); }
   };
 }
 
-function set_chain_arrows_line(chain, direction) {
+function set_chain_keys_line(chain, direction) {
   const count = chain.length;
 
   for (let index = 0; index < count; index++) {
     const elem = chain[index];
 
-    set_elem_keyup      (elem);
-    set_elem_arrows_line(elem, chain[(index - 1  + count)
-                                                 % count],
-                               chain[(index + 1) % count], direction);
+    set_elem_keyup       (elem);
+    set_elem_keydown_line(elem, chain[(index - 1  + count)
+                                                  % count],
+                                chain[(index + 1) % count],
+                                chain[         0],
+                                chain[ count - 1],
+                                direction);
   }
 }
 

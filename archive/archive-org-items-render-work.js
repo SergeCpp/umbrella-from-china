@@ -1058,9 +1058,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
   if (shown_cnt !== curr_length) update_diffs(shown_cnt, show_by);
 
-  set_chain_arrows_line(rank_chain, "vert");
-  set_chain_arrows_line(grow_chain, "vert");
-  set_chain_arrows_line(mood_chain, "vert");
+  set_chain_keys_line(rank_chain, "vert");
+  set_chain_keys_line(grow_chain, "vert");
+  set_chain_keys_line(mood_chain, "vert");
 
   restore_focus();
 
