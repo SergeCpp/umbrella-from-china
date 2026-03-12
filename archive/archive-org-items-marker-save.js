@@ -607,8 +607,8 @@ function get_ord_suf(ord) {
 }
 
 // num: positive or negative integer, or zero
-function format_num_ord (num) {
-  return format_num_sign(num) + get_ord_suf(Math.abs(num));
+function format_num_ord(num, sign = false) {
+  return (sign ? format_num_sign(num) : format_number(num)) + get_ord_suf(Math.abs(num));
 }
 
 const nowrap_beg = '<span class="text-nowrap">';

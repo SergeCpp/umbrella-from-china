@@ -568,22 +568,18 @@ function set_marked_ordinals(marked, marks, details_get, details_set) {
   const len = marked.length;
   const { above, below } = marks;
 
-  if (above.cnt) {
-    for (let i = 0; i < above.cnt; i++) {
-      const item = marked[len - 1 - i].item; // From end to beg
-      const ordinal = ", " + format_num_ord(i + 1);
+  for (let idx = 1; idx <= above.cnt; idx++) {
+    const item = marked[len - idx].item; // From end to beg
+    const ordinal = ", " + format_num_ord(+idx, "sign");
 
-      set_details_ordinal(item, details_get, details_set, ordinal);
-    }
+    set_details_ordinal(item, details_get, details_set, ordinal);
   }
 
-  if (below.cnt) {
-    for (let i = 0; i < below.cnt; i++) {
-      const item = marked[i].item; // From beg to end
-      const ordinal = ", " + format_num_ord(-(i + 1));
+  for (let idx = 1; idx <= below.cnt; idx++) {
+    const item = marked[idx - 1].item; // From beg to end
+    const ordinal = ", " + format_num_ord(-idx, "sign");
 
-      set_details_ordinal(item, details_get, details_set, ordinal);
-    }
+    set_details_ordinal(item, details_get, details_set, ordinal);
   }
 }
 
