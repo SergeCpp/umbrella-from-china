@@ -589,7 +589,10 @@ let details_div_inners = {};
 
 function clr_details_div_inners() { details_div_inners = {}; }
 
-function item_details(index, wrapper, inner, details_a, details_b) {
+function item_details(event, index, details_a, details_b) {
+  const inner   = event.currentTarget.parentElement;
+  const wrapper = inner              .parentElement;
+
   const details = details_a && details_b ? details_a + '\n' + details_b
                 : details_a              ? details_a
                 :              details_b ?                    details_b : "No details";

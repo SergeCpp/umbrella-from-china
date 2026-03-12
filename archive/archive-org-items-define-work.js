@@ -804,7 +804,7 @@ function date_change_menu(event, what) {
       i_end = i_max; }
 
   const  btn_other  = document.getElementById('span-btn-' + (what === "curr" ? "prev" : "curr"));
-  const menu_caller = document.activeElement;
+  const menu_caller = event.currentTarget;
   const menu        = document.createElement('div');
   menu.className    = 'menu';
   menu.id           = 'date-change-menu';
@@ -859,10 +859,10 @@ function date_change_menu(event, what) {
       if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab'].includes(key)) return;
       event.preventDefault();
 
-      const menu = event.currentTarget.parentElement;
+      const menu = opt.parentElement;
       const opts = Array.from(menu.children);
       const all  = opts.length;
-      const curr = opts.indexOf(event.currentTarget);
+      const curr = opts.indexOf(opt);
       let   next;
 
       if ((key === 'ArrowUp') || (key === 'ArrowLeft') || ((key === 'Tab') && event.shiftKey)) {
@@ -884,8 +884,8 @@ function date_change_menu(event, what) {
   menu.style.visibility = 'hidden';
   document.body.appendChild(menu);
 
-  const b_rect = event.target.getBoundingClientRect();
-  const m_rect = menu        .getBoundingClientRect();
+  const b_rect = menu_caller.getBoundingClientRect();
+  const m_rect = menu       .getBoundingClientRect();
 
   const b_mid  = b_rect.left + b_rect.width / 2;
   const m_half =               m_rect.width / 2;
