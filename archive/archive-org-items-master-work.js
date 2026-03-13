@@ -525,25 +525,21 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
 
   set_marked_ordinals(
     horz_curr_prev,
-    horz_marks,
     (item)          => item.horz_details,
     (item, details) => item.horz_details = details);
 
   set_marked_ordinals(
     vert_all_old,
-    vert_marks,
     (item)          => item.vert_details,
     (item, details) => item.vert_details = details);
 
   set_marked_ordinals(
     rank_up_dn,
-    rank_marks,
     (item)          => item.rank_details,
     (item, details) => item.rank_details = details);
 
   set_marked_ordinals(
     mood_pos_neg,
-    mood_marks,
     (item)          => item.mood_details,
     (item, details) => item.mood_details = details);
 
@@ -564,38 +560,79 @@ function set_details_ordinal(item, details_get, details_set, ordinal) {
   details_set(item, details);
 }
 
-function set_marked_ordinals(marked, marks, details_get, details_set) {
+function set_marked_ordinals(marked, details_get, details_set) {
   const len = marked.length;
-  const { above, below } = marks;
 
-  for (let idx = 1; idx <= above.cnt; idx++) {
-    const item = marked[len - idx].item; // From end to beg
+  for (let idx = 1; idx <= len; idx++) {
+    const elem = marked[len - idx]; // From end to beg
+    if   (elem.value <= 0) break;
+
     const ordinal = ", " + format_num_ord(+idx, "sign");
-
-    set_details_ordinal(item, details_get, details_set, ordinal);
+    set_details_ordinal(elem.item, details_get, details_set, ordinal);
   }
 
-  for (let idx = 1; idx <= below.cnt; idx++) {
-    const item = marked[idx - 1].item; // From beg to end
-    const ordinal = ", " + format_num_ord(-idx, "sign");
+  for (let idx = 1; idx <= len; idx++) {
+    const elem = marked[idx - 1]; // From beg to end
+    if   (elem.value >= 0) break;
 
-    set_details_ordinal(item, details_get, details_set, ordinal);
+    const ordinal = ", " + format_num_ord(-idx, "sign");
+    set_details_ordinal(elem.item, details_get, details_set, ordinal);
   }
 }
 
 /* Item details */
 
+let details_for_items  = {};
 let details_div_inners = {};
 
+function clr_details_for_items () { details_for_items  = {}; }
 function clr_details_div_inners() { details_div_inners = {}; }
 
-function item_details(event, index, details_a, details_b) {
-  const inner   = event.currentTarget.parentElement;
-  const wrapper = inner              .parentElement;
+function add_details_for_items(index, rank_details, hv_details, mood_details) {
+  if (!rank_details && !hv_details && !mood_details) return;
 
-  const details = details_a && details_b ? details_a + '\n' + details_b
-                : details_a              ? details_a
-                :              details_b ?                    details_b : "No details";
+  const details = {};
+
+  if (rank_details) details.rank = rank_details;
+  if (  hv_details) details.hv   =   hv_details;
+  if (mood_details) details.mood = mood_details;
+
+  details_for_items[index] = details;
+}
+
+function results_click(event) {
+  const container = event.target.closest(".item-stat-container, .item-grow-container");
+  if  (!container) return;
+
+  const inner   = container.parentElement;
+  if  (!inner   || !inner  .className.includes("inner"  )) return;
+
+  const wrapper = inner    .parentElement;
+  if  (!wrapper || !wrapper.className.includes("wrapper")) return;
+
+  if (!container.onclick) item_details(container);
+}
+
+function item_details(container) {
+  const inner   = container.parentElement;
+  const wrapper = inner    .parentElement;
+
+  const index = wrapper.item_index;
+  if   (index === undefined) return;
+
+  const stat_class = container.firstElementChild.className;
+
+  const stat_type  = stat_class.includes("prev") ? "rank"
+                   : stat_class.includes("curr") ? "hv"
+                   : stat_class.includes("grow") ? "mood"
+                   : null;
+  if  (!stat_type) return;
+
+  let  details = details_for_items[index];
+  if  (details)  details = details[stat_type];
+  if (!details)  details = stat_type === "rank" ? "No rank change"
+                         : stat_type === "mood" ? "No mood"
+                                                : "No details";
 
   let details_div = wrapper.querySelector(".item-details");
   if (details_div) {

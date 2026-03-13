@@ -741,6 +741,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   const mood_chain     = [];
   //
   if (is_filtering) clr_views_favs_shown();
+  clr_details_for_items ();
   clr_details_div_inners();
   //
   for (let index = 0; index < curr_length; index++) {
@@ -828,6 +829,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     // 1. Outer wrapper, for border/divider and spacing
     const item_wrapper = document.createElement("div");
     item_wrapper.className = "item-wrapper";
+    item_wrapper.item_index = index;
 
     // 2. Inner flex container
     const item_inner = document.createElement("div");
@@ -903,9 +905,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     const add_rank_class = is_rank_up ? " item-mark-up"
                          : is_rank_dn ? " item-mark-dn" : "";
 
-    if (add_rank_class) {
+    if   (add_rank_class) {
       stat_prev_container.tabIndex = -1;
-      stat_prev_container.onclick = (event) => item_details(event, index, item.rank_details);
+      stat_prev_container.onclick = (event) => item_details(event.currentTarget);
       rank_chain.push(stat_prev_container);
     }
 
@@ -942,9 +944,11 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     const add_vert_class = is_vert_grow ? " item-mark-grow"
                          : is_vert_fall ? " item-mark-fall" : "";
 
-    if (add_horz_class || add_vert_class) {
+    const add_hv_class = add_horz_class || add_vert_class;
+
+    if   (add_hv_class) {
       stat_curr_container.tabIndex = -1;
-      stat_curr_container.onclick = (event) => item_details(event, index, item.horz_details, item.vert_details);
+      stat_curr_container.onclick = (event) => item_details(event.currentTarget);
       grow_chain.push(stat_curr_container);
     }
 
@@ -977,9 +981,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     const add_mood_class = is_mood_pos ? " item-mark-grow"
                          : is_mood_neg ? " item-mark-fall" : "";
 
-    if (add_mood_class) {
+    if   (add_mood_class) {
       stat_grow_container.tabIndex = -1;
-      stat_grow_container.onclick = (event) => item_details(event, index, item.mood_details);
+      stat_grow_container.onclick = (event) => item_details(event.currentTarget);
       mood_chain.push(stat_grow_container);
     }
 
@@ -1039,28 +1043,35 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
         is_prev ? null : item);
     }
 
-    // 8.5. Link chains
+    // 8.5. Add details for item
+    const ih_details = item.horz_details;
+    const iv_details = item.vert_details;
+    const hv_details = ih_details && iv_details ? ih_details + '\n' + iv_details
+                     : ih_details               ? ih_details        : iv_details;
+
+    add_details_for_items(index, item.rank_details, hv_details, item.mood_details);
+
+    // 8.6. Link chains
     if (add_rank_class) {
-      if (add_horz_class || add_vert_class) stat_prev_container.elem_right = stat_curr_container;
-      else if (add_mood_class)              stat_prev_container.elem_right = stat_grow_container;
+      if      (add_hv_class)   { stat_prev_container.elem_right = stat_curr_container;
+                                 stat_curr_container.elem_left  = stat_prev_container; }
+      else if (add_mood_class) { stat_prev_container.elem_right = stat_grow_container;
+                                 stat_grow_container.elem_left  = stat_prev_container; }
     }
 
-    if (add_horz_class || add_vert_class) {
-      if (add_rank_class)                   stat_curr_container.elem_left  = stat_prev_container;
-      if (add_mood_class)                   stat_curr_container.elem_right = stat_grow_container;
+    if (add_hv_class) {
+      if      (add_mood_class) { stat_curr_container.elem_right = stat_grow_container;
+                                 stat_grow_container.elem_left  = stat_curr_container; }
     }
-
-    if (add_mood_class) {
-      if (add_horz_class || add_vert_class) stat_grow_container.elem_left  = stat_curr_container;
-      else if (add_rank_class)              stat_grow_container.elem_left  = stat_prev_container;
-    }
-  }
+  } // for (index) closing
 
   if (shown_cnt !== curr_length) update_diffs(shown_cnt, show_by);
 
   set_chain_keys_line(rank_chain, "vert");
   set_chain_keys_line(grow_chain, "vert");
   set_chain_keys_line(mood_chain, "vert");
+
+  container.onclick = (event) => results_click(event);
 
   restore_focus();
 

@@ -596,15 +596,13 @@ input[type="checkbox"].changed.tab-e {
 
 .item-stat-container {
   align-items: flex-end; /* Right align all stat */
+  cursor: pointer;
   display: flex;
   flex: 0 0 22ch;
   flex-direction: column;
   font-family: monospace;
   outline-offset: -2px; /* For outline not to be clipped, to be within padding */
   white-space: pre;
-}
-.item-stat-container:has(.item-mark-up, .item-mark-dn, .item-mark-grow, .item-mark-fall) {
-  cursor: pointer;
 }
 
 .item-stat-prev-old {
@@ -641,15 +639,13 @@ input[type="checkbox"].changed.tab-e {
 
 .item-grow-container {
   align-items: flex-start; /* Left align all grow */
+  cursor: pointer;
   display: flex;
   flex: 0 0 3ch;
   flex-direction: column;
   font-family: monospace;
   outline-offset: -2px; /* For outline not to be clipped, to be within padding */
   white-space: pre;
-}
-.item-grow-container:has(.item-mark-grow, .item-mark-fall) {
-  cursor: pointer;
 }
 
 .item-grow-old {
