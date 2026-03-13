@@ -31,6 +31,13 @@ function set_elem_keydown_line(elem, elem_prev, elem_next, elem_beg, elem_end, d
   elem.onkeydown = (event) => {
     if ((event.key === 'Enter') || (event.key === ' ')) { event.preventDefault(); return; }
 
+    if (event.shiftKey && (direction === "vert")) {
+      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab'].includes(event.key)) {
+        item_goto(elem, event); // Use plain movement logic
+        return;
+      }
+    }
+
     let elem_goto = null;
 
     switch (event.key) {

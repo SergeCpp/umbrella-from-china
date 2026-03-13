@@ -600,17 +600,91 @@ function add_details_for_items(index, rank_details, hv_details, mood_details) {
   details_for_items[index] = details;
 }
 
-function results_click(event) {
+function find_container(event, handler) {
   const container = event.target.closest(".item-stat-container, .item-grow-container");
-  if  (!container) return;
+  if  (!container) return null;
 
   const inner   = container.parentElement;
-  if  (!inner   || !inner  .className.includes("inner"  )) return;
+  if  (!inner   || !inner  .className.includes("inner"  )) return null;
 
   const wrapper = inner    .parentElement;
-  if  (!wrapper || !wrapper.className.includes("wrapper")) return;
+  if  (!wrapper || !wrapper.className.includes("wrapper")) return null;
 
-  if (!container.onclick) item_details(container);
+  return container[handler] ? null : container;
+}
+
+function results_click(event) {
+  const container = find_container(event, "onclick");
+  if   (container)  item_details(container);
+}
+
+function results_keyup(event) {
+  const container = find_container(event, "onkeyup");
+  if   (container)  item_keyup(container, event);
+}
+
+function results_keydown(event) {
+  const container = find_container(event, "onkeydown");
+  if   (container)  item_keydown(container, event);
+}
+
+function item_keyup(container, event) {
+  if ((event.key === 'Enter') || (event.key === ' ')) { item_details(container); }
+}
+
+function item_keydown(container, event) {
+  if ((event.key === 'Enter') || (event.key === ' ')) { event.preventDefault(); return; }
+
+  item_goto(container, event);
+}
+
+function item_goto(container, event) {
+  const is_left  = event.key === 'ArrowLeft';
+  const is_right = event.key === 'ArrowRight';
+  const is_up    = event.key === 'ArrowUp';
+  const is_down  = event.key === 'ArrowDown';
+  if  (!is_left && !is_right && !is_up && !is_down) return;
+
+  if (is_left || is_right) {
+    const container_go = is_left ? container.previousElementSibling : container.nextElementSibling;
+    if   (container_go && !container_go.className.includes("title")) {
+      event.preventDefault();
+      container_go.focus();
+    }
+    return;
+  }
+
+  const inner    = container.parentElement;
+  const wrapper  = inner    .parentElement;
+  const results  = wrapper  .parentElement;
+
+  let wrapper_go = null;
+
+  if (event.ctrlKey) { wrapper_go = is_up ? results.firstElementChild : results.lastElementChild;
+    while (!wrapper_go.className.includes("item")) {
+      wrapper_go = is_up ? wrapper_go.nextElementSibling : wrapper_go.previousElementSibling;
+    }
+  }
+  else { wrapper_go = is_up ? wrapper.previousElementSibling : wrapper.nextElementSibling;
+    if (!wrapper_go || !wrapper_go.className.includes("item")) {
+      wrapper_go = is_up ? results.lastElementChild : results.firstElementChild;
+    }
+    while (!wrapper_go.className.includes("item")) {
+      wrapper_go = is_up ? wrapper_go.previousElementSibling : wrapper_go.nextElementSibling;
+    }
+  }
+
+  const inner_go = wrapper_go.firstElementChild;
+  if  (!inner_go) return;
+
+  const children = Array.from(inner.children);
+  const index    = children.indexOf(container);
+
+  const container_go = inner_go.children[index];
+  if  (!container_go) return;
+
+  event.preventDefault();
+  container_go.focus();
 }
 
 function item_details(container) {

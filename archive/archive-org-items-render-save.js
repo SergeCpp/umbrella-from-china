@@ -900,13 +900,13 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     // 4.1. Prev stat container (stacked)
     const stat_prev_container = document.createElement("div");
     stat_prev_container.className = "item-stat-container"; // flex: 0 0 22ch;
+    stat_prev_container.tabIndex = -1;
 
     // Rank substantial changes marking: up and dn
     const add_rank_class = is_rank_up ? " item-mark-up"
                          : is_rank_dn ? " item-mark-dn" : "";
 
     if   (add_rank_class) {
-      stat_prev_container.tabIndex = -1;
       stat_prev_container.onclick = (event) => item_details(event.currentTarget);
       rank_chain.push(stat_prev_container);
     }
@@ -935,6 +935,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     // 5.1. Curr stat container (stacked)
     const stat_curr_container = document.createElement("div");
     stat_curr_container.className = "item-stat-container"; // flex: 0 0 22ch;
+    stat_curr_container.tabIndex = -1;
 
     // Substantial changes marking: horizontal impact of old from prev to curr
     const add_horz_class = is_horz_grow ? " item-mark-grow"
@@ -947,7 +948,6 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     const add_hv_class = add_horz_class || add_vert_class;
 
     if   (add_hv_class) {
-      stat_curr_container.tabIndex = -1;
       stat_curr_container.onclick = (event) => item_details(event.currentTarget);
       grow_chain.push(stat_curr_container);
     }
@@ -976,13 +976,13 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     // 6.1. Grow container (stacked)
     const stat_grow_container = document.createElement("div");
     stat_grow_container.className = "item-grow-container"; // flex: 0 0 3ch;
+    stat_grow_container.tabIndex = -1;
 
     // Grow mood substantial changes marking: positive and negative
     const add_mood_class = is_mood_pos ? " item-mark-grow"
                          : is_mood_neg ? " item-mark-fall" : "";
 
     if   (add_mood_class) {
-      stat_grow_container.tabIndex = -1;
       stat_grow_container.onclick = (event) => item_details(event.currentTarget);
       mood_chain.push(stat_grow_container);
     }
@@ -1071,7 +1071,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   set_chain_keys_line(grow_chain, "vert");
   set_chain_keys_line(mood_chain, "vert");
 
-  container.onclick = (event) => results_click(event);
+  container.onclick   = (event) => results_click  (event);
+  container.onkeyup   = (event) => results_keyup  (event);
+  container.onkeydown = (event) => results_keydown(event);
 
   restore_focus();
 
