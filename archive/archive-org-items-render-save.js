@@ -861,17 +861,11 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     item_link.className = "text-ellipsis";
     item_link.href = "https://archive.org/details/" + item.identifier;
     item_link.rel = "noopener"; // Safe for _blank
+    item_link.tabIndex = 0; // To show focus outline when set by focus() (else not shown)
     item_link.target = "_blank";
     item_link.textContent = (shown_cnt === index ? "" : (shown_cnt + 1) + " / ") + (index + 1) + ". " +
       (title_is_title ? item.title : item.identifier);
     item_title.appendChild(item_link);
-
-    /*
-    if (item.rank_change)
-      item_link.textContent += ' ' +
-        item.rank_change.toFixed(3) + ' ' +
-       (item.rank_change > 0 ? mark_rank_up : mark_rank_dn).toFixed(3);
-    */
 
     // Below gauges
     const item_gauge_below_a = document.createElement("div");

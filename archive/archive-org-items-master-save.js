@@ -600,8 +600,11 @@ function add_details_for_items(index, rank_details, hv_details, mood_details) {
   details_for_items[index] = details;
 }
 
-function find_container(event, handler) {
-  const container = event.target.closest(".item-stat-container, .item-grow-container");
+function find_container(event, handler, title) {
+  const classes =
+    (title ? ".item-title-container, " : "") + ".item-stat-container, .item-grow-container";
+
+  const container = event.target.closest(classes);
   if  (!container) return null;
 
   const inner   = container.parentElement;
@@ -624,16 +627,23 @@ function results_keyup(event) {
 }
 
 function results_keydown(event) {
-  const container = find_container(event, "onkeydown");
+  const container = find_container(event, "onkeydown", "title");
   if   (container)  item_keydown(container, event);
 }
 
 function item_keyup(container, event) {
-  if ((event.key === 'Enter') || (event.key === ' ')) { item_details(container); }
+  if ((event.key === 'Enter') || (event.key === ' ')) item_details(container);
 }
 
 function item_keydown(container, event) {
-  if ((event.key === 'Enter') || (event.key === ' ')) { event.preventDefault(); return; }
+  const is_title = (cell) => cell.className.includes("title");
+
+  if ((event.key === 'Enter') || (event.key === ' ')) {
+    if (is_title(container)) return;
+
+    event.preventDefault();
+    return;
+  }
 
   item_goto(container, event);
 }
@@ -645,12 +655,19 @@ function item_goto(container, event) {
   const is_down  = event.key === 'ArrowDown';
   if  (!is_left && !is_right && !is_up && !is_down) return;
 
+  const is_item  = (cell) => cell.className.includes("item" );
+  const is_title = (cell) => cell.className.includes("title");
+
+  const go_cell  = (cell) => {
+    event.preventDefault();
+    if (is_title(cell)) cell.querySelector("a").focus(); else cell.focus();
+  };
+
   if (is_left || is_right) {
-    const container_go = is_left ? container.previousElementSibling : container.nextElementSibling;
-    if   (container_go && !container_go.className.includes("title")) {
-      event.preventDefault();
-      container_go.focus();
-    }
+    const container_go =  is_left ? container.previousElementSibling : container.nextElementSibling;
+    if  (!container_go) return;
+
+    go_cell(container_go);
     return;
   }
 
@@ -660,17 +677,18 @@ function item_goto(container, event) {
 
   let wrapper_go = null;
 
-  if (event.ctrlKey) { wrapper_go = is_up ? results.firstElementChild : results.lastElementChild;
-    while (!wrapper_go.className.includes("item")) {
-      wrapper_go = is_up ? wrapper_go.nextElementSibling : wrapper_go.previousElementSibling;
+  if (event.ctrlKey) {
+         wrapper_go =   is_up ? results   .firstElementChild         : results   .lastElementChild;
+    while (!is_item(wrapper_go)) {
+         wrapper_go =   is_up ? wrapper_go.nextElementSibling        : wrapper_go.previousElementSibling;
     }
   }
-  else { wrapper_go = is_up ? wrapper.previousElementSibling : wrapper.nextElementSibling;
-    if (!wrapper_go || !wrapper_go.className.includes("item")) {
-      wrapper_go = is_up ? results.lastElementChild : results.firstElementChild;
+  else { wrapper_go =   is_up ? wrapper   .previousElementSibling    : wrapper   .nextElementSibling;
+    if (!wrapper_go || !is_item(wrapper_go)) {
+         wrapper_go =   is_up ? results   .lastElementChild          : results   .firstElementChild;
     }
-    while (!wrapper_go.className.includes("item")) {
-      wrapper_go = is_up ? wrapper_go.previousElementSibling : wrapper_go.nextElementSibling;
+    while (!is_item(wrapper_go)) {
+         wrapper_go =   is_up ? wrapper_go.previousElementSibling    : wrapper_go.nextElementSibling;
     }
   }
 
@@ -681,10 +699,9 @@ function item_goto(container, event) {
   const index    = children.indexOf(container);
 
   const container_go = inner_go.children[index];
-  if  (!container_go) return;
+  if  (!container_go || (container_go === container)) return;
 
-  event.preventDefault();
-  container_go.focus();
+  go_cell(container_go);
 }
 
 function item_details(container) {
