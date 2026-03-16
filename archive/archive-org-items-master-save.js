@@ -600,7 +600,7 @@ function add_details_for_items(index, rank_details, hv_details, mood_details) {
   details_for_items[index] = details;
 }
 
-function find_container(event, handler, title) {
+function find_container(event, handler, title = false) {
   const classes =
     (title ? ".item-title-container, " : "") + ".item-stat-container, .item-grow-container";
 
@@ -618,7 +618,7 @@ function find_container(event, handler, title) {
 
 function results_click(event) {
   const container = find_container(event, "onclick");
-  if   (container)  item_details(container);
+  if   (container)  item_click(container, event);
 }
 
 function results_keyup(event) {
@@ -631,40 +631,53 @@ function results_keydown(event) {
   if   (container)  item_keydown(container, event);
 }
 
+function item_click(container, event) {
+  item_details(container);
+}
+
 function item_keyup(container, event) {
-  if ((event.key === 'Enter') || (event.key === ' ')) item_details(container);
+  const key = event.key;
+  if ((key === 'Enter') || (key === ' ')) {
+    item_click(container, event);
+  }
 }
 
 function item_keydown(container, event) {
-  const is_title = (cell) => cell.className.includes("title");
+  const key      = event.key;
+  const is_title = (elem) => elem.className.includes("title");
 
-  if ((event.key === 'Enter') || (event.key === ' ')) {
+  if ((key === 'Enter') || (key === ' ')) {
     if (is_title(container)) return;
 
     event.preventDefault();
     return;
   }
 
-  item_goto(container, event);
+  item_arrows(container, event);
 }
 
-function item_goto(container, event) {
-  const is_left  = event.key === 'ArrowLeft';
-  const is_right = event.key === 'ArrowRight';
-  const is_up    = event.key === 'ArrowUp';
-  const is_down  = event.key === 'ArrowDown';
+function item_arrows(container, event) {
+  const key      = event.key;
+  const is_left  = key === 'ArrowLeft';
+  const is_right = key === 'ArrowRight';
+  const is_up    = key === 'ArrowUp';
+  const is_down  = key === 'ArrowDown';
   if  (!is_left && !is_right && !is_up && !is_down) return;
 
-  const is_item  = (cell) => cell.className.includes("item" );
-  const is_title = (cell) => cell.className.includes("title");
+  const is_item  = (elem) => elem.className.includes("item" );
+  const is_title = (elem) => elem.className.includes("title");
 
   const go_cell  = (cell) => {
     event.preventDefault();
     if (is_title(cell)) cell.querySelector("a").focus(); else cell.focus();
   };
 
+  if (event.altKey) {
+    event.preventDefault(); // Prewent browser actions
+  }
+
   if (is_left || is_right) {
-    const container_go =  is_left ? container.previousElementSibling : container.nextElementSibling;
+    const container_go = is_left ? container.previousElementSibling : container.nextElementSibling;
     if  (!container_go) return;
 
     go_cell(container_go);
@@ -675,30 +688,55 @@ function item_goto(container, event) {
   const wrapper  = inner    .parentElement;
   const results  = wrapper  .parentElement;
 
+  const cell_idx = Array.from(inner.children).indexOf(container);
+
+  const wr_cell  = (wrap) => {
+    if (!wrap) return null;
+
+    const innr = wrap.firstElementChild;
+    if  (!innr) return null;
+
+    const  cell = innr.children[cell_idx];
+    return cell;
+  };
+
+  const is_plain = (wrap) => {
+    const   cell = wr_cell(wrap);
+    return !cell || !cell.onclick;
+  };
+
   let wrapper_go = null;
 
-  if (event.ctrlKey) {
-         wrapper_go =   is_up ? results   .firstElementChild         : results   .lastElementChild;
+  if (event.altKey) { // To prev/next not plain or to beg/end if not found
+    let wo = wrapper;
+    let wn = is_up ? wo.previousElementSibling : wo.nextElementSibling;
+
+    while (wn && is_item(wn) && is_plain(wn)) {
+      wo = wn;
+      wn = is_up ? wo.previousElementSibling : wo.nextElementSibling;
+    }
+
+    wrapper_go = (wn && is_item(wn)) ? wn : wo;
+  }
+  else if (event.ctrlKey) { // To beg/end
+         wrapper_go =   is_up ? results   .firstElementChild      : results   .lastElementChild;
+
     while (!is_item(wrapper_go)) {
-         wrapper_go =   is_up ? wrapper_go.nextElementSibling        : wrapper_go.previousElementSibling;
+         wrapper_go =   is_up ? wrapper_go.nextElementSibling     : wrapper_go.previousElementSibling;
     }
   }
-  else { wrapper_go =   is_up ? wrapper   .previousElementSibling    : wrapper   .nextElementSibling;
+  else { wrapper_go =   is_up ? wrapper   .previousElementSibling : wrapper   .nextElementSibling;
     if (!wrapper_go || !is_item(wrapper_go)) {
-         wrapper_go =   is_up ? results   .lastElementChild          : results   .firstElementChild;
-    }
+         wrapper_go =   is_up ? results   .lastElementChild       : results   .firstElementChild; }
+
     while (!is_item(wrapper_go)) {
-         wrapper_go =   is_up ? wrapper_go.previousElementSibling    : wrapper_go.nextElementSibling;
+         wrapper_go =   is_up ? wrapper_go.previousElementSibling : wrapper_go.nextElementSibling;
     }
   }
 
-  const inner_go = wrapper_go.firstElementChild;
-  if  (!inner_go) return;
+  if (!wrapper_go) return;
 
-  const children = Array.from(inner.children);
-  const index    = children.indexOf(container);
-
-  const container_go = inner_go.children[index];
+  const container_go = wr_cell(wrapper_go);
   if  (!container_go || (container_go === container)) return;
 
   go_cell(container_go);

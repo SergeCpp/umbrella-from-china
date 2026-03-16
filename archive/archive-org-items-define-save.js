@@ -148,7 +148,8 @@ function init_controls() {
     input.oninput = () => tab_input_changed(input);
 
     input.onkeyup = (event) => {
-      if (event.key === 'Enter') {
+      const key = event.key;
+      if (key === 'Enter') {
         process_filter();
       }
     };
@@ -828,7 +829,10 @@ function date_change_menu(event, what) {
   }, 0);
 
   menu.onkeydown = (event) => {
-    if (event.key === 'Escape') { menu.remove_ex(); }
+    const key = event.key;
+    if (key === 'Escape') {
+      menu.remove_ex();
+    }
   };
 
   const init_opt = (opt, date) => {
@@ -840,7 +844,7 @@ function date_change_menu(event, what) {
     opt.onclick = () => {
       menu.remove_ex();
       save_focus('span-btn-' + what);
-      requestAnimationFrame(() => setTimeout(load_stat, 0, date, what));
+      requestAnimationFrame(() => setTimeout(load_stat, 0, date, what)); // RAF handles cache hit (menu closing)
     };
 
     opt.onkeyup = (event) => {

@@ -19,7 +19,10 @@ function restore_focus() {
 
 function set_elem_keyup(elem) {
   elem.onkeyup = (event) => {
-    if ((event.key === 'Enter') || (event.key === ' ')) elem.click();
+    const key = event.key;
+    if ((key === 'Enter') || (key === ' ')) {
+      elem.click();
+    }
   };
 }
 
@@ -29,30 +32,39 @@ function set_elem_keydown_line(elem, elem_prev, elem_next, elem_beg, elem_end, d
       ? ['ArrowUp',   'ArrowDown' ] : [];
 
   elem.onkeydown = (event) => {
-    if ((event.key === 'Enter') || (event.key === ' ')) { event.preventDefault(); return; }
+    const key = event.key;
+    if ((key === 'Enter') || (key === ' ')) {
+      event.preventDefault();
+      return;
+    }
 
-    if (event.shiftKey && (direction === "vert")) {
-      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab'].includes(event.key)) {
-        item_goto(elem, event); // Use plain movement logic
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key)) return;
+
+    if (direction === "vert") {
+      if (event.altKey || event.shiftKey) {
+        item_arrows(elem, event); // Use other movement logic
         return;
       }
     }
 
     let elem_goto = null;
 
-    switch (event.key) {
+    switch (key) {
       case key_prev: elem_goto = event.ctrlKey ? elem_beg : elem_prev; break;
       case key_next: elem_goto = event.ctrlKey ? elem_end : elem_next; break;
     }
 
     if (direction === "vert") {
-      switch (event.key) {
+      switch (key) {
         case 'ArrowLeft' : elem_goto = elem.elem_left;  break;
         case 'ArrowRight': elem_goto = elem.elem_right; break;
       }
     }
 
-    if (elem_goto && (elem_goto !== elem)) { event.preventDefault(); elem_goto.focus(); }
+    if (elem_goto && (elem_goto !== elem)) {
+      event.preventDefault();
+      elem_goto.focus();
+    }
   };
 }
 
