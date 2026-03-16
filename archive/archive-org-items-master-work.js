@@ -708,13 +708,14 @@ function item_arrows(container, event) {
   let wrapper_go = null;
 
   if (event.altKey) { // To prev/next not plain or to beg/end if not found
-    let wo = wrapper;
-    let wn = is_up ? wo.previousElementSibling : wo.nextElementSibling;
+    let wo = null;
+    let wn = wrapper;
 
-    while (wn && is_item(wn) && is_plain(wn)) {
+    do {
       wo = wn;
       wn = is_up ? wo.previousElementSibling : wo.nextElementSibling;
     }
+    while (wn && is_item(wn) && is_plain(wn));
 
     wrapper_go = (wn && is_item(wn)) ? wn : wo;
   }
