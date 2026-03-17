@@ -736,11 +736,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   const title_is_title = (title_is === "title"); // Else is "identifier"
   let   shown_cnt      = 0;
   //
-  const rank_chain     = [];
-  const grow_chain     = [];
-  const mood_chain     = [];
-  //
   if (is_filtering) clr_views_favs_shown();
+  //
   clr_details_for_items ();
   clr_details_div_inners();
   //
@@ -901,8 +898,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
                          : is_rank_dn ? " item-mark-dn" : "";
 
     if   (add_rank_class) {
-      stat_prev_container.onclick = (event) => item_details(event.currentTarget);
-      rank_chain.push(stat_prev_container);
+      stat_prev_container.is_subst = true;
     }
 
     // 4.2. Prev: old stat line
@@ -942,8 +938,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     const add_hv_class = add_horz_class || add_vert_class;
 
     if   (add_hv_class) {
-      stat_curr_container.onclick = (event) => item_details(event.currentTarget);
-      grow_chain.push(stat_curr_container);
+      stat_curr_container.is_subst = true;
     }
 
     // 5.2. Curr: old stat line
@@ -977,8 +972,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
                          : is_mood_neg ? " item-mark-fall" : "";
 
     if   (add_mood_class) {
-      stat_grow_container.onclick = (event) => item_details(event.currentTarget);
-      mood_chain.push(stat_grow_container);
+      stat_grow_container.is_subst = true;
     }
 
     // 6.2. Grow: old
@@ -1047,10 +1041,6 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   } // for (index) closing
 
   if (shown_cnt !== curr_length) update_diffs(shown_cnt, show_by);
-
-  set_chain_keys_line(rank_chain, "vert");
-  set_chain_keys_line(grow_chain, "vert");
-  set_chain_keys_line(mood_chain, "vert");
 
   container.onclick   = (event) => results_click  (event);
   container.onkeyup   = (event) => results_keyup  (event);

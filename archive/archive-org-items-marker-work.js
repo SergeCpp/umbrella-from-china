@@ -40,18 +40,6 @@ function set_elem_keydown_line(elem, elem_prev, elem_next, elem_beg, elem_end, d
 
     if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key)) return;
 
-    if (direction === "vert") {
-      if (event.altKey || event.shiftKey) {
-        item_arrows(elem, event); // Use other movement logic
-        return;
-      }
-
-      if ((key === 'ArrowLeft') || (key === 'ArrowRight')) {
-        item_arrows(elem, event); // To handle there
-        return;
-      }
-    }
-
     let elem_go = null;
 
     switch (key) {

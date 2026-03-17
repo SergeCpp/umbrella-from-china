@@ -605,7 +605,7 @@ function find_container(event, handler, title = false) {
     (title ? ".item-title-container, " : "") + ".item-stat-container, .item-grow-container";
 
   const container = event.target.closest(classes);
-  if  (!container) return null;
+  if  (!container || container[handler]) return null;
 
   const inner   = container.parentElement;
   if  (!inner   || !inner  .className.includes("inner"  )) return null;
@@ -613,7 +613,7 @@ function find_container(event, handler, title = false) {
   const wrapper = inner    .parentElement;
   if  (!wrapper || !wrapper.className.includes("wrapper")) return null;
 
-  return container[handler] ? null : container;
+  return container;
 }
 
 function results_click(event) {
@@ -710,7 +710,7 @@ function item_arrows(container, event) {
 
   const is_plain = (wrap) => {
     const   cell = wr_cell(wrap);
-    return !cell || !cell.onclick;
+    return !cell || !cell.is_subst;
   };
 
   let wrapper_go = null;
