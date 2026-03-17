@@ -1044,19 +1044,6 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
                      : ih_details               ? ih_details        : iv_details;
 
     add_details_for_items(index, item.rank_details, hv_details, item.mood_details);
-
-    // 8.6. Link chains
-    if (add_rank_class) {
-      if      (add_hv_class)   { stat_prev_container.elem_right = stat_curr_container;
-                                 stat_curr_container.elem_left  = stat_prev_container; }
-      else if (add_mood_class) { stat_prev_container.elem_right = stat_grow_container;
-                                 stat_grow_container.elem_left  = stat_prev_container; }
-    }
-
-    if (add_hv_class) {
-      if      (add_mood_class) { stat_curr_container.elem_right = stat_grow_container;
-                                 stat_grow_container.elem_left  = stat_curr_container; }
-    }
   } // for (index) closing
 
   if (shown_cnt !== curr_length) update_diffs(shown_cnt, show_by);

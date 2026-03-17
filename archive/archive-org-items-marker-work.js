@@ -45,25 +45,23 @@ function set_elem_keydown_line(elem, elem_prev, elem_next, elem_beg, elem_end, d
         item_arrows(elem, event); // Use other movement logic
         return;
       }
-    }
 
-    let elem_goto = null;
-
-    switch (key) {
-      case key_prev: elem_goto = event.ctrlKey ? elem_beg : elem_prev; break;
-      case key_next: elem_goto = event.ctrlKey ? elem_end : elem_next; break;
-    }
-
-    if (direction === "vert") {
-      switch (key) {
-        case 'ArrowLeft' : elem_goto = elem.elem_left;  break;
-        case 'ArrowRight': elem_goto = elem.elem_right; break;
+      if ((key === 'ArrowLeft') || (key === 'ArrowRight')) {
+        item_arrows(elem, event); // To handle there
+        return;
       }
     }
 
-    if (elem_goto && (elem_goto !== elem)) {
+    let elem_go = null;
+
+    switch (key) {
+      case key_prev: elem_go = event.ctrlKey ? elem_beg : elem_prev; break;
+      case key_next: elem_go = event.ctrlKey ? elem_end : elem_next; break;
+    }
+
+    if (elem_go && (elem_go !== elem)) {
       event.preventDefault();
-      elem_goto.focus();
+      elem_go.focus();
     }
   };
 }

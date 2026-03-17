@@ -668,35 +668,43 @@ function item_arrows(container, event) {
   const is_title = (elem) => elem.className.includes("title");
 
   const go_cell  = (cell) => {
+    if (!cell || (cell === container)) return;
     event.preventDefault();
     if (is_title(cell)) cell.querySelector("a").focus(); else cell.focus();
   };
+
+  const inner    = container.parentElement;
+  const wrapper  = inner    .parentElement;
+  const results  = wrapper  .parentElement;
 
   if (event.altKey) {
     event.preventDefault(); // Prewent browser actions
   }
 
   if (is_left || is_right) {
-    const container_go = is_left ? container.previousElementSibling : container.nextElementSibling;
-    if  (!container_go) return;
+    let container_go = null;
+
+    if (event.ctrlKey) { // To beg/end
+           container_go = is_left ? inner    .firstElementChild      : inner    .lastElementChild;
+    }
+    else { container_go = is_left ? container.previousElementSibling : container.nextElementSibling;
+      if (!container_go) {
+           container_go = is_left ? inner    .lastElementChild       : inner    .firstElementChild; }
+    }
 
     go_cell(container_go);
     return;
   }
 
-  const inner    = container.parentElement;
-  const wrapper  = inner    .parentElement;
-  const results  = wrapper  .parentElement;
+  const ix_cell = Array.from(inner.children).indexOf(container);
 
-  const cell_idx = Array.from(inner.children).indexOf(container);
-
-  const wr_cell  = (wrap) => {
+  const wr_cell = (wrap) => {
     if (!wrap) return null;
 
     const innr = wrap.firstElementChild;
     if  (!innr) return null;
 
-    const  cell = innr.children[cell_idx];
+    const  cell = innr.children[ix_cell];
     return cell;
   };
 
@@ -735,12 +743,7 @@ function item_arrows(container, event) {
     }
   }
 
-  if (!wrapper_go) return;
-
-  const container_go = wr_cell(wrapper_go);
-  if  (!container_go || (container_go === container)) return;
-
-  go_cell(container_go);
+  go_cell(wr_cell(wrapper_go));
 }
 
 function item_details(container) {
