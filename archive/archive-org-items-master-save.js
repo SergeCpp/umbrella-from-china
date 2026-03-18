@@ -605,7 +605,7 @@ function find_container(event, handler, title = false) {
     (title ? ".item-title-container, " : "") + ".item-stat-container, .item-grow-container";
 
   const container = event.target.closest(classes);
-  if  (!container || container[handler]) return null;
+  if  (!container || container.is_empty || container[handler]) return null;
 
   const inner   = container.parentElement;
   if  (!inner   || !inner  .className.includes("inner"  )) return null;
@@ -664,8 +664,15 @@ function item_arrows(container, event) {
   const is_down  = key === 'ArrowDown';
   if  (!is_left && !is_right && !is_up && !is_down) return;
 
-  const is_item  = (elem) => elem.className.includes("item" );
-  const is_title = (elem) => elem.className.includes("title");
+  const is_item  = (elem) => elem && elem.className.includes("item" );
+  const is_title = (elem) => elem && elem.className.includes("title");
+
+  const inner    = container.parentElement;
+  const wrapper  = inner    .parentElement;
+  const results  = wrapper  .parentElement;
+
+  const in_chlds = Array.from(inner.children);
+  const ix_cell  = in_chlds.indexOf(container);
 
   const go_cell  = (cell) => {
     if (!cell || (cell === container)) return;
@@ -673,33 +680,8 @@ function item_arrows(container, event) {
     if (is_title(cell)) cell.querySelector("a").focus(); else cell.focus();
   };
 
-  const inner    = container.parentElement;
-  const wrapper  = inner    .parentElement;
-  const results  = wrapper  .parentElement;
-
-  if (event.altKey) {
-    event.preventDefault(); // Prewent browser actions
-  }
-
-  if (is_left || is_right) {
-    let container_go = null;
-
-    if (event.ctrlKey) { // To beg/end
-           container_go = is_left ? inner    .firstElementChild      : inner    .lastElementChild;
-    }
-    else { container_go = is_left ? container.previousElementSibling : container.nextElementSibling;
-      if (!container_go) {
-           container_go = is_left ? inner    .lastElementChild       : inner    .firstElementChild; }
-    }
-
-    go_cell(container_go);
-    return;
-  }
-
-  const ix_cell = Array.from(inner.children).indexOf(container);
-
-  const wr_cell = (wrap) => {
-    if (!wrap) return null;
+  const wr_cell  = (wrap) => {
+    if (!is_item(wrap)) return null;
 
     const innr = wrap.firstElementChild;
     if  (!innr) return null;
@@ -708,38 +690,110 @@ function item_arrows(container, event) {
     return cell;
   };
 
-  const is_plain = (wrap) => {
+  const is_empty = (wrap) => { // If not plain then not empty
+    const   cell = wr_cell(wrap);
+    return !cell || cell.is_empty;
+  };
+
+  const is_plain = (wrap) => { // If empty then plain
     const   cell = wr_cell(wrap);
     return !cell || !cell.is_subst;
   };
 
+  if (event.altKey) {
+    event.preventDefault(); // Prewent browser actions
+  }
+
+  if (is_left || is_right) {
+    let container_go = null;
+    let len = in_chlds.length;
+    let ix;
+
+    if (event.ctrlKey) { // To beg/end
+      ix = is_left ? 0 : len - 1;
+
+      while (in_chlds[ix].is_empty) { // Will be found ok, at least title at [0] (always not empty)
+        ix = is_left ? ix + 1 : ix - 1;
+      }
+    }
+    else { // To prev/next not empty or to end/beg if not found (circulate)
+      ix = ix_cell;
+
+      do {
+        ix = ((is_left ? ix - 1 : ix + 1) + len) % len;
+      }
+      while (in_chlds[ix].is_empty); // Will be found ok, at least title at [0] (always not empty)
+    }
+
+    container_go = in_chlds[ix];
+    go_cell(container_go);
+    return;
+  }
+
+  const wr_forw  = (wrap) => is_up ? wrap.previousElementSibling : wrap.    nextElementSibling;
+  const wr_back  = (wrap) => is_up ? wrap.    nextElementSibling : wrap.previousElementSibling;
+
+  const fw_elem  = ()     => is_up ? results.firstElementChild   : results. lastElementChild;
+  const bk_elem  = ()     => is_up ? results. lastElementChild   : results.firstElementChild;
+
+  const fw_term  = ()     => {
+    let wr = fw_elem();
+
+    while (is_empty(wr)) { // Will be found ok, at least wrapper
+      wr = wr_back(wr);
+    }
+
+    return wr;
+  };
+
+  const bk_term  = ()     => {
+    let wr = bk_elem();
+
+    while (is_empty(wr)) { // Will be found ok, at least wrapper
+      wr = wr_forw(wr);
+    }
+
+    return wr;
+  };
+
   let wrapper_go = null;
 
-  if (event.altKey) { // To prev/next not plain or to beg/end if not found
-    let wo = null;
-    let wn = wrapper;
+  if (event.altKey && event.ctrlKey) { // To beg/end not plain or to beg/end if not found
+    wrapper_go = fw_term();
+    let  wr_go = wrapper_go;
+
+    while (is_item(wr_go)) {
+      if (!is_plain(wr_go)) { wrapper_go = wr_go; break; }
+      wr_go = wr_back(wr_go);
+    }
+  }
+  else if (event.altKey) { // To prev/next not plain or to beg/end if not found (stop at)
+    let wr_ne = null; // Last not empty encountered
+    let wr_go = wrapper; // Currently checking
 
     do {
-      wo = wn;
-      wn = is_up ? wo.previousElementSibling : wo.nextElementSibling;
+      if (!is_empty(wr_go))        wr_ne = wr_go;
+      wr_go = wr_forw(wr_go);
+      if (!is_plain(wr_go)) { wrapper_go = wr_go; break; }
     }
-    while (wn && is_item(wn) && is_plain(wn));
+    while (is_item(wr_go));
 
-    wrapper_go = (wn && is_item(wn)) ? wn : wo;
+    if (!wrapper_go) wrapper_go = wr_ne;
   }
   else if (event.ctrlKey) { // To beg/end
-         wrapper_go =   is_up ? results   .firstElementChild      : results   .lastElementChild;
-
-    while (!is_item(wrapper_go)) {
-         wrapper_go =   is_up ? wrapper_go.nextElementSibling     : wrapper_go.previousElementSibling;
-    }
+    wrapper_go = fw_term();
   }
-  else { wrapper_go =   is_up ? wrapper   .previousElementSibling : wrapper   .nextElementSibling;
-    if (!wrapper_go || !is_item(wrapper_go)) {
-         wrapper_go =   is_up ? results   .lastElementChild       : results   .firstElementChild; }
+  else { // To prev/next not empty or to end/beg if not found (circulate)
+    let wr_go = wrapper;
 
-    while (!is_item(wrapper_go)) {
-         wrapper_go =   is_up ? wrapper_go.previousElementSibling : wrapper_go.nextElementSibling;
+    do {
+      wr_go = wr_forw(wr_go);
+      if (!is_empty(wr_go)) { wrapper_go = wr_go; break; }
+    }
+    while (is_item(wr_go));
+
+    if (!wrapper_go) { // Not found, circulate
+         wrapper_go = bk_term(); // Here found ok, at least wrapper
     }
   }
 

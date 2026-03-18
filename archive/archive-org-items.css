@@ -604,6 +604,9 @@ input[type="checkbox"].changed.tab-e {
   outline-offset: -2px; /* For outline not to be clipped, to be within padding */
   white-space: pre;
 }
+.item-stat-container.is-empty {
+  cursor: default;
+}
 
 .item-stat-prev-old {
   border-radius: 0.5rem 0.5rem 0 0;
@@ -646,6 +649,9 @@ input[type="checkbox"].changed.tab-e {
   font-family: monospace;
   outline-offset: -2px; /* For outline not to be clipped, to be within padding */
   white-space: pre;
+}
+.item-grow-container.is-empty {
+  cursor: default;
 }
 
 .item-grow-old {

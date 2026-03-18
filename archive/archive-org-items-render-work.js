@@ -889,9 +889,16 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
     /////////////////////////////////////
     // 4.1. Prev stat container (stacked)
-    const stat_prev_container = document.createElement("div");
-    stat_prev_container.className = "item-stat-container"; // flex: 0 0 22ch;
-    stat_prev_container.tabIndex = -1;
+    const stat_prev_container = document.createElement("div"); // flex: 0 0 22ch;
+
+    if (!no_prev) {
+      stat_prev_container.className = "item-stat-container";
+      stat_prev_container.tabIndex = -1;
+    }
+    else {
+      stat_prev_container.className = "item-stat-container is-empty";
+      stat_prev_container.is_empty = true;
+    }
 
     // Rank substantial changes marking: up and dn
     const add_rank_class = is_rank_up ? " item-mark-up"
@@ -923,9 +930,16 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
     /////////////////////////////////////
     // 5.1. Curr stat container (stacked)
-    const stat_curr_container = document.createElement("div");
-    stat_curr_container.className = "item-stat-container"; // flex: 0 0 22ch;
-    stat_curr_container.tabIndex = -1;
+    const stat_curr_container = document.createElement("div"); // flex: 0 0 22ch;
+
+    if (!is_prev) {
+      stat_curr_container.className = "item-stat-container";
+      stat_curr_container.tabIndex = -1;
+    }
+    else {
+      stat_curr_container.className = "item-stat-container is-empty";
+      stat_curr_container.is_empty = true;
+    }
 
     // Substantial changes marking: horizontal impact of old from prev to curr
     const add_horz_class = is_horz_grow ? " item-mark-grow"
@@ -963,9 +977,16 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
     ////////////////////////////////
     // 6.1. Grow container (stacked)
-    const stat_grow_container = document.createElement("div");
-    stat_grow_container.className = "item-grow-container"; // flex: 0 0 3ch;
-    stat_grow_container.tabIndex = -1;
+    const stat_grow_container = document.createElement("div"); // flex: 0 0 3ch;
+
+    if (is_both) {
+      stat_grow_container.className = "item-grow-container";
+      stat_grow_container.tabIndex = -1;
+    }
+    else {
+      stat_grow_container.className = "item-grow-container is-empty";
+      stat_grow_container.is_empty = true;
+    }
 
     // Grow mood substantial changes marking: positive and negative
     const add_mood_class = is_mood_pos ? " item-mark-grow"
