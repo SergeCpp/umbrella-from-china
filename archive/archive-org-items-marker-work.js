@@ -630,7 +630,9 @@ function low_first(str) {
 
 /* Sorting */
 
-function sort_results(results, show_by, sort_by) {
+function sort_results(results, title_is, show_by, sort_by) {
+  const title_is_title = (title_is === "title"); // Else is "identifier"
+
   let field_1 = null;
   let field_2 = null;
   let field_3 = null;
@@ -646,10 +648,13 @@ function sort_results(results, show_by, sort_by) {
 
   // Descending by value: max >> min
   //  Ascending by title:   A >> Z
-  results.sort((above, below) => above[field_1] !== below[field_1] ? below[field_1] - above[field_1]
-                               : above[field_2] !== below[field_2] ? below[field_2] - above[field_2]
-                               : above[field_3] !== below[field_3] ? below[field_3] - above[field_3]
-                               : above.title.localeCompare(below.title));
+  results.sort((above, below) =>
+    (below[field_1] - above[field_1]) ||
+    (below[field_2] - above[field_2]) ||
+    (below[field_3] - above[field_3]) ||
+    (title_is_title
+     ? above.title     .localeCompare(below.title     )
+     : above.identifier.localeCompare(below.identifier)));
 }
 
 // EOF

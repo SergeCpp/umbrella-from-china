@@ -1,7 +1,7 @@
 /* Render */
 
 // what: "prev" / "curr"
-function render_stats(results, date, what, show_by, sort_by, container) {
+function render_stats(results, date, what, title_is, show_by, sort_by, container) {
   let field = null;
 
   switch (show_by + sort_by) {
@@ -20,7 +20,7 @@ function render_stats(results, date, what, show_by, sort_by, container) {
     case "views": format = (value) => format_number(value); break;
   }
 
-  sort_results(results, show_by, sort_by);
+  sort_results(results, title_is, show_by, sort_by);
 
   // Show stats: Min, 10%, 25%, 50%, 75%, 90%, Max
   const stats_text = document.createElement("div");
@@ -231,6 +231,7 @@ const  stat_23     = " /   23 =";
 const  stat_7      = " /    7 =";
 const  stat_eq     =        " =";
 
+// results_curr_exp is sorted
 function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, mood_by) {
   const show_by_old = (show_by === "old-23-7"); // Else by "all-30-7"
 

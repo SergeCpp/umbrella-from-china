@@ -471,8 +471,8 @@ const agg_fn = {
   add  : (prev, curr) =>          prev + curr,
   sub  : (prev, curr) => Math.abs(prev - curr),
 
-  pos  : (prev, curr) => (curr - prev) > 0 ? (curr - prev) : 0,
-  neg  : (prev, curr) => (prev - curr) > 0 ? (prev - curr) : 0,
+  pos  : (prev, curr) => Math.max(curr - prev, 0),
+  neg  : (prev, curr) => Math.max(prev - curr, 0),
 
   prev : (prev, curr) => prev,
   curr : (prev, curr) => curr,
@@ -527,9 +527,9 @@ function agg_nth(count_prev, count_curr, n, agg, time) {
   const values_len = values.length;
   if  (!values_len) return [0, null];
 
-  values.sort((above, below) => above[0] !== below[0]
-                              ? above[0] -   below[0]   // Lower count to start of array
-                              : below[1] -   above[1]); // Older item  to start of array
+  values.sort((above, below) =>
+    (above[0] - below[0]) || // Lower count to start of array
+    (below[1] - above[1]));  // Older item  to start of array
 
   if (n < 1)          n = 1;
   if (n > values_len) n = values_len;
@@ -569,8 +569,8 @@ function filter_count_range_agg(items_prev, items_curr,
 
   const time = {};
 
-  if (is_nth_min || is_nth_max) {
-    for (const item of items_prev) time[item.identifier] = item.time_all; // prev.time_all === curr.time_all
+  if (is_nth_min || is_nth_max) { // Use prev.time_all for tie-breaking logic in agg_nth
+    for (const item of items_prev) time[item.identifier] = item.time_all;
   }
 
   let min_time = null;

@@ -175,8 +175,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   only_both = curr_length - only_curr - only_prev;
 
   // Sort expanded arrays for show in list (curr) and rank changes calculations (both)
-  sort_results(results_curr_exp, show_by, sort_by);
-  sort_results(results_prev_exp, show_by, sort_by);
+  sort_results(results_curr_exp, title_is, show_by, sort_by);
+  sort_results(results_prev_exp, title_is, show_by, sort_by);
 
   // Create a map of curr expanded results by identifier
   // Set no_prev actual values in curr expanded results
@@ -274,11 +274,11 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
                   format_num_str(curr_exp_totals.favorited, 'Item'));
   container.appendChild(totals_div);
 
-  ////////////////////////
-  // Both stats displaying
+  ///////////////////////////////////////////////////////////////////
+  // Both stats displaying (also sorts results_prev and results_curr)
   //
-  render_stats(results_prev, date_prev, "prev", show_by, sort_by, container); // Also sorts results_prev
-  render_stats(results_curr, date_curr, "curr", show_by, sort_by, container); // Also sorts results_curr
+  render_stats(results_prev, date_prev, "prev", title_is, show_by, sort_by, container);
+  render_stats(results_curr, date_curr, "curr", title_is, show_by, sort_by, container);
 
   ///////////////////
   // Diffs displaying
