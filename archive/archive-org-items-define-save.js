@@ -1,4 +1,4 @@
-/* Global Variables */
+/* Stat Global Variables */
 
 const stat_file_dates   = [];     // ["YYYY-MM-DD"]
 const stat_file_cache   = {};     // ["YYYY-MM-DD"] = { data: [], usage: counter }
@@ -96,12 +96,12 @@ function load_section(section) {
 */
       const sec_its = parse_sect_text(text, section.name_data);
 /*
-      const str_n  =  JSON.stringify(sec_its);
+      const str_n   = JSON.stringify(sec_its);
       if   (str_n === JSON.stringify(section.items)) {
-        alert("section ok: " + str_n.length);
+        alert("ok sect: " + str_n.length);
       }
       else {
-        alert("section no");
+        alert("no sect");
       }
 */
       section.items = sec_its;
@@ -1068,10 +1068,10 @@ function load_stat_file(date) {
 /*
       const str_n  =  JSON.stringify(stats);
       if   (str_n === JSON.stringify(stats_)) {
-        alert("ok: " + str_n.length);
+        alert("ok stat: " + str_n.length);
       }
       else {
-        alert("no");
+        alert("no stat");
       }
 */
       const time_2 = performance.now();

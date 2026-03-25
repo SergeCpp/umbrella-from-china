@@ -1,4 +1,4 @@
-/* Global Variables */
+/* Error Messages */
 
 const err_beg = '<div class="text-center text-comment">';
 const err_bds = '<details><summary class="text-ellipsis" style="width: fit-content; margin: 0 auto;">';

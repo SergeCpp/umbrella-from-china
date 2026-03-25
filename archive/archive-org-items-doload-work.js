@@ -1,10 +1,12 @@
+/* Parsing XML */
+
 const doc_beg_seq =  '<doc>';
 const doc_beg_len = doc_beg_seq.length;
 const doc_end_seq = '</doc>';
 const doc_end_len = doc_end_seq.length;
 
 function parse_sect_text(text, name) {
-  const is_desc = name === 'description';
+  const is_desc = name === 'description'; // Is string, else is 'subject' array
   const items   = {};
   let   pos     = 0;
 
@@ -18,12 +20,12 @@ function parse_sect_text(text, name) {
     const identifier = get_stat_str(text, beg, end, 'identifier');
 
     if (is_desc) {
-      const desc = get_stat_str(text, beg, end, name, 'decode');
+      const description = get_stat_str(text, beg, end, 'description', 'decode');
 
-      items[identifier] = desc ? [desc.toLowerCase()] : []; // Lowercased as array for filtering
+      items[identifier] = description ? [description.toLowerCase()] : []; // Lowercased as array for filtering
     }
     else {
-      items[identifier] = get_stat_arr(text, beg, end, name);
+      items[identifier] = get_stat_arr(text, beg, end, 'subject');
     }
 
     pos = end + doc_end_len;
@@ -75,11 +77,16 @@ function parse_stat_text(text) {
 function decode_amp_str(str) {
   if (!str.includes('&')) return str;
 
-  return str.replace(/&quot;/g, '"')
-            .replace(/&amp;/g,  '&')
-            .replace(/&lt;/g,   '<')
-            .replace(/&gt;/g,   '>');
+  return str.replace(/&quot;/g, '"')  // 350 occurrences in 'description' (amps only there)
+            .replace(/&amp;/g,  '&')  //  79
+            .replace(/&gt;/g,   '>')  //  39
+            .replace(/&lt;/g,   '<'); //   6
 }
+
+const str_beg_seq =  '<str>';
+const str_beg_len = str_beg_seq.length;
+const str_end_seq = '</str>';
+const str_end_len = str_end_seq.length;
 
 function get_stat_str(text, beg, end, name, decode = false) {
   const beg_seq = '<str name="' + name + '">';
@@ -87,18 +94,13 @@ function get_stat_str(text, beg, end, name, decode = false) {
   if  ((beg_idx === -1) || (beg_idx >= end)) return undefined;
 
   const str_beg = beg_idx + beg_seq.length;
-  const str_end = text.indexOf('</str>', str_beg);
+  const str_end = text.indexOf(str_end_seq, str_beg);
   if  ((str_end === -1) || (str_end >= end)) return undefined;
 
   const str = text.slice(str_beg, str_end);
 
   return decode ? decode_amp_str(str) : str;
 }
-
-const str_beg_seq =  '<str>';
-const str_beg_len = str_beg_seq.length;
-const str_end_seq = '</str>';
-const str_end_len = str_end_seq.length;
 
 function get_stat_arr(text, beg, end, name) {
   const beg_seq = '<arr name="' + name + '">';
