@@ -4,15 +4,17 @@ Files named with save are not used, just copies of work
 -------------------------------------------------------
 https://umbrella-from-china.neocities.org/archive/archive-org-items-define-save.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-define-work.js
+https://umbrella-from-china.neocities.org/archive/archive-org-items-doload-save.js
+https://umbrella-from-china.neocities.org/archive/archive-org-items-doload-work.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-filter-save.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-filter-work.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-helper-save.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-helper-work.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-marker-save.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-marker-work.js
+
 https://umbrella-from-china.neocities.org/archive/archive-org-items-master-save.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-master-work.js
-
 https://umbrella-from-china.neocities.org/archive/archive-org-items-render-save.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-render-work.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-runner-save.js
@@ -20,7 +22,7 @@ https://umbrella-from-china.neocities.org/archive/archive-org-items-runner-work.
 https://umbrella-from-china.neocities.org/archive/archive-org-items.css
 https://umbrella-from-china.neocities.org/archive/archive-org-items.html
 ---------------------------------
-1 css + 1 html + 14 js = 16 files
+1 css + 1 html + 16 js = 18 files
 
 Queries for xml generation are in the archive-org-items.html comment block
 --------------------------------------------------------------------------
