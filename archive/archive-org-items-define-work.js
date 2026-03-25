@@ -71,6 +71,7 @@ function load_section(section) {
     })
     .then(text => {
       const time_1 = performance.now();
+/*
       const parser = new DOMParser();
       const xml    = parser.parseFromString(text, "text/xml");
 
@@ -92,7 +93,19 @@ function load_section(section) {
         const data = get_node_arr(doc, data_selector, true);
         section.items[identifier] = data;
       }
-      const time_2 = performance.now();
+*/
+      const sec_its = parse_sect_text(text, section.name_data);
+/*
+      const str_n  =  JSON.stringify(sec_its);
+      if   (str_n === JSON.stringify(section.items)) {
+        alert("section ok: " + str_n.length);
+      }
+      else {
+        alert("section no");
+      }
+*/
+      section.items = sec_its;
+      const time_2  = performance.now();
 
       section.du_load  = (time_1 - time_0);
       section.du_parse = (time_2 - time_1);
@@ -1043,12 +1056,24 @@ function load_stat_file(date) {
     })
     .then(text => {
       const time_1 = performance.now();
+/*
       const parser = new DOMParser();
       const xml    = parser.parseFromString(text, "text/xml");
+      if   (xml.querySelector("parsererror")) throw new Error(date + " &mdash; Invalid XML format");
 
-      if (xml.querySelector("parsererror")) throw new Error(date + " &mdash; Invalid XML format");
       const docs   = xml.querySelectorAll("doc");
-      const stats  = conv_stat_docs(docs);
+      const stats_ = conv_stat_docs(docs);
+*/
+      const stats  = parse_stat_text(text);
+/*
+      const str_n  =  JSON.stringify(stats);
+      if   (str_n === JSON.stringify(stats_)) {
+        alert("ok: " + str_n.length);
+      }
+      else {
+        alert("no");
+      }
+*/
       const time_2 = performance.now();
 
       // Accumulate
