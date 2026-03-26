@@ -1,19 +1,19 @@
 /* Stat Global Variables */
 
-const stat_file_dates   = [];     // ["YYYY-MM-DD"]
-const stat_file_cache   = {};     // ["YYYY-MM-DD"] = { data: [], usage: counter }
+const stat_file_dates   = [];   // ["YYYY-MM-DD"]
+const stat_file_cache   = {};   // ["YYYY-MM-DD"] = { data: [], usage: counter }
 
-let   sf_cache_hits     = 0;      // Non-negative integer
-let   sf_cache_misses   = 0;      // Non-negative integer
+let   stat_prev_date    = null; // "YYYY-MM-DD"
+let   stat_prev_items   = null; // []
 
-let   stat_prev_date    = null;   // "YYYY-MM-DD"
-let   stat_prev_items   = null;   // []
+let   stat_curr_date    = null; // "YYYY-MM-DD"
+let   stat_curr_items   = null; // []
 
-let   stat_curr_date    = null;   // "YYYY-MM-DD"
-let   stat_curr_items   = null;   // []
+let   sf_cache_hits     = 0;    // Non-negative integer
+let   sf_cache_misses   = 0;    // Non-negative integer
 
-let   du_load           = 0;      // Duration of load
-let   du_parse          = 0;      // Duration of parse
+let   sf_du_load        = 0;    // Duration of load
+let   sf_du_parse       = 0;    // Duration of parse
 
 /* Controls */
 
@@ -651,18 +651,18 @@ function process_filter() {
 
   // Performance
   timings.innerHTML =
-    format_nowrap('Cache: '   + sf_cache_size            +   ' / ' +
-                                sf_cache_hits            +   ' / ' +
-                                sf_cache_misses          +    ',') + '&ensp;' +
-    format_nowrap('Load: '    + du_load      .toFixed(1) +   ' / ' +
-     time_section('subjects',     'load')    .toFixed(1) +   ' / ' +
-     time_section('descriptions', 'load')    .toFixed(1) + ' ms,') + '&ensp;' +
-    format_nowrap('Parse: '   + du_parse     .toFixed(1) +   ' / ' +
-     time_section('subjects',     'parse')   .toFixed(1) +   ' / ' +
-     time_section('descriptions', 'parse')   .toFixed(1) + ' ms,') + '&ensp;' +
-    format_nowrap('Filter: '  + du_filter    .toFixed(1) + ' ms,') + '&ensp;' +
-    format_nowrap('Render: '  + du_render.pre.toFixed(1) +   ' / ' +
-                                du_render.dom.toFixed(1) + ' ms' );
+    format_nowrap('Cache: '  + sf_cache_size            +   ' / ' +
+                               sf_cache_hits            +   ' / ' +
+                               sf_cache_misses          +    ',') + '&ensp;' +
+    format_nowrap('Load: '   + sf_du_load   .toFixed(1) +   ' / ' +
+     time_section('subjects',       'load') .toFixed(1) +   ' / ' +
+     time_section('descriptions',   'load') .toFixed(1) + ' ms,') + '&ensp;' +
+    format_nowrap('Parse: '  + sf_du_parse  .toFixed(1) +   ' / ' +
+     time_section('subjects',       'parse').toFixed(1) +   ' / ' +
+     time_section('descriptions',   'parse').toFixed(1) + ' ms,') + '&ensp;' +
+    format_nowrap('Filter: ' + du_filter    .toFixed(1) + ' ms,') + '&ensp;' +
+    format_nowrap('Render: ' + du_render.pre.toFixed(1) +   ' / ' +
+                               du_render.dom.toFixed(1) + ' ms' );
   } catch (err) {
     container.innerHTML = error_compose("Error: " + err.message);
   }
@@ -880,8 +880,8 @@ function load_stat_file(date) {
       const stats  = parse_stat_text(text);
       const time_2 = performance.now();
 
-      du_load  += (time_1 - time_0); // Accumulate
-      du_parse += (time_2 - time_1); //
+      sf_du_load  += (time_1 - time_0); // Accumulate
+      sf_du_parse += (time_2 - time_1); //
 
       const cache_dates = Object.keys(stat_file_cache);
       if   (cache_dates.length >= 7) {
@@ -912,8 +912,8 @@ function load_stat(date, what) {
     if (stat_prev_date === date) return;
   }
 
-  du_load  = 0; // Clear
-  du_parse = 0; //
+  sf_du_load  = 0; // Clear
+  sf_du_parse = 0; //
 
   load_stat_file(date)
     .then(loaded_items => {

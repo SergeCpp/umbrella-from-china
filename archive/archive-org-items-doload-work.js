@@ -30,7 +30,7 @@ function parse_sect_text(text, name) {
     const identifier = get_stat_str(text, beg, end, bstr_identifier);
 
     if (is_desc) {
-      const description = get_stat_str(text, beg, end, bstr_description, 'decode');
+      const description = get_stat_str_decode(text, beg, end, bstr_description);
 
       items[identifier] = description ? [description.toLowerCase()] : []; // Lowercased as array for filtering
     }
@@ -91,48 +91,42 @@ const decode_amp_map = {
   '&lt;'  : '<'  //   6
 };
 
-function get_stat_str(text, beg, end, bstr, decode = false) {
+function get_stat_str_decode(text, beg, end, bstr) {
+  return get_stat_str       (text, beg, end, bstr)?.
+    replace(/&(quot|amp|gt|lt);/g, (m) => decode_amp_map[m]);
+}
+
+function get_stat_str(text, beg, end, bstr) {
   const beg_idx = text.indexOf(bstr, beg);
   if  ((beg_idx === -1) || (beg_idx >= end)) return undefined;
 
   const str_beg = beg_idx + bstr.length;
-  const str_end = text.indexOf('</str>', str_beg);
-  if  ((str_end === -1) || (str_end >= end)) return undefined;
-
-  const str = text.slice(str_beg, str_end);
-
-  return decode ? str.replace(/&(quot|amp|gt|lt);/g, (m) => decode_amp_map[m]) : str;
+  return text.slice(str_beg, text.indexOf('</str>', str_beg));
 }
 
 function get_stat_arr(text, beg, end, barr) {
   const beg_idx = text.indexOf(barr, beg);
 
-  if  ((beg_idx !== -1) && (beg_idx < end)) {
-    const arr_beg = beg_idx + barr.length;
-    const arr_end = text.indexOf('</arr>', arr_beg);
-    if  ((arr_end === -1) || (arr_end >= end)) return [];
-
-    const arr = [];
-    let   pos = arr_beg;
-
-    do {
-      const b = text.indexOf('<str>', pos);
-      if  ((b === -1) || (b >= arr_end)) break;
-
-      const a = b + 5;
-      const e = text.indexOf('</str>', a);
-      if  ((e === -1) || (e >= arr_end)) break;
-
-      arr.push(text.slice(a, e).toLowerCase());
-      pos = e + 6;
-    }
-    while (true);
-
-    return arr;
+  if  ((beg_idx === -1) || (beg_idx >= end)) {
+    const  str = get_stat_str(text, beg, end, '<str' + barr.slice(4));
+    return str ? [str.toLowerCase()] : [];
   }
 
-  const  str = get_stat_str(text, beg, end, '<str' + barr.slice(4));
-  return str ? [str.toLowerCase()] : [];
+  let   arr_pos = beg_idx + barr.length;
+  const arr_end = text.indexOf('</arr>', arr_pos);
+  const arr     = [];
+
+  do {
+    const b = text.indexOf('<str>', arr_pos);
+    if  ((b === -1) || (b >= arr_end)) break;
+
+    const e = text.indexOf('</str>', b + 5);
+    arr.push(text.slice(b + 5, e).toLowerCase());
+    arr_pos = e + 6;
+  }
+  while (true);
+
+  return arr;
 }
 
 /* Section: Subjects and Descriptions Processing */

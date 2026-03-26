@@ -103,7 +103,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       horz_change  : 0,
       vert_change  : 0,
       rank_change  : 0,
-//    horz_details // these four created in compose_items() for some items
+//    horz_details // These four created in compose_items() for some items
 //    vert_details
 //    rank_details
 //    mood_details
@@ -137,7 +137,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
         horz_change  : 0,
         vert_change  : 0,
         rank_change  : 0,
-//      horz_details // these four created in compose_items() for some items
+//      horz_details // These four created in compose_items() for some items
 //      vert_details
 //      rank_details
 //      mood_details
@@ -1027,7 +1027,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     // 8.1. Wrap
     item_wrapper.appendChild(item_inner);
 
-    // 8.2. Add mark indicators (if any) and check for show/hide
+    // 8.2. Add mark indicators (if any)
     if (item.marks) {
       const mark_last = item.marks.length - 1;
       for (let m = 0; m <= mark_last; m++) {
