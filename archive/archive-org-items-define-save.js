@@ -15,6 +15,21 @@ let   sf_cache_misses   = 0;    // Non-negative integer
 let   sf_du_load        = 0;    // Duration of load
 let   sf_du_parse       = 0;    // Duration of parse
 
+function cache_main(metric) {
+  switch (metric) {
+    case "size"  : return Object.keys(stat_file_cache).length;
+    case "hits"  : return sf_cache_hits;
+    case "misses": return sf_cache_misses;
+  }
+}
+
+function time_main(metric) {
+  switch (metric) {
+    case "load" : return sf_du_load;
+    case "parse": return sf_du_parse;
+  }
+}
+
 /* Controls */
 
 const input_ids =
@@ -646,21 +661,26 @@ function process_filter() {
     return;
   }
 
-  // Cache
-  const sf_cache_size = Object.keys(stat_file_cache).length;
-
   // Performance
   timings.innerHTML =
-    format_nowrap('Cache: '  + sf_cache_size            +   ' / ' +
-                               sf_cache_hits            +   ' / ' +
-                               sf_cache_misses          +    ',') + '&ensp;' +
-    format_nowrap('Load: '   + sf_du_load   .toFixed(1) +   ' / ' +
-     time_section('subjects',       'load') .toFixed(1) +   ' / ' +
-     time_section('descriptions',   'load') .toFixed(1) + ' ms,') + '&ensp;' +
-    format_nowrap('Parse: '  + sf_du_parse  .toFixed(1) +   ' / ' +
-     time_section('subjects',       'parse').toFixed(1) +   ' / ' +
-     time_section('descriptions',   'parse').toFixed(1) + ' ms,') + '&ensp;' +
+    //
+    format_nowrap('Cache: '  +
+       cache_main('size'  )                             +   ' / ' +
+       cache_main('hits'  )                             +   ' / ' +
+       cache_main('misses')                             +    ',') + '&ensp;' +
+    //
+    format_nowrap('Load: '   +
+        time_main('load'  )                 .toFixed(1) +   ' / ' +
+     time_section('subjects',     'load' )  .toFixed(1) +   ' / ' +
+     time_section('descriptions', 'load' )  .toFixed(1) + ' ms,') + '&ensp;' +
+    //
+    format_nowrap('Parse: '  +
+        time_main('parse' )                 .toFixed(1) +   ' / ' +
+     time_section('subjects',     'parse')  .toFixed(1) +   ' / ' +
+     time_section('descriptions', 'parse')  .toFixed(1) + ' ms,') + '&ensp;' +
+    //
     format_nowrap('Filter: ' + du_filter    .toFixed(1) + ' ms,') + '&ensp;' +
+    //
     format_nowrap('Render: ' + du_render.pre.toFixed(1) +   ' / ' +
                                du_render.dom.toFixed(1) + ' ms' );
   } catch (err) {

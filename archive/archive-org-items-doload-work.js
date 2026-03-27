@@ -98,29 +98,29 @@ function get_stat_str_decode(text, beg, end, bstr) {
 
 function get_stat_str(text, beg, end, bstr) {
   const beg_idx = text.indexOf(bstr, beg);
-  if  ((beg_idx === -1) || (beg_idx >= end)) return undefined;
+  if  ((beg_idx >= end) || (beg_idx === -1)) return undefined; // More frequent condition first
 
   const str_beg = beg_idx + bstr.length;
-  return text.slice(str_beg, text.indexOf('</str>', str_beg));
+  return text.slice(str_beg, text.indexOf('</str>', str_beg)); // XML considered correct
 }
 
 function get_stat_arr(text, beg, end, barr) {
   const beg_idx = text.indexOf(barr, beg);
 
-  if  ((beg_idx === -1) || (beg_idx >= end)) {
+  if  ((beg_idx >= end) || (beg_idx === -1)) { // More frequent condition first
     const  str = get_stat_str(text, beg, end, '<str' + barr.slice(4));
     return str ? [str.toLowerCase()] : [];
   }
 
-  let   arr_pos = beg_idx + barr.length;
-  const arr_end = text.indexOf('</arr>', arr_pos);
+  let   arr_pos = beg_idx + 20; // Minimal barr.length value
+  const arr_end = text.indexOf('</arr>', arr_pos); // XML considered correct
   const arr     = [];
 
   do {
-    const b = text.indexOf('<str>', arr_pos);
-    if  ((b === -1) || (b >= arr_end)) break;
+    const b = text.indexOf('<str', arr_pos); // Considered present in XML always after arr_pos
+    if   (b >= arr_end) break; // So this condition is enough
 
-    const e = text.indexOf('</str>', b + 5);
+    const e = text.indexOf('</str>', b + 5); // XML considered correct, and <str> was found above
     arr.push(text.slice(b + 5, e).toLowerCase());
     arr_pos = e + 6;
   }
