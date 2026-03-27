@@ -1,35 +1,3 @@
-/* Stat Global Variables */
-
-const stat_file_dates   = [];   // ["YYYY-MM-DD"]
-const stat_file_cache   = {};   // ["YYYY-MM-DD"] = { data: [], usage: counter }
-
-let   stat_prev_date    = null; // "YYYY-MM-DD"
-let   stat_prev_items   = null; // []
-
-let   stat_curr_date    = null; // "YYYY-MM-DD"
-let   stat_curr_items   = null; // []
-
-let   sf_cache_hits     = 0;    // Non-negative integer
-let   sf_cache_misses   = 0;    // Non-negative integer
-
-let   sf_du_load        = 0;    // Duration of load
-let   sf_du_parse       = 0;    // Duration of parse
-
-function cache_main(metric) {
-  switch (metric) {
-    case "size"  : return Object.keys(stat_file_cache).length;
-    case "hits"  : return sf_cache_hits;
-    case "misses": return sf_cache_misses;
-  }
-}
-
-function time_main(metric) {
-  switch (metric) {
-    case "load" : return sf_du_load;
-    case "parse": return sf_du_parse;
-  }
-}
-
 /* Controls */
 
 const input_ids =
@@ -574,10 +542,16 @@ function process_filter() {
         timings.innerHTML = "";
   try {
 
+  const main_prev_date  =  date_main("prev");
+  const main_prev_items = items_main("prev");
+
+  const main_curr_date  =  date_main("curr");
+  const main_curr_items = items_main("curr");
+
   // Filtering
   const  inputs_filter = tab_filter_inputs();
-  const results_filter = filter_route(stat_prev_items, stat_prev_date,
-                                      stat_curr_items, stat_curr_date,
+  const results_filter = filter_route(main_prev_items, main_prev_date,
+                                      main_curr_items, main_curr_date,
     get_section("subjects"), get_section("descriptions"),
     inputs_filter.values);
 
@@ -611,14 +585,14 @@ function process_filter() {
       for (const item of results_filter_prev) ids_prev[item.identifier] = true;
       for (const item of results_filter_curr) ids_curr[item.identifier] = true;
 
-      const base_prev = get_stat_subset(stat_prev_items, ids_prev);
-      const base_curr = get_stat_subset(stat_curr_items, ids_curr);
+      const base_prev = get_stat_subset(main_prev_items, ids_prev);
+      const base_curr = get_stat_subset(main_curr_items, ids_curr);
 
       marking_base = { prev: base_prev, curr: base_curr };
     }
 
-    const marks = filter_route(marking_base.prev, stat_prev_date,
-                               marking_base.curr, stat_curr_date,
+    const marks = filter_route(marking_base.prev, main_prev_date,
+                               marking_base.curr, main_curr_date,
       get_section("subjects"), get_section("descriptions"),
       inputs.values);
 
@@ -655,8 +629,8 @@ function process_filter() {
   const du_filter = performance.now() - time_0;
 
   // Render
-  const du_render = render_results(results_filter_prev, stat_prev_date,
-                                   results_filter_curr, stat_curr_date, results_mark);
+  const du_render = render_results(results_filter_prev, main_prev_date,
+                                   results_filter_curr, main_curr_date, results_mark);
   if  (!du_render) {
     return;
   }
@@ -690,18 +664,18 @@ function process_filter() {
 
 /* Date Change */
 
-// Uses global: stat_file_dates
 // what: "prev" / "curr"
 function date_change_menu(event, what) {
-  const menu_old = document.getElementById('date-change-menu');
+  const menu_old  = document.getElementById('date-change-menu');
   if   (menu_old) { menu_old.remove_ex(); }
 
-  const i_date = stat_file_dates.indexOf(what === "curr" ? stat_curr_date : stat_prev_date);
-  const i_min  = 0;
-  const i_max  = stat_file_dates.length - 1;
-  const h_view = 3;
-  let   i_beg  = i_date - h_view;
-  let   i_end  = i_date + h_view;
+  const m_dates = dates_main();
+  const i_date  = m_dates.indexOf(date_main(what));
+  const i_min   = 0;
+  const i_max   = m_dates.length - 1;
+  const h_view  = 3;
+  let   i_beg   = i_date - h_view;
+  let   i_end   = i_date + h_view;
 
   if (i_beg < i_min) {
       i_end = Math.min(i_end + (i_min - i_beg), i_max);
@@ -711,12 +685,12 @@ function date_change_menu(event, what) {
       i_beg = Math.max(i_beg - (i_end - i_max), i_min);
       i_end = i_max; }
 
-  const  btn_other  = document.getElementById('span-btn-' + (what === "curr" ? "prev" : "curr"));
+  const  btn_other  = document.getElementById('span-btn-' + (what === "prev" ? "curr" : "prev"));
   const menu_caller = event.currentTarget;
   const menu        = document.createElement('div');
-  menu.className    = 'menu';
+  menu.className    =             'menu';
   menu.id           = 'date-change-menu';
-  menu.setAttribute  ('role', 'menu');
+  menu.setAttribute  ('role',     'menu');
 
   menu.remove_ex = () => {
     document.removeEventListener('click', menu.outside_click);
@@ -790,7 +764,7 @@ function date_change_menu(event, what) {
   };
 
   for (let i = i_beg; i <= i_end; i++) {
-    const date = stat_file_dates[i];
+    const date = m_dates[i];
     const opt  = document.createElement('div');
     init_opt(opt, date);
     menu.appendChild(opt);
@@ -823,163 +797,6 @@ function date_change_menu(event, what) {
                        (m_rect.top    <= b_rect.bottom);
 
     if   (is_overlap) { btn_other.style.pointerEvents = 'none'; }
-  }
-}
-
-/* Dates */
-
-// Uses global: stat_file_dates
-function init_dates() {
-  const container = document.getElementById("results");
-  const dates_url = container.getAttribute("data-dates");
-
-  return fetch(dates_url)
-    .then(response => {
-      if (!response.ok) throw new Error("Dates file not found");
-      return response.text();
-    })
-    .then(text => {
-      const date_lines     = text.trim().split('\n');
-      const date_lines_cnt = date_lines.length;
-      if  ((date_lines_cnt === 1) && (date_lines[0] === "")) throw new Error("Dates file is empty");
-
-      const date_regex = /^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/;
-
-      for (let line_num = 0; line_num < date_lines_cnt; line_num++) {
-        const date = date_lines[line_num].trim();
-        if  (!date) break; // Stop dates file processing
-        if  (!date_regex.test(date)) continue; // Skip no-date line
-
-        stat_file_dates.push(date);
-      }
-
-      const dates_cnt = stat_file_dates.length;
-      if  (!dates_cnt) throw new Error("Dates file &mdash; No correct dates found");
-
-      if   (dates_cnt === 1) { // Prev === Curr is allowed
-        stat_prev_date = stat_file_dates[0];
-        stat_curr_date = stat_file_dates[0];
-      }
-      else {
-        stat_file_dates.sort();
-
-        stat_prev_date = stat_file_dates[dates_cnt - 2];
-        stat_curr_date = stat_file_dates[dates_cnt - 1];
-      }
-    })
-    .catch(err => {
-      container.innerHTML = error_compose("Error: " + err.message);
-      throw err;
-    });
-}
-
-/* Main */
-
-function load_stat_file(date) {
-  const cached = stat_file_cache[date];
-  if   (cached) {
-    sf_cache_hits++;
-    cached.usage++;
-    return Promise.resolve(cached.data);
-  }
-  sf_cache_misses++;
-
-  const time_0    = performance.now();
-  const container = document.getElementById("results");
-  const xml_tmplt = container.getAttribute("data-stats");
-  const xml_regex = /#/;
-  const xml_url   = xml_tmplt.replace(xml_regex, date);
-
-  return fetch(xml_url)
-    .then(response => {
-      if (!response.ok) throw new Error(date + " &mdash; XML file not found");
-      return response.text();
-    })
-    .then(text => {
-      const time_1 = performance.now();
-      const stats  = parse_stat_text(text);
-      const time_2 = performance.now();
-
-      sf_du_load  += (time_1 - time_0); // Accumulate
-      sf_du_parse += (time_2 - time_1); //
-
-      const cache_dates = Object.keys(stat_file_cache);
-      if   (cache_dates.length >= 7) {
-        let min_usage = Infinity;
-        let min_entry = null;
-        for (const cd of cache_dates) {
-          if ((cd === stat_curr_date) || (cd === stat_prev_date)) continue;
-          const usage = stat_file_cache[cd].usage;
-          if (min_usage > usage) {
-              min_usage = usage;
-              min_entry = cd;
-          }
-        }
-        if (min_entry) delete stat_file_cache[min_entry];
-      }
-
-      stat_file_cache[date] = { data: stats, usage: 1 };
-      return stats;
-    });
-}
-
-function load_stat(date, what) {
-  if (!stat_file_dates.includes(date)) return;
-
-  if (what === "curr") {
-    if (stat_curr_date === date) return;
-  } else { //  "prev"
-    if (stat_prev_date === date) return;
-  }
-
-  sf_du_load  = 0; // Clear
-  sf_du_parse = 0; //
-
-  load_stat_file(date)
-    .then(loaded_items => {
-      if (what === "curr") {
-        stat_curr_items = loaded_items;
-        stat_curr_date  = date;
-      } else { //  "prev"
-        stat_prev_items = loaded_items;
-        stat_prev_date  = date;
-      }
-      process_filter();
-    })
-    .catch(err => {
-      document.getElementById("results").innerHTML = error_compose("Error: " + err.message);
-    });
-}
-
-function load_stats() {
-  const container = document.getElementById("results");
-        container.innerHTML = '<div class="text-center text-comment">Loading...</div>';
-
-  if (stat_prev_date === stat_curr_date) {
-    load_stat_file(stat_prev_date)
-      .then(loaded_items => {
-        stat_prev_items = loaded_items;
-        stat_curr_items = loaded_items;
-
-        process_filter();
-      })
-      .catch(err => {
-        container.innerHTML = error_compose("Error: " + err.message);
-      });
-  } else { // Different dates to load
-    Promise.all([
-      load_stat_file(stat_prev_date),
-      load_stat_file(stat_curr_date)
-    ])
-    .then(([loaded_prev_items, loaded_curr_items]) => {
-      stat_prev_items = loaded_prev_items;
-      stat_curr_items = loaded_curr_items;
-
-      process_filter();
-    })
-    .catch(err => {
-      container.innerHTML = error_compose("Error: " + err.message);
-    });
   }
 }
 

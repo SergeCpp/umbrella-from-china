@@ -239,6 +239,212 @@ function filter_section(items_prev, items_curr, section_items, section_terms) {
   return { done: true, prev: results_prev, curr: results_curr };
 }
 
+/* Stat */
+
+const stat_file_dates = [];   // ["YYYY-MM-DD"]
+const stat_file_cache = {};   // ["YYYY-MM-DD"] = { data: [], usage: counter }
+
+let   stat_prev_date  = null; //  "YYYY-MM-DD"
+let   stat_prev_items = null; // []
+
+let   stat_curr_date  = null; //  "YYYY-MM-DD"
+let   stat_curr_items = null; // []
+
+let   sf_cache_hits   = 0;    // Non-negative integer
+let   sf_cache_misses = 0;    // Non-negative integer
+
+let   sf_du_load      = 0;    // Duration of load
+let   sf_du_parse     = 0;    // Duration of parse
+
+function dates_main() {
+  return stat_file_dates;
+}
+
+function date_main(what) {
+  switch (what) {
+    case "prev": return stat_prev_date;
+    case "curr": return stat_curr_date;
+  }
+}
+
+function items_main(what) {
+  switch (what) {
+    case "prev": return stat_prev_items;
+    case "curr": return stat_curr_items;
+  }
+}
+
+function cache_main(metric) {
+  switch (metric) {
+    case "size"  : return Object.keys(stat_file_cache).length;
+    case "hits"  : return sf_cache_hits;
+    case "misses": return sf_cache_misses;
+  }
+}
+
+function time_main(metric) {
+  switch (metric) {
+    case "load" : return sf_du_load;
+    case "parse": return sf_du_parse;
+  }
+}
+
+/* Dates */
+
+function init_dates() {
+  const container = document.getElementById("results");
+  const dates_url = container.getAttribute("data-dates");
+
+  return fetch(dates_url)
+    .then(response => {
+      if (!response.ok) throw new Error("Dates file not found");
+      return response.text();
+    })
+    .then(text => {
+      const date_lines     = text.trim().split('\n');
+      const date_lines_cnt = date_lines.length;
+      if  ((date_lines_cnt === 1) && (date_lines[0] === "")) throw new Error("Dates file is empty");
+
+      const date_regex = /^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/;
+
+      for (let line_num = 0; line_num < date_lines_cnt; line_num++) {
+        const date = date_lines[line_num].trim();
+        if  (!date) break; // Stop dates file processing
+        if  (!date_regex.test(date)) continue; // Skip no-date line
+
+        stat_file_dates.push(date);
+      }
+
+      const dates_cnt = stat_file_dates.length;
+      if  (!dates_cnt) throw new Error("Dates file &mdash; No correct dates found");
+
+      if   (dates_cnt === 1) { // Prev === Curr is allowed
+        stat_prev_date = stat_file_dates[0];
+        stat_curr_date = stat_file_dates[0];
+      }
+      else {
+        stat_file_dates.sort();
+
+        stat_prev_date = stat_file_dates[dates_cnt - 2];
+        stat_curr_date = stat_file_dates[dates_cnt - 1];
+      }
+    })
+    .catch(err => {
+      container.innerHTML = error_compose("Error: " + err.message);
+      throw err;
+    });
+}
+
+/* Main */
+
+function load_stat_file(date) {
+  const cached = stat_file_cache[date];
+  if   (cached) {
+    sf_cache_hits++;
+    cached.usage++;
+    return Promise.resolve(cached.data);
+  }
+  sf_cache_misses++;
+
+  const time_0    = performance.now();
+  const container = document.getElementById("results");
+  const xml_tmplt = container.getAttribute("data-stats");
+  const xml_regex = /#/;
+  const xml_url   = xml_tmplt.replace(xml_regex, date);
+
+  return fetch(xml_url)
+    .then(response => {
+      if (!response.ok) throw new Error(date + " &mdash; XML file not found");
+      return response.text();
+    })
+    .then(text => {
+      const time_1 = performance.now();
+      const stats  = parse_stat_text(text);
+      const time_2 = performance.now();
+
+      sf_du_load  += (time_1 - time_0); // Accumulate
+      sf_du_parse += (time_2 - time_1); //
+
+      const cache_dates = Object.keys(stat_file_cache);
+      if   (cache_dates.length >= 7) {
+        let min_usage = Infinity;
+        let min_entry = null;
+        for (const cd of cache_dates) {
+          if ((cd === stat_prev_date) || (cd === stat_curr_date)) continue;
+          const usage = stat_file_cache[cd].usage;
+          if (min_usage > usage) {
+              min_usage = usage;
+              min_entry = cd;
+          }
+        }
+        if (min_entry) delete stat_file_cache[min_entry];
+      }
+
+      stat_file_cache[date] = { data: stats, usage: 1 };
+      return stats;
+    });
+}
+
+function load_stat(date, what) {
+  if (!stat_file_dates.includes(date)) return;
+
+  if (what === "curr") {
+    if (stat_curr_date === date) return;
+  } else { //  "prev"
+    if (stat_prev_date === date) return;
+  }
+
+  sf_du_load  = 0; // Clear
+  sf_du_parse = 0; //
+
+  load_stat_file(date)
+    .then(loaded_items => {
+      if (what === "curr") {
+        stat_curr_items = loaded_items;
+        stat_curr_date  = date;
+      } else { //  "prev"
+        stat_prev_items = loaded_items;
+        stat_prev_date  = date;
+      }
+      process_filter();
+    })
+    .catch(err => {
+      document.getElementById("results").innerHTML = error_compose("Error: " + err.message);
+    });
+}
+
+function load_stats() {
+  const container = document.getElementById("results");
+        container.innerHTML = '<div class="text-center text-comment">Loading...</div>';
+
+  if (stat_prev_date === stat_curr_date) {
+    load_stat_file(stat_prev_date)
+      .then(loaded_items => {
+        stat_prev_items = loaded_items;
+        stat_curr_items = loaded_items;
+
+        process_filter();
+      })
+      .catch(err => {
+        container.innerHTML = error_compose("Error: " + err.message);
+      });
+  } else { // Different dates to load
+    Promise.all([
+      load_stat_file(stat_prev_date),
+      load_stat_file(stat_curr_date)
+    ])
+    .then(([loaded_prev_items, loaded_curr_items]) => {
+      stat_prev_items = loaded_prev_items;
+      stat_curr_items = loaded_curr_items;
+
+      process_filter();
+    })
+    .catch(err => {
+      container.innerHTML = error_compose("Error: " + err.message);
+    });
+  }
+}
+
 // EOF
 
 
