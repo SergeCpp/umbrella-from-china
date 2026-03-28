@@ -1,19 +1,73 @@
 /* Parsing XML */
 
-const bstr_date        = '<str name="date">';
-const bstr_description = '<str name="description">';
-const bstr_downloads   = '<str name="downloads">';
-const bstr_identifier  = '<str name="identifier">';
-const bstr_item_size   = '<str name="item_size">';
-const bstr_mediatype   = '<str name="mediatype">';
-const bstr_month       = '<str name="month">';
-const bstr_publicdate  = '<str name="publicdate">';
-const bstr_title       = '<str name="title">';
-const bstr_week        = '<str name="week">';
+function get_node_arr(doc, name, is_selector = false) {
+  const node = doc.querySelector(is_selector ? name :
+                                 ('arr[name="' + name + '"], ' +
+                                  'str[name="' + name + '"]'));
+  if  (!node) return [];
+  if   (node.tagName === "arr")
+    return Array.from(node.querySelectorAll("str"), n => n.textContent.toLowerCase());
 
-const barr_collection  = '<arr name="collection">';
-const barr_creator     = '<arr name="creator">';
-const barr_subject     = '<arr name="subject">';
+  return [node.textContent.toLowerCase()];
+}
+
+function conv_stat_docs(docs) {
+  const stats = [];
+
+  for (let i = 0; i < docs.length; i++) {
+    const doc = docs[i];
+
+    const identifier = doc.querySelector('str[name="identifier"]')?.textContent;
+    const title      = doc.querySelector('str[name="title"]'     )?.textContent;
+    const item_size  = doc.querySelector('str[name="item_size"]' )?.textContent;
+    const mediatype  = doc.querySelector('str[name="mediatype"]' )?.textContent;
+    let   date       = doc.querySelector('str[name="date"]'      )?.textContent;
+    const publicdate = doc.querySelector('str[name="publicdate"]')?.textContent;
+    const downloads  = doc.querySelector('str[name="downloads"]' )?.textContent;
+    const month      = doc.querySelector('str[name="month"]'     )?.textContent;
+    const week       = doc.querySelector('str[name="week"]'      )?.textContent;
+
+    if (date === undefined) date = ""; // Audio items (6) and collections (6)
+
+    const collection_arr = get_node_arr(doc, "collection");
+    const    creator_arr = get_node_arr(doc, "creator"   );
+    const      title_arr = title      ? [title     .toLowerCase()] : []; // Lowercased as array for filtering
+    const identifier_arr = identifier ? [identifier.toLowerCase()] : []; // Lowercased as array for filtering
+
+    stats.push({
+      identifier,
+      title     ,
+      item_size ,
+      mediatype ,
+      date      ,
+      publicdate,
+      downloads ,
+      month     ,
+      week      ,
+      collection_arr,
+         creator_arr,
+           title_arr,
+      identifier_arr
+    });
+  }
+
+  return stats;
+}
+
+const bstr_date        = '"date">'; // <str name="date">
+const bstr_description = 'ption">'; // <str name="description">
+const bstr_downloads   = 'loads">'; // <str name="downloads">
+const bstr_identifier  = 'ifier">'; // <str name="identifier">
+const bstr_item_size   = '_size">'; // <str name="item_size">
+const bstr_mediatype   = 'atype">'; // <str name="mediatype">
+const bstr_month       = 'month">'; // <str name="month">
+const bstr_publicdate  = 'cdate">'; // <str name="publicdate">
+const bstr_title       = 'title">'; // <str name="title">
+const bstr_week        = '"week">'; // <str name="week">
+
+const barr_collection  = 'ction">'; // <arr name="collection">
+const barr_creator     = 'eator">'; // <arr name="creator">
+const barr_subject     = 'bject">'; // <arr name="subject">
 
 function parse_sect_text(text, name) {
   const is_desc = name === 'description'; // Is string, else is 'subject' array
@@ -21,21 +75,21 @@ function parse_sect_text(text, name) {
   let   pos     = 0;
 
   do {
-    const beg = text.indexOf( '<doc>', pos);
-    if   (beg === -1) break;
+    pos = text.indexOf('<doc>', pos) + 5;
+    if (pos < 5) break;
 
-    const end = text.indexOf('</doc>', beg + 5);
+    const end = text.indexOf('</doc>', pos);
     if   (end === -1) break;
 
-    const identifier = get_stat_str(text, beg, end, bstr_identifier);
+    const identifier = get_stat_str(text, pos, end, bstr_identifier);
 
     if (is_desc) {
-      const description = get_stat_str_decode(text, beg, end, bstr_description);
+      const description = get_stat_str_decode(text, pos, end, bstr_description);
 
       items[identifier] = description ? [description.toLowerCase()] : []; // Lowercased as array for filtering
     }
     else {
-      items[identifier] = get_stat_arr(text, beg, end, barr_subject);
+      items[identifier] = get_stat_arr(text, pos, end, barr_subject);
     }
 
     pos = end + 6;
@@ -45,33 +99,39 @@ function parse_sect_text(text, name) {
   return items;
 }
 
+// Minimal time: 213.3 ms, 198.5 ms
+function parse_stat_text_10(text) {
+  for (let i = 0; i < 9; i++ ) parse_stat_text_1(text);
+  return                       parse_stat_text_1(text);
+}
+
 function parse_stat_text(text) {
   const stats = [];
   let   pos   = 0;
 
   do {
-    const beg = text.indexOf( '<doc>', pos);
-    if   (beg === -1) break;
+    pos = text.indexOf('<doc>', pos) + 5;
+    if (pos < 5) break;
 
-    const end = text.indexOf('</doc>', beg + 5);
+    const end = text.indexOf('</doc>', pos);
     if   (end === -1) break;
 
-    const identifier = get_stat_str(text, beg, end, bstr_identifier);
-    const title      = get_stat_str(text, beg, end, bstr_title     );
+    const identifier = get_stat_str(text, pos, end, bstr_identifier);
+    const title      = get_stat_str(text, pos, end, bstr_title     );
 
     stats.push({
       identifier     ,
       title          ,
-      item_size      : get_stat_str(text, beg, end, bstr_item_size ),
-      mediatype      : get_stat_str(text, beg, end, bstr_mediatype ),
-      date           : get_stat_str(text, beg, end, bstr_date      ),
-      publicdate     : get_stat_str(text, beg, end, bstr_publicdate),
-      downloads      : get_stat_str(text, beg, end, bstr_downloads ),
-      month          : get_stat_str(text, beg, end, bstr_month     ),
-      week           : get_stat_str(text, beg, end, bstr_week      ),
+      item_size      : get_stat_str(text, pos, end, bstr_item_size ),
+      mediatype      : get_stat_str(text, pos, end, bstr_mediatype ),
+      date           : get_stat_str(text, pos, end, bstr_date      ),
+      publicdate     : get_stat_str(text, pos, end, bstr_publicdate),
+      downloads      : get_stat_str(text, pos, end, bstr_downloads ),
+      month          : get_stat_str(text, pos, end, bstr_month     ),
+      week           : get_stat_str(text, pos, end, bstr_week      ),
 
-      collection_arr : get_stat_arr(text, beg, end, barr_collection),
-         creator_arr : get_stat_arr(text, beg, end, barr_creator   ),
+      collection_arr : get_stat_arr(text, pos, end, barr_collection),
+         creator_arr : get_stat_arr(text, pos, end, barr_creator   ),
 
            title_arr : title      ? [title     .toLowerCase()] : [], // Lowercased as array for filtering
       identifier_arr : identifier ? [identifier.toLowerCase()] : []  // Lowercased as array for filtering
@@ -84,6 +144,7 @@ function parse_stat_text(text) {
   return stats;
 }
 
+const decode_amp_reg = /&(quot|amp|gt|lt);/g;
 const decode_amp_map = {
   '&quot;': '"', // 350 occurrences in 'description' (amps only there)
   '&amp;' : '&', //  79
@@ -92,37 +153,39 @@ const decode_amp_map = {
 };
 
 function get_stat_str_decode(text, beg, end, bstr) {
-  return get_stat_str       (text, beg, end, bstr)?.
-    replace(/&(quot|amp|gt|lt);/g, (m) => decode_amp_map[m]);
+  const str = get_stat_str  (text, beg, end, bstr);
+  if  (!str.includes('&')) return str;
+
+  return str.replace(decode_amp_reg, (m) => decode_amp_map[m]);
 }
 
 function get_stat_str(text, beg, end, bstr) {
-  const beg_idx = text.indexOf(bstr, beg);
-  if  ((beg_idx >= end) || (beg_idx === -1)) return undefined; // More frequent condition first
+  const str_pos = text.indexOf(bstr, beg) + 7;
+  if  ((str_pos >= end) || (str_pos < 7)) return ""; // More frequent condition first
 
-  const str_beg = beg_idx + bstr.length;
-  return text.slice(str_beg, text.indexOf('</str>', str_beg)); // XML considered correct
+  return text.slice(str_pos, text.indexOf('</', str_pos)); // XML considered correct
 }
 
 function get_stat_arr(text, beg, end, barr) {
-  const beg_idx = text.indexOf(barr, beg);
+  let  arr_pos = text.indexOf(barr, beg) + 7;
+  if ((arr_pos >= end) || (arr_pos < 7)) return []; // More frequent condition first
 
-  if  ((beg_idx >= end) || (beg_idx === -1)) { // More frequent condition first
-    const  str = get_stat_str(text, beg, end, '<str' + barr.slice(4));
-    return str ? [str.toLowerCase()] : [];
+  const arr_end = text.indexOf('</a', arr_pos); // XML considered correct
+
+  if  ((arr_end >= end) || (arr_end === -1)) { // More frequent condition first
+    // It is <str> found at arr_pos
+    return [text.slice(arr_pos, text.indexOf('</', arr_pos)).toLowerCase()]; // XML considered correct
   }
 
-  let   arr_pos = beg_idx + 20; // Minimal barr.length value
-  const arr_end = text.indexOf('</arr>', arr_pos); // XML considered correct
-  const arr     = [];
+  const arr = [];
 
+  arr_pos -= 6; // </str>
   do {
-    const b = text.indexOf('<str', arr_pos); // Considered present in XML always after arr_pos
+    const b = text.indexOf('<s', arr_pos + 6) + 5; // Considered present in XML always after arr_pos
     if   (b >= arr_end) break; // So this condition is enough
 
-    const e = text.indexOf('</str>', b + 5); // XML considered correct, and <str> was found above
-    arr.push(text.slice(b + 5, e).toLowerCase());
-    arr_pos = e + 6;
+    arr_pos = text.indexOf('</', b); // XML considered correct, and <str> is found at b
+    arr.push(text.slice(b, arr_pos).toLowerCase());
   }
   while (true);
 
@@ -184,9 +247,41 @@ function load_section(section) {
       return response.text();
     })
     .then(text => {
+/*
+      const parser = new DOMParser();
+      const xml    = parser.parseFromString(text, "text/xml");
+
+      if (xml.querySelector("parsererror")) {
+        section.text_error = section.name_error + " &mdash; XML file invalid format";
+        throw new Error(section.text_error);
+      }
+      const docs = xml.querySelectorAll("doc");
+
+      // Create data lookup map for id: data
+      const section_items = {};
+      const data_selector = 'arr[name="' + section.name_data + '"], ' +
+                            'str[name="' + section.name_data + '"]';
+      for (const doc of docs) {
+        const node_id = doc.querySelector('str[name="identifier"]');
+        if  (!node_id) continue;
+
+        const identifier = node_id.textContent;
+        const data = get_node_arr(doc, data_selector, true);
+        section_items[identifier] = data;
+      }
+*/
       const time_1  = performance.now();
       section.items = parse_sect_text(text, section.name_data);
       const time_2  = performance.now();
+/*
+      const str_n   = JSON.stringify(section_items);
+      if   (str_n === JSON.stringify(section.items)) {
+//      alert("ok sect: " + str_n.length);
+      }
+      else {
+        alert("no sect");
+      }
+*/
 
       section.du_load  = (time_1 - time_0); // Anew
       section.du_parse = (time_2 - time_1); //
@@ -358,9 +453,26 @@ function load_stat_file(date) {
       return response.text();
     })
     .then(text => {
+/*
+      const parser = new DOMParser();
+      const xml    = parser.parseFromString(text, "text/xml");
+      if   (xml.querySelector("parsererror")) throw new Error(date + " &mdash; Invalid XML format");
+
+      const docs   = xml.querySelectorAll("doc");
+      const stats_ = conv_stat_docs(docs);
+*/
       const time_1 = performance.now();
       const stats  = parse_stat_text(text);
       const time_2 = performance.now();
+/*
+      const str_n  =  JSON.stringify(stats);
+      if   (str_n === JSON.stringify(stats_)) {
+//      alert("ok stat: " + str_n.length);
+      }
+      else {
+        alert("no stat");
+      }
+*/
 
       sf_du_load  += (time_1 - time_0); // Accumulate
       sf_du_parse += (time_2 - time_1); //
