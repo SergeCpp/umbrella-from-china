@@ -27,7 +27,7 @@ function conv_stat_docs(docs) {
     const month      = doc.querySelector('str[name="month"]'     )?.textContent;
     const week       = doc.querySelector('str[name="week"]'      )?.textContent;
 
-    if (date === undefined) date = ""; // Audio items (6) and collections (6)
+    if (date === undefined) date = ""; // For audio items (6) and collections (6)
 
     const collection_arr = get_node_arr(doc, "collection");
     const    creator_arr = get_node_arr(doc, "creator"   );
@@ -55,22 +55,40 @@ function conv_stat_docs(docs) {
 }
 
 const bstr_date        = '"date">'; // <str name="date">
-const bstr_description = 'ption">'; // <str name="description">
+//    bstr_description = 'ption">'; // <str name="description">
 const bstr_downloads   = 'loads">'; // <str name="downloads">
-const bstr_identifier  = 'ifier">'; // <str name="identifier">
+//    bstr_identifier  = 'ifier">'; // <str name="identifier">
 const bstr_item_size   = '_size">'; // <str name="item_size">
 const bstr_mediatype   = 'atype">'; // <str name="mediatype">
 const bstr_month       = 'month">'; // <str name="month">
 const bstr_publicdate  = 'cdate">'; // <str name="publicdate">
-const bstr_title       = 'title">'; // <str name="title">
+//    bstr_title       = 'title">'; // <str name="title">
 const bstr_week        = '"week">'; // <str name="week">
 
-const barr_collection  = 'ction">'; // <arr name="collection">
-const barr_creator     = 'eator">'; // <arr name="creator">
-const barr_subject     = 'bject">'; // <arr name="subject">
+//    barr_collection  = 'ction">'; // <arr name="collection">
+//    barr_creator     = 'eator">'; // <arr name="creator">
+//    barr_subject     = 'bject">'; // <arr name="subject">
+
+// Subj du_min: 86.4 ms
+// Desc du_min: 63.8 ms
+function parse_sect_text_10(text, name) {
+  let du_min = Infinity;
+
+  for (let loop = 0; loop < 10; loop++) {
+    const start = performance.now();
+    for (let i = 0; i < 10; i++ ) parse_sect_text_1(text, name);
+    const du_10 = performance.now() - start;
+    if   (du_10 < du_min) du_min = du_10;
+  }
+
+  alert(du_min.toFixed(1));
+
+  const  stats = parse_sect_text_1(text, name);
+  return stats;
+}
 
 function parse_sect_text(text, name) {
-  const is_desc = name === 'description'; // Is string, else is 'subject' array
+  const is_desc = (name === 'description'); // Is string, else is 'subject' array
   const items   = {};
   let   pos     = 0;
 
@@ -81,15 +99,17 @@ function parse_sect_text(text, name) {
     const end = text.indexOf('</doc>', pos);
     if   (end === -1) break;
 
-    const identifier = get_stat_str(text, pos, end, bstr_identifier);
-
     if (is_desc) {
-      const description = get_stat_str_decode(text, pos, end, bstr_description);
+      const ptr = [pos];
+      const description = get_stat_str_dec(text, pos,    end, 'ption">', ptr);
+      const identifier  = get_stat_str    (text, ptr[0], end, 'ifier">');
 
-      items[identifier] = description ? [description.toLowerCase()] : []; // Lowercased as array for filtering
+      items[identifier] = [description.toLowerCase()]; // Lowercased as array for filtering
     }
     else {
-      items[identifier] = get_stat_arr(text, pos, end, barr_subject);
+      const identifier  = get_stat_str    (text, pos,    end, 'ifier">');
+
+      items[identifier] = get_stat_arr    (text, pos,    end, 'bject">');
     }
 
     pos = end + 6;
@@ -99,10 +119,39 @@ function parse_sect_text(text, name) {
   return items;
 }
 
-// Minimal time: 213.3 ms, 198.5 ms
+// du_min: 94.0 ms, 92.3 ms
 function parse_stat_text_10(text) {
-  for (let i = 0; i < 9; i++ ) parse_stat_text_1(text);
-  return                       parse_stat_text_1(text);
+  let du_min = Infinity;
+
+  for (let loop = 0; loop < 10; loop++) {
+    const start = performance.now();
+    for (let i = 0; i < 10; i++ ) parse_stat_text_1(text);
+    const du_10 = performance.now() - start;
+    if   (du_10 < du_min) du_min = du_10;
+  }
+
+  alert(du_min.toFixed(1));
+
+  const stats  = parse_stat_text_1(text);
+
+/*
+  const parser = new DOMParser();
+  const xml    = parser.parseFromString(text, "text/xml");
+  if   (xml.querySelector("parsererror")) throw new Error(date + " &mdash; Invalid XML format");
+
+  const docs   = xml.querySelectorAll("doc");
+  const stats_ = conv_stat_docs(docs);
+
+  const str    =  JSON.stringify(stats);
+  if   (str   === JSON.stringify(stats_)) {
+//  alert("ok stat: " + str.length);
+  }
+  else {
+    alert("no stat");
+  }
+*/
+
+  return stats;
 }
 
 function parse_stat_text(text) {
@@ -116,8 +165,8 @@ function parse_stat_text(text) {
     const end = text.indexOf('</doc>', pos);
     if   (end === -1) break;
 
-    const identifier = get_stat_str(text, pos, end, bstr_identifier);
-    const title      = get_stat_str(text, pos, end, bstr_title     );
+    const identifier = get_stat_str(text, pos, end, 'ifier">'      );
+    const title      = get_stat_str(text, pos, end, 'title">'      );
 
     stats.push({
       identifier     ,
@@ -130,11 +179,11 @@ function parse_stat_text(text) {
       month          : get_stat_str(text, pos, end, bstr_month     ),
       week           : get_stat_str(text, pos, end, bstr_week      ),
 
-      collection_arr : get_stat_arr(text, pos, end, barr_collection),
-         creator_arr : get_stat_arr(text, pos, end, barr_creator   ),
+      collection_arr : get_stat_arr(text, pos, end, 'ction">'      ),
+         creator_arr : get_stat_arr(text, pos, end, 'eator">'      ),
 
-           title_arr : title      ? [title     .toLowerCase()] : [], // Lowercased as array for filtering
-      identifier_arr : identifier ? [identifier.toLowerCase()] : []  // Lowercased as array for filtering
+           title_arr : [title     .toLowerCase()], // Lowercased as array for filtering
+      identifier_arr : [identifier.toLowerCase()]  // Lowercased as array for filtering
     });
 
     pos = end + 6;
@@ -152,11 +201,25 @@ const decode_amp_map = {
   '&lt;'  : '<'  //   6
 };
 
-function get_stat_str_decode(text, beg, end, bstr) {
-  const str = get_stat_str  (text, beg, end, bstr);
-  if  (!str.includes('&')) return str;
+function get_stat_str_dec(text, beg, end, bstr, ptr) {
+  const str_pos = text.indexOf(bstr, beg) + 7;
+  if  ((str_pos >= end) || (str_pos < 7)) return ""; // More frequent condition first
 
-  return str.replace(decode_amp_reg, (m) => decode_amp_map[m]);
+  const str_end = text.indexOf('</', str_pos); // XML considered correct
+  ptr[0] = str_end + 21; // </str> + \n + 4 spaces + <str name= (<arr name=)
+
+  const  str = text.slice(str_pos, str_end);
+  return str.includes('&') ? str.replace(decode_amp_reg, (m) => decode_amp_map[m]) : str;
+}
+
+function get_stat_str_ptr(text, beg, end, bstr, ptr) {
+  const str_pos = text.indexOf(bstr, beg) + 7;
+  if  ((str_pos >= end) || (str_pos < 7)) return ""; // More frequent condition first
+
+  const str_end = text.indexOf('</', str_pos); // XML considered correct
+  ptr[0] = str_end + 21; // </str> + \n + 4 spaces + <str name= (<arr name=)
+
+  return text.slice(str_pos, str_end);
 }
 
 function get_stat_str(text, beg, end, bstr) {
@@ -267,6 +330,10 @@ function load_section(section) {
 
         const identifier = node_id.textContent;
         const data = get_node_arr(doc, data_selector, true);
+
+        // For two collections
+        if ((data[0] === undefined) && (section.name_data === "description")) data[0] = "";
+
         section_items[identifier] = data;
       }
 */
@@ -453,26 +520,9 @@ function load_stat_file(date) {
       return response.text();
     })
     .then(text => {
-/*
-      const parser = new DOMParser();
-      const xml    = parser.parseFromString(text, "text/xml");
-      if   (xml.querySelector("parsererror")) throw new Error(date + " &mdash; Invalid XML format");
-
-      const docs   = xml.querySelectorAll("doc");
-      const stats_ = conv_stat_docs(docs);
-*/
       const time_1 = performance.now();
       const stats  = parse_stat_text(text);
       const time_2 = performance.now();
-/*
-      const str_n  =  JSON.stringify(stats);
-      if   (str_n === JSON.stringify(stats_)) {
-//      alert("ok stat: " + str_n.length);
-      }
-      else {
-        alert("no stat");
-      }
-*/
 
       sf_du_load  += (time_1 - time_0); // Accumulate
       sf_du_parse += (time_2 - time_1); //
