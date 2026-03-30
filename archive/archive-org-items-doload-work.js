@@ -72,14 +72,14 @@ function conv_stat_docs(docs) {
 // barr_creator     = 'eator">'; // <arr name="creator">
 // barr_subject     = 'bject">'; // <arr name="subject">
 
-// Subj du_min: 76.1 ms
+// Subj du_min: 74.7 ms
 // Desc du_min: 62.1 ms
 function parse_sect_text_10(text, name) { // Rename: text_10 <-> text
   let du_min = Infinity;
 
   for (let warm = 0; warm < 10; warm++) parse_sect_text_1(text, name);
 
-  for (let loop = 0; loop < 20; loop++) {
+  for (let loop = 0; loop < 10; loop++) {
     const start = performance.now();
     for (let i = 0; i < 10; i++) parse_sect_text_1(text, name);
     const du_10 = performance.now() - start;
@@ -122,35 +122,53 @@ function parse_sect_text_10(text, name) { // Rename: text_10 <-> text
 }
 
 function parse_sect_text(text, name) { // Rename: text <-> text_1
-  const is_desc = (name === 'description'); // Is string, else is 'subject' array
-  const items   = {};
-  let   pos     = 700; // XML header
+  switch (name) {
+    case 'subject'    : return parse_sect_subj(text);
+    case 'description': return parse_sect_desc(text);
+  }
+}
+
+// Is 'subject' array
+function parse_sect_subj(text) {
+  const subjs = {};
+  let   pos   = text.indexOf('<doc>', 700) + 1; // Skip XML header and <
 
   do {
-    pos = text.indexOf('<doc>', pos) + 26; // <doc> + \n + 4 spaces + <str name="ident
-    if (pos < 26) break;                   //                                    descr
+    pos += 32;// doc> + \n + 4 spaces + <str name="identifier">
+    const str_end = text.indexOf('</', pos);
+    const identifier = text.slice(pos, str_end);
 
+    pos = str_end + 24; // </str> + \n + 4 spaces + <str name="su
     const end = text.indexOf('</doc>', pos);
-    if   (end === -1) break;
+    subjs[identifier] = get_stat_arr(text, pos, end, 'bject">');
 
-    if (is_desc) {
-      const ptr = [pos];
-      const description = get_desc_str(text, pos,    end,  ptr     );
-      const identifier  = get_stat_str(text, ptr[0], end, 'ifier">');
-
-      items[identifier] = [description.toLowerCase()]; // Lowercased as array for filtering
-    }
-    else {
-      const identifier  = get_stat_str(text, pos,    end, 'ifier">');
-
-      items[identifier] = get_stat_arr(text, pos,    end, 'bject">');
-    }
-
-    pos = end + 6;
+    pos = end + 10; // </doc> + \n + 2 spaces + <
   }
-  while (true);
+  while (text.charCodeAt(pos) === 0x64); // At 'd' of <doc>
 
-  return items;
+  return subjs;
+}
+
+// Is 'description' string
+function parse_sect_desc(text) {
+  const descs = {};
+  let   pos   = text.indexOf('<doc>', 700) + 1; // Skip XML header and <
+
+  do {
+    pos += 25; // doc> + \n + 4 spaces + <str name="ident
+                                              //    descr
+    const end = text.indexOf('</doc>', pos);
+    const ptr = [pos];
+    const description = get_desc_str(text, pos,    end,  ptr     );
+    const identifier  = get_stat_str(text, ptr[0], end, 'ifier">');
+
+    descs[identifier] = [description.toLowerCase()]; // Lowercased as array for filtering
+
+    pos = end + 10; // </doc> + \n + 2 spaces + <
+  }
+  while (text.charCodeAt(pos) === 0x64); // At 'd' of <doc>
+
+  return descs;
 }
 
 // du_min: 89.0 ms / 82.9 ms
@@ -159,7 +177,7 @@ function parse_stat_text_10(text) { // Rename: text_10 <-> text
 
   for (let warm = 0; warm < 10; warm++) parse_stat_text_1(text);
 
-  for (let loop = 0; loop < 20; loop++) {
+  for (let loop = 0; loop < 10; loop++) {
     const start = performance.now();
     for (let i = 0; i < 10; i++) parse_stat_text_1(text);
     const du_10 = performance.now() - start;
@@ -189,21 +207,16 @@ function parse_stat_text_10(text) { // Rename: text_10 <-> text
 
 function parse_stat_text(text) { // Rename: text <-> text_1
   const stats = [];
-  let   pos   = 700; // XML header
+  let   pos   = text.indexOf('<doc>', 700) + 1; // Skip XML header and <
 
   do {
-    pos = text.indexOf('<doc>', pos) + 20; // <doc> + \n + 4 spaces + <arr name=
-    if (pos < 20) break;
+    pos += 19;// doc> + \n + 4 spaces + <arr name=
 
     const end = text.indexOf('</doc>', pos);
-    if   (end === -1) break;
-
-    const identifier = get_stat_str(text, pos, end, 'ifier">');
-    const title      = get_stat_str(text, pos, end, 'title">');
 
     stats.push({
-      identifier     ,
-      title          ,
+      identifier     : get_stat_str(text, pos, end, 'ifier">'),
+      title          : get_stat_str(text, pos, end, 'title">'),
       item_size      : get_stat_str(text, pos, end, '_size">'),
       mediatype      : get_stat_str(text, pos, end, 'atype">'),
       date           : get_stat_str(text, pos, end, '"date">'),
@@ -221,13 +234,14 @@ function parse_stat_text(text) { // Rename: text <-> text_1
 //    identifier_arr : [identifier.toLowerCase()]
     });
 
-    pos = end + 6;
+    pos = end + 10; // </doc> + \n + 2 spaces + <
   }
-  while (true);
+  while (text.charCodeAt(pos) === 0x64); // At 'd' of <doc>
 
   return stats;
 }
 
+// Lowercased as array for filtering
 function ensure_title_can_filter(filter_terms, is_title_identifier) {
   if (!filter_terms || !filter_terms.length) return;
 
@@ -237,12 +251,13 @@ function ensure_title_can_filter(filter_terms, is_title_identifier) {
   const main_prev_items = items_main("prev");
   const main_curr_items = items_main("curr");
 
-  if (main_prev_items[0][field_arr]) return;
+  if (!main_prev_items[0][field_arr])
+    for (const item of main_prev_items)
+      item[field_arr] = [item[field_str].toLowerCase()];
 
-  // Lowercased as array for filtering
-  //
-  for (const item of main_prev_items) item[field_arr] = [item[field_str].toLowerCase()];
-  for (const item of main_curr_items) item[field_arr] = [item[field_str].toLowerCase()];
+  if (!main_curr_items[0][field_arr])
+    for (const item of main_curr_items)
+      item[field_arr] = [item[field_str].toLowerCase()];
 }
 
 const decode_amp_reg = /&(quot|amp|gt|lt);/g;
