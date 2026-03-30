@@ -701,6 +701,9 @@ function filter_route(base_prev_items, base_prev_date,
   const title       = input_clean_parse(      title_str);
   const description = input_clean_parse(description_str);
 
+  // Title: ensure filtering field available
+  ensure_title_can_filter(title, is_title_identifier);
+
   // Views
   let dl_min_str = input_values["downloads-min"].trim().toLowerCase();
   let dl_max_str = input_values["downloads-max"].trim().toLowerCase();

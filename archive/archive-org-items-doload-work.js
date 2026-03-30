@@ -31,8 +31,11 @@ function conv_stat_docs(docs) {
 
     const collection_arr = get_node_arr(doc, "collection");
     const    creator_arr = get_node_arr(doc, "creator"   );
-    const      title_arr = title      ? [title     .toLowerCase()] : []; // Lowercased as array for filtering
-    const identifier_arr = identifier ? [identifier.toLowerCase()] : []; // Lowercased as array for filtering
+
+// Lowercased as array for filtering
+//
+//  const      title_arr = [title     .toLowerCase()];
+//  const identifier_arr = [identifier.toLowerCase()];
 
     stats.push({
       identifier,
@@ -45,38 +48,40 @@ function conv_stat_docs(docs) {
       month     ,
       week      ,
       collection_arr,
-         creator_arr,
-           title_arr,
-      identifier_arr
+         creator_arr
+//         title_arr
+//    identifier_arr
     });
   }
 
   return stats;
 }
 
-//    bstr_date        = '"date">'; // <str name="date">
-//    bstr_description = 'ption">'; // <str name="description">
-//    bstr_downloads   = 'loads">'; // <str name="downloads">
-//    bstr_identifier  = 'ifier">'; // <str name="identifier">
-//    bstr_item_size   = '_size">'; // <str name="item_size">
-//    bstr_mediatype   = 'atype">'; // <str name="mediatype">
-//    bstr_month       = 'month">'; // <str name="month">
-//    bstr_publicdate  = 'cdate">'; // <str name="publicdate">
-//    bstr_title       = 'title">'; // <str name="title">
-//    bstr_week        = '"week">'; // <str name="week">
+// bstr_date        = '"date">'; // <str name="date">
+// bstr_description = 'ption">'; // <str name="description">
+// bstr_downloads   = 'loads">'; // <str name="downloads">
+// bstr_identifier  = 'ifier">'; // <str name="identifier">
+// bstr_item_size   = '_size">'; // <str name="item_size">
+// bstr_mediatype   = 'atype">'; // <str name="mediatype">
+// bstr_month       = 'month">'; // <str name="month">
+// bstr_publicdate  = 'cdate">'; // <str name="publicdate">
+// bstr_title       = 'title">'; // <str name="title">
+// bstr_week        = '"week">'; // <str name="week">
 
-//    barr_collection  = 'ction">'; // <arr name="collection">
-//    barr_creator     = 'eator">'; // <arr name="creator">
-//    barr_subject     = 'bject">'; // <arr name="subject">
+// barr_collection  = 'ction">'; // <arr name="collection">
+// barr_creator     = 'eator">'; // <arr name="creator">
+// barr_subject     = 'bject">'; // <arr name="subject">
 
-// Subj du_min: 86.4 ms
-// Desc du_min: 62.9 ms
-function parse_sect_text_10(text, name) {
+// Subj du_min: 76.1 ms
+// Desc du_min: 62.1 ms
+function parse_sect_text_10(text, name) { // Rename: text_10 <-> text
   let du_min = Infinity;
 
-  for (let loop = 0; loop < 10; loop++) {
+  for (let warm = 0; warm < 10; warm++) parse_sect_text_1(text, name);
+
+  for (let loop = 0; loop < 20; loop++) {
     const start = performance.now();
-    for (let i = 0; i < 10; i++ ) parse_sect_text_1(text, name);
+    for (let i = 0; i < 10; i++) parse_sect_text_1(text, name);
     const du_10 = performance.now() - start;
     if   (du_10 < du_min) du_min = du_10;
   }
@@ -84,8 +89,6 @@ function parse_sect_text_10(text, name) {
   alert(du_min.toFixed(1));
 
   const items  = parse_sect_text_1(text, name);
-
-// /*
   const parser = new DOMParser();
   const xml    = parser.parseFromString(text, "text/xml");
   if   (xml.querySelector("parsererror")) throw new Error("Invalid XML format");
@@ -114,34 +117,33 @@ function parse_sect_text_10(text, name) {
   else {
     alert("no sect " + name);
   }
-// */
 
   return items;
 }
 
-function parse_sect_text(text, name) {
+function parse_sect_text(text, name) { // Rename: text <-> text_1
   const is_desc = (name === 'description'); // Is string, else is 'subject' array
   const items   = {};
   let   pos     = 700; // XML header
 
   do {
-    pos = text.indexOf('<doc>', pos) + 20; // <doc> + \n + 4 spaces + <str name=
-    if (pos < 20) break;
+    pos = text.indexOf('<doc>', pos) + 26; // <doc> + \n + 4 spaces + <str name="ident
+    if (pos < 26) break;                   //                                    descr
 
     const end = text.indexOf('</doc>', pos);
     if   (end === -1) break;
 
     if (is_desc) {
       const ptr = [pos];
-      const description = get_stat_str_dec(text, pos,    end,  ptr);
-      const identifier  = get_stat_str    (text, ptr[0], end, 'ifier">');
+      const description = get_desc_str(text, pos,    end,  ptr     );
+      const identifier  = get_stat_str(text, ptr[0], end, 'ifier">');
 
       items[identifier] = [description.toLowerCase()]; // Lowercased as array for filtering
     }
     else {
-      const identifier  = get_stat_str    (text, pos,    end, 'ifier">');
+      const identifier  = get_stat_str(text, pos,    end, 'ifier">');
 
-      items[identifier] = get_stat_arr    (text, pos,    end, 'bject">');
+      items[identifier] = get_stat_arr(text, pos,    end, 'bject">');
     }
 
     pos = end + 6;
@@ -151,13 +153,15 @@ function parse_sect_text(text, name) {
   return items;
 }
 
-// du_min: 89.9 ms, 89.6 ms
-function parse_stat_text_10(text) {
+// du_min: 89.0 ms / 82.9 ms
+function parse_stat_text_10(text) { // Rename: text_10 <-> text
   let du_min = Infinity;
 
-  for (let loop = 0; loop < 10; loop++) {
+  for (let warm = 0; warm < 10; warm++) parse_stat_text_1(text);
+
+  for (let loop = 0; loop < 20; loop++) {
     const start = performance.now();
-    for (let i = 0; i < 10; i++ ) parse_stat_text_1(text);
+    for (let i = 0; i < 10; i++) parse_stat_text_1(text);
     const du_10 = performance.now() - start;
     if   (du_10 < du_min) du_min = du_10;
   }
@@ -165,8 +169,6 @@ function parse_stat_text_10(text) {
   alert(du_min.toFixed(1));
 
   const stats  = parse_stat_text_1(text);
-
-// /*
   const parser = new DOMParser();
   const xml    = parser.parseFromString(text, "text/xml");
   if   (xml.querySelector("parsererror")) throw new Error("Invalid XML format");
@@ -181,12 +183,11 @@ function parse_stat_text_10(text) {
   else {
     alert("no stat");
   }
-// */
 
   return stats;
 }
 
-function parse_stat_text(text) {
+function parse_stat_text(text) { // Rename: text <-> text_1
   const stats = [];
   let   pos   = 700; // XML header
 
@@ -212,10 +213,12 @@ function parse_stat_text(text) {
       week           : get_stat_str(text, pos, end, '"week">'),
 
       collection_arr : get_stat_arr(text, pos, end, 'ction">'),
-         creator_arr : get_stat_arr(text, pos, end, 'eator">'),
+         creator_arr : get_stat_arr(text, pos, end, 'eator">')
 
-           title_arr : [title     .toLowerCase()], // Lowercased as array for filtering
-      identifier_arr : [identifier.toLowerCase()]  // Lowercased as array for filtering
+// Lowercased as array for filtering
+//
+//         title_arr : [title     .toLowerCase()]
+//    identifier_arr : [identifier.toLowerCase()]
     });
 
     pos = end + 6;
@@ -223,6 +226,23 @@ function parse_stat_text(text) {
   while (true);
 
   return stats;
+}
+
+function ensure_title_can_filter(filter_terms, is_title_identifier) {
+  if (!filter_terms || !filter_terms.length) return;
+
+  const field_str = is_title_identifier ? "identifier" : "title";
+  const field_arr = field_str + "_arr";
+
+  const main_prev_items = items_main("prev");
+  const main_curr_items = items_main("curr");
+
+  if (main_prev_items[0][field_arr]) return;
+
+  // Lowercased as array for filtering
+  //
+  for (const item of main_prev_items) item[field_arr] = [item[field_str].toLowerCase()];
+  for (const item of main_curr_items) item[field_arr] = [item[field_str].toLowerCase()];
 }
 
 const decode_amp_reg = /&(quot|amp|gt|lt);/g;
@@ -233,20 +253,19 @@ const decode_amp_map = {
   '&lt;'  : '<'  //   6
 };
 
-function get_stat_str_dec(text, beg, end, ptr) {
-//const str_pos = text.indexOf('n">', beg) + 3;
-//if  ((str_pos >= end) || (str_pos < 3)) return ""; // More frequent condition first
-  if (text.charCodeAt(beg + 1) !== 0x64) return ""; // Not 'd', so it is not "description"
-  const str_pos = beg + 14; // After ...on">
+// beg: after "descr / "ident
+function get_desc_str(text, beg, end, ptr) {
+  if (text.charCodeAt(beg + 1) !== 0x70) return ""; // Not 'p', so not "description"
+  const str_pos = beg + 8; // After iption">
 
   const str_end = text.indexOf('</', str_pos); // XML considered correct
-  ptr[0] = str_end + 21; // </str> + \n + 4 spaces + <str name=
+  ptr[0] = str_end + 27; // </str> + \n + 4 spaces + <str name="ident
 
   const  str = text.slice(str_pos, str_end);
   return str.includes('&') ? str.replace(decode_amp_reg, (m) => decode_amp_map[m]) : str;
 }
 
-function get_stat_str_ptr(text, beg, end, bstr, ptr) {
+function get_stat_ptr(text, beg, end, bstr, ptr) {
   const str_pos = text.indexOf(bstr, beg) + 7;
   if  ((str_pos >= end) || (str_pos < 7)) return ""; // More frequent condition first
 
@@ -270,7 +289,7 @@ function get_stat_arr(text, beg, end, barr) {
   const arr_end = text.indexOf('</a', arr_pos); // XML considered correct
 
   if  ((arr_end >= end) || (arr_end === -1)) { // More frequent condition first
-    // It is <str> found at arr_pos
+    // Found <str> at arr_pos
     return [text.slice(arr_pos, text.indexOf('</', arr_pos)).toLowerCase()]; // XML considered correct
   }
 
@@ -278,8 +297,8 @@ function get_stat_arr(text, beg, end, barr) {
 
   arr_pos -= 6; // </str>
   do {
-    const b = text.indexOf('<s', arr_pos + 6) + 5; // Considered present in XML always after arr_pos
-    if   (b >= arr_end) break; // So this condition is enough
+    if ((arr_pos + 6) === arr_end) break;
+    const b = arr_pos + 11; // After <str>
 
     arr_pos = text.indexOf('</', b); // XML considered correct, and <str> is found at b
     arr.push(text.slice(b, arr_pos).toLowerCase());
