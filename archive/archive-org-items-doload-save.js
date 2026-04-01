@@ -134,7 +134,7 @@ function parse_sect_subj(text) {
 
     pos = end + 21; // </str> + \n + 4 spaces + <arr name=
     const ptr = [0]; // Initial not needed
-    subjs[identifier] = get_stat_arr_ptr(text, pos, 0x73, 10, ptr); // Code fos 's' of "subject">
+    subjs[identifier] = get_stat_arr(text, pos, 0x73, 10, ptr); // Code fos 's' of "subject">
 
     pos = ptr[0] - 2; // - 21 + </arr> + \n + 2 spaces + </doc> + \n + 2 spaces + <
   }
@@ -165,7 +165,7 @@ function parse_sect_desc(text) {
   return descs;
 }
 
-// du_min: 18.2 ms
+// du_min: 17.8 ms
 function parse_stat_text_10(text) { // Rename: text_10 <-> text
   let du_min = Infinity;
 
@@ -209,20 +209,20 @@ function parse_stat_text(text) { // Rename: text <-> text_1
     const ptr = [pos]; // Initial needed for case of absent collection
 
     stats.push({
-      collection_arr : get_stat_arr_ptr(text, pos,    0x63, 13, ptr), // Code for 'c' of "collection">
-         creator_arr : get_stat_arr_ptr(text, ptr[0], 0x63, 10, ptr), // Code for 'c' of "creator">
+      collection_arr : get_stat_arr(text, pos,    0x63,   13, ptr), // "collection">
+         creator_arr : get_stat_arr(text, ptr[0], 0x63,   10, ptr), // "creator">
 
-      date           : get_stat_str_ptr(text, ptr[0], 0x64, 0x61,  7, ptr), // "date">
-      downloads      : get_stat_str_ptr(text, ptr[0], 0x64, 0x6f, 12, ptr), // "downloads">
-      identifier     : get_stat_str_ptr(text, ptr[0], 0x69, 0x64, 13, ptr), // "identifier">
-//    indexdate      : get_stat_str_ptr(text, ptr[0], 0x69, 0x6e, 12, ptr), // "indexdate">
-      item_size      : get_stat_str_ptr(text, ptr[0], 0x69, 0x74, 12, ptr), // "item_size">
-      mediatype      : get_stat_str_ptr(text, ptr[0], 0x6d, 0x65, 12, ptr), // "mediatype">
-      month          : get_stat_str_ptr(text, ptr[0], 0x6d, 0x6f,  8, ptr), // "month">
-      publicdate     : get_stat_str_ptr(text, ptr[0], 0x70, 0x75, 13, ptr), // "publicdate">
-//    reviewdate     : get_stat_str_ptr(text, ptr[0], 0x72, 0x65, 13, ptr), // "reviewdate">
-      title          : get_stat_str_ptr(text, ptr[0], 0x74, 0x69,  8, ptr), // "title">
-      week           : get_stat_str_ptr(text, ptr[0], 0x77, 0x65,  7, ptr)  // "week">
+      date           : get_stat_str(text, ptr[0], 0x6461,  7, ptr), // "date">
+      downloads      : get_stat_str(text, ptr[0], 0x646f, 12, ptr), // "downloads">
+      identifier     : get_stat_str(text, ptr[0], 0x6964, 13, ptr), // "identifier">
+//    indexdate      : get_stat_str(text, ptr[0], 0x696e, 12, ptr), // "indexdate">
+      item_size      : get_stat_str(text, ptr[0], 0x6974, 12, ptr), // "item_size">
+      mediatype      : get_stat_str(text, ptr[0], 0x6d65, 12, ptr), // "mediatype">
+      month          : get_stat_str(text, ptr[0], 0x6d6f,  8, ptr), // "month">
+      publicdate     : get_stat_str(text, ptr[0], 0x7075, 13, ptr), // "publicdate">
+//    reviewdate     : get_stat_str(text, ptr[0], 0x7265, 13, ptr), // "reviewdate">
+      title          : get_stat_str(text, ptr[0], 0x7469,  8, ptr), // "title">
+      week           : get_stat_str(text, ptr[0], 0x7765,  7, ptr)  // "week">
     });
 
     pos = ptr[0] - 2; // - 21 + </arr> + \n + 2 spaces + </doc> + \n + 2 spaces + <
@@ -260,47 +260,37 @@ function get_desc_str(text, beg, ptr) {
   ptr[0] = str_end + 21; // </str> + \n + 4 spaces + <str name=
 
   const  str = text.slice(str_pos, str_end);
-  return str.includes('&')
-       ? str.replace (/&quot;/g, '"') // Faster than callback method
-            .replace (/&amp;/g,  '&')
-            .replace (/&gt;/g,   '>')
-            .replace (/&lt;/g,   '<')
+  return str.includes('&') // Replace chain here faster than callback method
+       ? str.replace (/&quot;/g, '"') // 350 occurrences in 'description' (474 '&' only there)
+            .replace (/&amp;/g,  '&') //  79 in two collections (39 + 39) and one video
+            .replace (/&gt;/g,   '>') //  39 mainly in one collection
+            .replace (/&lt;/g,   '<') //   6
        : str;
 }
 
 // beg: at " of <str name="
-function get_stat_str_ptr(text, beg, b1, b2, blen, ptr) {
-  let t1 = text.charCodeAt(beg + 1);
-  let t2 = text.charCodeAt(beg + 2);
+function get_stat_str(text, beg, b12, blen, ptr) {
+  let t12 = (text.charCodeAt(beg + 1) << 8) | text.charCodeAt(beg + 2);
 
-  while ((t1 < b1) || ((t1 === b1) && ((t2 < b2)))) {
-    beg = text.indexOf('<', beg) + 21; // To next element
-
-    t1  = text.charCodeAt(beg + 1);
-    t2  = text.charCodeAt(beg + 2);
+  while (t12 < b12) {
+    // To next string element
+    beg =  text.indexOf('<', beg) + 21; // </str> + \n + 4 spaces + <str name=
+    t12 = (text.charCodeAt(beg + 1) << 8) | text.charCodeAt(beg + 2);
   }
 
-  if ((t1 > b1) || ((t1 === b1) && ((t2 > b2)))) return ""; // Do not touch ptr
+  if (t12 > b12) return ""; // Do not touch ptr
 
-  let str_pos = beg + blen;
+  let str_pos = beg + blen; // To string beginning
 
   const str_end = text.indexOf('<', str_pos); // XML considered correct
-  ptr[0] = str_end + 21; // </str> + \n + 4 spaces + <str name= (<arr name=)
+  ptr[0] = str_end + 21; // </str> + \n + 4 spaces + <str name=
 
   return text.slice(str_pos, str_end);
 }
 
-// beg: at " of <str name="
-function get_stat_str(text, beg, bstr, blen) {
-  if (text.charCodeAt(beg + 1) !== bstr.charCodeAt(1)) return "";
-  let str_pos = beg + blen;
-
-  return text.slice(str_pos, text.indexOf('<', str_pos)); // XML considered correct
-}
-
 // beg: at " of <arr name="
-function get_stat_arr_ptr(text, beg, barr, blen, ptr) {
-  if (text.charCodeAt(beg + 1) !== barr) return [];
+function get_stat_arr(text, beg, b1, blen, ptr) {
+  if (text.charCodeAt(beg + 1) !== b1) return []; // Do not touch ptr
 
   let arr_pos = beg + blen;
 
@@ -314,43 +304,17 @@ function get_stat_arr_ptr(text, beg, barr, blen, ptr) {
 
   const arr = [];
 
-  arr_pos -= 6; // At '<' of </str>
-  do {
-    const b = arr_pos + 11; // After </str><str>
-    if (text.charCodeAt(b) === 0x3e) break; // At '>' of </arr>
+  arr_pos += 5; // After </str><str>
+  do { // No empty arrays in the XML
+    const b = arr_pos; // String beginning
 
     arr_pos = text.indexOf('<', b); // XML considered correct, and <str> is found at b
     arr.push(text.slice(b, arr_pos).toLowerCase());
+    arr_pos += 11; // After </str><str> or at '>' of </arr>
   }
-  while (true);
+  while (text.charCodeAt(arr_pos) !== 0x3e); // Not '>' of </arr>
 
-  ptr[0] = arr_pos + 27; // </str> + </arr> + \n + 4 spaces + <str name= (<arr name=)
-
-  return arr;
-}
-
-function get_stat_arr(text, beg, end, barr, blen) {
-  let  arr_pos = text.indexOf(barr, beg) + blen;
-  if ((arr_pos >= end) || (arr_pos < blen)) return []; // More frequent condition first
-
-  const arr_end = text.indexOf('</a', arr_pos); // XML considered correct
-
-  if  ((arr_end >= end) || (arr_end === -1)) { // More frequent condition first
-    // Found <str> at arr_pos
-    return [text.slice(arr_pos, text.indexOf('<', arr_pos)).toLowerCase()]; // XML considered correct
-  }
-
-  const arr = [];
-
-  arr_pos -= 6; // </str>
-  do {
-    const b = arr_pos + 11; // After <str>
-    if   (b > arr_end) break;
-
-    arr_pos = text.indexOf('<', b); // XML considered correct, and <str> is found at b
-    arr.push(text.slice(b, arr_pos).toLowerCase());
-  }
-  while (true);
+  ptr[0] = arr_pos + 16; // > + \n + 4 spaces + <str name= (<arr name=)
 
   return arr;
 }
