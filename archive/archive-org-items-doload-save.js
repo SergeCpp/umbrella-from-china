@@ -66,8 +66,8 @@ function conv_stat_docs(docs) {
 // barr_creator     <arr name="creator">
 // barr_subject     <arr name="subject">
 
-// Subj du_min: 71.2 ms
-// Desc du_min: 54.4 ms
+// Subj du_min: 52.1 ms
+// Desc du_min: 53.8 ms
 function parse_sect_text_10(text, name) { // Rename: text_10 <-> text
   let du_min = Infinity;
 
@@ -129,14 +129,14 @@ function parse_sect_subj(text) {
 
   do {
     pos += 32;// doc> + \n + 4 spaces + <str name="identifier">
-    let   end = text.indexOf('<', pos);
+    const end = text.indexOf('<', pos);
     const identifier = text.slice(pos, end);
 
-    pos = end + 21; // </str> + \n + 4 spaces + <str name=
-    end = text.indexOf('</d', pos);
-    subjs[identifier] = get_stat_arr(text, pos, end, '"s', 10); // "subject">
+    pos = end + 21; // </str> + \n + 4 spaces + <arr name=
+    const ptr = [0]; // Initial not needed
+    subjs[identifier] = get_stat_arr_ptr(text, pos, 0x73, 10, ptr); // Code fos 's' of "subject">
 
-    pos = end + 10; // </doc> + \n + 2 spaces + <
+    pos = ptr[0] - 2; // - 21 + </arr> + \n + 2 spaces + </doc> + \n + 2 spaces + <
   }
   while (text.charCodeAt(pos) === 0x64); // At 'd' of <doc>
 
@@ -150,7 +150,7 @@ function parse_sect_desc(text) {
 
   do {
     pos += 19; // doc> + \n + 4 spaces + <str name=
-    const ptr = [pos];
+    const ptr = [pos]; // Initial needed for case of absent description
     const description = get_desc_str(text, pos, ptr);
 
     pos = ptr[0] + 13; // "identifier">
@@ -165,7 +165,7 @@ function parse_sect_desc(text) {
   return descs;
 }
 
-// du_min: 39.3 ms
+// du_min: 18.2 ms
 function parse_stat_text_10(text) { // Rename: text_10 <-> text
   let du_min = Infinity;
 
@@ -206,25 +206,26 @@ function parse_stat_text(text) { // Rename: text <-> text_1
   do {
     pos += 19;// doc> + \n + 4 spaces + <arr name=
 
-    const ptr =                    [pos];
-    const end = text.indexOf('</d', pos);
+    const ptr = [pos]; // Initial needed for case of absent collection
 
     stats.push({
-      collection_arr : get_stat_arr_ptr(text, pos,    end, '"co', 13, ptr), // "collection">
-         creator_arr : get_stat_arr_ptr(text, ptr[0], end, '"cr', 10, ptr), // "creator">
+      collection_arr : get_stat_arr_ptr(text, pos,    0x63, 13, ptr), // Code for 'c' of "collection">
+         creator_arr : get_stat_arr_ptr(text, ptr[0], 0x63, 10, ptr), // Code for 'c' of "creator">
 
-      date           : get_stat_str_ptr(text, ptr[0], end, '"da',  7, ptr), // "date">
-      downloads      : get_stat_str_ptr(text, ptr[0], end, '"do', 12, ptr), // "downloads">
-      identifier     : get_stat_str_ptr(text, ptr[0], end, '"id', 13, ptr), // "identifier">
-      item_size      : get_stat_str_ptr(text, ptr[0], end, '"it', 12, ptr), // "item_size">
-      mediatype      : get_stat_str_ptr(text, ptr[0], end, '"me', 12, ptr), // "mediatype">
-      month          : get_stat_str_ptr(text, ptr[0], end, '"mo',  8, ptr), // "month">
-      publicdate     : get_stat_str_ptr(text, ptr[0], end, '"p' , 13, ptr), // "publicdate">
-      title          : get_stat_str_ptr(text, ptr[0], end, '"t' ,  8, ptr), // "title">
-      week           : get_stat_str    (text, ptr[0], end, '"w' ,  7     )  // "week">
+      date           : get_stat_str_ptr(text, ptr[0], 0x64, 0x61,  7, ptr), // "date">
+      downloads      : get_stat_str_ptr(text, ptr[0], 0x64, 0x6f, 12, ptr), // "downloads">
+      identifier     : get_stat_str_ptr(text, ptr[0], 0x69, 0x64, 13, ptr), // "identifier">
+//    indexdate      : get_stat_str_ptr(text, ptr[0], 0x69, 0x6e, 12, ptr), // "indexdate">
+      item_size      : get_stat_str_ptr(text, ptr[0], 0x69, 0x74, 12, ptr), // "item_size">
+      mediatype      : get_stat_str_ptr(text, ptr[0], 0x6d, 0x65, 12, ptr), // "mediatype">
+      month          : get_stat_str_ptr(text, ptr[0], 0x6d, 0x6f,  8, ptr), // "month">
+      publicdate     : get_stat_str_ptr(text, ptr[0], 0x70, 0x75, 13, ptr), // "publicdate">
+//    reviewdate     : get_stat_str_ptr(text, ptr[0], 0x72, 0x65, 13, ptr), // "reviewdate">
+      title          : get_stat_str_ptr(text, ptr[0], 0x74, 0x69,  8, ptr), // "title">
+      week           : get_stat_str_ptr(text, ptr[0], 0x77, 0x65,  7, ptr)  // "week">
     });
 
-    pos = end + 10; // </doc> + \n + 2 spaces + <
+    pos = ptr[0] - 2; // - 21 + </arr> + \n + 2 spaces + </doc> + \n + 2 spaces + <
   }
   while (text.charCodeAt(pos) === 0x64); // At 'd' of <doc>
 
@@ -250,7 +251,7 @@ function ensure_title_can_filter(filter_terms, is_title_identifier) {
       item[field_arr] = [item[field_str].toLowerCase()];
 }
 
-// beg: at "de... / "id...
+// beg: at " of "de... / "id...
 function get_desc_str(text, beg, ptr) {
   if (text.charCodeAt(beg + 1) !== 0x64) return ""; // Not 'd', so not "description"
   const str_pos = beg + 14; // After "description">
@@ -267,9 +268,21 @@ function get_desc_str(text, beg, ptr) {
        : str;
 }
 
-function get_stat_str_ptr(text, beg, end, bstr, blen, ptr) {
-  const str_pos = text.indexOf(bstr, beg) + blen;
-  if  ((str_pos >= end) || (str_pos < blen)) return ""; // More frequent condition first
+// beg: at " of <str name="
+function get_stat_str_ptr(text, beg, b1, b2, blen, ptr) {
+  let t1 = text.charCodeAt(beg + 1);
+  let t2 = text.charCodeAt(beg + 2);
+
+  while ((t1 < b1) || ((t1 === b1) && ((t2 < b2)))) {
+    beg = text.indexOf('<', beg) + 21; // To next element
+
+    t1  = text.charCodeAt(beg + 1);
+    t2  = text.charCodeAt(beg + 2);
+  }
+
+  if ((t1 > b1) || ((t1 === b1) && ((t2 > b2)))) return ""; // Do not touch ptr
+
+  let str_pos = beg + blen;
 
   const str_end = text.indexOf('<', str_pos); // XML considered correct
   ptr[0] = str_end + 21; // </str> + \n + 4 spaces + <str name= (<arr name=)
@@ -277,20 +290,21 @@ function get_stat_str_ptr(text, beg, end, bstr, blen, ptr) {
   return text.slice(str_pos, str_end);
 }
 
-function get_stat_str(text, beg, end, bstr, blen) {
-  const str_pos = text.indexOf(bstr, beg) + blen;
-  if  ((str_pos >= end) || (str_pos < blen)) return ""; // More frequent condition first
+// beg: at " of <str name="
+function get_stat_str(text, beg, bstr, blen) {
+  if (text.charCodeAt(beg + 1) !== bstr.charCodeAt(1)) return "";
+  let str_pos = beg + blen;
 
   return text.slice(str_pos, text.indexOf('<', str_pos)); // XML considered correct
 }
 
-function get_stat_arr_ptr(text, beg, end, barr, blen, ptr) {
-  let  arr_pos = text.indexOf(barr, beg) + blen;
-  if ((arr_pos >= end) || (arr_pos < blen)) return []; // More frequent condition first
+// beg: at " of <arr name="
+function get_stat_arr_ptr(text, beg, barr, blen, ptr) {
+  if (text.charCodeAt(beg + 1) !== barr) return [];
 
-  const arr_end = text.indexOf('</a', arr_pos); // XML considered correct
+  let arr_pos = beg + blen;
 
-  if  ((arr_end >= end) || (arr_end === -1)) { // More frequent condition first
+  if (text.charCodeAt(beg - 9) !== 0x61) { // Not 'a', so not <arr
     // Found <str> at arr_pos
     const str_end = text.indexOf('<', arr_pos); // XML considered correct
     ptr[0] = str_end + 21; // </str> + \n + 4 spaces + <str name= (<arr name=)
@@ -298,19 +312,19 @@ function get_stat_arr_ptr(text, beg, end, barr, blen, ptr) {
     return [text.slice(arr_pos, str_end).toLowerCase()];
   }
 
-  ptr[0] = arr_end + 21; // </arr> + \n + 4 spaces + <str name= (<arr name=)
-
   const arr = [];
 
-  arr_pos -= 6; // </str>
+  arr_pos -= 6; // At '<' of </str>
   do {
-    const b = arr_pos + 11; // After <str>
-    if   (b > arr_end) break;
+    const b = arr_pos + 11; // After </str><str>
+    if (text.charCodeAt(b) === 0x3e) break; // At '>' of </arr>
 
     arr_pos = text.indexOf('<', b); // XML considered correct, and <str> is found at b
     arr.push(text.slice(b, arr_pos).toLowerCase());
   }
   while (true);
+
+  ptr[0] = arr_pos + 27; // </str> + </arr> + \n + 4 spaces + <str name= (<arr name=)
 
   return arr;
 }
