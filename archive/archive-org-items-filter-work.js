@@ -701,8 +701,9 @@ function filter_route(base_prev_items, base_prev_date,
   const title       = input_clean_parse(      title_str);
   const description = input_clean_parse(description_str);
 
-  // Creators: ensure filtering field available
-  ensure_creators_can_filter(creators);
+  // Collections and Creators: ensure filtering fields available
+  ensure_field_can_filter("collection", collections);
+  ensure_field_can_filter("creator",    creators   );
 
   // Title: ensure filtering field available
   ensure_title_can_filter(title, is_title_identifier);

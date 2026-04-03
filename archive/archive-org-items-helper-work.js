@@ -81,8 +81,21 @@ function filter_base(stats_items, stats_date,
 
     /* Calculating Stats */
 
+    let   favorites = 0;
     const colls_arr = doc.collection_arr;
-    const favorites = colls_arr.filter(c => c.startsWith("fav-")).length;
+    if (typeof colls_arr === "object") {
+      const    colls_len = colls_arr.length;
+      for  (let i = 0; i < colls_len; i++) {
+        if (colls_arr [i].startsWith("fav-")) favorites++;
+      }
+    }
+    else { // Raw string
+      let     pos = 4; // <str>fav-a
+      while ((pos = colls_arr.indexOf(">fav-", pos)) !== -1) {
+        favorites++;
+        pos += 16; // >fav-a</str><str>fav-b
+      }
+    }
 
     const calc_date = new Date(stats_date + "T11:59:59.999Z"); // To count a day for published on day before
 

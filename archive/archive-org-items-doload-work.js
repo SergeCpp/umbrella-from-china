@@ -28,16 +28,18 @@ function conv_stat_docs(docs) {
   for (let i = 0; i < docs.length; i++) {
     const doc = docs[i];
 
-    const collection_arr = get_node_arr(doc, "collection");
+    const collection_arr = get_node_raw(doc, "collection");
     const    creator_arr = get_node_raw(doc, "creator"   );
 
     let   date       = doc.querySelector('str[name="date"]'      )?.textContent;
     const downloads  = doc.querySelector('str[name="downloads"]' )?.textContent;
     const identifier = doc.querySelector('str[name="identifier"]')?.textContent;
+//        indexdate
     const item_size  = doc.querySelector('str[name="item_size"]' )?.textContent;
     const mediatype  = doc.querySelector('str[name="mediatype"]' )?.textContent;
     const month      = doc.querySelector('str[name="month"]'     )?.textContent;
     const publicdate = doc.querySelector('str[name="publicdate"]')?.textContent;
+//        reviewdate
     const title      = doc.querySelector('str[name="title"]'     )?.textContent;
     const week       = doc.querySelector('str[name="week"]'      )?.textContent;
 
@@ -62,23 +64,27 @@ function conv_stat_docs(docs) {
   return stats;
 }
 
+// barr_collection  <arr name="collection">
+// barr_creator     <arr name="creator">
+//
 // bstr_date        <str name="date">
-// bstr_description <str name="description">
 // bstr_downloads   <str name="downloads">
 // bstr_identifier  <str name="identifier">
+//      indexdate
 // bstr_item_size   <str name="item_size">
 // bstr_mediatype   <str name="mediatype">
 // bstr_month       <str name="month">
 // bstr_publicdate  <str name="publicdate">
+//      reviewdate
 // bstr_title       <str name="title">
 // bstr_week        <str name="week">
 
-// barr_collection  <arr name="collection">
-// barr_creator     <arr name="creator">
 // barr_subject     <arr name="subject">
 
-// Subj du_min: 52.1 ms
-// Desc du_min: 53.8 ms
+// bstr_description <str name="description">
+
+// Subj: Text: 52.1 ms / 10; DOM: 84.6 ms / 1
+// Desc: Text: 53.8 ms / 10; DOM: 47.1 ms / 1
 function parse_sect_text_10(text, name) { // Rename: text_10 <-> text
   let du_min = Infinity;
 
@@ -91,15 +97,13 @@ function parse_sect_text_10(text, name) { // Rename: text_10 <-> text
     if   (du_10 < du_min) du_min = du_10;
   }
 
-  alert(du_min.toFixed(1) + " ms");
-
-  const items  = parse_sect_text_1(text, name);
+  const start  = performance.now();
   const parser = new DOMParser();
   const xml    = parser.parseFromString(text, "text/xml");
   if   (xml.querySelector("parsererror")) throw new Error("Invalid XML format");
 
   const docs   = xml.querySelectorAll("doc");
-  const items_ = {};
+  const it_dom = {};
   const data_selector = 'arr[name="' + name + '"], ' +
                         'str[name="' + name + '"]';
   for (const doc of docs) {
@@ -112,11 +116,17 @@ function parse_sect_text_10(text, name) { // Rename: text_10 <-> text
     // For two collections
     if ((data[0] === undefined) && (name === "description")) data[0] = "";
 
-    items_[identifier] = data;
+    it_dom[identifier] = data;
   }
 
-  const str  =  JSON.stringify(items);
-  if   (str === JSON.stringify(items_)) {
+  const du_dom = performance.now() - start;
+
+  alert("Text: " + du_min.toFixed(1) + " ms / 10" + '\n' +
+        "DOM: "  + du_dom.toFixed(1) + " ms / 1");
+
+  const items = parse_sect_text_1(text, name);
+  const str   =  JSON.stringify  (items);
+  if   (str  === JSON.stringify  (it_dom)) {
 //  alert("ok sect " + name + ": " + str.length);
   }
   else {
@@ -143,11 +153,11 @@ function parse_sect_subj(text) {
     const end = text.indexOf('<', pos);
     const identifier = text.slice(pos, end);
 
-    pos = end + 21; // </str> + \n + 4 spaces + <arr name=
+    pos = end + 22; // </str> + \n + 4 spaces + <arr name="
     const ptr = [0]; // Initial not needed
-    subjs[identifier] = get_stat_arr(text, pos, 0x73, 10, ptr); // "subject">
+    subjs[identifier] = get_stat_arr(text, pos, 0x73, 9, ptr); // subject">
 
-    pos = ptr[0] - 2; // - 21 + </arr> + \n + 2 spaces + </doc> + \n + 2 spaces + <
+    pos = ptr[0] - 3; // - 22 + 19: </arr> + \n + 2 spaces + </doc> + \n + 2 spaces + <
   }
   while (text.charCodeAt(pos) === 0x64); // At 'd' of <doc>
 
@@ -160,11 +170,11 @@ function parse_sect_desc(text) {
   let   pos   = text.indexOf('<d', 700) + 1; // XML header and <
 
   do {
-    pos += 19; // doc> + \n + 4 spaces + <str name=
+    pos += 20; // doc> + \n + 4 spaces + <str name="
     const ptr = [pos]; // Initial needed for case of absent description
     const description = get_desc_str(text, pos, ptr);
 
-    pos = ptr[0] + 13; // "identifier">
+    pos = ptr[0] + 12; // After identifier">
     const end = text.indexOf('<', pos);
     const identifier  = text.slice(pos, end);
     descs[identifier] = [description.toLowerCase()]; // Lowercased as array for filtering
@@ -176,7 +186,8 @@ function parse_sect_desc(text) {
   return descs;
 }
 
-// du_min: 17.0 ms
+// Text: 10.7 ms / 10
+// DOM : 70.4 ms / 1
 function parse_stat_text_10(text) { // Rename: text_10 <-> text
   let du_min = Infinity;
 
@@ -189,18 +200,21 @@ function parse_stat_text_10(text) { // Rename: text_10 <-> text
     if   (du_10 < du_min) du_min = du_10;
   }
 
-  alert(du_min.toFixed(1) + " ms");
-
-  const stats  = parse_stat_text_1(text);
+  const start  = performance.now();
   const parser = new DOMParser();
   const xml    = parser.parseFromString(text, "text/xml");
   if   (xml.querySelector("parsererror")) throw new Error("Invalid XML format");
 
   const docs   = xml.querySelectorAll("doc");
-  const stats_ = conv_stat_docs(docs);
+  const st_dom = conv_stat_docs(docs);
+  const du_dom = performance.now() - start;
 
-  const str    =  JSON.stringify(stats);
-  if   (str   === JSON.stringify(stats_)) {
+  alert("Text: " + du_min.toFixed(1) + " ms / 10" + '\n' +
+        "DOM: "  + du_dom.toFixed(1) + " ms / 1");
+
+  const stats  = parse_stat_text_1(text);
+  const str    =  JSON.stringify  (stats);
+  if   (str   === JSON.stringify  (st_dom)) {
 //  alert("ok stat: " + str.length);
   }
   else {
@@ -215,28 +229,28 @@ function parse_stat_text(text) { // Rename: text <-> text_1
   let   pos   = text.indexOf('<d', 700) + 1; // XML header and <
 
   do {
-    pos += 19;// doc> + \n + 4 spaces + <arr name=
+    pos += 20;// doc> + \n + 4 spaces + <arr name="
 
     const ptr = [pos]; // Initial needed for case of absent collection
 
     stats.push({
-      collection_arr : get_stat_arr(text, pos,    0x63,   13, ptr), // "collection">
-         creator_arr : get_stat_raw(text, ptr[0], 0x63,   10, ptr), // "creator">
+      collection_arr : get_stat_raw(text, pos,    0x63,   12, ptr), // collection">
+         creator_arr : get_stat_raw(text, ptr[0], 0x63,    9, ptr), // creator">
 
-      date           : get_stat_str(text, ptr[0], 0x6461,  7, ptr), // "date">
-      downloads      : get_stat_str(text, ptr[0], 0x646f, 12, ptr), // "downloads">
-      identifier     : get_stat_str(text, ptr[0], 0x6964, 13, ptr), // "identifier">
-//    indexdate      : get_stat_str(text, ptr[0], 0x696e, 12, ptr), // "indexdate">
-      item_size      : get_stat_str(text, ptr[0], 0x6974, 12, ptr), // "item_size">
-      mediatype      : get_stat_str(text, ptr[0], 0x6d65, 12, ptr), // "mediatype">
-      month          : get_stat_str(text, ptr[0], 0x6d6f,  8, ptr), // "month">
-      publicdate     : get_stat_str(text, ptr[0], 0x7075, 13, ptr), // "publicdate">
-//    reviewdate     : get_stat_str(text, ptr[0], 0x7265, 13, ptr), // "reviewdate">
-      title          : get_stat_str(text, ptr[0], 0x7469,  8, ptr), // "title">
-      week           : get_stat_str(text, ptr[0], 0x7765,  7, ptr)  // "week">
+      date           : get_stat_str(text, ptr[0], 0x6461,  6, ptr), // date">
+      downloads      : get_stat_str(text, ptr[0], 0x646f, 11, ptr), // downloads">
+      identifier     : get_stat_str(text, ptr[0], 0x6964, 12, ptr), // identifier">
+//    indexdate      : get_stat_str(text, ptr[0], 0x696e, 11, ptr), // indexdate">
+      item_size      : get_stat_str(text, ptr[0], 0x6974, 11, ptr), // item_size">
+      mediatype      : get_stat_str(text, ptr[0], 0x6d65, 11, ptr), // mediatype">
+      month          : get_stat_str(text, ptr[0], 0x6d6f,  7, ptr), // month">
+      publicdate     : get_stat_str(text, ptr[0], 0x7075, 12, ptr), // publicdate">
+//    reviewdate     : get_stat_str(text, ptr[0], 0x7265, 12, ptr), // reviewdate">
+      title          : get_stat_str(text, ptr[0], 0x7469,  7, ptr), // title">
+      week           : get_stat_str(text, ptr[0], 0x7765,  6, ptr)  // week">
     });
 
-    pos = ptr[0] - 2; // - 21 + </arr> + \n + 2 spaces + </doc> + \n + 2 spaces + <
+    pos = ptr[0] - 3; // - 22 + 19: </arr> + \n + 2 spaces + </doc> + \n + 2 spaces + <
   }
   while (text.charCodeAt(pos) === 0x64); // At 'd' of <doc>
 
@@ -244,30 +258,33 @@ function parse_stat_text(text) { // Rename: text <-> text_1
 }
 
 // Lowercased as array for filtering
-function convert_creator(field) {
+function conv_raw_str_to_arr(field, to_lowercase) {
   if (field === "<emp></emp>") return [];
 
-  if (!field.startsWith("<str>") && !field.endsWith("</str>")) return [field.toLowerCase()];
+  if (to_lowercase) field = field.toLowerCase();
 
-  return field.slice(5, -6).split("</str><str>").map(f => f.toLowerCase());
+  if (!field.startsWith("<str>") && !field.endsWith("</str>")) return [field];
+
+  return field.slice(5, -6).split("</str><str>");
 }
 
 // Lowercased as array for filtering
-function ensure_creators_can_filter(filter_terms) {
+function ensure_field_can_filter(field_name, filter_terms) {
   if (!filter_terms || !filter_terms.length) return;
 
-  const field_arr = "creator_arr";
+  const field_arr    =  field_name  +  "_arr";
+  const to_lowercase = (field_name === "creator");
 
   const main_prev_items = items_main("prev");
   const main_curr_items = items_main("curr");
 
   if (typeof main_prev_items[0][field_arr] !== "object")
     for (const item of main_prev_items)
-      item[field_arr] = convert_creator(item[field_arr]);
+      item[field_arr] = conv_raw_str_to_arr(item[field_arr], to_lowercase);
 
   if (typeof main_curr_items[0][field_arr] !== "object")
     for (const item of main_curr_items)
-      item[field_arr] = convert_creator(item[field_arr]);
+      item[field_arr] = conv_raw_str_to_arr(item[field_arr], to_lowercase);
 }
 
 // Lowercased as array for filtering
@@ -289,13 +306,13 @@ function ensure_title_can_filter(filter_terms, is_title_identifier) {
       item[field_arr] = [item[field_str].toLowerCase()];
 }
 
-// beg: at " of "de... / "id...
+// beg: after " of "desc... / "id...
 function get_desc_str(text, beg, ptr) {
-  if (text.charCodeAt(beg + 1) !== 0x64) return ""; // Not 'd', so not "description"
-  const str_pos = beg + 14; // After "description">
+  if (text.charCodeAt(beg) !== 0x64) return ""; // Not 'd', so not "description"
+  const str_pos = beg + 13; // After description">
 
   const str_end = text.indexOf('<', str_pos); // XML considered correct
-  ptr[0] = str_end + 21; // </str> + \n + 4 spaces + <str name=
+  ptr[0] = str_end + 22; // </str> + \n + 4 spaces + <str name="
 
   const  str = text.slice(str_pos, str_end);
   return str.includes('&') // Replace chain here faster than callback method
@@ -306,56 +323,62 @@ function get_desc_str(text, beg, ptr) {
        : str;
 }
 
-// beg: at " of <str name="
-function get_stat_str(text, beg, b12, blen, ptr) {
-  let t12 = (text.charCodeAt(beg + 1) << 8) | text.charCodeAt(beg + 2);
+// beg: after <str name="
+function get_stat_str(text, beg, b01, blen, ptr) {
+  let t01 = (text.charCodeAt(beg) << 8) | text.charCodeAt(beg + 1);
 
-  while (t12 < b12) {
+  while (t01 < b01) {
     // To next string element
-    beg =  text.indexOf('<', beg) + 21; // </str> + \n + 4 spaces + <str name=
-    t12 = (text.charCodeAt(beg + 1) << 8) | text.charCodeAt(beg + 2);
+    beg =  text.indexOf('<', beg) + 22; // </str> + \n + 4 spaces + <str name="
+    t01 = (text.charCodeAt(beg) << 8) | text.charCodeAt(beg + 1);
   }
 
-  if (t12 > b12) return ""; // Do not touch ptr
+  if (t01 > b01) return ""; // Do not touch ptr
 
   let str_pos = beg + blen; // To string beginning
 
   const str_end = text.indexOf('<', str_pos); // XML considered correct
-  ptr[0] = str_end + 21; // </str> + \n + 4 spaces + <str name=
+  ptr[0] = str_end + 22; // </str> + \n + 4 spaces + <str name="
 
   return text.slice(str_pos, str_end);
 }
 
-// beg: at " of <arr name="
-function get_stat_raw(text, beg, b1, blen, ptr) {
-  if (text.charCodeAt(beg + 1) !== b1) return '<emp></emp>'; // Do not touch ptr
+// beg: after <arr name="
+function get_stat_raw(text, beg, b, blen, ptr) {
+  if (text.charCodeAt(beg) !== b) return '<emp></emp>'; // Do not touch ptr
 
   let arr_pos = beg + blen; // To array/string beginning
 
-  if (text.charCodeAt(beg - 9) !== 0x61) { // Not 'a', so not <arr
+  // 10: arr name="
+  if (text.charCodeAt(beg - 10) !== 0x61) { // Not 'a', so not <arr
     // Found <str> at arr_pos
     const str_end = text.indexOf('<', arr_pos); // XML considered correct
-    ptr[0] = str_end + 21; // </str> + \n + 4 spaces + <arr name= (<str name=)
+    ptr[0] = str_end + 22; // </str> + \n + 4 spaces + <arr name=" (<str name=")
 
     return text.slice(arr_pos, str_end); // Return raw string
   }
 
-  const arr_end = text.indexOf('</a', arr_pos); // XML considered correct
-  ptr[0] = arr_end + 21; // </arr> + \n + 4 spaces + <arr name= (<str name=)
+  // 25: <str>a</str><str>b</str><
+  // No empty arrays in the XML
+  // No one-string arrays
+  // No empty strings
+  const arr_end = text.indexOf('/a', arr_pos + 25) - 1; // XML considered correct
+  ptr[0] = arr_end + 22; // </arr> + \n + 4 spaces + <arr name=" (<str name=")
 
   return text.slice(arr_pos, arr_end); // Return raw string
 }
 
-// beg: at " of <arr name="
-function get_stat_arr(text, beg, b1, blen, ptr) {
-  if (text.charCodeAt(beg + 1) !== b1) return []; // Do not touch ptr
+// beg: after <arr name="
+function get_stat_arr(text, beg, b, blen, ptr) {
+  if (text.charCodeAt(beg) !== b) return []; // Do not touch ptr
 
   let arr_pos = beg + blen; // To array/string beginning
 
-  if (text.charCodeAt(beg - 9) !== 0x61) { // Not 'a', so not <arr
+  // 10: arr name="
+  if (text.charCodeAt(beg - 10) !== 0x61) { // Not 'a', so not <arr
     // Found <str> at arr_pos
     const str_end = text.indexOf('<', arr_pos); // XML considered correct
-    ptr[0] = str_end + 21; // </str> + \n + 4 spaces + <arr name= (<str name=)
+    ptr[0] = str_end + 22; // </str> + \n + 4 spaces + <arr name=" (<str name=")
 
     return [text.slice(arr_pos, str_end).toLowerCase()];
   }
@@ -364,15 +387,15 @@ function get_stat_arr(text, beg, b1, blen, ptr) {
 
   arr_pos += 5; // After </str><str>
   do { // No empty arrays in the XML
-    const b = arr_pos; // String beginning
+    const str_beg = arr_pos; // String beginning
 
-    arr_pos = text.indexOf('<', b); // XML considered correct, and <str> is found at b
-    arr.push(text.slice(b, arr_pos).toLowerCase());
+    arr_pos = text.indexOf('<', str_beg); // XML considered correct, and <str> is found at b
+    arr.push(text.slice(str_beg, arr_pos).toLowerCase());
     arr_pos += 11; // After </str><str> or at '>' of </arr>
   }
   while (text.charCodeAt(arr_pos) !== 0x3e); // Not '>' of </arr>
 
-  ptr[0] = arr_pos + 16; // > + \n + 4 spaces + <arr name= (<str name=)
+  ptr[0] = arr_pos + 17; // > + \n + 4 spaces + <arr name=" (<str name=")
 
   return arr;
 }
