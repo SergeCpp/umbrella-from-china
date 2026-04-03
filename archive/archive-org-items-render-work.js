@@ -740,6 +740,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   //
   clr_details_for_items ();
   clr_details_div_inners();
+  clr_linkage_for_items ();
   //
   for (let index = 0; index < curr_length; index++) {
     const item = results_curr_exp[index];
@@ -1059,9 +1060,16 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
                      : ih_details               ? ih_details        : iv_details;
 
     add_details_for_items(index, item.rank_details, hv_details, item.mood_details);
+    add_linkage_for_items(index, shown_cnt,
+      is_both && item.rank_change,
+      is_both && item.horz_change,
+     !is_prev && item.vert_change,
+      is_both && item.grow._mood);
   } // for (index) closing
 
   if (shown_cnt !== curr_length) update_diffs(shown_cnt, show_by);
+
+  set_linkage_for_items();
 
   container.onclick   = (event) => results_click  (event);
   container.onkeyup   = (event) => results_keyup  (event);

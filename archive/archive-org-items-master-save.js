@@ -581,7 +581,7 @@ function set_marked_ordinals(marked, details_get, details_set) {
   }
 }
 
-/* Item details */
+/* Item Details */
 
 let details_for_items  = {};
 let details_div_inners = {};
@@ -842,6 +842,76 @@ function item_details(container) {
   }
 
   details_div.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function add_details_linkage(name, index, shown_prev, shown_next) {
+  const stat_type  = name === "rank" ? "rank"
+                   : name === "horz" ? "hv"
+                   : name === "vert" ? "hv"
+                   : name === "mood" ? "mood"
+                   : null;
+  if  (!stat_type) return;
+
+  const details = details_for_items[index];
+  if  (!details) return;
+  if  (!details[stat_type]) return;
+
+  const linkage =                                               // \u2212 is &minus;
+    shown_prev && shown_next ? format_nowrap('#' + shown_prev + " <\u2212> " + '#' + shown_next) :
+    shown_prev               ? format_nowrap('#' + shown_prev + " <\u2212"                     ) :
+                  shown_next ? format_nowrap(                     "\u2212> " + '#' + shown_next) :
+    null;
+
+  if (!linkage) return;
+
+  if ((name === "horz") && details[stat_type].includes('\n')) {
+    const lines        =   details[stat_type].split   ('\n');
+
+    details[stat_type] = lines[0] + '\n' + linkage + '\n' + lines[1];
+    return;
+  }
+
+  details[stat_type] += '\n' + linkage;
+}
+
+/* Item Linkage */
+
+let rank_linkage = [];
+let horz_linkage = [];
+let vert_linkage = [];
+let mood_linkage = [];
+
+function clr_linkage_for_items() {
+    rank_linkage = [];
+    horz_linkage = [];
+    vert_linkage = [];
+    mood_linkage = [];
+}
+
+function add_linkage_for_items(index, shown, rank_change, horz_change, vert_change, mood) {
+  if (rank_change) rank_linkage.push({ index, shown, value: rank_change });
+  if (horz_change) horz_linkage.push({ index, shown, value: horz_change });
+  if (vert_change) vert_linkage.push({ index, shown, value: vert_change });
+  if (mood)        mood_linkage.push({ index, shown, value: mood });
+}
+
+function set_linkage_for_items() {
+  rank_linkage.sort((above, below) => below.value - above.value); // Descending
+  horz_linkage.sort((above, below) => below.value - above.value); // Descending
+  vert_linkage.sort((above, below) => below.value - above.value); // Descending
+  mood_linkage.sort((above, below) => below.value - above.value); // Descending
+
+  for (let i = 0; i < rank_linkage.length; i++)
+    add_details_linkage("rank", rank_linkage[i].index, rank_linkage[i - 1]?.shown, rank_linkage[i + 1]?.shown);
+
+  for (let i = 0; i < horz_linkage.length; i++)
+    add_details_linkage("horz", horz_linkage[i].index, horz_linkage[i - 1]?.shown, horz_linkage[i + 1]?.shown);
+
+  for (let i = 0; i < vert_linkage.length; i++)
+    add_details_linkage("vert", vert_linkage[i].index, vert_linkage[i - 1]?.shown, vert_linkage[i + 1]?.shown);
+
+  for (let i = 0; i < mood_linkage.length; i++)
+    add_details_linkage("mood", mood_linkage[i].index, mood_linkage[i - 1]?.shown, mood_linkage[i + 1]?.shown);
 }
 
 // EOF
