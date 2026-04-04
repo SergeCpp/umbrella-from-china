@@ -821,6 +821,13 @@ function item_details(container) {
   if (!details)  details = stat_type === "rank" ? "No rank change"
                          : stat_type === "mood" ? "No mood"
                                                 : "No details";
+  if (typeof details === "object") {
+    const ih_details = details.horz;
+    const iv_details = details.vert;
+
+    details = ih_details && iv_details ? ih_details + '\n' + iv_details
+            : ih_details               ? ih_details        : iv_details;
+  }
 
   let details_div = wrapper.querySelector(".item-details");
   if (details_div) {
@@ -844,7 +851,37 @@ function item_details(container) {
   details_div.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
-function add_details_linkage(name, index, shown_prev, shown_next) {
+function get_details_ordinal(name, index) {
+  const stat_type  = name === "rank" ? "rank"
+                   : name === "horz" ? "hv"
+                   : name === "vert" ? "hv"
+                   : name === "mood" ? "mood"
+                   : null;
+  if  (!stat_type) return null;
+
+  let  details = details_for_items[index];
+  if (!details) return null;
+  if (!details[stat_type]) return null;
+
+  switch (name) {
+    case "horz":
+    case "vert":
+      if (typeof details[stat_type] !== "object") return null;
+
+      details = details[stat_type][name]; break;
+
+    default:
+      details = details[stat_type]; break;
+  }
+
+  const term = "</span>";
+  if (!details.endsWith(term)) return null;
+
+  const  ordinal = details.slice(details.lastIndexOf(' ') + 1, -term.length);
+  return ordinal;
+}
+
+function add_details_linkage(name, index, prev, next) {
   const stat_type  = name === "rank" ? "rank"
                    : name === "horz" ? "hv"
                    : name === "vert" ? "hv"
@@ -856,22 +893,29 @@ function add_details_linkage(name, index, shown_prev, shown_next) {
   if  (!details) return;
   if  (!details[stat_type]) return;
 
-  const linkage =                                               // \u2212 is &minus;
-    shown_prev && shown_next ? format_nowrap('#' + shown_prev + " <\u2212> " + '#' + shown_next) :
-    shown_prev               ? format_nowrap('#' + shown_prev + " <\u2212"                     ) :
-                  shown_next ? format_nowrap(                     "\u2212> " + '#' + shown_next) :
+  const sh_ord = (shown, ordinal) => shown ? '#' + shown + (ordinal ? " is " + ordinal : "") : null;
+
+  const sh_ord_prev = sh_ord(prev?.shown, prev?.ordinal);
+  const sh_ord_next = sh_ord(next?.shown, next?.ordinal);
+
+  const linkage =                                          // \u2002 is &ensp;
+    sh_ord_prev && sh_ord_next ? format_nowrap(sh_ord_prev + "\u2002<<\u2002Near\u2002>>\u2002" + sh_ord_next) :
+    sh_ord_prev                ? format_nowrap(sh_ord_prev + "\u2002<<\u2002Near"                            ) :
+                   sh_ord_next ? format_nowrap(                            "Near\u2002>>\u2002" + sh_ord_next) :
     null;
 
   if (!linkage) return;
 
-  if ((name === "horz") && details[stat_type].includes('\n')) {
-    const lines        =   details[stat_type].split   ('\n');
+  switch (name) {
+    case "horz":
+    case "vert":
+      if (typeof details[stat_type] !== "object") return;
 
-    details[stat_type] = lines[0] + '\n' + linkage + '\n' + lines[1];
-    return;
+      details[stat_type][name] += '\n' + linkage; return;
+
+    default:
+      details[stat_type]       += '\n' + linkage; return;
   }
-
-  details[stat_type] += '\n' + linkage;
 }
 
 /* Item Linkage */
@@ -889,10 +933,10 @@ function clr_linkage_for_items() {
 }
 
 function add_linkage_for_items(index, shown, rank_change, horz_change, vert_change, mood) {
-  if (rank_change) rank_linkage.push({ index, shown, value: rank_change });
-  if (horz_change) horz_linkage.push({ index, shown, value: horz_change });
-  if (vert_change) vert_linkage.push({ index, shown, value: vert_change });
-  if (mood)        mood_linkage.push({ index, shown, value: mood });
+  if (rank_change) rank_linkage.push({ index, shown, value: rank_change, ordinal: null });
+  if (horz_change) horz_linkage.push({ index, shown, value: horz_change, ordinal: null });
+  if (vert_change) vert_linkage.push({ index, shown, value: vert_change, ordinal: null });
+  if (mood)        mood_linkage.push({ index, shown, value: mood,        ordinal: null });
 }
 
 function set_linkage_for_items() {
@@ -901,17 +945,31 @@ function set_linkage_for_items() {
   vert_linkage.sort((above, below) => below.value - above.value); // Descending
   mood_linkage.sort((above, below) => below.value - above.value); // Descending
 
+  // Get Ordinal
   for (let i = 0; i < rank_linkage.length; i++)
-    add_details_linkage("rank", rank_linkage[i].index, rank_linkage[i - 1]?.shown, rank_linkage[i + 1]?.shown);
+    rank_linkage[i].ordinal = get_details_ordinal("rank", rank_linkage[i].index);
 
   for (let i = 0; i < horz_linkage.length; i++)
-    add_details_linkage("horz", horz_linkage[i].index, horz_linkage[i - 1]?.shown, horz_linkage[i + 1]?.shown);
+    horz_linkage[i].ordinal = get_details_ordinal("horz", horz_linkage[i].index);
 
   for (let i = 0; i < vert_linkage.length; i++)
-    add_details_linkage("vert", vert_linkage[i].index, vert_linkage[i - 1]?.shown, vert_linkage[i + 1]?.shown);
+    vert_linkage[i].ordinal = get_details_ordinal("vert", vert_linkage[i].index);
 
   for (let i = 0; i < mood_linkage.length; i++)
-    add_details_linkage("mood", mood_linkage[i].index, mood_linkage[i - 1]?.shown, mood_linkage[i + 1]?.shown);
+    mood_linkage[i].ordinal = get_details_ordinal("mood", mood_linkage[i].index);
+
+  // Add Linkage
+  for (let i = 0; i < rank_linkage.length; i++)
+    add_details_linkage("rank", rank_linkage[i].index, rank_linkage[i - 1], rank_linkage[i + 1]);
+
+  for (let i = 0; i < horz_linkage.length; i++)
+    add_details_linkage("horz", horz_linkage[i].index, horz_linkage[i - 1], horz_linkage[i + 1]);
+
+  for (let i = 0; i < vert_linkage.length; i++)
+    add_details_linkage("vert", vert_linkage[i].index, vert_linkage[i - 1], vert_linkage[i + 1]);
+
+  for (let i = 0; i < mood_linkage.length; i++)
+    add_details_linkage("mood", mood_linkage[i].index, mood_linkage[i - 1], mood_linkage[i + 1]);
 }
 
 // EOF

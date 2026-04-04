@@ -1056,8 +1056,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     // 8.5. Add details for item
     const ih_details = item.horz_details;
     const iv_details = item.vert_details;
-    const hv_details = ih_details && iv_details ? ih_details + '\n' + iv_details
-                     : ih_details               ? ih_details        : iv_details;
+    const hv_details = ih_details || iv_details ? { horz: ih_details, vert: iv_details } : null;
 
     add_details_for_items(index, item.rank_details, hv_details, item.mood_details);
     add_linkage_for_items(index, shown_cnt,
