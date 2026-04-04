@@ -617,9 +617,19 @@ function find_container(event, handler, title = false) {
   return container;
 }
 
+function find_linkage(event) {
+  const  linkage = event.target;
+  if   (!linkage.className.includes("item-linkage")) return null;
+
+  return linkage;
+}
+
 function results_click(event) {
-  const container = find_container(event, "onclick");
-  if   (container)  item_click(container, event);
+  const container  = find_container(event, "onclick");
+  if   (container) { item_click(container, event); return; }
+
+  const linkage  = find_linkage(event);
+  if   (linkage) { linkage_click(linkage, event); return; }
 }
 
 function results_keyup(event) {
@@ -801,11 +811,11 @@ function item_arrows(container, event) {
   go_cell(wr_cell(wrapper_go));
 }
 
-function item_details(container) {
+function item_details(container, ensure_open = false, jump_to_item = false) {
   const inner   = container.parentElement;
   const wrapper = inner    .parentElement;
 
-  const index = wrapper.item_index;
+  const index   = wrapper  .item_index;
   if   (index === undefined) return;
 
   const stat_class = container.firstElementChild.className;
@@ -831,10 +841,13 @@ function item_details(container) {
 
   let details_div = wrapper.querySelector(".item-details");
   if (details_div) {
-    if (details_div_inners[index] !== details) {
-        details_div.innerHTML       = details;
-        details_div_inners[index]   = details;
-        details_div.classList.remove("collapse");
+    if   (details_div_inners[index] !== details) {
+          details_div.innerHTML       = details;
+          details_div_inners[index]   = details;
+          details_div.classList.remove("collapse");
+    }
+    else if (ensure_open) {
+          details_div.classList.remove("collapse");
     }
     else {
       if (details_div.classList.toggle("collapse")) return; // Collapsed
@@ -847,6 +860,8 @@ function item_details(container) {
     details_div_inners[index] = details;
     inner.after(details_div);
   }
+
+  if (jump_to_item) { container.focus(); return; } // Jumped to item
 
   details_div.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
@@ -893,10 +908,13 @@ function add_details_linkage(name, index, prev, next) {
   if  (!details) return;
   if  (!details[stat_type]) return;
 
-  const sh_ord = (shown, ordinal) => shown ? '#' + shown + (ordinal ? " is " + ordinal : "") : null;
+  const sh_ord = (shown, ordinal, direction) => shown
+    ? '<span class="item-linkage ' + name + '-' + direction + '">#' +
+      shown + (ordinal ? ' is ' + ordinal : "") + '</span>'
+    : null;
 
-  const sh_ord_prev = sh_ord(prev?.shown, prev?.ordinal);
-  const sh_ord_next = sh_ord(next?.shown, next?.ordinal);
+  const sh_ord_prev = sh_ord(prev?.shown, prev?.ordinal, "prev");
+  const sh_ord_next = sh_ord(next?.shown, next?.ordinal, "next");
 
   const linkage =                                          // \u2002 is &ensp;
     sh_ord_prev && sh_ord_next ? format_nowrap(sh_ord_prev + "\u2002<<\u2002Near\u2002>>\u2002" + sh_ord_next) :
@@ -932,11 +950,20 @@ function clr_linkage_for_items() {
     mood_linkage = [];
 }
 
-function add_linkage_for_items(index, shown, rank_change, horz_change, vert_change, mood) {
-  if (rank_change) rank_linkage.push({ index, shown, value: rank_change, ordinal: null });
-  if (horz_change) horz_linkage.push({ index, shown, value: horz_change, ordinal: null });
-  if (vert_change) vert_linkage.push({ index, shown, value: vert_change, ordinal: null });
-  if (mood)        mood_linkage.push({ index, shown, value: mood,        ordinal: null });
+function add_linkage_for_items(index, shown,
+  rank, rank_container, horz, horz_container, vert, vert_container, mood, mood_container) {
+  if (rank)
+    rank_linkage.push({ index, shown, value: rank, container: rank_container,
+      ordinal: null, prev_container: null, next_container: null });
+  if (horz)
+    horz_linkage.push({ index, shown, value: horz, container: horz_container,
+      ordinal: null, prev_container: null, next_container: null });
+  if (vert)
+    vert_linkage.push({ index, shown, value: vert, container: vert_container,
+      ordinal: null, prev_container: null, next_container: null });
+  if (mood)
+    mood_linkage.push({ index, shown, value: mood, container: mood_container,
+      ordinal: null, prev_container: null, next_container: null });
 }
 
 function set_linkage_for_items() {
@@ -945,18 +972,30 @@ function set_linkage_for_items() {
   vert_linkage.sort((above, below) => below.value - above.value); // Descending
   mood_linkage.sort((above, below) => below.value - above.value); // Descending
 
-  // Get Ordinal
-  for (let i = 0; i < rank_linkage.length; i++)
+  // Get Ordinal, Prev and Next Containers
+  for (let i = 0; i < rank_linkage.length; i++) {
     rank_linkage[i].ordinal = get_details_ordinal("rank", rank_linkage[i].index);
+    rank_linkage[i].prev_container = rank_linkage[i - 1]?.container;
+    rank_linkage[i].next_container = rank_linkage[i + 1]?.container;
+  }
 
-  for (let i = 0; i < horz_linkage.length; i++)
+  for (let i = 0; i < horz_linkage.length; i++) {
     horz_linkage[i].ordinal = get_details_ordinal("horz", horz_linkage[i].index);
+    horz_linkage[i].prev_container = horz_linkage[i - 1]?.container;
+    horz_linkage[i].next_container = horz_linkage[i + 1]?.container;
+  }
 
-  for (let i = 0; i < vert_linkage.length; i++)
+  for (let i = 0; i < vert_linkage.length; i++) {
     vert_linkage[i].ordinal = get_details_ordinal("vert", vert_linkage[i].index);
+    vert_linkage[i].prev_container = vert_linkage[i - 1]?.container;
+    vert_linkage[i].next_container = vert_linkage[i + 1]?.container;
+  }
 
-  for (let i = 0; i < mood_linkage.length; i++)
+  for (let i = 0; i < mood_linkage.length; i++) {
     mood_linkage[i].ordinal = get_details_ordinal("mood", mood_linkage[i].index);
+    mood_linkage[i].prev_container = mood_linkage[i - 1]?.container;
+    mood_linkage[i].next_container = mood_linkage[i + 1]?.container;
+  }
 
   // Add Linkage
   for (let i = 0; i < rank_linkage.length; i++)
@@ -970,6 +1009,36 @@ function set_linkage_for_items() {
 
   for (let i = 0; i < mood_linkage.length; i++)
     add_details_linkage("mood", mood_linkage[i].index, mood_linkage[i - 1], mood_linkage[i + 1]);
+}
+
+function linkage_click(linkage, event) {
+  item_linkage(linkage);
+}
+
+function item_linkage(linkage) {
+  const nowrap  = linkage.parentElement;
+  const details = nowrap .parentElement;
+  const wrapper = details.parentElement;
+
+  const index   = wrapper.item_index;
+  if   (index === undefined) return;
+
+  // Class name format: item-linkage nnnn-dddd
+  const name_dir     = linkage.className.slice(-9);
+  let   container_go = null;
+
+  switch (name_dir) {
+    case "rank-prev": container_go = rank_linkage.find(i => i.index === index)?.prev_container; break;
+    case "rank-next": container_go = rank_linkage.find(i => i.index === index)?.next_container; break;
+    case "horz-prev": container_go = horz_linkage.find(i => i.index === index)?.prev_container; break;
+    case "horz-next": container_go = horz_linkage.find(i => i.index === index)?.next_container; break;
+    case "vert-prev": container_go = vert_linkage.find(i => i.index === index)?.prev_container; break;
+    case "vert-next": container_go = vert_linkage.find(i => i.index === index)?.next_container; break;
+    case "mood-prev": container_go = mood_linkage.find(i => i.index === index)?.prev_container; break;
+    case "mood-next": container_go = mood_linkage.find(i => i.index === index)?.next_container; break;
+  }
+
+  item_details(container_go, "ensure-open", "jump-to-item");
 }
 
 // EOF

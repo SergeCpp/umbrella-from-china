@@ -1060,10 +1060,10 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
     add_details_for_items(index, item.rank_details, hv_details, item.mood_details);
     add_linkage_for_items(index, shown_cnt,
-      is_both && item.rank_change,
-      is_both && item.horz_change,
-     !is_prev && item.vert_change,
-      is_both && item.grow._mood);
+      is_both && item.rank_change,  is_both && stat_prev_container,
+      is_both && item.horz_change,  is_both && stat_curr_container,
+     !is_prev && item.vert_change, !is_prev && stat_curr_container,
+      is_both && item.grow._mood,   is_both && stat_grow_container);
   } // for (index) closing
 
   if (shown_cnt !== curr_length) update_diffs(shown_cnt, show_by);

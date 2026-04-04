@@ -679,7 +679,7 @@ input[type="checkbox"].changed.tab-e {
   color: #595959; /* Gray35. Lower Lightness by 6 from 41 */
 }
 
-/* Substantial changes marking */
+/* Substantial Changes Marking */
 
 .item-mark-grow {
   background-color: hsl(0.42turn 75% 92%); /* Perceived lighter than fall:95 */
@@ -721,7 +721,7 @@ input[type="checkbox"].changed.tab-e {
   color: #525252; /* Gray32. Lower Lightness by 3 from 35 */
 }
 
-/* Rank changes marking */
+/* Rank Changes Marking */
 
 .item-mark-up {
   background-color: hsl(0.07turn 75% 95%); /* Perceived lighter than dn:95 */
@@ -763,7 +763,7 @@ input[type="checkbox"].changed.tab-e {
   color: #525252; /* Gray32. Lower Lightness by 3 from 35 */
 }
 
-/* Item marking */
+/* Item Marking */
 
 .item-mark-a {
   background-color: hsl(0.07turn 75% 86%);
@@ -812,10 +812,19 @@ input[type="checkbox"].changed.tab-e {
   color: hsl(0.91turn, 75%, 68%);
 }
 
-/* Item details */
+/* Item Details */
 
 .item-details {
   white-space: pre-line;
+}
+
+/* Item Linkage */
+
+.item-linkage {
+  cursor: pointer;
+}
+.item-linkage:hover { /* The same as for player.css: media-poster hover */
+  color: #696969; /* DimGray, L41: Lower Lightness by 21 from text-comment, Gray62 */
 }
 
 /* EOF */
