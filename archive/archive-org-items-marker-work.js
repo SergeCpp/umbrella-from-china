@@ -657,6 +657,217 @@ function sort_results(results, title_is, show_by, sort_by) {
      : above.identifier.localeCompare(below.identifier)));
 }
 
+/* Stats */
+
+// what: "prev" / "curr"
+function render_stats(results, date, what, title_is, show_by, sort_by, container) {
+  let field = null;
+
+  switch (show_by + sort_by) {
+    case "old-23-7" + "ratio": field = "ratio_old"; break;
+    case "old-23-7" + "views": field = "views_old"; break;
+    case "all-30-7" + "ratio": field = "ratio_all"; break;
+    case "all-30-7" + "views": field = "views_all"; break;
+
+    default: return; // Unknown parameters
+  }
+
+  let format = null;
+
+  switch (sort_by) {
+    case "ratio": format = (value) => value.toFixed(3);     break;
+    case "views": format = (value) => format_number(value); break;
+  }
+
+  sort_results(results, title_is, show_by, sort_by);
+
+  // Show stats: Min, 10%, 25%, 50%, 75%, 90%, Max
+  const stats_text = document.createElement("div");
+  stats_text.className = "text-center";
+  stats_text.style.color = "#696969"; // DimGray, L41
+
+  // Calculate stats from sorted results
+  const max = format(results[0                 ]?.[field] || 0);
+  const min = format(results[results.length - 1]?.[field] || 0);
+
+  // Simple percentile approximations (array is already sorted)
+  const get_percentile = (percent) => {
+    const index = Math.floor((100 - percent) / 100 * results.length);
+    return format(results[index]?.[field] || 0);
+  };
+
+  const percentile10 = get_percentile(10);
+  const quartile1    = get_percentile(25);
+  const median       = get_percentile(50);
+  const quartile3    = get_percentile(75);
+  const percentile90 = get_percentile(90);
+
+  stats_text.innerHTML =
+    format_nowrap(cap_first(what) + '&thinsp;' +
+      '<span ' +
+      'class="span-btn" id="span-btn-' + what + '" role="button" tabindex="0" ' +
+      'onkeydown="if ((event.key === \'Enter\') || (event.key === \' \')) event.preventDefault();" ' +
+      'onkeyup  ="if ((event.key === \'Enter\') || (event.key === \' \')) ' +
+                 'date_change_menu(event, \'' + what + '\');" ' +
+      'onclick  ="date_change_menu(event, \'' + what + '\')" ' +
+      '>' + date + '</span>' + '&thinsp;' + ':') + '&ensp;' +
+    format_nowrap('Min ' + min            + ',') + '&ensp;' +
+    format_nowrap('10% ' + percentile10   + ',') + '&ensp;' +
+    format_nowrap('25% ' + quartile1      + ',') + '&ensp;' +
+    format_nowrap('50% ' + median         + ',') + '&ensp;' +
+    format_nowrap('75% ' + quartile3      + ',') + '&ensp;' +
+    format_nowrap('90% ' + percentile90   + ',') + '&ensp;' +
+    format_nowrap('Max ' + max);
+
+  container.appendChild(stats_text);
+}
+
+/* Diffs */
+
+let diffs_text       = null;
+let diffs_text_inner = null;
+
+function create_diffs_inner(views_favs_prev, views_favs_curr, shown_cnt, show_by) {
+  const show_by_old = (show_by === "old-23-7"); // Else by "all-30-7"
+
+  return "" +
+    format_nowrap    ('Differences for ' +
+      format_num_str (shown_cnt, 'Item') + ' in:') + ' ' +
+    format_nowrap    ('Views: ' +
+      format_num_sign(show_by_old
+                    ? views_favs_curr.views_old - views_favs_prev.views_old  // \u200a is &hairsp;
+                    : views_favs_curr.views_all - views_favs_prev.views_all) + '\u200a/\u200a' +
+      format_num_sign(show_by_old
+                    ? views_favs_curr.views_23  - views_favs_prev.views_23
+                    : views_favs_curr.views_30  - views_favs_prev.views_30 ) + '\u200a/\u200a' +
+      format_num_sign(views_favs_curr.views_7   - views_favs_prev.views_7  ) + ',') + ' ' +
+    format_nowrap    ('Favs: ' +
+      format_num_sign(views_favs_curr.favorites - views_favs_prev.favorites) + '\u200a/\u200a' +
+      format_num_sign(views_favs_curr.favorited - views_favs_prev.favorited));
+}
+
+function render_diffs(results_prev, results_curr, shown_cnt, show_by, container) {
+  diffs_text = document.createElement("div");
+  diffs_text.className  = "text-center text-comment";
+
+  const views_favs_prev = get_views_favs(results_prev);
+  const views_favs_curr = get_views_favs(results_curr);
+
+  diffs_text_inner      = create_diffs_inner(views_favs_prev, views_favs_curr, shown_cnt, show_by);
+  diffs_text.innerHTML  = diffs_text_inner;
+
+  container.appendChild(diffs_text);
+}
+
+function update_diffs(shown_cnt, show_by) {
+  const views_favs    = get_views_favs_shown();
+  const updated_inner = create_diffs_inner(views_favs.prev, views_favs.curr, shown_cnt, show_by);
+
+  if (diffs_text_inner   !== updated_inner) {
+      diffs_text.innerHTML = updated_inner;
+      diffs_text_inner     = updated_inner;
+  }
+}
+
+/* Compose Header */
+
+function compose_header(title_is, title_is_set,
+                         show_by,  show_by_set,
+                         sort_by,  sort_by_set,
+                         mood_by,  mood_by_set,
+  container) {
+
+  const header_wrapper = document.createElement("div");
+  header_wrapper.className = "header-wrapper";
+  const header_inner = document.createElement("div");
+  header_inner.className = "header-inner";
+
+  const header_title_wrapper = document.createElement("div");
+  const add_title_class = (title_is === "title") ? "bg-fall" : "bg-dn";
+  header_title_wrapper.className = "header-title-wrapper" + ' ' + add_title_class;
+  header_title_wrapper.id = "header-title-wrapper";
+  const header_title_inner = document.createElement("div");
+  header_title_inner.className = "header-title-inner subtitle text-ellipsis";
+  header_title_inner.textContent = "Internet Archive Item";
+  header_title_wrapper.appendChild(header_title_inner);
+  //
+  header_title_wrapper.setAttribute("role", "button");
+  header_title_wrapper.tabIndex = 0;
+  //
+  header_title_wrapper.onclick = () => {
+    title_is_set(title_is === "title" ? "identifier" : "title");
+    save_focus("header-title-wrapper");
+    process_filter();
+  };
+
+  const header_stat_prev_wrapper = document.createElement("div");
+  const add_stat_prev_class = (show_by === "old-23-7") ? "bg-grow" : "bg-up";
+  header_stat_prev_wrapper.className = "header-stat-wrapper" + ' ' + add_stat_prev_class;
+  header_stat_prev_wrapper.id = "header-stat-prev-wrapper";
+  const header_stat_prev_inner = document.createElement("div");
+  header_stat_prev_inner.className = "header-stat-inner subtitle";
+  header_stat_prev_inner.textContent = "Prev";
+  header_stat_prev_wrapper.appendChild(header_stat_prev_inner);
+  //
+  header_stat_prev_wrapper.setAttribute("role", "button");
+  header_stat_prev_wrapper.tabIndex = 0;
+  //
+  header_stat_prev_wrapper.onclick = () => {
+    show_by_set(show_by === "old-23-7" ? "all-30-7" : "old-23-7");
+    save_focus("header-stat-prev-wrapper");
+    process_filter();
+  };
+
+  const header_stat_curr_wrapper = document.createElement("div");
+  const add_stat_curr_class = (sort_by === "ratio") ? "bg-fall" : "bg-dn";
+  header_stat_curr_wrapper.className = "header-stat-wrapper" + ' ' + add_stat_curr_class;
+  header_stat_curr_wrapper.id = "header-stat-curr-wrapper";
+  const header_stat_curr_inner = document.createElement("div");
+  header_stat_curr_inner.className = "header-stat-inner subtitle";
+  header_stat_curr_inner.textContent = "Curr";
+  header_stat_curr_wrapper.appendChild(header_stat_curr_inner);
+  //
+  header_stat_curr_wrapper.setAttribute("role", "button");
+  header_stat_curr_wrapper.tabIndex = 0;
+  //
+  header_stat_curr_wrapper.onclick = () => {
+    sort_by_set(sort_by === "ratio" ? "views" : "ratio");
+    save_focus("header-stat-curr-wrapper");
+    process_filter();
+  };
+
+  const header_stat_grow_wrapper = document.createElement("div");
+  const add_stat_grow_class = (mood_by === "same-signs") ? "bg-grow" : "bg-up";
+  header_stat_grow_wrapper.className = "header-grow-wrapper" + ' ' + add_stat_grow_class;
+  header_stat_grow_wrapper.id = "header-stat-grow-wrapper";
+  const header_stat_grow_inner = document.createElement("div");
+  header_stat_grow_inner.className = "header-grow-inner subtitle";
+  header_stat_grow_inner.innerHTML = "&plus;&hairsp;&minus;";
+  header_stat_grow_wrapper.appendChild(header_stat_grow_inner);
+  //
+  header_stat_grow_wrapper.setAttribute("role", "button");
+  header_stat_grow_wrapper.tabIndex = 0;
+  //
+  header_stat_grow_wrapper.onclick = () => {
+    mood_by_set(mood_by === "same-signs" ? "diff-signs" : "same-signs");
+    save_focus("header-stat-grow-wrapper");
+    process_filter();
+  };
+
+  set_chain_keys_line      ([header_title_wrapper,
+                             header_stat_prev_wrapper,
+                             header_stat_curr_wrapper,
+                             header_stat_grow_wrapper], "horz");
+
+  header_inner  .appendChild(header_title_wrapper    );
+  header_inner  .appendChild(header_stat_prev_wrapper);
+  header_inner  .appendChild(header_stat_curr_wrapper);
+  header_inner  .appendChild(header_stat_grow_wrapper);
+  //
+  header_wrapper.appendChild(header_inner  );
+  container     .appendChild(header_wrapper);
+}
+
 // EOF
 
 
