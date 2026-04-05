@@ -595,6 +595,8 @@ function item_arrows(container, event) {
 }
 
 function item_details(container, ensure_open = false, jump_to_item = false) {
+  ensure_linkage_is_ready();
+
   const inner   = container.parentElement;
   const wrapper = inner    .parentElement;
 
@@ -679,7 +681,7 @@ function get_details_ordinal(name, index) {
   return ordinal;
 }
 
-function add_details_linkage(name, index, prev, next) {
+function add_details_linkage(name, index, linkage_arr, linkage_idx) {
   const stat_type  = name === "rank" ? "rank"
                    : name === "horz" ? "hv"
                    : name === "vert" ? "hv"
@@ -695,15 +697,34 @@ function add_details_linkage(name, index, prev, next) {
     ? '<span class="item-linkage ' + name + '-' + direction + '">#' +
       shown + (ordinal ? ' is ' + ordinal : "") + '</span>'
     : null;
+                // \u2002 is &ensp;
+  const to_prev = "\u2002<<\u2002";
+  const to_next = "\u2002>>\u2002";
 
-  const sh_ord_prev = sh_ord(prev?.shown, prev?.ordinal, "prev");
-  const sh_ord_next = sh_ord(next?.shown, next?.ordinal, "next");
-
-  const linkage =                                          // \u2002 is &ensp;
-    sh_ord_prev && sh_ord_next ? format_nowrap(sh_ord_prev + "\u2002<<\u2002Near\u2002>>\u2002" + sh_ord_next) :
-    sh_ord_prev                ? format_nowrap(sh_ord_prev + "\u2002<<\u2002Near"                            ) :
-                   sh_ord_next ? format_nowrap(                            "Near\u2002>>\u2002" + sh_ord_next) :
+  const make_linkage = (type, span_prev, span_next) =>
+    span_prev && span_next ? format_nowrap(span_prev + to_prev + type + to_next + span_next) :
+    span_prev              ? format_nowrap(span_prev + to_prev + type                      ) :
+                 span_next ? format_nowrap(                      type + to_next + span_next) :
     null;
+
+  const prev = linkage_arr[linkage_idx - 1];
+  const next = linkage_arr[linkage_idx + 1];
+
+  const sh_ord_prev  = sh_ord(prev?.shown, prev?.ordinal, "prev");
+  const sh_ord_next  = sh_ord(next?.shown, next?.ordinal, "next");
+
+  const near_linkage = make_linkage("Near", sh_ord_prev, sh_ord_next);
+
+  const pr10 = linkage_arr[linkage_idx - 10];
+  const nx10 = linkage_arr[linkage_idx + 10];
+
+  const sh_ord_pr10  = sh_ord(pr10?.shown, pr10?.ordinal, "pr10");
+  const sh_ord_nx10  = sh_ord(nx10?.shown, nx10?.ordinal, "nx10");
+
+  const dist_linkage = make_linkage("Dist", sh_ord_pr10, sh_ord_nx10);
+
+  const linkage = near_linkage && dist_linkage ? near_linkage + '\n' + dist_linkage
+                : near_linkage                 ? near_linkage        : dist_linkage;
 
   if (!linkage) return;
 
@@ -726,11 +747,15 @@ let horz_linkage = [];
 let vert_linkage = [];
 let mood_linkage = [];
 
+let linkage_is_ready = false;
+
 function clr_linkage_for_items() {
     rank_linkage = [];
     horz_linkage = [];
     vert_linkage = [];
     mood_linkage = [];
+
+    linkage_is_ready = false;
 }
 
 function add_linkage_for_items(index, shown,
@@ -772,16 +797,24 @@ function set_linkage_for_items() {
 
   // Add Linkage
   for (let i = 0; i < rank_linkage.length; i++)
-    add_details_linkage("rank", rank_linkage[i].index, rank_linkage[i - 1], rank_linkage[i + 1]);
+    add_details_linkage("rank", rank_linkage[i].index, rank_linkage, i);
 
   for (let i = 0; i < horz_linkage.length; i++)
-    add_details_linkage("horz", horz_linkage[i].index, horz_linkage[i - 1], horz_linkage[i + 1]);
+    add_details_linkage("horz", horz_linkage[i].index, horz_linkage, i);
 
   for (let i = 0; i < vert_linkage.length; i++)
-    add_details_linkage("vert", vert_linkage[i].index, vert_linkage[i - 1], vert_linkage[i + 1]);
+    add_details_linkage("vert", vert_linkage[i].index, vert_linkage, i);
 
   for (let i = 0; i < mood_linkage.length; i++)
-    add_details_linkage("mood", mood_linkage[i].index, mood_linkage[i - 1], mood_linkage[i + 1]);
+    add_details_linkage("mood", mood_linkage[i].index, mood_linkage, i);
+
+  linkage_is_ready = true;
+}
+
+function ensure_linkage_is_ready() {
+  if (linkage_is_ready) return;
+
+  set_linkage_for_items();
 }
 
 function linkage_click(linkage, event) {
@@ -799,27 +832,26 @@ function item_linkage(linkage) {
   // Class name format: item-linkage nnnn-dddd
   const name_dir = linkage.className.slice(-9);
   const name     = name_dir.slice(0, 4);
-  let   last     = -1;
+  const dir      = name_dir.slice(  -4);
 
-  let index_from = -1;
+  let linkage_arr = null;
   switch (name) {
-    case "rank": index_from = rank_linkage.findIndex(lnk => lnk.index === index); last = rank_linkage.length - 1; break;
-    case "horz": index_from = horz_linkage.findIndex(lnk => lnk.index === index); last = horz_linkage.length - 1; break;
-    case "vert": index_from = vert_linkage.findIndex(lnk => lnk.index === index); last = vert_linkage.length - 1; break;
-    case "mood": index_from = mood_linkage.findIndex(lnk => lnk.index === index); last = mood_linkage.length - 1; break;
+    case "rank": linkage_arr = rank_linkage; break;
+    case "horz": linkage_arr = horz_linkage; break;
+    case "vert": linkage_arr = vert_linkage; break;
+    case "mood": linkage_arr = mood_linkage; break;
   }
-  if (index_from === -1) return;
+  if (!linkage_arr) return;
+
+  const index_from = linkage_arr.findIndex(lnk => lnk.index === index);
+  if   (index_from === -1) return;
 
   let container_go = null;
-  switch (name_dir) {
-    case "rank-prev": if (index_from > 0)    container_go = rank_linkage[index_from - 1].container; break;
-    case "rank-next": if (index_from < last) container_go = rank_linkage[index_from + 1].container; break;
-    case "horz-prev": if (index_from > 0)    container_go = horz_linkage[index_from - 1].container; break;
-    case "horz-next": if (index_from < last) container_go = horz_linkage[index_from + 1].container; break;
-    case "vert-prev": if (index_from > 0)    container_go = vert_linkage[index_from - 1].container; break;
-    case "vert-next": if (index_from < last) container_go = vert_linkage[index_from + 1].container; break;
-    case "mood-prev": if (index_from > 0)    container_go = mood_linkage[index_from - 1].container; break;
-    case "mood-next": if (index_from < last) container_go = mood_linkage[index_from + 1].container; break;
+  switch (dir) {
+    case "prev": container_go = linkage_arr[index_from - 1 ].container; break;
+    case "next": container_go = linkage_arr[index_from + 1 ].container; break;
+    case "pr10": container_go = linkage_arr[index_from - 10].container; break;
+    case "nx10": container_go = linkage_arr[index_from + 10].container; break;
   }
   if (!container_go) return;
 

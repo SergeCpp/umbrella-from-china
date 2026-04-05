@@ -1068,7 +1068,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
   if (shown_cnt !== curr_length) update_diffs(shown_cnt, show_by);
 
-  set_linkage_for_items();
+//set_linkage_for_items(); // Called on first click for details, in item_details()
 
   container.onclick   = (event) => results_click  (event);
   container.onkeyup   = (event) => results_keyup  (event);
