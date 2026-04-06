@@ -822,6 +822,7 @@ input[type="checkbox"].changed.tab-e {
 
 .item-linkage {
   cursor: pointer;
+  outline-offset: 2px; /* For outline to not touch text */
 }
 .item-linkage:hover { /* The same as for player.css: media-poster hover */
   color: #696969; /* DimGray, L41: Lower Lightness by 21 from text-comment, Gray62 */

@@ -568,23 +568,33 @@ function find_linkage(event) {
   return linkage;
 }
 
+// Results Events
+
 function results_click(event) {
   const container  = find_container(event, "onclick");
-  if   (container) { item_click(container, event); return; }
+  if   (container) { item_click(container,  event); return; }
 
-  const linkage  = find_linkage(event);
-  if   (linkage) { linkage_click(linkage, event); return; }
+  const linkage    = find_linkage(event);
+  if   (linkage)   { linkage_click(linkage, event); return; }
 }
 
 function results_keyup(event) {
-  const container = find_container(event, "onkeyup");
-  if   (container)  item_keyup(container, event);
+  const container  = find_container(event, "onkeyup");
+  if   (container) { item_keyup(container,  event); return; }
+
+  const linkage    = find_linkage(event);
+  if   (linkage)   { linkage_keyup(linkage, event); return; }
 }
 
 function results_keydown(event) {
-  const container = find_container(event, "onkeydown", "title");
-  if   (container)  item_keydown(container, event);
+  const container  = find_container(event, "onkeydown", "title");
+  if   (container) { item_keydown(container,  event); return; }
+
+  const linkage    = find_linkage(event);
+  if   (linkage)   { linkage_keydown(linkage, event); return; }
 }
+
+// Item Events
 
 function item_click(container, event) {
   item_details(container);
@@ -755,7 +765,7 @@ function item_arrows(container, event) {
   go_cell(wr_cell(wrapper_go));
 }
 
-function item_details(container, ensure_open = false, jump_to_item = false) {
+function item_details(container, ensure_open = false, jump_to_item = false, linkage_go = null) {
    ensure_details_are_ready();
   ensure_ordinals_are_ready();
   ensure_linkages_are_ready();
@@ -812,6 +822,11 @@ function item_details(container, ensure_open = false, jump_to_item = false) {
   if (jump_to_item) container.focus(); // Jump to item
 
   details_div.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+  if (linkage_go) {
+    const linkage = details_div.querySelector('.' + linkage_go);
+    if   (linkage)  linkage.focus();
+  }
 }
 
 function get_details_ordinal(name, index) {
@@ -857,8 +872,8 @@ function add_details_linkage(name, index, linkage_arr, linkage_idx) {
   if  (!details[stat_type]) return;
 
   const sh_ord = (shown, ordinal, direction) => shown
-    ? '<span class="item-linkage ' + name + '-' + direction + '">#' +
-      shown + (ordinal ? ' is ' + ordinal : "") + '</span>'
+    ? '<span class="item-linkage ' + name + '-' + direction + '" role="button" tabindex="-1">' +
+      '#' + shown + (ordinal ? ' is ' + ordinal : "") + '</span>'
     : null;
                 // \u2002 is &ensp;
   const to_prev = "\u2002<<\u2002";
@@ -980,17 +995,85 @@ function ensure_linkages_are_ready() {
   set_linkage_for_items();
 }
 
+// Linkage Events
+
 function linkage_click(linkage, event) {
   item_linkage(linkage);
 }
 
-function item_linkage(linkage) {
-  const nowrap  = linkage.parentElement;
-  const details = nowrap .parentElement;
-  const wrapper = details.parentElement;
+function linkage_keyup(linkage, event) {
+  const key = event.key;
+  if ((key === 'Enter') || (key === ' ')) {
+    linkage_click(linkage, event);
+  }
+}
 
-  const index   = wrapper.item_index;
-  if   (index === undefined) return;
+function linkage_keydown(linkage, event) {
+  const key = event.key;
+  if ((key === 'Enter') || (key === ' ')) {
+    event.preventDefault();
+    return;
+  }
+
+  linkage_arrows(linkage, event);
+}
+
+function linkage_arrows(linkage, event) {
+  const key      = event.key;
+  const is_left  = key === 'ArrowLeft';
+  const is_right = key === 'ArrowRight';
+  const is_up    = key === 'ArrowUp';
+  const is_down  = key === 'ArrowDown';
+  if  (!is_left && !is_right && !is_up && !is_down) return;
+
+  const nowrap   = linkage.parentElement;
+  const details  = nowrap .parentElement;
+
+  // Class name format: item-linkage nnnn-dddd
+  const name_dir = linkage.className.slice(-9);
+  const name     = name_dir.slice(0, 4);
+  const dir      = name_dir.slice(  -4);
+
+  const prev_go  = details.querySelector('.' + name + '-' + "prev");
+  const next_go  = details.querySelector('.' + name + '-' + "next");
+  const pr10_go  = details.querySelector('.' + name + '-' + "pr10");
+  const nx10_go  = details.querySelector('.' + name + '-' + "nx10");
+
+  let linkage_go = null;
+  switch (dir + key) {
+    case "prev" + 'ArrowLeft' :
+    case "prev" + 'ArrowRight': linkage_go = next_go || nx10_go; break;
+    case "prev" + 'ArrowUp'   :
+    case "prev" + 'ArrowDown' : linkage_go = pr10_go || nx10_go; break;
+
+    case "next" + 'ArrowLeft' :
+    case "next" + 'ArrowRight': linkage_go = prev_go || pr10_go; break;
+    case "next" + 'ArrowUp'   :
+    case "next" + 'ArrowDown' : linkage_go = nx10_go || pr10_go; break;
+
+    case "pr10" + 'ArrowLeft' :
+    case "pr10" + 'ArrowRight': linkage_go = nx10_go || next_go; break;
+    case "pr10" + 'ArrowUp'   :
+    case "pr10" + 'ArrowDown' : linkage_go = prev_go || next_go; break;
+
+    case "nx10" + 'ArrowLeft' :
+    case "nx10" + 'ArrowRight': linkage_go = pr10_go || prev_go; break;
+    case "nx10" + 'ArrowUp'   :
+    case "nx10" + 'ArrowDown' : linkage_go = next_go || prev_go; break;
+  }
+  if (!linkage_go) return;
+
+  event.preventDefault();
+  linkage_go.focus();
+}
+
+function item_linkage(linkage) {
+  const nowrap   = linkage.parentElement;
+  const details  = nowrap .parentElement;
+  const wrapper  = details.parentElement;
+
+  const index    = wrapper.item_index;
+  if   (index  === undefined) return;
 
   // Class name format: item-linkage nnnn-dddd
   const name_dir = linkage.className.slice(-9);
@@ -1018,7 +1101,7 @@ function item_linkage(linkage) {
   }
   if (!container_go) return;
 
-  item_details(container_go, "ensure-open", "jump-to-item");
+  item_details(container_go, "ensure-open", "jump-to-item", name_dir);
 }
 
 // EOF
