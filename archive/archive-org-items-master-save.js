@@ -78,10 +78,12 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
   const mood_sig_max   = 1 / (1 + Math.exp((mood_sig_base - 1) * mood_sig_steep));
   const mood_pos_neg   = [];  // Of curr_length anyway
   //
-  // Gauges
+  // Details
+  //
+  clr_details_raw();
   //
   for (let index_curr = 0; index_curr < curr_length; index_curr++) {
-    const item = results_curr_exp[index_curr];
+    const item      = results_curr_exp[index_curr];
     const item_prev = map_prev[item.identifier];
 
     ///////
@@ -169,13 +171,10 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
         const horz_factor = horz_decay / horz_scale; // More suitable for log(close-to-one) result
         horz_change = horz_impact * horz_factor;
         item.horz_change  = horz_change; // Needed in markable item only, and if not 0 only
-        item.horz_details =
-          format_nowrap("Horizontal impact: " + format_num_sign(horz_impact.toFixed(6)) + ',') + ' ' +
-          format_nowrap("Scale multiplier: "  + format_number  (horz_factor.toFixed(6)) + ',') + ' ' +
-          format_nowrap("Scaled: "            + format_num_sign(horz_change.toFixed(6)));
+        add_details_raw_horz(index_curr, horz_impact, horz_factor, horz_change);
       }
     }
-    horz_curr_prev.push({ item, value:horz_change }); // Needed in array anyway
+    horz_curr_prev.push({ index: index_curr, value: horz_change }); // Needed in array anyway
     //
     // Vert change
     //
@@ -192,13 +191,10 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
         const vert_factor = vert_decay / vert_scale; // More suitable for log(close-to-one) result
         vert_change = vert_impact * vert_factor;
         item.vert_change  = vert_change; // Needed in markable item only, and if not 0 only
-        item.vert_details =
-          format_nowrap("Vertical impact: "  + format_num_sign(vert_impact.toFixed(6)) + ',') + ' ' +
-          format_nowrap("Scale multiplier: " + format_number  (vert_factor.toFixed(6)) + ',') + ' ' +
-          format_nowrap("Scaled: "           + format_num_sign(vert_change.toFixed(6)));
+        add_details_raw_vert(index_curr, vert_impact, vert_factor, vert_change);
       }
     }
-    vert_all_old.push({ item, value:vert_change }); // Needed in array anyway
+    vert_all_old.push({ index: index_curr, value: vert_change }); // Needed in array anyway
 
     //////////////////////////////
     // Rank change, 0 is no change
@@ -212,15 +208,10 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
           rank_sig_base, rank_sig_steep, rank_decay, rank_sig_min, rank_sig_max);
         rank_change       = rank_diff / rank_scale;
         item.rank_change  = rank_change; // Needed in markable item only, and if rank_diff is not 0 only
-        item.rank_details =
-          format_nowrap("Rank change: "   + format_num_sign(rank_diff)              + ','  + ' ' +
-                        "from "           + format_number  (item.index_prev + 1)           + ' ' +
-                        "to "             + format_number  (     index_curr + 1)    + ',') + ' ' +
-          format_nowrap("Scale divisor: " + format_number  (rank_scale .toFixed(6)) + ',') + ' ' +
-          format_nowrap("Scaled: "        + format_num_sign(rank_change.toFixed(6)));
+        add_details_raw_rank(index_curr, rank_diff, item.index_prev + 1, index_curr + 1, rank_scale, rank_change);
       }
     }
-    rank_up_dn.push({ item, value:rank_change }); // Needed in array anyway
+    rank_up_dn.push({ index: index_curr, value: rank_change }); // Needed in array anyway
 
     //////////////////////////////
     // Grow and Mood, 0 is no Mood
@@ -247,10 +238,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
         const mood_scale = get_scale_sig(index_curr, curr_length,
           mood_sig_base, mood_sig_steep, mood_decay, mood_sig_min, mood_sig_max);
         _mood = grow_mood / mood_scale;
-        item.mood_details =
-          format_nowrap("Mood: "          + format_num_sign( grow_mood)             + ',') + ' ' +
-          format_nowrap("Scale divisor: " + format_number  ( mood_scale.toFixed(6)) + ',') + ' ' +
-          format_nowrap("Scaled: "        + format_num_sign(_mood      .toFixed(6)));
+        add_details_raw_mood(index_curr, grow_mood, mood_scale, _mood);
       }
       _grow._mood = _mood; // Needed in markable item only
     }
@@ -260,7 +248,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
       _grow._7   = "   ";
     }
     item.grow = _grow;
-    mood_pos_neg.push({ item, value:_mood }); // Needed in array anyway
+    mood_pos_neg.push({ index: index_curr, value: _mood }); // Needed in array anyway
 
     /////////
     // Gauges
@@ -307,25 +295,11 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
 //const mark_mood_pos  = mood_marks.above.val;
 //const mark_mood_neg  = mood_marks.below.val;
 
-  set_marked_ordinals(
+  set_ordinal_arrays(
     horz_curr_prev,
-    (item)          => item.horz_details,
-    (item, details) => item.horz_details = details);
-
-  set_marked_ordinals(
     vert_all_old,
-    (item)          => item.vert_details,
-    (item, details) => item.vert_details = details);
-
-  set_marked_ordinals(
     rank_up_dn,
-    (item)          => item.rank_details,
-    (item, details) => item.rank_details = details);
-
-  set_marked_ordinals(
-    mood_pos_neg,
-    (item)          => item.mood_details,
-    (item, details) => item.mood_details = details);
+    mood_pos_neg);
 
   return {
     horz_marks,
@@ -335,13 +309,65 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
   };
 }
 
-function set_details_ordinal(item, details_get, details_set, ordinal) {
+/* Ordinals */
+
+let ord_horz_curr_prev = []; // Of curr_length anyway
+let ord_vert_all_old   = []; // Of curr_length anyway
+let ord_rank_up_dn     = []; // Of curr_length anyway
+let ord_mood_pos_neg   = []; // Of curr_length anyway
+
+let ordinals_are_ready = false;
+
+function set_ordinal_arrays(
+  ord_horz,
+  ord_vert,
+  ord_rank,
+  ord_mood) {
+  ord_horz_curr_prev = ord_horz;
+  ord_vert_all_old   = ord_vert;
+  ord_rank_up_dn     = ord_rank;
+  ord_mood_pos_neg   = ord_mood;
+
+  ordinals_are_ready = false;
+}
+
+function set_ordinal_values() {
+  set_marked_ordinals(
+    ord_horz_curr_prev,
+    (index)          => get_details_for_item("horz", index),
+    (index, details) => set_details_for_item("horz", index, details));
+
+  set_marked_ordinals(
+    ord_vert_all_old,
+    (index)          => get_details_for_item("vert", index),
+    (index, details) => set_details_for_item("vert", index, details));
+
+  set_marked_ordinals(
+    ord_rank_up_dn,
+    (index)          => get_details_for_item("rank", index),
+    (index, details) => set_details_for_item("rank", index, details));
+
+  set_marked_ordinals(
+    ord_mood_pos_neg,
+    (index)          => get_details_for_item("mood", index),
+    (index, details) => set_details_for_item("mood", index, details));
+
+  ordinals_are_ready = true;
+}
+
+function ensure_ordinals_are_ready() {
+  if (ordinals_are_ready) return;
+
+  set_ordinal_values();
+}
+
+function set_details_ordinal(index, details_get, details_set, ordinal) {
   const   term = "</span>";
-  let  details = details_get(item);
+  let  details = details_get(index);
   if (!details.endsWith(term)) return;
 
-  details = details.slice(0, -term.length) + ordinal + term;
-  details_set(item, details);
+  details = details.slice(0, -term.length) + ", " + ordinal + term;
+  details_set(index, details);
 }
 
 function set_marked_ordinals(marked, details_get, details_set) {
@@ -351,20 +377,105 @@ function set_marked_ordinals(marked, details_get, details_set) {
     const elem = marked[len - idx]; // From end to beg
     if   (elem.value <= 0) break;
 
-    const ordinal = ", " + format_num_ord(+idx, "sign");
-    set_details_ordinal(elem.item, details_get, details_set, ordinal);
+    const ordinal = format_num_ord(+idx, "sign");
+    set_details_ordinal(elem.index, details_get, details_set, ordinal);
   }
 
   for (let idx = 1; idx <= len; idx++) {
     const elem = marked[idx - 1]; // From beg to end
     if   (elem.value >= 0) break;
 
-    const ordinal = ", " + format_num_ord(-idx, "sign");
-    set_details_ordinal(elem.item, details_get, details_set, ordinal);
+    const ordinal = format_num_ord(-idx, "sign");
+    set_details_ordinal(elem.index, details_get, details_set, ordinal);
   }
 }
 
 /* Item Details */
+
+let details_raw_horz  = {};
+let details_raw_vert  = {};
+let details_raw_rank  = {};
+let details_raw_mood  = {};
+
+let details_are_ready = false;
+
+function clr_details_raw() {
+    details_raw_horz  = {};
+    details_raw_vert  = {};
+    details_raw_rank  = {};
+    details_raw_mood  = {};
+
+    details_are_ready = false;
+}
+
+function add_details_raw_horz(index,     impact, factor, change) {
+             details_raw_horz[index] = { impact, factor, change };
+}
+
+function add_details_raw_vert(index,     impact, factor, change) {
+             details_raw_vert[index] = { impact, factor, change };
+}
+
+function add_details_raw_rank(index,     diff, from, to, divisor, change) {
+             details_raw_rank[index] = { diff, from, to, divisor, change };
+}
+
+function add_details_raw_mood(index,     mood, divisor, scaled) {
+             details_raw_mood[index] = { mood, divisor, scaled };
+}
+
+function set_details_for_items() {
+  const indices = {};
+
+  for (const index in details_raw_horz) indices[index] = null;
+  for (const index in details_raw_vert) indices[index] = null;
+  for (const index in details_raw_rank) indices[index] = null;
+  for (const index in details_raw_mood) indices[index] = null;
+
+  for (const index in indices) {
+    const horz_raw     = details_raw_horz[index];
+    const horz_details = horz_raw
+        ? format_nowrap("Horizontal impact: " + format_num_sign(horz_raw.impact.toFixed(6)) + ',') + ' ' +
+          format_nowrap("Scale multiplier: "  + format_number  (horz_raw.factor.toFixed(6)) + ',') + ' ' +
+          format_nowrap("Scaled: "            + format_num_sign(horz_raw.change.toFixed(6)))
+        : null;
+
+    const vert_raw     = details_raw_vert[index];
+    const vert_details = vert_raw
+        ? format_nowrap("Vertical impact: "   + format_num_sign(vert_raw.impact.toFixed(6)) + ',') + ' ' +
+          format_nowrap("Scale multiplier: "  + format_number  (vert_raw.factor.toFixed(6)) + ',') + ' ' +
+          format_nowrap("Scaled: "            + format_num_sign(vert_raw.change.toFixed(6)))
+        : null;
+
+    const rank_raw     = details_raw_rank[index];
+    const rank_details = rank_raw
+        ? format_nowrap("Rank change: "       + format_num_sign(rank_raw.diff) + ','  + ' ' +
+                        "from "               + format_number  (rank_raw.from) + ' '  +
+                        "to "                 + format_number  (rank_raw.to  ) + ',') + ' ' +
+          format_nowrap("Scale divisor: "     + format_number  (rank_raw.divisor.toFixed(6)) + ',') + ' ' +
+          format_nowrap("Scaled: "            + format_num_sign(rank_raw.change .toFixed(6)))
+        : null;
+
+    const mood_raw     = details_raw_mood[index];
+    const mood_details = mood_raw
+        ? format_nowrap("Mood: "              + format_num_sign(mood_raw.mood)               + ',') + ' ' +
+          format_nowrap("Scale divisor: "     + format_number  (mood_raw.divisor.toFixed(6)) + ',') + ' ' +
+          format_nowrap("Scaled: "            + format_num_sign(mood_raw.scaled .toFixed(6)))
+        : null;
+
+    const hv_details = horz_details || vert_details ? { horz: horz_details, vert: vert_details } : null;
+
+    add_details_for_item(index, rank_details, hv_details, mood_details);
+  }
+
+  details_are_ready = true;
+}
+
+function ensure_details_are_ready() {
+  if (details_are_ready) return;
+
+  set_details_for_items();
+}
 
 let details_for_items  = {};
 let details_div_inners = {};
@@ -372,7 +483,7 @@ let details_div_inners = {};
 function clr_details_for_items () { details_for_items  = {}; }
 function clr_details_div_inners() { details_div_inners = {}; }
 
-function add_details_for_items(index, rank_details, hv_details, mood_details) {
+function add_details_for_item(index, rank_details, hv_details, mood_details) {
   if (!rank_details && !hv_details && !mood_details) return;
 
   const details = {};
@@ -382,6 +493,56 @@ function add_details_for_items(index, rank_details, hv_details, mood_details) {
   if (mood_details) details.mood = mood_details;
 
   details_for_items[index] = details;
+}
+
+function get_details_for_item(name, index) {
+  const stat_type  = name === "rank" ? "rank"
+                   : name === "horz" ? "hv"
+                   : name === "vert" ? "hv"
+                   : name === "mood" ? "mood"
+                   : null;
+  if  (!stat_type) return null;
+
+  let  details = details_for_items[index];
+  if (!details) return null;
+  if (!details[stat_type]) return null;
+
+  switch (name) {
+    case "horz":
+    case "vert":
+      if (typeof details[stat_type] !== "object") return null;
+
+      details = details[stat_type][name]; break;
+
+    default:
+      details = details[stat_type]; break;
+  }
+
+  return details;
+}
+
+function set_details_for_item(name, index, value) {
+  const stat_type  = name === "rank" ? "rank"
+                   : name === "horz" ? "hv"
+                   : name === "vert" ? "hv"
+                   : name === "mood" ? "mood"
+                   : null;
+  if  (!stat_type) return;
+
+  const details = details_for_items[index];
+  if  (!details) return;
+  if  (!details[stat_type]) return;
+
+  switch (name) {
+    case "horz":
+    case "vert":
+      if (typeof details[stat_type] !== "object") return;
+
+      details[stat_type][name] = value; return;
+
+    default:
+      details[stat_type]       = value; return;
+  }
 }
 
 function find_container(event, handler, title = false) {
@@ -595,7 +756,9 @@ function item_arrows(container, event) {
 }
 
 function item_details(container, ensure_open = false, jump_to_item = false) {
-  ensure_linkage_is_ready();
+   ensure_details_are_ready();
+  ensure_ordinals_are_ready();
+  ensure_linkages_are_ready();
 
   const inner   = container.parentElement;
   const wrapper = inner    .parentElement;
@@ -742,20 +905,20 @@ function add_details_linkage(name, index, linkage_arr, linkage_idx) {
 
 /* Item Linkage */
 
-let rank_linkage = [];
-let horz_linkage = [];
-let vert_linkage = [];
-let mood_linkage = [];
+let rank_linkage       = [];
+let horz_linkage       = [];
+let vert_linkage       = [];
+let mood_linkage       = [];
 
-let linkage_is_ready = false;
+let linkages_are_ready = false;
 
 function clr_linkage_for_items() {
-    rank_linkage = [];
-    horz_linkage = [];
-    vert_linkage = [];
-    mood_linkage = [];
+    rank_linkage       = [];
+    horz_linkage       = [];
+    vert_linkage       = [];
+    mood_linkage       = [];
 
-    linkage_is_ready = false;
+    linkages_are_ready = false;
 }
 
 function add_linkage_for_items(index, shown,
@@ -808,11 +971,11 @@ function set_linkage_for_items() {
   for (let i = 0; i < mood_linkage.length; i++)
     add_details_linkage("mood", mood_linkage[i].index, mood_linkage, i);
 
-  linkage_is_ready = true;
+  linkages_are_ready = true;
 }
 
-function ensure_linkage_is_ready() {
-  if (linkage_is_ready) return;
+function ensure_linkages_are_ready() {
+  if (linkages_are_ready) return;
 
   set_linkage_for_items();
 }

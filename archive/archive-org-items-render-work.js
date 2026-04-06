@@ -103,10 +103,6 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       horz_change  : 0,
       vert_change  : 0,
       rank_change  : 0,
-//    horz_details // These four created in compose_items() for some items
-//    vert_details
-//    rank_details
-//    mood_details
       grow         : null,
       gauges       : null,
       marks        : null,
@@ -137,10 +133,6 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
         horz_change  : 0,
         vert_change  : 0,
         rank_change  : 0,
-//      horz_details // These four created in compose_items() for some items
-//      vert_details
-//      rank_details
-//      mood_details
         grow         : null,
         gauges       : null,
         marks        : null,
@@ -1053,12 +1045,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
         is_prev ? null : item);
     }
 
-    // 8.5. Add details for item
-    const ih_details = item.horz_details;
-    const iv_details = item.vert_details;
-    const hv_details = ih_details || iv_details ? { horz: ih_details, vert: iv_details } : null;
-
-    add_details_for_items(index, item.rank_details, hv_details, item.mood_details);
+    // 8.5. Add linkage for item
     add_linkage_for_items(index, shown_cnt,
       is_both && item.rank_change,  is_both && stat_prev_container,
       is_both && item.horz_change,  is_both && stat_curr_container,
@@ -1067,8 +1054,6 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   } // for (index) closing
 
   if (shown_cnt !== curr_length) update_diffs(shown_cnt, show_by);
-
-//set_linkage_for_items(); // Called on first click for details, in item_details()
 
   container.onclick   = (event) => results_click  (event);
   container.onkeyup   = (event) => results_keyup  (event);
