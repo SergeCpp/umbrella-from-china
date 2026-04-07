@@ -332,25 +332,10 @@ function set_ordinal_arrays(
 }
 
 function set_ordinal_values() {
-  set_marked_ordinals(
-    ord_horz_curr_prev,
-    (index)          => get_details_for_item("horz", index),
-    (index, details) => set_details_for_item("horz", index, details));
-
-  set_marked_ordinals(
-    ord_vert_all_old,
-    (index)          => get_details_for_item("vert", index),
-    (index, details) => set_details_for_item("vert", index, details));
-
-  set_marked_ordinals(
-    ord_rank_up_dn,
-    (index)          => get_details_for_item("rank", index),
-    (index, details) => set_details_for_item("rank", index, details));
-
-  set_marked_ordinals(
-    ord_mood_pos_neg,
-    (index)          => get_details_for_item("mood", index),
-    (index, details) => set_details_for_item("mood", index, details));
+  set_marked_ordinals("horz", ord_horz_curr_prev);
+  set_marked_ordinals("vert", ord_vert_all_old  );
+  set_marked_ordinals("rank", ord_rank_up_dn    );
+  set_marked_ordinals("mood", ord_mood_pos_neg  );
 
   ordinals_are_ready = true;
 }
@@ -361,16 +346,16 @@ function ensure_ordinals_are_ready() {
   set_ordinal_values();
 }
 
-function set_details_ordinal(index, details_get, details_set, ordinal) {
+function set_details_ordinal(name, index, ordinal) {
   const   term = "</span>";
-  let  details = details_get(index);
+  let  details = get_details_for_item(name, index);
   if (!details.endsWith(term)) return;
 
   details = details.slice(0, -term.length) + ", " + ordinal + term;
-  details_set(index, details);
+  set_details_for_item(name, index, details);
 }
 
-function set_marked_ordinals(marked, details_get, details_set) {
+function set_marked_ordinals(name, marked) {
   const len = marked.length;
 
   for (let idx = 1; idx <= len; idx++) {
@@ -378,7 +363,7 @@ function set_marked_ordinals(marked, details_get, details_set) {
     if   (elem.value <= 0) break;
 
     const ordinal = format_num_ord(+idx, "sign");
-    set_details_ordinal(elem.index, details_get, details_set, ordinal);
+    set_details_ordinal(name, elem.index, ordinal);
   }
 
   for (let idx = 1; idx <= len; idx++) {
@@ -386,7 +371,7 @@ function set_marked_ordinals(marked, details_get, details_set) {
     if   (elem.value >= 0) break;
 
     const ordinal = format_num_ord(-idx, "sign");
-    set_details_ordinal(elem.index, details_get, details_set, ordinal);
+    set_details_ordinal(name, elem.index, ordinal);
   }
 }
 
@@ -435,16 +420,16 @@ function set_details_for_items() {
   for (const index in indices) {
     const horz_raw     = details_raw_horz[index];
     const horz_details = horz_raw
-        ? format_nowrap("Horizontal impact: " + format_num_sign(horz_raw.impact.toFixed(6)) + ',') + ' ' +
-          format_nowrap("Scale multiplier: "  + format_number  (horz_raw.factor.toFixed(6)) + ',') + ' ' +
-          format_nowrap("Scaled: "            + format_num_sign(horz_raw.change.toFixed(6)))
+        ? format_nowrap("Horizontal impact: " + format_num_sign(horz_raw.impact .toFixed(6)) + ',') + ' ' +
+          format_nowrap("Scale multiplier: "  + format_number  (horz_raw.factor .toFixed(6)) + ',') + ' ' +
+          format_nowrap("Scaled: "            + format_num_sign(horz_raw.change .toFixed(6)))
         : null;
 
     const vert_raw     = details_raw_vert[index];
     const vert_details = vert_raw
-        ? format_nowrap("Vertical impact: "   + format_num_sign(vert_raw.impact.toFixed(6)) + ',') + ' ' +
-          format_nowrap("Scale multiplier: "  + format_number  (vert_raw.factor.toFixed(6)) + ',') + ' ' +
-          format_nowrap("Scaled: "            + format_num_sign(vert_raw.change.toFixed(6)))
+        ? format_nowrap("Vertical impact: "   + format_num_sign(vert_raw.impact .toFixed(6)) + ',') + ' ' +
+          format_nowrap("Scale multiplier: "  + format_number  (vert_raw.factor .toFixed(6)) + ',') + ' ' +
+          format_nowrap("Scaled: "            + format_num_sign(vert_raw.change .toFixed(6)))
         : null;
 
     const rank_raw     = details_raw_rank[index];
@@ -748,6 +733,18 @@ function item_arrows(container, event) {
   else if (event.ctrlKey) { // To beg/end
     wrapper_go = fw_term();
   }
+  else if (event.shiftKey) { // Details-related
+    event.preventDefault();
+
+    if (is_down) { // Open details and go to first linkage
+      item_details(container, "ensure-open", false,
+        (ix_cell === 1 ? "rank" :
+         ix_cell === 2 ? "horz" :
+         ix_cell === 3 ? "mood" : "") + "-prev");
+    }
+
+    return;
+  }
   else { // To prev/next not empty or to end/beg if not found (circulate)
     let wr_go = wrapper;
 
@@ -823,10 +820,36 @@ function item_details(container, ensure_open = false, jump_to_item = false, link
 
   details_div.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
-  if (linkage_go) {
-    const linkage = details_div.querySelector('.' + linkage_go);
-    if   (linkage)  linkage.focus();
+  if (!linkage_go) return;
+
+  // No scroll below, not interfere with scroll above
+
+  const link_dir = linkage_go.slice(-4);
+
+  const linkage  = details_div.querySelector('.' + linkage_go);
+  if   (linkage) { linkage.focus({ preventScroll: true }); return; }
+
+  let linkage2_go = null;
+  switch (link_dir) {
+    case "prev": linkage2_go = linkage_go.slice(0, -4) + "next"; break
+    case "next": linkage2_go = linkage_go.slice(0, -4) + "prev"; break
+    case "pr10": linkage2_go = linkage_go.slice(0, -4) + "prev"; break
+    case "nx10": linkage2_go = linkage_go.slice(0, -4) + "next"; break
   }
+  if (!linkage2_go) return;
+
+  const linkage2  = details_div.querySelector('.' + linkage2_go);
+  if   (linkage2) { linkage2.focus({ preventScroll: true }); return; }
+
+  let linkage3_go = null;
+  switch (link_dir) {
+    case "pr10": linkage3_go = linkage_go.slice(0, -4) + "nx10"; break
+    case "nx10": linkage3_go = linkage_go.slice(0, -4) + "pr10"; break
+  }
+  if (!linkage3_go) return;
+
+  const linkage3  = details_div.querySelector('.' + linkage3_go);
+  if   (linkage3) { linkage3.focus({ preventScroll: true }); return; }
 }
 
 function get_details_ordinal(name, index) {
@@ -1028,43 +1051,144 @@ function linkage_arrows(linkage, event) {
 
   const nowrap   = linkage.parentElement;
   const details  = nowrap .parentElement;
+  const wrapper  = details.parentElement;
 
   // Class name format: item-linkage nnnn-dddd
   const name_dir = linkage.className.slice(-9);
   const name     = name_dir.slice(0, 4);
   const dir      = name_dir.slice(  -4);
 
-  const prev_go  = details.querySelector('.' + name + '-' + "prev");
-  const next_go  = details.querySelector('.' + name + '-' + "next");
-  const pr10_go  = details.querySelector('.' + name + '-' + "pr10");
-  const nx10_go  = details.querySelector('.' + name + '-' + "nx10");
+  if (event.shiftKey) {
+    event.preventDefault();
+
+    if (is_up) {
+      const index   = wrapper.item_index;
+      if   (index === undefined) return;
+
+      let linkage_arr = null;
+      switch (name) {
+        case "rank": linkage_arr = rank_linkage; break;
+        case "horz": linkage_arr = horz_linkage; break;
+        case "vert": linkage_arr = vert_linkage; break;
+        case "mood": linkage_arr = mood_linkage; break;
+      }
+      if (!linkage_arr) return;
+
+      const index_from = linkage_arr.findIndex(lnk => lnk.index === index);
+      if   (index_from === -1) return;
+
+      const container_go = linkage_arr[index_from].container;
+      if  (!container_go) return;
+
+      container_go.focus();
+    }
+
+    return;
+  }
 
   let linkage_go = null;
-  switch (dir + key) {
-    case "prev" + 'ArrowLeft' :
-    case "prev" + 'ArrowRight': linkage_go = next_go || nx10_go; break;
-    case "prev" + 'ArrowUp'   :
-    case "prev" + 'ArrowDown' : linkage_go = pr10_go || nx10_go; break;
-
-    case "next" + 'ArrowLeft' :
-    case "next" + 'ArrowRight': linkage_go = prev_go || pr10_go; break;
-    case "next" + 'ArrowUp'   :
-    case "next" + 'ArrowDown' : linkage_go = nx10_go || pr10_go; break;
-
-    case "pr10" + 'ArrowLeft' :
-    case "pr10" + 'ArrowRight': linkage_go = nx10_go || next_go; break;
-    case "pr10" + 'ArrowUp'   :
-    case "pr10" + 'ArrowDown' : linkage_go = prev_go || next_go; break;
-
-    case "nx10" + 'ArrowLeft' :
-    case "nx10" + 'ArrowRight': linkage_go = pr10_go || prev_go; break;
-    case "nx10" + 'ArrowUp'   :
-    case "nx10" + 'ArrowDown' : linkage_go = next_go || prev_go; break;
+  switch (name) {
+    case "rank": linkage_go = linkage_go_4(name, dir, key, details); break;
+    case "horz": linkage_go = linkage_go_8(name, dir, key, details); break;
+    case "vert": linkage_go = linkage_go_8(name, dir, key, details); break;
+    case "mood": linkage_go = linkage_go_4(name, dir, key, details); break;
   }
   if (!linkage_go) return;
 
   event.preventDefault();
   linkage_go.focus();
+}
+
+function linkage_go_4(name, dir, key, details) {
+  const prev_go = details.querySelector('.' + name + '-' + "prev");
+  const next_go = details.querySelector('.' + name + '-' + "next");
+  const pr10_go = details.querySelector('.' + name + '-' + "pr10");
+  const nx10_go = details.querySelector('.' + name + '-' + "nx10");
+
+  switch (dir   +  key) {
+    case "prev" + 'ArrowLeft' :
+    case "prev" + 'ArrowRight': return next_go || nx10_go;
+    case "prev" + 'ArrowUp'   :
+    case "prev" + 'ArrowDown' : return pr10_go || nx10_go;
+
+    case "next" + 'ArrowLeft' :
+    case "next" + 'ArrowRight': return prev_go || pr10_go;
+    case "next" + 'ArrowUp'   :
+    case "next" + 'ArrowDown' : return nx10_go || pr10_go;
+
+    case "pr10" + 'ArrowLeft' :
+    case "pr10" + 'ArrowRight': return nx10_go || next_go;
+    case "pr10" + 'ArrowUp'   :
+    case "pr10" + 'ArrowDown' : return prev_go || next_go;
+
+    case "nx10" + 'ArrowLeft' :
+    case "nx10" + 'ArrowRight': return pr10_go || prev_go;
+    case "nx10" + 'ArrowUp'   :
+    case "nx10" + 'ArrowDown' : return next_go || prev_go;
+  }
+
+  return null;
+}
+
+function linkage_go_8(name, dir, key, details) {
+  switch (key) {
+    case 'ArrowLeft' :
+    case 'ArrowRight': return linkage_go_4(name, dir, key, details);
+  }
+
+  const horz_prev_go = details.querySelector(".horz-prev");
+  const horz_next_go = details.querySelector(".horz-next");
+  const horz_pr10_go = details.querySelector(".horz-pr10");
+  const horz_nx10_go = details.querySelector(".horz-nx10");
+
+  const vert_prev_go = details.querySelector(".vert-prev");
+  const vert_next_go = details.querySelector(".vert-next");
+  const vert_pr10_go = details.querySelector(".vert-pr10");
+  const vert_nx10_go = details.querySelector(".vert-nx10");
+
+  switch (name  +  dir   +  key) {
+    case "horz" + "prev" + 'ArrowUp'   : return vert_pr10_go || vert_prev_go || horz_pr10_go ||
+                                                vert_nx10_go || vert_next_go || horz_nx10_go;
+    case "horz" + "prev" + 'ArrowDown' : return horz_pr10_go || vert_prev_go || vert_pr10_go ||
+                                                horz_nx10_go || vert_next_go || vert_nx10_go;
+
+    case "horz" + "next" + 'ArrowUp'   : return vert_nx10_go || vert_next_go || horz_nx10_go ||
+                                                vert_pr10_go || vert_prev_go || horz_pr10_go;
+    case "horz" + "next" + 'ArrowDown' : return horz_nx10_go || vert_next_go || vert_nx10_go ||
+                                                horz_pr10_go || vert_prev_go || vert_pr10_go;
+
+    case "horz" + "pr10" + 'ArrowUp'   : return horz_prev_go || vert_pr10_go || vert_prev_go ||
+                                                horz_next_go || vert_nx10_go || vert_next_go;
+    case "horz" + "pr10" + 'ArrowDown' : return vert_prev_go || vert_pr10_go || horz_prev_go ||
+                                                vert_next_go || vert_nx10_go || horz_next_go;
+
+    case "horz" + "nx10" + 'ArrowUp'   : return horz_next_go || vert_nx10_go || vert_next_go ||
+                                                horz_prev_go || vert_pr10_go || vert_prev_go;
+    case "horz" + "nx10" + 'ArrowDown' : return vert_next_go || vert_nx10_go || horz_next_go ||
+                                                vert_prev_go || vert_pr10_go || horz_prev_go;
+
+    case "vert" + "prev" + 'ArrowUp'   : return horz_pr10_go || horz_prev_go || vert_pr10_go ||
+                                                horz_nx10_go || horz_next_go || vert_nx10_go;
+    case "vert" + "prev" + 'ArrowDown' : return vert_pr10_go || horz_prev_go || horz_pr10_go ||
+                                                vert_nx10_go || horz_next_go || horz_nx10_go;
+
+    case "vert" + "next" + 'ArrowUp'   : return horz_nx10_go || horz_next_go || vert_nx10_go ||
+                                                horz_pr10_go || horz_prev_go || vert_pr10_go;
+    case "vert" + "next" + 'ArrowDown' : return vert_nx10_go || horz_next_go || horz_nx10_go ||
+                                                vert_pr10_go || horz_prev_go || horz_pr10_go;
+
+    case "vert" + "pr10" + 'ArrowUp'   : return vert_prev_go || horz_pr10_go || horz_prev_go ||
+                                                vert_next_go || horz_nx10_go || horz_next_go;
+    case "vert" + "pr10" + 'ArrowDown' : return horz_prev_go || horz_pr10_go || vert_prev_go ||
+                                                horz_next_go || horz_nx10_go || vert_next_go;
+
+    case "vert" + "nx10" + 'ArrowUp'   : return vert_next_go || horz_nx10_go || horz_next_go ||
+                                                vert_prev_go || horz_pr10_go || horz_prev_go;
+    case "vert" + "nx10" + 'ArrowDown' : return horz_next_go || horz_nx10_go || vert_next_go ||
+                                                horz_prev_go || horz_pr10_go || vert_prev_go;
+  }
+
+  return null;
 }
 
 function item_linkage(linkage) {
