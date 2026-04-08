@@ -27,10 +27,12 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
   const base_ratio     = (max_ratio     <= 0) ? 0 : 100 / Math.log(max_ratio     + 1);
   const base_favorites = (max_favorites <= 0) ? 0 : 100 / Math.log(max_favorites + 1);
   //
-  function get_percentage(value, max, base) {
-    return (value <=   0) ?   '0%' :
-           (value >= max) ? '100%' : (Math.log(value + 1) * base).toFixed(3) + '%';
-  }
+//function get_percentage(value, max, base) {
+//  return (value <=   0) ?   '0%' :
+//         (value >= max) ? '100%' : (Math.log(value + 1) * base).toFixed(3) + '%';
+//}
+  //
+  init_gauges(max_ratio, base_ratio, max_favorites, base_favorites);
 
   ///////////////////////////////
   // Compose prev, curr, and grow
@@ -253,23 +255,32 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
     /////////
     // Gauges
     //
-    const _gauges = {};
-    let   _gauges_set = false;
+//  const _gauges = {};
+//  let   _gauges_set = false;
     if (!item.no_prev) {
-      _gauges.below_a_w = get_percentage(item_prev.favorites, max_favorites, base_favorites);
-      _gauges_set = true;
+//    _gauges.below_a_w = get_percentage(item_prev.favorites, max_favorites, base_favorites);
+//    _gauges_set = true;
+
+      add_gauge_below_a(index_curr, item_prev.favorites);
     }
     if (!item.is_prev) {
-      _gauges.below_b_w = get_percentage(item.favorites, max_favorites, base_favorites);
+//    _gauges.below_b_w = get_percentage(item.favorites, max_favorites, base_favorites);
+//
+//    _gauges.above_a_w = get_percentage(item.ratio_old, max_ratio, base_ratio);
+//    _gauges.above_b_w = get_percentage(item.ratio_all, max_ratio, base_ratio);
+//    _gauges_set = true;
 
-      _gauges.above_a_w = get_percentage(item.ratio_old, max_ratio, base_ratio);
-      _gauges.above_b_w = get_percentage(item.ratio_all, max_ratio, base_ratio);
-      _gauges_set = true;
+      add_gauge_below_b(index_curr, item.favorites);
+
+      add_gauge_above_a(index_curr, item.ratio_old);
+      add_gauge_above_b(index_curr, item.ratio_all);
     }
-    if (_gauges_set) {
-      item.gauges = _gauges;
-    }
-  }
+//  if (_gauges_set) {
+//    item.gauges = _gauges;
+//  }
+  } // for (index_curr) closing
+  //
+  defer_gauges_setting();
 
   // 1:0, 3:0, 4:1, 10:1, 20:2, 30:3, 50:4, 75:5, 100:6, 125:7, 150:8, 200:10, 300:12, 500:16, 800:21, 826:21
   const horz_marks_cnt = Math.floor(Math.pow(horz_curr_prev .length, 0.551) / 1.841);
@@ -307,6 +318,106 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
     rank_marks,
     mood_marks
   };
+}
+
+/* Gauges */
+
+let gauges_max_ratio      = 0;
+let gauges_base_ratio     = 0;
+let gauges_max_favorites  = 0;
+let gauges_base_favorites = 0;
+
+let gauges_raw_above_a    = {};
+let gauges_raw_above_b    = {};
+let gauges_raw_below_a    = {};
+let gauges_raw_below_b    = {};
+
+let gauges_defer_time     = 0;
+
+function init_gauges(max_ratio, base_ratio, max_favorites, base_favorites) {
+    gauges_max_ratio      = max_ratio;
+    gauges_base_ratio     = base_ratio;
+    gauges_max_favorites  = max_favorites;
+    gauges_base_favorites = base_favorites;
+
+    gauges_raw_above_a    = {};
+    gauges_raw_above_b    = {};
+    gauges_raw_below_a    = {};
+    gauges_raw_below_b    = {};
+
+    gauges_defer_time     = 0;
+}
+
+function add_gauge_above_a(index,   ratio) {
+        gauges_raw_above_a[index] = ratio;
+}
+
+function add_gauge_above_b(index,   ratio) {
+        gauges_raw_above_b[index] = ratio;
+}
+
+function add_gauge_below_a(index,   favorites) {
+        gauges_raw_below_a[index] = favorites;
+}
+
+function add_gauge_below_b(index,  favorites) {
+        gauges_raw_below_b[index] = favorites;
+}
+
+function defer_gauges_setting() {
+  gauges_defer_time = performance.now();
+  setTimeout(set_gauges, 2000, gauges_defer_time);
+}
+
+function set_gauges(defer_time) {
+  if (defer_time !== gauges_defer_time) return;
+
+  const container = document.getElementById("results");
+  let   wrapper   = container.querySelector(".item-wrapper");
+  if  (!wrapper)  { defer_gauges_setting(); return; } // No items yet
+
+  const get_percentage = (value, max, base) =>
+    (value <=   0) ?   '0%' :
+    (value >= max) ? '100%' : (Math.log(value + 1) * base).toFixed(3) + '%';
+
+  do {
+    const index = wrapper.item_index;
+    if   (index === undefined) break;
+
+    const inner = wrapper.firstElementChild;
+    const title = inner  .firstElementChild;
+
+    const ga_a  = title.firstElementChild;
+    const ga_a_ratio = gauges_raw_above_a[index];
+    if   (ga_a_ratio !== undefined) {
+      const width = get_percentage(ga_a_ratio, gauges_max_ratio, gauges_base_ratio);
+      if   (width !== '0%') ga_a.style.width = width;
+    }
+
+    const ga_b = ga_a.nextElementSibling;
+    const ga_b_ratio = gauges_raw_above_b[index];
+    if   (ga_b_ratio !== undefined) {
+      const width = get_percentage(ga_b_ratio, gauges_max_ratio, gauges_base_ratio);
+      if   (width !== '0%') ga_b.style.width = width;
+    }
+
+    const gb_a = ga_b.nextElementSibling.nextElementSibling;
+    const gb_a_favorites = gauges_raw_below_a[index];
+    if   (gb_a_favorites !== undefined) {
+      const width = get_percentage(gb_a_favorites, gauges_max_favorites, gauges_base_favorites);
+      if   (width !== '0%') gb_a.style.width = width;
+    }
+
+    const gb_b = gb_a.nextElementSibling;
+    const gb_b_favorites = gauges_raw_below_b[index];
+    if   (gb_b_favorites !== undefined) {
+      const width = get_percentage(gb_b_favorites, gauges_max_favorites, gauges_base_favorites);
+      if   (width !== '0%') gb_b.style.width = width;
+    }
+
+    wrapper = wrapper.nextElementSibling;
+  }
+  while (wrapper);
 }
 
 /* Ordinals */

@@ -104,7 +104,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       vert_change  : 0,
       rank_change  : 0,
       grow         : null,
-      gauges       : null,
+//    gauges       : null,
       marks        : null,
       is_rank_up   : null,
       is_rank_dn   : null,
@@ -134,7 +134,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
         vert_change  : 0,
         rank_change  : 0,
         grow         : null,
-        gauges       : null,
+//      gauges       : null,
         marks        : null,
         is_rank_up   : null,
         is_rank_dn   : null,
@@ -838,10 +838,10 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     item_gauge_above_b.className = "item-gauge-above-b";
 
     // Display ratios old and all for curr on the above gauges
-    if (!is_prev) {
-      item_gauge_above_a.style.width = item.gauges.above_a_w;
-      item_gauge_above_b.style.width = item.gauges.above_b_w;
-    }
+//  if (!is_prev) {
+//    item_gauge_above_a.style.width = item.gauges.above_a_w;
+//    item_gauge_above_b.style.width = item.gauges.above_b_w;
+//  }
 
     // Link button
     const item_title = document.createElement("div");
@@ -865,13 +865,13 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     item_gauge_below_b.className = "item-gauge-below-b";
 
     // Display favorites prev and curr counts on the below gauges
-    if (!no_prev) {
-      item_gauge_below_a.style.width = item.gauges.below_a_w;
-    }
-
-    if (!is_prev) {
-      item_gauge_below_b.style.width = item.gauges.below_b_w;
-    }
+//  if (!no_prev) {
+//    item_gauge_below_a.style.width = item.gauges.below_a_w;
+//  }
+//
+//  if (!is_prev) {
+//    item_gauge_below_b.style.width = item.gauges.below_b_w;
+//  }
 
     // 3. Title: assemble the hierarchy
     item_title_container.appendChild(item_gauge_above_a);
