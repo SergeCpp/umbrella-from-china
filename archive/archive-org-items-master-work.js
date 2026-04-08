@@ -27,11 +27,6 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
   const base_ratio     = (max_ratio     <= 0) ? 0 : 100 / Math.log(max_ratio     + 1);
   const base_favorites = (max_favorites <= 0) ? 0 : 100 / Math.log(max_favorites + 1);
   //
-//function get_percentage(value, max, base) {
-//  return (value <=   0) ?   '0%' :
-//         (value >= max) ? '100%' : (Math.log(value + 1) * base).toFixed(3) + '%';
-//}
-  //
   init_gauges(max_ratio, base_ratio, max_favorites, base_favorites);
 
   ///////////////////////////////
@@ -255,32 +250,19 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
     /////////
     // Gauges
     //
-//  const _gauges = {};
-//  let   _gauges_set = false;
     if (!item.no_prev) {
-//    _gauges.below_a_w = get_percentage(item_prev.favorites, max_favorites, base_favorites);
-//    _gauges_set = true;
-
+      // Display favorites prev count on the below a gauge
       add_gauge_below_a(index_curr, item_prev.favorites);
     }
     if (!item.is_prev) {
-//    _gauges.below_b_w = get_percentage(item.favorites, max_favorites, base_favorites);
-//
-//    _gauges.above_a_w = get_percentage(item.ratio_old, max_ratio, base_ratio);
-//    _gauges.above_b_w = get_percentage(item.ratio_all, max_ratio, base_ratio);
-//    _gauges_set = true;
-
+      // Display favorites curr count on the below b gauge
       add_gauge_below_b(index_curr, item.favorites);
 
+      // Display ratios old and all for curr on the above gauges
       add_gauge_above_a(index_curr, item.ratio_old);
       add_gauge_above_b(index_curr, item.ratio_all);
     }
-//  if (_gauges_set) {
-//    item.gauges = _gauges;
-//  }
   } // for (index_curr) closing
-  //
-  defer_gauges_setting();
 
   // 1:0, 3:0, 4:1, 10:1, 20:2, 30:3, 50:4, 75:5, 100:6, 125:7, 150:8, 200:10, 300:12, 500:16, 800:21, 826:21
   const horz_marks_cnt = Math.floor(Math.pow(horz_curr_prev .length, 0.551) / 1.841);
@@ -366,7 +348,7 @@ function add_gauge_below_b(index,  favorites) {
 
 function defer_gauges_setting() {
   gauges_defer_time = performance.now();
-  setTimeout(set_gauges, 2000, gauges_defer_time);
+  setTimeout(set_gauges, 200, gauges_defer_time);
 }
 
 function set_gauges(defer_time) {
