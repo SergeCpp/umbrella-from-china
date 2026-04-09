@@ -348,7 +348,7 @@ function add_gauge_below_b(index,  favorites) {
 
 function defer_gauges_setting() {
   gauges_defer_time = performance.now();
-  setTimeout(set_gauges, 200, gauges_defer_time);
+  setTimeout(set_gauges, 1000, gauges_defer_time);
 }
 
 function set_gauges(defer_time) {
@@ -1143,31 +1143,61 @@ function linkage_arrows(linkage, event) {
 }
 
 function linkage_go_4(name, dir, key, details) {
-  const prev_go = details.querySelector('.' + name + '-' + "prev");
-  const next_go = details.querySelector('.' + name + '-' + "next");
-  const pr10_go = details.querySelector('.' + name + '-' + "pr10");
-  const nx10_go = details.querySelector('.' + name + '-' + "nx10");
+  const    prev_go = details.querySelector('.' + name + '-' + "prev");
+  const    next_go = details.querySelector('.' + name + '-' + "next");
+  const    pr10_go = details.querySelector('.' + name + '-' + "pr10");
+  const    nx10_go = details.querySelector('.' + name + '-' + "nx10");
 
-  switch (dir   +  key) {
-    case "prev" + 'ArrowLeft' :
-    case "prev" + 'ArrowRight': return next_go || nx10_go || pr10_go;
-    case "prev" + 'ArrowUp'   :
-    case "prev" + 'ArrowDown' : return pr10_go || nx10_go;
+  const linkage_go = [ [next_go ? prev_go : null, next_go ? next_go : prev_go],
+                       [nx10_go ? pr10_go : null, nx10_go ? nx10_go : pr10_go] ];
+  let h = -1;
+  switch (dir) {
+    case "prev": h = next_go ? 0 : 1; break;
+    case "pr10": h = nx10_go ? 0 : 1; break;
+    case "next": h =               1; break;
+    case "nx10": h =               1; break;
+  }
+  if (h === -1) return null;
 
-    case "next" + 'ArrowLeft' :
-    case "next" + 'ArrowRight': return prev_go || pr10_go || nx10_go;
-    case "next" + 'ArrowUp'   :
-    case "next" + 'ArrowDown' : return nx10_go || pr10_go;
+  let v = -1;
+  switch (dir) {
+    case "prev":
+    case "next": v = 0; break;
+    case "pr10":
+    case "nx10": v = 1; break;
+  }
+  if (v === -1) return null;
 
-    case "pr10" + 'ArrowLeft' :
-    case "pr10" + 'ArrowRight': return nx10_go || next_go || prev_go;
-    case "pr10" + 'ArrowUp'   :
-    case "pr10" + 'ArrowDown' : return prev_go || next_go;
+  switch (h +  key) {
+    case  0 + 'ArrowLeft' :
+    case  0 + 'ArrowRight':
+      switch (v) {
+        case  0: return linkage_go[0][1] || linkage_go[1][1] || linkage_go[1][0];
+        case  1: return linkage_go[1][1] || linkage_go[0][1] || linkage_go[0][0];
+      }
 
-    case "nx10" + 'ArrowLeft' :
-    case "nx10" + 'ArrowRight': return pr10_go || prev_go || next_go;
-    case "nx10" + 'ArrowUp'   :
-    case "nx10" + 'ArrowDown' : return next_go || prev_go;
+    case  1 + 'ArrowLeft' :
+    case  1 + 'ArrowRight':
+      switch (v) {
+        case  0: return linkage_go[0][0] || linkage_go[1][0] || linkage_go[1][1];
+        case  1: return linkage_go[1][0] || linkage_go[0][0] || linkage_go[0][1];
+      }
+  }
+
+  switch (v +  key) {
+    case  0 + 'ArrowUp'  :
+    case  0 + 'ArrowDown':
+      switch (h) {
+        case  0: return linkage_go[1][0] || linkage_go[1][1] || linkage_go[0][1];
+        case  1: return linkage_go[1][1] || linkage_go[1][0] || linkage_go[0][0];
+      }
+
+    case  1 + 'ArrowUp'  :
+    case  1 + 'ArrowDown':
+      switch (h) {
+        case  0: return linkage_go[0][0] || linkage_go[0][1] || linkage_go[1][1];
+        case  1: return linkage_go[0][1] || linkage_go[0][0] || linkage_go[1][0];
+      }
   }
 
   return null;
@@ -1184,16 +1214,20 @@ function linkage_go_8(name, dir, key, details) {
   const vert_pr10_go = details.querySelector(".vert-pr10");
   const vert_nx10_go = details.querySelector(".vert-nx10");
 
-  const linkage_go   = [ [horz_prev_go, horz_next_go],
-                         [horz_pr10_go, horz_nx10_go],
-                         [vert_prev_go, vert_next_go],
-                         [vert_pr10_go, vert_nx10_go] ];
+  const   linkage_go = [ [horz_next_go ? horz_prev_go : null, horz_next_go ? horz_next_go : horz_prev_go],
+                         [horz_nx10_go ? horz_pr10_go : null, horz_nx10_go ? horz_nx10_go : horz_pr10_go],
+                         [vert_next_go ? vert_prev_go : null, vert_next_go ? vert_next_go : vert_prev_go],
+                         [vert_nx10_go ? vert_pr10_go : null, vert_nx10_go ? vert_nx10_go : vert_pr10_go] ];
   let curr_h = -1;
-  switch (dir) {
-    case "prev":
-    case "pr10": curr_h = 0; break;
-    case "next":
-    case "nx10": curr_h = 1; break;
+  switch (name  +  dir) {
+    case "horz" + "prev": curr_h = horz_next_go ? 0 : 1; break;
+    case "horz" + "pr10": curr_h = horz_nx10_go ? 0 : 1; break;
+    case "horz" + "next": curr_h =                    1; break;
+    case "horz" + "nx10": curr_h =                    1; break;
+    case "vert" + "prev": curr_h = vert_next_go ? 0 : 1; break;
+    case "vert" + "pr10": curr_h = vert_nx10_go ? 0 : 1; break;
+    case "vert" + "next": curr_h =                    1; break;
+    case "vert" + "nx10": curr_h =                    1; break;
   }
   if (curr_h === -1) return null;
 
@@ -1229,26 +1263,22 @@ function linkage_go_8(name, dir, key, details) {
     case 'ArrowLeft' : {
       const h = curr_h;
 
-      let  go = null;
       switch (curr_v) {
-        case 0: go = linkage_go[3][h] || linkage_go[2][h] || linkage_go[1][h]; break;
-        case 1: go = linkage_go[0][h] || linkage_go[3][h] || linkage_go[2][h]; break;
-        case 2: go = linkage_go[1][h] || linkage_go[0][h] || linkage_go[3][h]; break;
-        case 3: go = linkage_go[2][h] || linkage_go[1][h] || linkage_go[0][h]; break;
+        case 0: return linkage_go[3][h] || linkage_go[2][h] || linkage_go[1][h];
+        case 1: return linkage_go[0][h] || linkage_go[3][h] || linkage_go[2][h];
+        case 2: return linkage_go[1][h] || linkage_go[0][h] || linkage_go[3][h];
+        case 3: return linkage_go[2][h] || linkage_go[1][h] || linkage_go[0][h];
       }
-      return go;
     }
     case 'ArrowRight': {
       const h = curr_h;
 
-      let  go = null;
       switch (curr_v) {
-        case 0: go = linkage_go[1][h] || linkage_go[2][h] || linkage_go[3][h]; break;
-        case 1: go = linkage_go[2][h] || linkage_go[3][h] || linkage_go[0][h]; break;
-        case 2: go = linkage_go[3][h] || linkage_go[0][h] || linkage_go[1][h]; break;
-        case 3: go = linkage_go[0][h] || linkage_go[1][h] || linkage_go[2][h]; break;
+        case 0: return linkage_go[1][h] || linkage_go[2][h] || linkage_go[3][h];
+        case 1: return linkage_go[2][h] || linkage_go[3][h] || linkage_go[0][h];
+        case 2: return linkage_go[3][h] || linkage_go[0][h] || linkage_go[1][h];
+        case 3: return linkage_go[0][h] || linkage_go[1][h] || linkage_go[2][h];
       }
-      return go;
     }
   }
 
