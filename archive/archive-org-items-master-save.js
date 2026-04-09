@@ -366,35 +366,44 @@ function set_gauges(defer_time) {
     const index = wrapper.item_index;
     if   (index === undefined) break;
 
-    const inner = wrapper.firstElementChild;
-    const title = inner  .firstElementChild;
+    const inner           = wrapper.firstElementChild;
+    if  (!inner)            break; // It is error, must be set
+    const title_container = inner  .firstElementChild;
+    if  (!title_container)  break; // It is error, must be set
 
-    const ga_a  = title.firstElementChild;
-    const ga_a_ratio = gauges_raw_above_a[index];
-    if   (ga_a_ratio !== undefined) {
-      const width = get_percentage(ga_a_ratio, gauges_max_ratio, gauges_base_ratio);
-      if   (width !== '0%') ga_a.style.width = width;
+    const gauge_above_a   = title_container.firstElementChild;
+    if  (!gauge_above_a)    break; // It is error, must be set
+    const gauge_above_a_ratio   = gauges_raw_above_a[index];
+    if   (gauge_above_a_ratio !== undefined) {
+      const width = get_percentage(gauge_above_a_ratio, gauges_max_ratio, gauges_base_ratio);
+      if   (width !== '0%') gauge_above_a.style.width = width;
     }
 
-    const ga_b = ga_a.nextElementSibling;
-    const ga_b_ratio = gauges_raw_above_b[index];
-    if   (ga_b_ratio !== undefined) {
-      const width = get_percentage(ga_b_ratio, gauges_max_ratio, gauges_base_ratio);
-      if   (width !== '0%') ga_b.style.width = width;
+    const gauge_above_b   = gauge_above_a.nextElementSibling;
+    if  (!gauge_above_b)    break; // It is error, must be set
+    const gauge_above_b_ratio   = gauges_raw_above_b[index];
+    if   (gauge_above_b_ratio !== undefined) {
+      const width = get_percentage(gauge_above_b_ratio, gauges_max_ratio, gauges_base_ratio);
+      if   (width !== '0%') gauge_above_b.style.width = width;
     }
 
-    const gb_a = ga_b.nextElementSibling.nextElementSibling;
-    const gb_a_favorites = gauges_raw_below_a[index];
-    if   (gb_a_favorites !== undefined) {
-      const width = get_percentage(gb_a_favorites, gauges_max_favorites, gauges_base_favorites);
-      if   (width !== '0%') gb_a.style.width = width;
+    const title           = gauge_above_b.nextElementSibling;
+    if  (!title)            break; // It is error, must be set
+
+    const gauge_below_a   = title        .nextElementSibling;
+    if  (!gauge_below_a)    break; // It is error, must be set
+    const gauge_below_a_favorites   = gauges_raw_below_a[index];
+    if   (gauge_below_a_favorites !== undefined) {
+      const width = get_percentage(gauge_below_a_favorites, gauges_max_favorites, gauges_base_favorites);
+      if   (width !== '0%') gauge_below_a.style.width = width;
     }
 
-    const gb_b = gb_a.nextElementSibling;
-    const gb_b_favorites = gauges_raw_below_b[index];
-    if   (gb_b_favorites !== undefined) {
-      const width = get_percentage(gb_b_favorites, gauges_max_favorites, gauges_base_favorites);
-      if   (width !== '0%') gb_b.style.width = width;
+    const gauge_below_b   = gauge_below_a.nextElementSibling;
+    if  (!gauge_below_b)    break; // It is error, must be set
+    const gauge_below_b_favorites   = gauges_raw_below_b[index];
+    if   (gauge_below_b_favorites !== undefined) {
+      const width = get_percentage(gauge_below_b_favorites, gauges_max_favorites, gauges_base_favorites);
+      if   (width !== '0%') gauge_below_b.style.width = width;
     }
 
     wrapper = wrapper.nextElementSibling;
@@ -1218,68 +1227,62 @@ function linkage_go_8(name, dir, key, details) {
                          [horz_nx10_go ? horz_pr10_go : null, horz_nx10_go ? horz_nx10_go : horz_pr10_go],
                          [vert_next_go ? vert_prev_go : null, vert_next_go ? vert_next_go : vert_prev_go],
                          [vert_nx10_go ? vert_pr10_go : null, vert_nx10_go ? vert_nx10_go : vert_pr10_go] ];
-  let curr_h = -1;
+  let h = -1;
   switch (name  +  dir) {
-    case "horz" + "prev": curr_h = horz_next_go ? 0 : 1; break;
-    case "horz" + "pr10": curr_h = horz_nx10_go ? 0 : 1; break;
-    case "horz" + "next": curr_h =                    1; break;
-    case "horz" + "nx10": curr_h =                    1; break;
-    case "vert" + "prev": curr_h = vert_next_go ? 0 : 1; break;
-    case "vert" + "pr10": curr_h = vert_nx10_go ? 0 : 1; break;
-    case "vert" + "next": curr_h =                    1; break;
-    case "vert" + "nx10": curr_h =                    1; break;
+    case "horz" + "prev": h = horz_next_go ? 0 : 1; break;
+    case "horz" + "pr10": h = horz_nx10_go ? 0 : 1; break;
+    case "horz" + "next": h =                    1; break;
+    case "horz" + "nx10": h =                    1; break;
+    case "vert" + "prev": h = vert_next_go ? 0 : 1; break;
+    case "vert" + "pr10": h = vert_nx10_go ? 0 : 1; break;
+    case "vert" + "next": h =                    1; break;
+    case "vert" + "nx10": h =                    1; break;
   }
-  if (curr_h === -1) return null;
+  if (h === -1) return null;
 
-  let curr_v = -1;
+  let v = -1;
   switch (name  +  dir) {
     case "horz" + "prev":
-    case "horz" + "next": curr_v = 0; break;
+    case "horz" + "next": v = 0; break;
     case "horz" + "pr10":
-    case "horz" + "nx10": curr_v = 1; break;
+    case "horz" + "nx10": v = 1; break;
     case "vert" + "prev":
-    case "vert" + "next": curr_v = 2; break;
+    case "vert" + "next": v = 2; break;
     case "vert" + "pr10":
-    case "vert" + "nx10": curr_v = 3; break;
+    case "vert" + "nx10": v = 3; break;
   }
-  if (curr_v === -1) return null;
+  if (v === -1) return null;
 
   switch (key) {
     case 'ArrowLeft' :
     case 'ArrowRight': {
-      const h = curr_h ^ 1;
-
+      const s = h ^ 1;
       let  go = null;
-      switch (curr_v) {
-        case 0: go = linkage_go[0][h] || linkage_go[1][h] || linkage_go[2][h] || linkage_go[3][h]; break;
-        case 1: go = linkage_go[1][h] || linkage_go[0][h] || linkage_go[2][h] || linkage_go[3][h]; break;
-        case 2: go = linkage_go[2][h] || linkage_go[3][h] || linkage_go[1][h] || linkage_go[0][h]; break;
-        case 3: go = linkage_go[3][h] || linkage_go[2][h] || linkage_go[1][h] || linkage_go[0][h]; break;
+      switch (v) {
+        case  0: go = linkage_go[0][s] || linkage_go[1][s] || linkage_go[2][s] || linkage_go[3][s]; break;
+        case  1: go = linkage_go[1][s] || linkage_go[0][s] || linkage_go[2][s] || linkage_go[3][s]; break;
+        case  2: go = linkage_go[2][s] || linkage_go[3][s] || linkage_go[1][s] || linkage_go[0][s]; break;
+        case  3: go = linkage_go[3][s] || linkage_go[2][s] || linkage_go[1][s] || linkage_go[0][s]; break;
       }
       if (go) return go;
     }
   }
   switch (key) {
-    case 'ArrowLeft' : {
-      const h = curr_h;
-
-      switch (curr_v) {
-        case 0: return linkage_go[3][h] || linkage_go[2][h] || linkage_go[1][h];
-        case 1: return linkage_go[0][h] || linkage_go[3][h] || linkage_go[2][h];
-        case 2: return linkage_go[1][h] || linkage_go[0][h] || linkage_go[3][h];
-        case 3: return linkage_go[2][h] || linkage_go[1][h] || linkage_go[0][h];
+    case 'ArrowLeft' :
+      switch (v) {
+        case  0: return linkage_go[3][h] || linkage_go[2][h] || linkage_go[1][h];
+        case  1: return linkage_go[0][h] || linkage_go[3][h] || linkage_go[2][h];
+        case  2: return linkage_go[1][h] || linkage_go[0][h] || linkage_go[3][h];
+        case  3: return linkage_go[2][h] || linkage_go[1][h] || linkage_go[0][h];
       }
-    }
-    case 'ArrowRight': {
-      const h = curr_h;
 
-      switch (curr_v) {
-        case 0: return linkage_go[1][h] || linkage_go[2][h] || linkage_go[3][h];
-        case 1: return linkage_go[2][h] || linkage_go[3][h] || linkage_go[0][h];
-        case 2: return linkage_go[3][h] || linkage_go[0][h] || linkage_go[1][h];
-        case 3: return linkage_go[0][h] || linkage_go[1][h] || linkage_go[2][h];
+    case 'ArrowRight':
+      switch (v) {
+        case  0: return linkage_go[1][h] || linkage_go[2][h] || linkage_go[3][h];
+        case  1: return linkage_go[2][h] || linkage_go[3][h] || linkage_go[0][h];
+        case  2: return linkage_go[3][h] || linkage_go[0][h] || linkage_go[1][h];
+        case  3: return linkage_go[0][h] || linkage_go[1][h] || linkage_go[2][h];
       }
-    }
   }
 
   let move = 0;
@@ -1289,11 +1292,11 @@ function linkage_go_8(name, dir, key, details) {
   }
   if (!move) return null;
 
-  for (let v = 1; v < 4; v++) {
-    const go = linkage_go[(curr_v + (v * move) + 4) % 4];
+  for (let i = 1; i < 4; i++) {
+    const go = linkage_go[(v + (i * move) + 4) % 4];
 
-    if (go[curr_h    ]) return go[curr_h    ];
-    if (go[curr_h ^ 1]) return go[curr_h ^ 1];
+    if (go[h    ]) return go[h    ];
+    if (go[h ^ 1]) return go[h ^ 1];
   }
 
   return null;

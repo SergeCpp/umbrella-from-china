@@ -1,28 +1,28 @@
 /* How to show and sort items */
 
-let title_is          = "title";      // "title"      / "identifier"
-let  show_by          = "old-23-7";   // "old-23-7"   / "all-30-7"
-let  sort_by          = "ratio";      // "ratio"      / "views"
-let  mood_by          = "same-signs"; // "same-signs" / "diff-signs"
+let  title_is           = "title";      // "title"      / "identifier"
+let   show_by           = "old-23-7";   // "old-23-7"   / "all-30-7"
+let   sort_by           = "ratio";      // "ratio"      / "views"
+let   mood_by           = "same-signs"; // "same-signs" / "diff-signs"
 
 /* Which items to show */
 
-let show_prev         = true; function inp_prev  (chk) { show_prev  = chk.checked; }
-let show_curr         = true; function inp_curr  (chk) { show_curr  = chk.checked; }
-let show_both         = true; function inp_both  (chk) { show_both  = chk.checked; }
+let   show_prev         = true; function inp_prev  (chk) { show_prev  = chk.checked; }
+let   show_curr         = true; function inp_curr  (chk) { show_curr  = chk.checked; }
+let   show_both         = true; function inp_both  (chk) { show_both  = chk.checked; }
 
-let show_plain        = true; function inp_plain (chk) { show_plain = chk.checked; }
+let   show_plain        = true; function inp_plain (chk) { show_plain = chk.checked; }
 
-const show_noplain    = {}; // [noplain] = true / false
-const hide_noplain    = {}; // [noplain] = false / true
+const show_noplain      = {}; // [noplain] = true / false
+const hide_noplain      = {}; // [noplain] = false / true
 
-let show_nomark       = true;
-let show_plain_nomark = true;
+let   show_nomark       = true;
+let   show_plain_nomark = true;
 
-const show_mark       = {}; // [mark] = true / false
-const hide_mark       = {}; // [mark] = false / true
+const show_mark         = {}; // [mark] = true / false
+const hide_mark         = {}; // [mark] = false / true
 
-const show_marked_by  = {}; // [num] = undefined (means true) / true / false
+const show_marked_by    = {}; // [num] = undefined (means true) / true / false
 
 function inp_show_hide(chk, accent) {
   if (show_noplain[accent]) {
