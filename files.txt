@@ -335,7 +335,7 @@ https://umbrella-from-china.neocities.org/ziyan-dancer.txt
 -------------------------------------------
 1 css + 27 html + 29 txt + 1 xml = 58 files
 
-The total size of the site files is less than 73 megabytes
+The total size of the site files is less than 74 megabytes
 
 No external images hotlinking, all images are hosted on this site
 
