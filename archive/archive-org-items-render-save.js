@@ -97,7 +97,6 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       is_prev      : false,
       no_prev      : null,
       is_both      : null,
-      prev         : null,
       curr         : null,
       index_prev   : null,
       horz_change  : 0,
@@ -126,7 +125,6 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
         is_prev      : true,
         no_prev      : null,
         is_both      : null,
-        prev         : null,
         curr         : null,
         index_prev   : null,
         horz_change  : 0,
@@ -887,17 +885,18 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     // 4.2. Prev: old stat line
     const stat_prev_old = document.createElement("div");
     stat_prev_old.className = "item-stat-prev-old" + add_rank_class;
-    stat_prev_old.textContent = item.prev._old;
+                              // 123456789 123456789 12
+    stat_prev_old.textContent = "                      "; // 22ch
 
     // 4.3. Prev: 23-day stat line
     const stat_prev_23 = document.createElement("div");
     stat_prev_23.className = "item-stat-prev-23" + add_rank_class;
-    stat_prev_23.textContent = item.prev._23;
+    stat_prev_23.textContent = "                      "; // 22ch
 
     // 4.4. Prev: 7-day stat line
     const stat_prev_7 = document.createElement("div");
     stat_prev_7.className = "item-stat-prev-7" + add_rank_class;
-    stat_prev_7.textContent = item.prev._7;
+    stat_prev_7.textContent = "                      "; // 22ch
 
     // 4.5. Prev: assemble the hierarchy
     stat_prev_container.appendChild(stat_prev_old);
@@ -1044,7 +1043,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
   restore_focus();
 
-  defer_gauges_setting();
+  if (shown_cnt) defer_gauges_setting();
 
   return { pre: time_1 - time_0, dom: performance.now() - time_1 };
 }
