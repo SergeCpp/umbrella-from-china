@@ -1043,7 +1043,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
   restore_focus();
 
-  if (shown_cnt) defer_render();
+  defer_render(shown_cnt);
 
   return { pre: time_1 - time_0, dom: performance.now() - time_1 };
 }

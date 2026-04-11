@@ -1,9 +1,90 @@
 /* Deferred Render */
 
-const    defer_wait = 60; // ms
+const    defer_render_chunk     = 60;   // 60 x 14 = 840
+const    defer_render_wait      = 20;   // ms
 
-function defer_render() {
-         defer_gauges_setting();
+let      defer_render_shown     = 0;    // These set only in defer_render
+let      defer_render_time      = 0;    //
+
+let      defer_render_processed = 0;    // These set also in defer_render_step
+let      defer_render_duration  = 0;    //
+let      defer_render_wrapper   = null; //
+
+function defer_render            (shown) {
+         defer_render_shown     = shown;
+         defer_render_time      = performance.now();
+
+         defer_render_processed = 0;
+         defer_render_duration  = 0;
+         defer_render_wrapper   = null;
+
+  if (!shown) return;
+
+//defer_render_pass(0); // Fast start
+  requestAnimationFrame(() => defer_render_step(defer_render_time, 30)); // Fast start, short chunk
+}
+
+function defer_render_pass(defer_factor = 1) {
+  setTimeout(defer_render_step, defer_render_wait * defer_factor, defer_render_time);
+}
+
+function defer_render_step(defer_time, chunk_override) {
+  if (defer_time             !== defer_render_time ) return;
+  if (defer_render_processed === defer_render_shown) return;
+
+  const time_0  = performance.now();
+  let   wrapper = null;
+
+  if (!defer_render_processed) {
+    const container = document.getElementById("results");
+          wrapper   = container.querySelector(".item-wrapper");
+    if  (!wrapper)  { defer_render_pass(10); return; } // No items yet
+  }
+  else {
+          wrapper   = defer_render_wrapper;
+  }
+
+  let count = Math.min(chunk_override || defer_render_chunk, defer_render_shown - defer_render_processed);
+
+  do {
+    const index = wrapper.item_index;
+    if   (index === undefined) return;
+
+    const inner           = wrapper        .firstElementChild;
+    if  (!inner)            return;
+
+    const title_container = inner          .firstElementChild;
+    if  (!title_container)  return;
+    const  prev_container = title_container.nextElementSibling;
+    if   (!prev_container)  return;
+    const  curr_container =  prev_container.nextElementSibling;
+    if   (!curr_container)  return;
+    const  grow_container =  curr_container.nextElementSibling;
+    if   (!grow_container)  return;
+
+    set_item_gauges(index, title_container);
+    set_item_prev  (index,  prev_container);
+    set_item_curr  (index,  curr_container);
+    set_item_grow  (index,  grow_container);
+
+    defer_render_processed++;
+    count--;
+
+    if (defer_render_processed === defer_render_shown) { wrapper = null; break; }
+
+    wrapper = wrapper.nextElementSibling;
+    if (!wrapper) return;
+  }
+  while(count);
+
+  defer_render_wrapper   = wrapper;
+  defer_render_duration += (performance.now() - time_0);
+
+  if (defer_render_processed < defer_render_shown) { defer_render_pass(); return; }
+
+  const timing = document.getElementById("timings-render-by-timer");
+  if   (timing)
+        timing.textContent = defer_render_duration.toFixed(1);
 }
 
 /* Gauges */
@@ -18,8 +99,6 @@ let gauges_raw_above_b    = {};
 let gauges_raw_below_a    = {};
 let gauges_raw_below_b    = {};
 
-let gauges_defer_time     = 0;
-
 function init_gauges_raw   (max_ratio, base_ratio, max_favorites, base_favorites) {
     gauges_max_ratio      = max_ratio;
     gauges_base_ratio     = base_ratio;
@@ -30,8 +109,6 @@ function init_gauges_raw   (max_ratio, base_ratio, max_favorites, base_favorites
     gauges_raw_above_b    = {};
     gauges_raw_below_a    = {};
     gauges_raw_below_b    = {};
-
-    gauges_defer_time     = 0;
 }
 
 function add_gauge_above_a(index,   ratio) {
@@ -50,77 +127,45 @@ function add_gauge_below_b(index,   favorites) {
         gauges_raw_below_b[index] = favorites;
 }
 
-function defer_gauges_setting(defer_factor = 1) {
-  gauges_defer_time = performance.now();
-  setTimeout(timer_gauges_setting, defer_wait * defer_factor, gauges_defer_time);
-}
+const get_gauge_percentage = (value, max, base) =>
+  (value <=   0) ?   '0%' :
+  (value >= max) ? '100%' : (Math.log(value + 1) * base).toFixed(3) + '%';
 
-function timer_gauges_setting(defer_time) {
-  if (defer_time !== gauges_defer_time) return;
-
-  const time_0    = performance.now();
-
-  const container = document.getElementById("results");
-  let   wrapper   = container.querySelector(".item-wrapper");
-  if  (!wrapper)  { defer_gauges_setting(10); return; } // No items yet
-
-  const get_percentage = (value, max, base) =>
-    (value <=   0) ?   '0%' :
-    (value >= max) ? '100%' : (Math.log(value + 1) * base).toFixed(3) + '%';
-
-  do {
-    const index = wrapper.item_index;
-    if   (index === undefined) break;
-
-    const inner           = wrapper.firstElementChild;
-    if  (!inner)            break;
-    const title_container = inner  .firstElementChild;
-    if  (!title_container)  break;
-
-    const gauge_above_a   = title_container.firstElementChild;
-    if  (!gauge_above_a)    break;
-    const gauge_above_a_ratio   = gauges_raw_above_a[index];
-    if   (gauge_above_a_ratio !== undefined) {
-      const width = get_percentage(gauge_above_a_ratio, gauges_max_ratio, gauges_base_ratio);
-      if   (width !== '0%') gauge_above_a.style.width = width;
-    }
-
-    const gauge_above_b   = gauge_above_a.nextElementSibling;
-    if  (!gauge_above_b)    break;
-    const gauge_above_b_ratio   = gauges_raw_above_b[index];
-    if   (gauge_above_b_ratio !== undefined) {
-      const width = get_percentage(gauge_above_b_ratio, gauges_max_ratio, gauges_base_ratio);
-      if   (width !== '0%') gauge_above_b.style.width = width;
-    }
-
-    const title           = gauge_above_b.nextElementSibling;
-    if  (!title)            break;
-
-    const gauge_below_a   = title        .nextElementSibling;
-    if  (!gauge_below_a)    break;
-    const gauge_below_a_favorites   = gauges_raw_below_a[index];
-    if   (gauge_below_a_favorites !== undefined) {
-      const width = get_percentage(gauge_below_a_favorites, gauges_max_favorites, gauges_base_favorites);
-      if   (width !== '0%') gauge_below_a.style.width = width;
-    }
-
-    const gauge_below_b   = gauge_below_a.nextElementSibling;
-    if  (!gauge_below_b)    break;
-    const gauge_below_b_favorites   = gauges_raw_below_b[index];
-    if   (gauge_below_b_favorites !== undefined) {
-      const width = get_percentage(gauge_below_b_favorites, gauges_max_favorites, gauges_base_favorites);
-      if   (width !== '0%') gauge_below_b.style.width = width;
-    }
-
-    wrapper = wrapper.nextElementSibling;
+function set_item_gauges(index, title_container) {
+  const gauge_above_a   = title_container.firstElementChild;
+  if  (!gauge_above_a)    return;
+  const gauge_above_a_ratio   = gauges_raw_above_a[index];
+  if   (gauge_above_a_ratio !== undefined) {
+    const width = get_gauge_percentage(gauge_above_a_ratio, gauges_max_ratio, gauges_base_ratio);
+    if   (width !== '0%') gauge_above_a.style.width = width;
   }
-  while (wrapper);
 
-  const timing = document.getElementById("timings-render-by-timer");
-  if   (timing)
-        timing.textContent = (performance.now() - time_0).toFixed(1);
+  const gauge_above_b   = gauge_above_a.nextElementSibling;
+  if  (!gauge_above_b)    return;
+  const gauge_above_b_ratio   = gauges_raw_above_b[index];
+  if   (gauge_above_b_ratio !== undefined) {
+    const width = get_gauge_percentage(gauge_above_b_ratio, gauges_max_ratio, gauges_base_ratio);
+    if   (width !== '0%') gauge_above_b.style.width = width;
+  }
 
-  defer_prev_setting();
+  const title           = gauge_above_b.nextElementSibling;
+  if  (!title)            return;
+
+  const gauge_below_a   = title        .nextElementSibling;
+  if  (!gauge_below_a)    return;
+  const gauge_below_a_favorites   = gauges_raw_below_a[index];
+  if   (gauge_below_a_favorites !== undefined) {
+    const width = get_gauge_percentage(gauge_below_a_favorites, gauges_max_favorites, gauges_base_favorites);
+    if   (width !== '0%') gauge_below_a.style.width = width;
+  }
+
+  const gauge_below_b   = gauge_below_a.nextElementSibling;
+  if  (!gauge_below_b)    return;
+  const gauge_below_b_favorites   = gauges_raw_below_b[index];
+  if   (gauge_below_b_favorites !== undefined) {
+    const width = get_gauge_percentage(gauge_below_b_favorites, gauges_max_favorites, gauges_base_favorites);
+    if   (width !== '0%') gauge_below_b.style.width = width;
+  }
 }
 
 /* Prev */
@@ -129,14 +174,10 @@ let prev_raw_show_by = null;
 
 let prev_raw_data    = {};
 
-let prev_defer_time  = 0;
-
 function init_prev_raw(show_by) {
     prev_raw_show_by = show_by;
 
     prev_raw_data    = {};
-
-    prev_defer_time  = 0;
 }
 
 function add_prev_raw(index,
@@ -153,79 +194,45 @@ function add_prev_raw(index,
     views_7,             ratio_7 };
 }
 
-function defer_prev_setting() {
-  prev_defer_time = performance.now();
-  setTimeout(timer_prev_setting, defer_wait, prev_defer_time);
-}
-
-function timer_prev_setting(defer_time) {
-  if (defer_time  !== prev_defer_time) return;
-
-  const time_0      = performance.now();
-
-  const container   = document.getElementById("results");
-  let   wrapper     = container.querySelector(".item-wrapper");
-  if  (!wrapper)      return;
-
+function set_item_prev(index, prev_container) {
   const show_by_old = (prev_raw_show_by === "old-23-7"); // Else by "all-30-7"
 
-  do {
-    const index = wrapper.item_index;
-    if   (index === undefined) break;
+  const raw = prev_raw_data[index];
+  if  (!raw)  return;
 
-    const raw = prev_raw_data[index];
-    if   (raw) {
-      let _old = null;
-      let _23  = null;
-      let _7   = null;
+  let _old = null;
+  let _23  = null;
+  let _7   = null;
 
-      if (show_by_old) {
-        _old = raw.views_old.toString().padStart(6) + " /" +
-               raw. days_old.toString().padStart(5) + " =" +
-               raw.ratio_old.toFixed(3).padStart(7);
-        _23  = raw.views_23 .toString().padStart(6) + " /   23 =" +
-               raw.ratio_23 .toFixed(3).padStart(7);
-        _7   = raw.views_7  .toString().padStart(6) + " /    7 =" +
-               raw.ratio_7  .toFixed(3).padStart(7);
-      }
-      else {
-        _old = raw.views_all.toString().padStart(6) + " /" +
-               raw. days_all.toString().padStart(5) + " =" +
-               raw.ratio_all.toFixed(3).padStart(7);
-        _23  = raw.views_30 .toString().padStart(6) + " /   30 =" +
-               raw.ratio_30 .toFixed(3).padStart(7);
-        _7   = raw.views_7  .toString().padStart(6) + " /    7 =" +
-               raw.ratio_7  .toFixed(3).padStart(7);
-      }
-
-      const inner           = wrapper        .firstElementChild;
-      if  (!inner)            break;
-      const title_container = inner          .firstElementChild;
-      if  (!title_container)  break;
-      const prev_container  = title_container.nextElementSibling;
-      if  (!prev_container)   break;
-
-      const prev_old        = prev_container .firstElementChild;
-      if  (!prev_old)         break;
-      const prev_23         = prev_old       .nextElementSibling;
-      if  (!prev_23)          break;
-      const prev_7          = prev_23        .nextElementSibling;
-      if  (!prev_7)           break;
-
-      prev_old.textContent  = _old;
-      prev_23 .textContent  = _23;
-      prev_7  .textContent  = _7;
-    }
-
-    wrapper = wrapper.nextElementSibling;
+  if (show_by_old) {
+    _old = raw.views_old.toString().padStart(6) + " /" +
+           raw. days_old.toString().padStart(5) + " =" +
+           raw.ratio_old.toFixed(3).padStart(7);
+    _23  = raw.views_23 .toString().padStart(6) + " /   23 =" +
+           raw.ratio_23 .toFixed(3).padStart(7);
+    _7   = raw.views_7  .toString().padStart(6) + " /    7 =" +
+           raw.ratio_7  .toFixed(3).padStart(7);
   }
-  while (wrapper);
+  else {
+    _old = raw.views_all.toString().padStart(6) + " /" +
+           raw. days_all.toString().padStart(5) + " =" +
+           raw.ratio_all.toFixed(3).padStart(7);
+    _23  = raw.views_30 .toString().padStart(6) + " /   30 =" +
+           raw.ratio_30 .toFixed(3).padStart(7);
+    _7   = raw.views_7  .toString().padStart(6) + " /    7 =" +
+           raw.ratio_7  .toFixed(3).padStart(7);
+  }
 
-  const timing = document.getElementById("timings-render-by-timer");
-  if   (timing)
-        timing.textContent = (parseFloat(timing.textContent) + (performance.now() - time_0)).toFixed(1);
+  const prev_old       = prev_container.firstElementChild;
+  if  (!prev_old)        return;
+  const prev_23        = prev_old      . nextElementSibling;
+  if  (!prev_23)         return;
+  const prev_7         = prev_23       . nextElementSibling;
+  if  (!prev_7)          return;
 
-  defer_curr_setting();
+  prev_old.textContent = _old;
+  prev_23 .textContent = _23;
+  prev_7  .textContent = _7;
 }
 
 /* Curr */
@@ -234,14 +241,10 @@ let curr_raw_show_by = null;
 
 let curr_raw_data    = {};
 
-let curr_defer_time  = 0;
-
 function init_curr_raw(show_by) {
     curr_raw_show_by = show_by;
 
     curr_raw_data    = {};
-
-    curr_defer_time  = 0;
 }
 
 function add_curr_raw(index,
@@ -258,150 +261,74 @@ function add_curr_raw(index,
     views_7,             ratio_7 };
 }
 
-function defer_curr_setting() {
-  curr_defer_time = performance.now();
-  setTimeout(timer_curr_setting, defer_wait, curr_defer_time);
-}
-
-function timer_curr_setting(defer_time) {
-  if (defer_time  !== curr_defer_time) return;
-
-  const time_0      = performance.now();
-
-  const container   = document.getElementById("results");
-  let   wrapper     = container.querySelector(".item-wrapper");
-  if  (!wrapper)      return;
-
+function set_item_curr(index, curr_container) {
   const show_by_old = (curr_raw_show_by === "old-23-7"); // Else by "all-30-7"
 
-  do {
-    const index = wrapper.item_index;
-    if   (index === undefined) break;
+  const raw = curr_raw_data[index];
+  if  (!raw)  return;
 
-    const raw = curr_raw_data[index];
-    if   (raw) {
-      let _old = null;
-      let _23  = null;
-      let _7   = null;
+  let _old = null;
+  let _23  = null;
+  let _7   = null;
 
-      if (show_by_old) {
-        _old = raw.views_old.toString().padStart(6) + " /" +
-               raw. days_old.toString().padStart(5) + " =" +
-               raw.ratio_old.toFixed(3).padStart(7);
-        _23  = raw.views_23 .toString().padStart(6) + " /   23 =" +
-               raw.ratio_23 .toFixed(3).padStart(7);
-        _7   = raw.views_7  .toString().padStart(6) + " /    7 =" +
-               raw.ratio_7  .toFixed(3).padStart(7);
-      }
-      else {
-        _old = raw.views_all.toString().padStart(6) + " /" +
-               raw. days_all.toString().padStart(5) + " =" +
-               raw.ratio_all.toFixed(3).padStart(7);
-        _23  = raw.views_30 .toString().padStart(6) + " /   30 =" +
-               raw.ratio_30 .toFixed(3).padStart(7);
-        _7   = raw.views_7  .toString().padStart(6) + " /    7 =" +
-               raw.ratio_7  .toFixed(3).padStart(7);
-      }
-
-      const inner           = wrapper        .firstElementChild;
-      if  (!inner)            break;
-      const title_container = inner          .firstElementChild;
-      if  (!title_container)  break;
-      const prev_container  = title_container.nextElementSibling;
-      if  (!prev_container)   break;
-      const curr_container  = prev_container .nextElementSibling;
-      if  (!curr_container)   break;
-
-      const curr_old        = curr_container .firstElementChild;
-      if  (!curr_old)         break;
-      const curr_23         = curr_old       .nextElementSibling;
-      if  (!curr_23)          break;
-      const curr_7          = curr_23        .nextElementSibling;
-      if  (!curr_7)           break;
-
-      curr_old.textContent  = _old;
-      curr_23 .textContent  = _23;
-      curr_7  .textContent  = _7;
-    }
-
-    wrapper = wrapper.nextElementSibling;
+  if (show_by_old) {
+    _old = raw.views_old.toString().padStart(6) + " /" +
+           raw. days_old.toString().padStart(5) + " =" +
+           raw.ratio_old.toFixed(3).padStart(7);
+    _23  = raw.views_23 .toString().padStart(6) + " /   23 =" +
+           raw.ratio_23 .toFixed(3).padStart(7);
+    _7   = raw.views_7  .toString().padStart(6) + " /    7 =" +
+           raw.ratio_7  .toFixed(3).padStart(7);
   }
-  while (wrapper);
+  else {
+    _old = raw.views_all.toString().padStart(6) + " /" +
+           raw. days_all.toString().padStart(5) + " =" +
+           raw.ratio_all.toFixed(3).padStart(7);
+    _23  = raw.views_30 .toString().padStart(6) + " /   30 =" +
+           raw.ratio_30 .toFixed(3).padStart(7);
+    _7   = raw.views_7  .toString().padStart(6) + " /    7 =" +
+           raw.ratio_7  .toFixed(3).padStart(7);
+  }
 
-  const timing = document.getElementById("timings-render-by-timer");
-  if   (timing)
-        timing.textContent = (parseFloat(timing.textContent) + (performance.now() - time_0)).toFixed(1);
+  const curr_old       = curr_container.firstElementChild;
+  if  (!curr_old)        return;
+  const curr_23        = curr_old      . nextElementSibling;
+  if  (!curr_23)         return;
+  const curr_7         = curr_23       . nextElementSibling;
+  if  (!curr_7)          return;
 
-  defer_grow_setting();
+  curr_old.textContent = _old;
+  curr_23 .textContent = _23;
+  curr_7  .textContent = _7;
 }
 
 /* Grow */
 
-let grow_raw_data   = {};
-
-let grow_defer_time = 0;
+let grow_raw_data = {};
 
 function init_grow_raw() {
-    grow_raw_data   = {};
-
-    grow_defer_time = 0;
+    grow_raw_data = {};
 }
 
 function add_grow_raw(index,     grow_old, grow_23, grow_7) {
         grow_raw_data[index] = { grow_old, grow_23, grow_7 };
 }
 
-function defer_grow_setting() {
-  grow_defer_time = performance.now();
-  setTimeout(timer_grow_setting, defer_wait, grow_defer_time);
-}
+function set_item_grow(index, grow_container) {
+  const raw = grow_raw_data[index];
+  if  (!raw)  return;
 
-function timer_grow_setting(defer_time) {
-  if (defer_time  !== grow_defer_time) return;
+  const grow_old  = grow_container.firstElementChild;
+  if  (!grow_old)   return;
+  const grow_23   = grow_old      . nextElementSibling;
+  if  (!grow_23)    return;
+  const grow_7    = grow_23       . nextElementSibling;
+  if  (!grow_7)     return;
 
-  const time_0      = performance.now();
-
-  const container   = document.getElementById("results");
-  let   wrapper     = container.querySelector(".item-wrapper");
-  if  (!wrapper)      return;
-
-  do {
-    const index = wrapper.item_index;
-    if   (index === undefined) break;
-
-    const raw = grow_raw_data[index];
-    if   (raw) {
-      const inner           = wrapper        .firstElementChild;
-      if  (!inner)            break;
-      const title_container = inner          .firstElementChild;
-      if  (!title_container)  break;
-      const prev_container  = title_container.nextElementSibling;
-      if  (!prev_container)   break;
-      const curr_container  = prev_container .nextElementSibling;
-      if  (!curr_container)   break;
-      const grow_container  = curr_container .nextElementSibling;
-      if  (!grow_container)   break;
-
-      const grow_old        = grow_container .firstElementChild;
-      if  (!grow_old)         break;
-      const grow_23         = grow_old       .nextElementSibling;
-      if  (!grow_23)          break;
-      const grow_7          = grow_23        .nextElementSibling;
-      if  (!grow_7)           break;
-
-                        //  123
-      if (raw.grow_old !== "   ") grow_old.textContent = raw.grow_old;
-      if (raw.grow_23  !== "   ") grow_23 .textContent = raw.grow_23;
-      if (raw.grow_7   !== "   ") grow_7  .textContent = raw.grow_7;
-    }
-
-    wrapper = wrapper.nextElementSibling;
-  }
-  while (wrapper);
-
-  const timing = document.getElementById("timings-render-by-timer");
-  if   (timing)
-        timing.textContent = (parseFloat(timing.textContent) + (performance.now() - time_0)).toFixed(1);
+                    //  123
+  if (raw.grow_old !== "   ") grow_old.textContent = raw.grow_old;
+  if (raw.grow_23  !== "   ") grow_23 .textContent = raw.grow_23;
+  if (raw.grow_7   !== "   ") grow_7  .textContent = raw.grow_7;
 }
 
 /* Ordinals */
@@ -813,9 +740,10 @@ function item_arrows(container, event) {
 
     if (is_down) { // Open details and go to first linkage
       item_details(container, "ensure-open", false,
-        (ix_cell === 1 ? "rank" :
-         ix_cell === 2 ? "horz" :
-         ix_cell === 3 ? "mood" : "") + "-prev");
+        ix_cell === 1 ?  "rank-prev"  :
+        ix_cell === 2 ? ["horz-prev",
+                         "vert-prev"] :
+        ix_cell === 3 ?  "mood-prev"  : "");
     }
 
     return;
@@ -895,36 +823,7 @@ function item_details(container, ensure_open = false, jump_to_item = false, link
 
   details_div.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
-  if (!linkage_go) return;
-
-  // No scroll below, not interfere with scroll above
-
-  const link_dir = linkage_go.slice(-4);
-
-  const linkage  = details_div.querySelector('.' + linkage_go);
-  if   (linkage) { linkage.focus({ preventScroll: true }); return; }
-
-  let linkage2_go = null;
-  switch (link_dir) {
-    case "prev": linkage2_go = linkage_go.slice(0, -4) + "next"; break
-    case "next": linkage2_go = linkage_go.slice(0, -4) + "prev"; break
-    case "pr10": linkage2_go = linkage_go.slice(0, -4) + "prev"; break
-    case "nx10": linkage2_go = linkage_go.slice(0, -4) + "next"; break
-  }
-  if (!linkage2_go) return;
-
-  const linkage2  = details_div.querySelector('.' + linkage2_go);
-  if   (linkage2) { linkage2.focus({ preventScroll: true }); return; }
-
-  let linkage3_go = null;
-  switch (link_dir) {
-    case "pr10": linkage3_go = linkage_go.slice(0, -4) + "nx10"; break
-    case "nx10": linkage3_go = linkage_go.slice(0, -4) + "pr10"; break
-  }
-  if (!linkage3_go) return;
-
-  const linkage3  = details_div.querySelector('.' + linkage3_go);
-  if   (linkage3) { linkage3.focus({ preventScroll: true }); return; }
+  focus_linkage(details_div, linkage_go);
 }
 
 function add_details_linkage(name, index, linkage_arr, linkage_idx) {
@@ -1330,6 +1229,46 @@ function item_linkage(linkage) {
   if (!container_go) return;
 
   item_details(container_go, "ensure-open", "jump-to-item", name_dir);
+}
+
+function focus_linkage(details_div, linkage_go) {
+  if (!details_div || !linkage_go) return false;
+
+  if (typeof linkage_go === "object")
+    return focus_linkage(details_div, linkage_go[0]) ||
+           focus_linkage(details_div, linkage_go[1]);
+
+  // No scroll downstream, do not interfere with scroll upstream
+
+  const link_name = linkage_go.slice(0, 4);
+  const link_dir  = linkage_go.slice(  -4);
+
+  const linkage   = details_div.querySelector('.' + linkage_go);
+  if   (linkage)  { linkage.focus({ preventScroll: true }); return true; }
+
+  let linkage2_go = null;
+  switch (link_dir) {
+    case "prev": linkage2_go = link_name + "-next"; break
+    case "next": linkage2_go = link_name + "-prev"; break
+    case "pr10": linkage2_go = link_name + "-prev"; break
+    case "nx10": linkage2_go = link_name + "-next"; break
+  }
+  if (!linkage2_go) return false;
+
+  const linkage2  = details_div.querySelector('.' + linkage2_go);
+  if   (linkage2) { linkage2.focus({ preventScroll: true }); return true; }
+
+  let linkage3_go = null;
+  switch (link_dir) {
+    case "pr10": linkage3_go = link_name + "-nx10"; break
+    case "nx10": linkage3_go = link_name + "-pr10"; break
+  }
+  if (!linkage3_go) return false;
+
+  const linkage3  = details_div.querySelector('.' + linkage3_go);
+  if   (linkage3) { linkage3.focus({ preventScroll: true }); return true; }
+
+  return false;
 }
 
 // EOF
