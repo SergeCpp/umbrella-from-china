@@ -656,7 +656,8 @@ function process_filter() {
     format_nowrap('Filter: ' + du_filter    .toFixed(1) + ' ms,') + '&ensp;' +
     //
     format_nowrap('Render: ' + du_render.pre.toFixed(1) +   ' / ' +
-                               du_render.dom.toFixed(1) + ' ms' );
+                               du_render.dom.toFixed(1) +   ' / ' +
+        '<span id="timings-render-by-timer">0.0</span>' + ' ms' );
   } catch (err) {
     container.innerHTML = error_compose("Error: " + err.message);
   }

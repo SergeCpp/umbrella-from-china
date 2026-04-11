@@ -870,20 +870,6 @@ function compose_header(title_is, title_is_set,
 
 /* Compose Items */
 
-// Stat data sizes and templates
-const views_length = 6; // 123456
-const  days_length = 5; // 12345
-const ratio_length = 7; // 123.567
-
-const  stat_length = views_length + 2 + days_length + 2 + ratio_length; // Used in CSS as 22ch
-const  stat_empty  = "".padStart(stat_length);
-
-const  stat_sl     = " /";
-const  stat_30     = " /   30 =";
-const  stat_23     = " /   23 =";
-const  stat_7      = " /    7 =";
-const  stat_eq     =        " =";
-
 // results_curr_exp is sorted
 function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, mood_by) {
   const show_by_old = (show_by === "old-23-7"); // Else by "all-30-7"
@@ -903,6 +889,8 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
   // Compose prev, curr, and grow
   //
   init_prev_raw(show_by);
+  init_curr_raw(show_by);
+  init_grow_raw();
   //
   // For log/sig scaling of marks
   //
@@ -959,43 +947,23 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
     // Prev
     //
     if (!item.no_prev) {
-      add_prev_raw(index_curr, item.no_prev, item_prev.views_all, item_prev.days_all, item_prev.ratio_all,
-                                             item_prev.views_old, item_prev.days_old, item_prev.ratio_old,
-                                             item_prev.views_30,                      item_prev.ratio_30,
-                                             item_prev.views_23,                      item_prev.ratio_23,
-                                             item_prev.views_7,                       item_prev.ratio_7);
+      add_prev_raw(index_curr, item_prev.views_all, item_prev.days_all, item_prev.ratio_all,
+                               item_prev.views_old, item_prev.days_old, item_prev.ratio_old,
+                               item_prev.views_30,                      item_prev.ratio_30,
+                               item_prev.views_23,                      item_prev.ratio_23,
+                               item_prev.views_7,                       item_prev.ratio_7);
     }
 
     ///////
     // Curr
     //
-    const _curr = {}; // _old, _23, _7
     if (!item.is_prev) {
-      if (show_by_old) {
-        _curr._old = item.views_old.toString().padStart(views_length) + stat_sl +
-                     item. days_old.toString().padStart( days_length) + stat_eq +
-                     item.ratio_old.toFixed(3).padStart(ratio_length);
-        _curr._23  = item.views_23 .toString().padStart(views_length) + stat_23 +
-                     item.ratio_23 .toFixed(3).padStart(ratio_length);
-        _curr._7   = item.views_7  .toString().padStart(views_length) + stat_7  +
-                     item.ratio_7  .toFixed(3).padStart(ratio_length);
-      }
-      else {
-        _curr._old = item.views_all.toString().padStart(views_length) + stat_sl +
-                     item. days_all.toString().padStart( days_length) + stat_eq +
-                     item.ratio_all.toFixed(3).padStart(ratio_length);
-        _curr._23  = item.views_30 .toString().padStart(views_length) + stat_30 +
-                     item.ratio_30 .toFixed(3).padStart(ratio_length);
-        _curr._7   = item.views_7  .toString().padStart(views_length) + stat_7  +
-                     item.ratio_7  .toFixed(3).padStart(ratio_length);
-      }
+      add_curr_raw(index_curr, item.views_all, item.days_all, item.ratio_all,
+                               item.views_old, item.days_old, item.ratio_old,
+                               item.views_30,                 item.ratio_30,
+                               item.views_23,                 item.ratio_23,
+                               item.views_7,                  item.ratio_7);
     }
-    else {
-      _curr._old = stat_empty;
-      _curr._23  = stat_empty;
-      _curr._7   = stat_empty;
-    }
-    item.curr = _curr;
 
     ////////////////////////////////////////////////////
     // Horz and Vert substantial changes, 0 is no change
@@ -1077,9 +1045,11 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
                      : get_grow_fixed(item_prev.views_30,  item.views_30 );
       const grow_7   = get_grow_fixed(item_prev.views_7,   item.views_7  );
 
-      _grow._old = grow_old;
-      _grow._23  = grow_23;
-      _grow._7   = grow_7;
+//    _grow._old = grow_old;
+//    _grow._23  = grow_23;
+//    _grow._7   = grow_7;
+
+      add_grow_raw(index_curr, grow_old, grow_23, grow_7);
 
       const grow_mood = get_grow_mood(grow_old, grow_23, grow_7, mood_by);
       if   (grow_mood) {
@@ -1091,11 +1061,11 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
       }
       _grow._mood = _mood; // Needed in markable item only
     }
-    else {
-      _grow._old = "   ";
-      _grow._23  = "   ";
-      _grow._7   = "   ";
-    }
+//  else {
+//    _grow._old = "   ";
+//    _grow._23  = "   ";
+//    _grow._7   = "   ";
+//  }
     item.grow = _grow;
     mood_pos_neg.push({ index: index_curr, value: _mood }); // Needed in array anyway
 

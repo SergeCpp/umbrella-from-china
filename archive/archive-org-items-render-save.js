@@ -97,7 +97,6 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       is_prev      : false,
       no_prev      : null,
       is_both      : null,
-      curr         : null,
       index_prev   : null,
       horz_change  : 0,
       vert_change  : 0,
@@ -125,7 +124,6 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
         is_prev      : true,
         no_prev      : null,
         is_both      : null,
-        curr         : null,
         index_prev   : null,
         horz_change  : 0,
         vert_change  : 0,
@@ -933,17 +931,18 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     // 5.2. Curr: old stat line
     const stat_curr_old = document.createElement("div");
     stat_curr_old.className = "item-stat-curr-old" + add_horz_class;
-    stat_curr_old.textContent = item.curr._old;
+                              // 123456789 123456789 12
+    stat_curr_old.textContent = "                      "; // 22ch
 
     // 5.3. Curr: 23-day stat line
     const stat_curr_23 = document.createElement("div");
     stat_curr_23.className = "item-stat-curr-23" + add_vert_class;
-    stat_curr_23.textContent = item.curr._23;
+    stat_curr_23.textContent = "                      "; // 22ch
 
     // 5.4. Curr: 7-day stat line
     const stat_curr_7 = document.createElement("div");
     stat_curr_7.className = "item-stat-curr-7" + add_vert_class;
-    stat_curr_7.textContent = item.curr._7;
+    stat_curr_7.textContent = "                      "; // 22ch
 
     // 5.5. Curr: assemble the hierarchy
     stat_curr_container.appendChild(stat_curr_old);
@@ -974,17 +973,18 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     // 6.2. Grow: old
     const stat_grow_old = document.createElement("div");
     stat_grow_old.className = "item-grow-old" + add_mood_class;
-    stat_grow_old.textContent = item.grow._old;
+                              // 123
+    stat_grow_old.textContent = "   "; // 3ch
 
     // 6.3. Grow: 23
     const stat_grow_23 = document.createElement("div");
     stat_grow_23.className = "item-grow-23" + add_mood_class;
-    stat_grow_23.textContent = item.grow._23;
+    stat_grow_23.textContent = "   "; // 3ch
 
     // 6.4. Grow: 7
     const stat_grow_7 = document.createElement("div");
     stat_grow_7.className = "item-grow-7" + add_mood_class;
-    stat_grow_7.textContent = item.grow._7;
+    stat_grow_7.textContent = "   "; // 3ch
 
     // 6.5. Grow: assemble the hierarchy
     stat_grow_container.appendChild(stat_grow_old);
@@ -1043,7 +1043,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
   restore_focus();
 
-  if (shown_cnt) defer_gauges_setting();
+  if (shown_cnt) defer_render();
 
   return { pre: time_1 - time_0, dom: performance.now() - time_1 };
 }

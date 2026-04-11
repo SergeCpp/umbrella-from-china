@@ -1,3 +1,11 @@
+/* Deferred Render */
+
+const    defer_wait = 60; // ms
+
+function defer_render() {
+         defer_gauges_setting();
+}
+
 /* Gauges */
 
 let gauges_max_ratio      = 0;
@@ -42,9 +50,9 @@ function add_gauge_below_b(index,   favorites) {
         gauges_raw_below_b[index] = favorites;
 }
 
-function defer_gauges_setting() {
+function defer_gauges_setting(defer_factor = 1) {
   gauges_defer_time = performance.now();
-  setTimeout(timer_gauges_setting, 1000, gauges_defer_time);
+  setTimeout(timer_gauges_setting, defer_wait * defer_factor, gauges_defer_time);
 }
 
 function timer_gauges_setting(defer_time) {
@@ -54,7 +62,7 @@ function timer_gauges_setting(defer_time) {
 
   const container = document.getElementById("results");
   let   wrapper   = container.querySelector(".item-wrapper");
-  if  (!wrapper)  { defer_gauges_setting(); return; } // No items yet
+  if  (!wrapper)  { defer_gauges_setting(10); return; } // No items yet
 
   const get_percentage = (value, max, base) =>
     (value <=   0) ?   '0%' :
@@ -108,7 +116,9 @@ function timer_gauges_setting(defer_time) {
   }
   while (wrapper);
 
-// (performance.now() - time_0).toFixed(1)
+  const timing = document.getElementById("timings-render-by-timer");
+  if   (timing)
+        timing.textContent = (performance.now() - time_0).toFixed(1);
 
   defer_prev_setting();
 }
@@ -130,22 +140,22 @@ function init_prev_raw(show_by) {
 }
 
 function add_prev_raw(index,
-    no_prev, views_all, days_all, ratio_all,
-             views_old, days_old, ratio_old,
-             views_30,            ratio_30,
-             views_23,            ratio_23,
-             views_7,             ratio_7) { prev_raw_data[index] = {
+    views_all, days_all, ratio_all,
+    views_old, days_old, ratio_old,
+    views_30,            ratio_30,
+    views_23,            ratio_23,
+    views_7,             ratio_7) { prev_raw_data[index] = {
 
-    no_prev, views_all, days_all, ratio_all,
-             views_old, days_old, ratio_old,
-             views_30,            ratio_30,
-             views_23,            ratio_23,
-             views_7,             ratio_7 };
+    views_all, days_all, ratio_all,
+    views_old, days_old, ratio_old,
+    views_30,            ratio_30,
+    views_23,            ratio_23,
+    views_7,             ratio_7 };
 }
 
 function defer_prev_setting() {
   prev_defer_time = performance.now();
-  setTimeout(timer_prev_setting, 70, prev_defer_time);
+  setTimeout(timer_prev_setting, defer_wait, prev_defer_time);
 }
 
 function timer_prev_setting(defer_time) {
@@ -163,29 +173,29 @@ function timer_prev_setting(defer_time) {
     const index = wrapper.item_index;
     if   (index === undefined) break;
 
-    const prev_raw =   prev_raw_data[index];
-    if   (prev_raw && !prev_raw.no_prev) {
+    const raw = prev_raw_data[index];
+    if   (raw) {
       let _old = null;
       let _23  = null;
       let _7   = null;
 
       if (show_by_old) {
-        _old = prev_raw.views_old.toString().padStart(6) + " /" +
-               prev_raw. days_old.toString().padStart(5) + " =" +
-               prev_raw.ratio_old.toFixed(3).padStart(7);
-        _23  = prev_raw.views_23 .toString().padStart(6) + " /   23 =" +
-               prev_raw.ratio_23 .toFixed(3).padStart(7);
-        _7   = prev_raw.views_7  .toString().padStart(6) + " /    7 =" +
-               prev_raw.ratio_7  .toFixed(3).padStart(7);
+        _old = raw.views_old.toString().padStart(6) + " /" +
+               raw. days_old.toString().padStart(5) + " =" +
+               raw.ratio_old.toFixed(3).padStart(7);
+        _23  = raw.views_23 .toString().padStart(6) + " /   23 =" +
+               raw.ratio_23 .toFixed(3).padStart(7);
+        _7   = raw.views_7  .toString().padStart(6) + " /    7 =" +
+               raw.ratio_7  .toFixed(3).padStart(7);
       }
       else {
-        _old = prev_raw.views_all.toString().padStart(6) + " /" +
-               prev_raw. days_all.toString().padStart(5) + " =" +
-               prev_raw.ratio_all.toFixed(3).padStart(7);
-        _23  = prev_raw.views_30 .toString().padStart(6) + " /   30 =" +
-               prev_raw.ratio_30 .toFixed(3).padStart(7);
-        _7   = prev_raw.views_7  .toString().padStart(6) + " /    7 =" +
-               prev_raw.ratio_7  .toFixed(3).padStart(7);
+        _old = raw.views_all.toString().padStart(6) + " /" +
+               raw. days_all.toString().padStart(5) + " =" +
+               raw.ratio_all.toFixed(3).padStart(7);
+        _23  = raw.views_30 .toString().padStart(6) + " /   30 =" +
+               raw.ratio_30 .toFixed(3).padStart(7);
+        _7   = raw.views_7  .toString().padStart(6) + " /    7 =" +
+               raw.ratio_7  .toFixed(3).padStart(7);
       }
 
       const inner           = wrapper        .firstElementChild;
@@ -211,16 +221,188 @@ function timer_prev_setting(defer_time) {
   }
   while (wrapper);
 
-// (performance.now() - time_0).toFixed(1)
+  const timing = document.getElementById("timings-render-by-timer");
+  if   (timing)
+        timing.textContent = (parseFloat(timing.textContent) + (performance.now() - time_0)).toFixed(1);
+
+  defer_curr_setting();
 }
 
 /* Curr */
 
+let curr_raw_show_by = null;
 
+let curr_raw_data    = {};
+
+let curr_defer_time  = 0;
+
+function init_curr_raw(show_by) {
+    curr_raw_show_by = show_by;
+
+    curr_raw_data    = {};
+
+    curr_defer_time  = 0;
+}
+
+function add_curr_raw(index,
+    views_all, days_all, ratio_all,
+    views_old, days_old, ratio_old,
+    views_30,            ratio_30,
+    views_23,            ratio_23,
+    views_7,             ratio_7) { curr_raw_data[index] = {
+
+    views_all, days_all, ratio_all,
+    views_old, days_old, ratio_old,
+    views_30,            ratio_30,
+    views_23,            ratio_23,
+    views_7,             ratio_7 };
+}
+
+function defer_curr_setting() {
+  curr_defer_time = performance.now();
+  setTimeout(timer_curr_setting, defer_wait, curr_defer_time);
+}
+
+function timer_curr_setting(defer_time) {
+  if (defer_time  !== curr_defer_time) return;
+
+  const time_0      = performance.now();
+
+  const container   = document.getElementById("results");
+  let   wrapper     = container.querySelector(".item-wrapper");
+  if  (!wrapper)      return;
+
+  const show_by_old = (curr_raw_show_by === "old-23-7"); // Else by "all-30-7"
+
+  do {
+    const index = wrapper.item_index;
+    if   (index === undefined) break;
+
+    const raw = curr_raw_data[index];
+    if   (raw) {
+      let _old = null;
+      let _23  = null;
+      let _7   = null;
+
+      if (show_by_old) {
+        _old = raw.views_old.toString().padStart(6) + " /" +
+               raw. days_old.toString().padStart(5) + " =" +
+               raw.ratio_old.toFixed(3).padStart(7);
+        _23  = raw.views_23 .toString().padStart(6) + " /   23 =" +
+               raw.ratio_23 .toFixed(3).padStart(7);
+        _7   = raw.views_7  .toString().padStart(6) + " /    7 =" +
+               raw.ratio_7  .toFixed(3).padStart(7);
+      }
+      else {
+        _old = raw.views_all.toString().padStart(6) + " /" +
+               raw. days_all.toString().padStart(5) + " =" +
+               raw.ratio_all.toFixed(3).padStart(7);
+        _23  = raw.views_30 .toString().padStart(6) + " /   30 =" +
+               raw.ratio_30 .toFixed(3).padStart(7);
+        _7   = raw.views_7  .toString().padStart(6) + " /    7 =" +
+               raw.ratio_7  .toFixed(3).padStart(7);
+      }
+
+      const inner           = wrapper        .firstElementChild;
+      if  (!inner)            break;
+      const title_container = inner          .firstElementChild;
+      if  (!title_container)  break;
+      const prev_container  = title_container.nextElementSibling;
+      if  (!prev_container)   break;
+      const curr_container  = prev_container .nextElementSibling;
+      if  (!curr_container)   break;
+
+      const curr_old        = curr_container .firstElementChild;
+      if  (!curr_old)         break;
+      const curr_23         = curr_old       .nextElementSibling;
+      if  (!curr_23)          break;
+      const curr_7          = curr_23        .nextElementSibling;
+      if  (!curr_7)           break;
+
+      curr_old.textContent  = _old;
+      curr_23 .textContent  = _23;
+      curr_7  .textContent  = _7;
+    }
+
+    wrapper = wrapper.nextElementSibling;
+  }
+  while (wrapper);
+
+  const timing = document.getElementById("timings-render-by-timer");
+  if   (timing)
+        timing.textContent = (parseFloat(timing.textContent) + (performance.now() - time_0)).toFixed(1);
+
+  defer_grow_setting();
+}
 
 /* Grow */
 
+let grow_raw_data   = {};
 
+let grow_defer_time = 0;
+
+function init_grow_raw() {
+    grow_raw_data   = {};
+
+    grow_defer_time = 0;
+}
+
+function add_grow_raw(index,     grow_old, grow_23, grow_7) {
+        grow_raw_data[index] = { grow_old, grow_23, grow_7 };
+}
+
+function defer_grow_setting() {
+  grow_defer_time = performance.now();
+  setTimeout(timer_grow_setting, defer_wait, grow_defer_time);
+}
+
+function timer_grow_setting(defer_time) {
+  if (defer_time  !== grow_defer_time) return;
+
+  const time_0      = performance.now();
+
+  const container   = document.getElementById("results");
+  let   wrapper     = container.querySelector(".item-wrapper");
+  if  (!wrapper)      return;
+
+  do {
+    const index = wrapper.item_index;
+    if   (index === undefined) break;
+
+    const raw = grow_raw_data[index];
+    if   (raw) {
+      const inner           = wrapper        .firstElementChild;
+      if  (!inner)            break;
+      const title_container = inner          .firstElementChild;
+      if  (!title_container)  break;
+      const prev_container  = title_container.nextElementSibling;
+      if  (!prev_container)   break;
+      const curr_container  = prev_container .nextElementSibling;
+      if  (!curr_container)   break;
+      const grow_container  = curr_container .nextElementSibling;
+      if  (!grow_container)   break;
+
+      const grow_old        = grow_container .firstElementChild;
+      if  (!grow_old)         break;
+      const grow_23         = grow_old       .nextElementSibling;
+      if  (!grow_23)          break;
+      const grow_7          = grow_23        .nextElementSibling;
+      if  (!grow_7)           break;
+
+                        //  123
+      if (raw.grow_old !== "   ") grow_old.textContent = raw.grow_old;
+      if (raw.grow_23  !== "   ") grow_23 .textContent = raw.grow_23;
+      if (raw.grow_7   !== "   ") grow_7  .textContent = raw.grow_7;
+    }
+
+    wrapper = wrapper.nextElementSibling;
+  }
+  while (wrapper);
+
+  const timing = document.getElementById("timings-render-by-timer");
+  if   (timing)
+        timing.textContent = (parseFloat(timing.textContent) + (performance.now() - time_0)).toFixed(1);
+}
 
 /* Ordinals */
 
