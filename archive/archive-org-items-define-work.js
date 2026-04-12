@@ -535,12 +535,16 @@ function filter_by_marks(prev, curr, marks, mode) {
 
 /* Filter */
 
+let      process_du_filter = 0; // ms
+
+function time_filter() {
+  return process_du_filter;
+}
+
 function process_filter() {
-  const time_0    = performance.now();
-  const container = document.getElementById("results");
-  const timings   = document.getElementById("timings");
-        timings.innerHTML = "";
   try {
+
+  const time_0          = performance.now();
 
   const main_prev_date  =  date_main("prev");
   const main_prev_items = items_main("prev");
@@ -556,14 +560,14 @@ function process_filter() {
     inputs_filter.values);
 
   if (results_filter.error) {
-    container.innerHTML = results_filter.error;
+    process_error(results_filter.error);
     return;
   }
   if (results_filter.wait) {
     return;
   }
   if (!results_filter.done) {
-    container.innerHTML = error_compose("Unexpected filtering error");
+    process_error(error_compose("Unexpected filtering error"));
     return;
   }
 
@@ -597,14 +601,14 @@ function process_filter() {
       inputs.values);
 
     if (marks.error) {
-      container.innerHTML = marks.error;
+      process_error(marks.error);
       return;
     }
     if (marks.wait) {
       return;
     }
     if (!marks.done) {
-      container.innerHTML = error_compose("Unexpected marking error");
+      process_error(error_compose("Unexpected marking error"));
       return;
     }
 
@@ -626,16 +630,22 @@ function process_filter() {
   }
 
   // Filtering and Marking Duration
-  const du_filter = performance.now() - time_0;
+  process_du_filter = performance.now() - time_0;
 
   // Render
-  const du_render = render_results(results_filter_prev, main_prev_date,
-                                   results_filter_curr, main_curr_date, results_mark);
-  if  (!du_render) {
-    return;
-  }
+  setTimeout(render_results, 0,
+    results_filter_prev, main_prev_date,
+    results_filter_curr, main_curr_date, results_mark);
 
-  // Performance
+  } catch (err) {
+    process_error(error_compose("Error: " + err.message));
+  }
+}
+
+function process_timings() {
+  const   timings   = document.getElementById("timings");
+  const   du_render = time_render();
+
   timings.innerHTML =
     //
     format_nowrap('Cache: '  +
@@ -653,14 +663,19 @@ function process_filter() {
      time_section('subjects',     'parse')  .toFixed(1) +   ' / ' +
      time_section('descriptions', 'parse')  .toFixed(1) + ' ms,') + '&ensp;' +
     //
-    format_nowrap('Filter: ' + du_filter    .toFixed(1) + ' ms,') + '&ensp;' +
+    format_nowrap('Filter: ' + time_filter().toFixed(1) + ' ms,') + '&ensp;' +
     //
     format_nowrap('Render: ' + du_render.pre.toFixed(1) +   ' / ' +
                                du_render.dom.toFixed(1) +   ' / ' +
         '<span id="timings-render-by-timer">0.0</span>' + ' ms' );
-  } catch (err) {
-    container.innerHTML = error_compose("Error: " + err.message);
-  }
+}
+
+function process_error(error) {
+  const container = document.getElementById("results");
+  const timings   = document.getElementById("timings");
+
+  container.innerHTML = error;
+  timings  .innerHTML = "";
 }
 
 /* Date Change */

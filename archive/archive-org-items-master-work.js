@@ -20,8 +20,8 @@ function defer_render            (shown) {
 
   if (!shown) return;
 
-//defer_render_pass(0); // Fast start
-  requestAnimationFrame(() => defer_render_step(defer_render_time, 30)); // Fast start, short chunk
+  const chunk_override = Math.max(Math.round(defer_render_chunk / 3), 1); // Short first chunk
+  requestAnimationFrame(() => defer_render_step(defer_render_time, chunk_override)); // Fast start
 }
 
 function defer_render_pass(defer_factor = 1) {

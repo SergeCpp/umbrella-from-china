@@ -601,7 +601,7 @@ function init_dates() {
       }
     })
     .catch(err => {
-      container.innerHTML = error_compose("Error: " + err.message);
+      process_error(error_compose("Error: " + err.message));
       throw err;
     });
 }
@@ -680,13 +680,13 @@ function load_stat(date, what) {
       process_filter();
     })
     .catch(err => {
-      document.getElementById("results").innerHTML = error_compose("Error: " + err.message);
+      process_error(error_compose("Error: " + err.message));
     });
 }
 
 function load_stats() {
   const container = document.getElementById("results");
-        container.innerHTML = '<div class="text-center text-comment">Loading...</div>';
+        container . innerHTML = '<div class="text-center text-comment">Loading...</div>';
 
   if (stat_prev_date === stat_curr_date) {
     load_stat_file(stat_prev_date)
@@ -697,7 +697,7 @@ function load_stats() {
         process_filter();
       })
       .catch(err => {
-        container.innerHTML = error_compose("Error: " + err.message);
+        process_error(error_compose("Error: " + err.message));
       });
   } else { // Different dates to load
     Promise.all([
@@ -711,7 +711,7 @@ function load_stats() {
       process_filter();
     })
     .catch(err => {
-      container.innerHTML = error_compose("Error: " + err.message);
+      process_error(error_compose("Error: " + err.message));
     });
   }
 }

@@ -70,14 +70,22 @@ function init_render() {
 
 /* Render */
 
+const    process_du_render = { pre: 0, dom: 0 }; // ms
+
+function time_render() {
+  return process_du_render;
+}
+
 function render_results(results_prev, date_prev, results_curr, date_curr, results_mark) {
+  try {
+
   const time_0    = performance.now();
   const container = document.getElementById("results");
-        container.innerHTML = "";
+        container . innerHTML = "";
 
   if (!results_prev.length && !results_curr.length) {
-    container.innerHTML = error_compose("No items matched the filters");
-    return false;
+    process_error(error_compose("No items matched the filters"));
+    return;
   }
 
   ///////
@@ -1045,7 +1053,14 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
   defer_render(shown_cnt);
 
-  return { pre: time_1 - time_0, dom: performance.now() - time_1 };
+  process_du_render.pre = time_1            - time_0;
+  process_du_render.dom = performance.now() - time_1;
+
+  process_timings();
+
+  } catch (err) {
+    process_error(error_compose("Error: " + err.message));
+  }
 }
 
 // EOF
