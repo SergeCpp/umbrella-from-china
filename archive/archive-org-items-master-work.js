@@ -1,6 +1,7 @@
 /* Deferred Render */
 
-const    defer_render_chunk     = 60;   // 60 x 14 = 840
+const    defer_render_chunk_sz  = 60;   // 60 x 14 = 840
+const    defer_render_chunk_du  = 30;   // ms, max allowed duration for chunk
 const    defer_render_wait      = 20;   // ms
 
 let      defer_render_shown     = 0;    // These set only in defer_render
@@ -20,7 +21,7 @@ function defer_render            (shown) {
 
   if (!shown) return;
 
-  const chunk_override = Math.max(Math.round(defer_render_chunk / 3), 1); // Short first chunk
+  const chunk_override = Math.max(Math.round(defer_render_chunk_sz / 3), 1); // Short first chunk
   requestAnimationFrame(() => defer_render_step(defer_render_time, chunk_override)); // Fast start
 }
 
@@ -44,7 +45,8 @@ function defer_render_step(defer_time, chunk_override) {
           wrapper   = defer_render_wrapper;
   }
 
-  let count = Math.min(chunk_override || defer_render_chunk, defer_render_shown - defer_render_processed);
+  let count    = Math.min(chunk_override || defer_render_chunk_sz, defer_render_shown - defer_render_processed);
+  let duration = 0;
 
   do {
     const index = wrapper.item_index;
@@ -62,6 +64,7 @@ function defer_render_step(defer_time, chunk_override) {
     const  grow_container =  curr_container.nextElementSibling;
     if   (!grow_container)  return;
 
+    set_item_title (index, title_container, defer_render_processed);
     set_item_gauges(index, title_container);
     set_item_prev  (index,  prev_container);
     set_item_curr  (index,  curr_container);
@@ -69,22 +72,87 @@ function defer_render_step(defer_time, chunk_override) {
 
     defer_render_processed++;
     count--;
+    duration = performance.now() - time_0;
 
     if (defer_render_processed === defer_render_shown) { wrapper = null; break; }
 
     wrapper = wrapper.nextElementSibling;
     if (!wrapper) return;
+
+    if (duration > defer_render_chunk_du) break;
   }
   while(count);
 
   defer_render_wrapper   = wrapper;
-  defer_render_duration += (performance.now() - time_0);
+  defer_render_duration += duration;
 
   if (defer_render_processed < defer_render_shown) { defer_render_pass(); return; }
 
   const timing = document.getElementById("timings-render-by-timer");
   if   (timing)
         timing.textContent = defer_render_duration.toFixed(1);
+}
+
+/* Title */
+
+let title_raw_title_is_title = true;
+
+let title_raw_identifier     = {}; // Separate flat objects are some faster than { a, b } inside one object
+let title_raw_title          = {}; //
+
+function init_title_raw       (title_is_title) {
+    title_raw_title_is_title = title_is_title;
+
+    title_raw_identifier     = {};
+    title_raw_title          = {};
+}
+
+function add_title_raw  (index,   identifier, title) {
+    title_raw_identifier[index] = identifier;
+
+  if (title_raw_title_is_title)
+      title_raw_title   [index] =             title;
+}
+
+function set_item_title(index, container, shown_idx) {
+  const  identifier = title_raw_identifier[index];
+  if   (!identifier)  return;
+  const title       = title_raw_title_is_title ? title_raw_title[index] : null;
+
+  // Above gauges
+  const item_gauge_above_a = document.createElement("div");
+  item_gauge_above_a.className = "item-gauge-above-a";
+
+  const item_gauge_above_b = document.createElement("div");
+  item_gauge_above_b.className = "item-gauge-above-b";
+
+  // Link button
+  const item_title = document.createElement("div");
+  item_title.className = "item-title";
+
+  const item_link = document.createElement("a");
+  item_link.className = "text-ellipsis";
+  item_link.href = "https://archive.org/details/" + identifier;
+  item_link.rel = "noopener"; // Safe for _blank
+  item_link.tabIndex = 0; // To show focus outline when set by focus() (else not shown)
+  item_link.target = "_blank";
+  item_link.textContent = (shown_idx === index ? "" : (shown_idx + 1) + " / ") + (index + 1) + ". " +
+    (title_raw_title_is_title ? title : identifier);
+  item_title.appendChild(item_link);
+
+  // Below gauges
+  const item_gauge_below_a = document.createElement("div");
+  item_gauge_below_a.className = "item-gauge-below-a";
+
+  const item_gauge_below_b = document.createElement("div");
+  item_gauge_below_b.className = "item-gauge-below-b";
+
+  // Assemble the hierarchy
+  container.appendChild(item_gauge_above_a);
+  container.appendChild(item_gauge_above_b);
+  container.appendChild(item_title        );
+  container.appendChild(item_gauge_below_a);
+  container.appendChild(item_gauge_below_b);
 }
 
 /* Gauges */
@@ -170,136 +238,94 @@ function set_item_gauges(index, title_container) {
 
 /* Prev */
 
-let prev_raw_show_by = null;
+let prev_raw_23_30   = null;
 
 let prev_raw_data    = {};
 
-function init_prev_raw(show_by) {
-    prev_raw_show_by = show_by;
+function init_prev_raw(show_by_old) {
+    prev_raw_23_30   = show_by_old ? "23" : "30";
 
     prev_raw_data    = {};
 }
 
 function add_prev_raw(index,
-    views_all, days_all, ratio_all,
-    views_old, days_old, ratio_old,
-    views_30,            ratio_30,
-    views_23,            ratio_23,
-    views_7,             ratio_7) { prev_raw_data[index] = {
+    views_old_all, days_old_all, ratio_old_all,
+    views_23_30,                 ratio_23_30,
+    views_7,                     ratio_7) { prev_raw_data[index] = {
 
-    views_all, days_all, ratio_all,
-    views_old, days_old, ratio_old,
-    views_30,            ratio_30,
-    views_23,            ratio_23,
-    views_7,             ratio_7 };
+    views_old_all, days_old_all, ratio_old_all,
+    views_23_30,                 ratio_23_30,
+    views_7,                     ratio_7 };
 }
 
-function set_item_prev(index, prev_container) {
-  const show_by_old = (prev_raw_show_by === "old-23-7"); // Else by "all-30-7"
+function set_item_prev(index, container) {
+  const  raw = prev_raw_data[index];
+  if   (!raw)  return;
 
-  const raw = prev_raw_data[index];
-  if  (!raw)  return;
+  const _old = raw.views_old_all.toString().padStart(6) + " /" +
+               raw. days_old_all.toString().padStart(5) + " =" +
+               raw.ratio_old_all.toFixed(3).padStart(7);
+  const _23  = raw.views_23_30  .toString().padStart(6) + " /   " + prev_raw_23_30 + " =" +
+               raw.ratio_23_30  .toFixed(3).padStart(7);
+  const _7   = raw.views_7      .toString().padStart(6) + " /    7 =" +
+               raw.ratio_7      .toFixed(3).padStart(7);
 
-  let _old = null;
-  let _23  = null;
-  let _7   = null;
+  const e_old  = container.firstElementChild;
+  if  (!e_old)   return;
+  const e_23   = e_old    . nextElementSibling;
+  if  (!e_23)    return;
+  const e_7    = e_23     . nextElementSibling;
+  if  (!e_7)     return;
 
-  if (show_by_old) {
-    _old = raw.views_old.toString().padStart(6) + " /" +
-           raw. days_old.toString().padStart(5) + " =" +
-           raw.ratio_old.toFixed(3).padStart(7);
-    _23  = raw.views_23 .toString().padStart(6) + " /   23 =" +
-           raw.ratio_23 .toFixed(3).padStart(7);
-    _7   = raw.views_7  .toString().padStart(6) + " /    7 =" +
-           raw.ratio_7  .toFixed(3).padStart(7);
-  }
-  else {
-    _old = raw.views_all.toString().padStart(6) + " /" +
-           raw. days_all.toString().padStart(5) + " =" +
-           raw.ratio_all.toFixed(3).padStart(7);
-    _23  = raw.views_30 .toString().padStart(6) + " /   30 =" +
-           raw.ratio_30 .toFixed(3).padStart(7);
-    _7   = raw.views_7  .toString().padStart(6) + " /    7 =" +
-           raw.ratio_7  .toFixed(3).padStart(7);
-  }
-
-  const prev_old       = prev_container.firstElementChild;
-  if  (!prev_old)        return;
-  const prev_23        = prev_old      . nextElementSibling;
-  if  (!prev_23)         return;
-  const prev_7         = prev_23       . nextElementSibling;
-  if  (!prev_7)          return;
-
-  prev_old.textContent = _old;
-  prev_23 .textContent = _23;
-  prev_7  .textContent = _7;
+  e_old.textContent = _old;
+  e_23 .textContent = _23;
+  e_7  .textContent = _7;
 }
 
 /* Curr */
 
-let curr_raw_show_by = null;
+let curr_raw_23_30   = null;
 
 let curr_raw_data    = {};
 
-function init_curr_raw(show_by) {
-    curr_raw_show_by = show_by;
+function init_curr_raw(show_by_old) {
+    curr_raw_23_30   = show_by_old ? "23" : "30";
 
     curr_raw_data    = {};
 }
 
 function add_curr_raw(index,
-    views_all, days_all, ratio_all,
-    views_old, days_old, ratio_old,
-    views_30,            ratio_30,
-    views_23,            ratio_23,
-    views_7,             ratio_7) { curr_raw_data[index] = {
+    views_old_all, days_old_all, ratio_old_all,
+    views_23_30,                 ratio_23_30,
+    views_7,                     ratio_7) { curr_raw_data[index] = {
 
-    views_all, days_all, ratio_all,
-    views_old, days_old, ratio_old,
-    views_30,            ratio_30,
-    views_23,            ratio_23,
-    views_7,             ratio_7 };
+    views_old_all, days_old_all, ratio_old_all,
+    views_23_30,                 ratio_23_30,
+    views_7,                     ratio_7 };
 }
 
-function set_item_curr(index, curr_container) {
-  const show_by_old = (curr_raw_show_by === "old-23-7"); // Else by "all-30-7"
+function set_item_curr(index, container) {
+  const  raw = curr_raw_data[index];
+  if   (!raw)  return;
 
-  const raw = curr_raw_data[index];
-  if  (!raw)  return;
+  const _old = raw.views_old_all.toString().padStart(6) + " /" +
+               raw. days_old_all.toString().padStart(5) + " =" +
+               raw.ratio_old_all.toFixed(3).padStart(7);
+  const _23  = raw.views_23_30  .toString().padStart(6) + " /   " + curr_raw_23_30 + " =" +
+               raw.ratio_23_30  .toFixed(3).padStart(7);
+  const _7   = raw.views_7      .toString().padStart(6) + " /    7 =" +
+               raw.ratio_7      .toFixed(3).padStart(7);
 
-  let _old = null;
-  let _23  = null;
-  let _7   = null;
+  const e_old  = container.firstElementChild;
+  if  (!e_old)   return;
+  const e_23   = e_old    . nextElementSibling;
+  if  (!e_23)    return;
+  const e_7    = e_23     . nextElementSibling;
+  if  (!e_7)     return;
 
-  if (show_by_old) {
-    _old = raw.views_old.toString().padStart(6) + " /" +
-           raw. days_old.toString().padStart(5) + " =" +
-           raw.ratio_old.toFixed(3).padStart(7);
-    _23  = raw.views_23 .toString().padStart(6) + " /   23 =" +
-           raw.ratio_23 .toFixed(3).padStart(7);
-    _7   = raw.views_7  .toString().padStart(6) + " /    7 =" +
-           raw.ratio_7  .toFixed(3).padStart(7);
-  }
-  else {
-    _old = raw.views_all.toString().padStart(6) + " /" +
-           raw. days_all.toString().padStart(5) + " =" +
-           raw.ratio_all.toFixed(3).padStart(7);
-    _23  = raw.views_30 .toString().padStart(6) + " /   30 =" +
-           raw.ratio_30 .toFixed(3).padStart(7);
-    _7   = raw.views_7  .toString().padStart(6) + " /    7 =" +
-           raw.ratio_7  .toFixed(3).padStart(7);
-  }
-
-  const curr_old       = curr_container.firstElementChild;
-  if  (!curr_old)        return;
-  const curr_23        = curr_old      . nextElementSibling;
-  if  (!curr_23)         return;
-  const curr_7         = curr_23       . nextElementSibling;
-  if  (!curr_7)          return;
-
-  curr_old.textContent = _old;
-  curr_23 .textContent = _23;
-  curr_7  .textContent = _7;
+  e_old.textContent = _old;
+  e_23 .textContent = _23;
+  e_7  .textContent = _7;
 }
 
 /* Grow */

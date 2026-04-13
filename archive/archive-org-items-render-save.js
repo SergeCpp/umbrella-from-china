@@ -287,7 +287,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     vert_marks,
     rank_marks,
     mood_marks
-  } = compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, mood_by);
+  } = compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, show_by, mood_by);
 
   const mark_grow_old  = horz_marks.above.val;
   const mark_fall_old  = horz_marks.below.val;
@@ -727,8 +727,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
                   mood_by,  mood_by_new =>  mood_by =  mood_by_new,
     container);
   //
-  const title_is_title = (title_is === "title"); // Else is "identifier"
-  let   shown_cnt      = 0;
+  let shown_cnt = 0;
   //
   if (is_filtering) clr_views_favs_shown();
   //
@@ -827,45 +826,10 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     const item_inner = document.createElement("div");
     item_inner.className = "item-inner";
 
-    ///////////
-    // 3. Title
+    ///////////////////////////////
+    // 3. Title, see set_item_title
     const item_title_container = document.createElement("div");
     item_title_container.className = "item-title-container";
-
-    // Above gauges
-    const item_gauge_above_a = document.createElement("div");
-    item_gauge_above_a.className = "item-gauge-above-a";
-
-    const item_gauge_above_b = document.createElement("div");
-    item_gauge_above_b.className = "item-gauge-above-b";
-
-    // Link button
-    const item_title = document.createElement("div");
-    item_title.className = "item-title";
-
-    const item_link = document.createElement("a");
-    item_link.className = "text-ellipsis";
-    item_link.href = "https://archive.org/details/" + item.identifier;
-    item_link.rel = "noopener"; // Safe for _blank
-    item_link.tabIndex = 0; // To show focus outline when set by focus() (else not shown)
-    item_link.target = "_blank";
-    item_link.textContent = (shown_cnt === index ? "" : (shown_cnt + 1) + " / ") + (index + 1) + ". " +
-      (title_is_title ? item.title : item.identifier);
-    item_title.appendChild(item_link);
-
-    // Below gauges
-    const item_gauge_below_a = document.createElement("div");
-    item_gauge_below_a.className = "item-gauge-below-a";
-
-    const item_gauge_below_b = document.createElement("div");
-    item_gauge_below_b.className = "item-gauge-below-b";
-
-    // 3. Title: assemble the hierarchy
-    item_title_container.appendChild(item_gauge_above_a);
-    item_title_container.appendChild(item_gauge_above_b);
-    item_title_container.appendChild(item_title        );
-    item_title_container.appendChild(item_gauge_below_a);
-    item_title_container.appendChild(item_gauge_below_b);
 
     /////////////////////////////////////
     // 4.1. Prev stat container (stacked)

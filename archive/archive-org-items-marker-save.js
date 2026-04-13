@@ -352,16 +352,16 @@ function get_grow_value(grow) {
   return grow_values[grow] || 0;
 }
 
-function get_grow_mood(grow_old, grow_23, grow_7, mood_by) {
+function get_grow_mood(grow_old, grow_23, grow_7, mood_by_same) {
   const v_old = get_grow_value(grow_old);
   const v_23  = get_grow_value(grow_23 );
   const v_7   = get_grow_value(grow_7  );
 
   const mood  = v_old + v_23 + v_7;
 
-  if (mood_by === "diff-signs") return mood;
+  if (!mood_by_same) return mood; // By "diff-signs"
 
-  // "same-signs"
+  // By "same-signs"
   if ((v_old >= 0) && (v_23 >= 0) && (v_7 >= 0)) return mood;
   if ((v_old <= 0) && (v_23 <= 0) && (v_7 <= 0)) return mood;
 
@@ -871,8 +871,10 @@ function compose_header(title_is, title_is_set,
 /* Compose Items */
 
 // results_curr_exp is sorted
-function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, mood_by) {
-  const show_by_old = (show_by === "old-23-7"); // Else by "all-30-7"
+function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, show_by, mood_by) {
+  const title_is_title = (title_is === "title"     ); // Else is "identifier"
+  const show_by_old    = (show_by  === "old-23-7"  ); // Else by "all-30-7"
+  const mood_by_same   = (mood_by  === "same-signs"); // Else by "diff-signs"
 
   ////////////////////////
   // Log scaling of gauges
@@ -885,12 +887,13 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
   //
   init_gauges_raw(max_ratio, base_ratio, max_favorites, base_favorites);
 
-  ///////////////////////////////
-  // Compose prev, curr, and grow
+  //////////////////////////////////////
+  // Compose title, prev, curr, and grow
   //
-  init_prev_raw(show_by);
-  init_curr_raw(show_by);
-  init_grow_raw();
+  init_title_raw(title_is_title);
+  init_prev_raw (show_by_old);
+  init_curr_raw (show_by_old);
+  init_grow_raw ();
   //
   // For log/sig scaling of marks
   //
@@ -943,26 +946,46 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
     const item      = results_curr_exp[index_curr];
     const item_prev = map_prev[item.identifier];
 
+    ////////
+    // Title
+    //
+    if (title_is_title) {
+      add_title_raw(index_curr, item.identifier, item.title);
+    }
+    else {
+      add_title_raw(index_curr, item.identifier);
+    }
+
     ///////
     // Prev
     //
     if (!item.no_prev) {
-      add_prev_raw(index_curr, item_prev.views_all, item_prev.days_all, item_prev.ratio_all,
-                               item_prev.views_old, item_prev.days_old, item_prev.ratio_old,
-                               item_prev.views_30,                      item_prev.ratio_30,
-                               item_prev.views_23,                      item_prev.ratio_23,
-                               item_prev.views_7,                       item_prev.ratio_7);
+      if (show_by_old) {
+        add_prev_raw(index_curr, item_prev.views_old, item_prev.days_old, item_prev.ratio_old,
+                                 item_prev.views_23,                      item_prev.ratio_23,
+                                 item_prev.views_7,                       item_prev.ratio_7);
+      }
+      else {
+        add_prev_raw(index_curr, item_prev.views_all, item_prev.days_all, item_prev.ratio_all,
+                                 item_prev.views_30,                      item_prev.ratio_30,
+                                 item_prev.views_7,                       item_prev.ratio_7);
+      }
     }
 
     ///////
     // Curr
     //
     if (!item.is_prev) {
-      add_curr_raw(index_curr, item.views_all, item.days_all, item.ratio_all,
-                               item.views_old, item.days_old, item.ratio_old,
-                               item.views_30,                 item.ratio_30,
-                               item.views_23,                 item.ratio_23,
-                               item.views_7,                  item.ratio_7);
+      if (show_by_old) {
+        add_curr_raw(index_curr, item.views_old, item.days_old, item.ratio_old,
+                                 item.views_23,                 item.ratio_23,
+                                 item.views_7,                  item.ratio_7);
+      }
+      else {
+        add_curr_raw(index_curr, item.views_all, item.days_all, item.ratio_all,
+                                 item.views_30,                 item.ratio_30,
+                                 item.views_7,                  item.ratio_7);
+      }
     }
 
     ////////////////////////////////////////////////////
@@ -1051,7 +1074,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, show_by, moo
 
       add_grow_raw(index_curr, grow_old, grow_23, grow_7);
 
-      const grow_mood = get_grow_mood(grow_old, grow_23, grow_7, mood_by);
+      const grow_mood = get_grow_mood(grow_old, grow_23, grow_7, mood_by_same);
       if   (grow_mood) {
 //      const mood_scale = get_scale_log(index_curr, curr_log_base, mood_log_steep, mood_decay);
         const mood_scale = get_scale_sig(index_curr, curr_length,
