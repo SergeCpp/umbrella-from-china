@@ -1,8 +1,8 @@
 /* Deferred Render */
 
 const    defer_render_chunk_sz  = 51;   // 17 + 15 x 51 + 44 = 826
-const    defer_render_chunk_du  = 20;   // ms, max allowed duration for chunk
-const    defer_render_wait      = 10;   // ms, between chunks
+const    defer_render_chunk_du  =  7;   // ms, max allowed duration for chunk
+const    defer_render_wait      = 14;   // ms, between chunks
 
 let      defer_render_shown     = 0;    // These set only in defer_render
 let      defer_render_time      = 0;    //
