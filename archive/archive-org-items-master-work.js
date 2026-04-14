@@ -1,8 +1,8 @@
 /* Deferred Render */
 
-const    defer_render_chunk_sz  = 60;   // 60 x 14 = 840
-const    defer_render_chunk_du  = 30;   // ms, max allowed duration for chunk
-const    defer_render_wait      = 20;   // ms
+const    defer_render_chunk_sz  = 51;   // 17 + 15 x 51 + 44 = 826
+const    defer_render_chunk_du  = 20;   // ms, max allowed duration for chunk
+const    defer_render_wait      = 10;   // ms, between chunks
 
 let      defer_render_shown     = 0;    // These set only in defer_render
 let      defer_render_time      = 0;    //
@@ -57,18 +57,17 @@ function defer_render_step(defer_time, chunk_override) {
 
     const title_container = inner          .firstElementChild;
     if  (!title_container)  return;
-    const  prev_container = title_container.nextElementSibling;
+    const  prev_container = title_container. nextElementSibling;
     if   (!prev_container)  return;
-    const  curr_container =  prev_container.nextElementSibling;
+    const  curr_container =  prev_container. nextElementSibling;
     if   (!curr_container)  return;
-    const  grow_container =  curr_container.nextElementSibling;
+    const  grow_container =  curr_container. nextElementSibling;
     if   (!grow_container)  return;
 
-    set_item_title (index, title_container, defer_render_processed);
-    set_item_gauges(index, title_container);
-    set_item_prev  (index,  prev_container);
-    set_item_curr  (index,  curr_container);
-    set_item_grow  (index,  grow_container);
+    set_item_title(index, title_container, defer_render_processed);
+    set_item_prev (index,  prev_container);
+    set_item_curr (index,  curr_container);
+    set_item_grow (index,  grow_container);
 
     defer_render_processed++;
     count--;
@@ -147,6 +146,9 @@ function set_item_title(index, container, shown_idx) {
   const item_gauge_below_b = document.createElement("div");
   item_gauge_below_b.className = "item-gauge-below-b";
 
+  // Calculate and set width for gauges
+  set_item_gauges(index, item_gauge_above_a, item_gauge_above_b, item_gauge_below_a, item_gauge_below_b);
+
   // Assemble the hierarchy
   container.appendChild(item_gauge_above_a);
   container.appendChild(item_gauge_above_b);
@@ -199,36 +201,29 @@ const get_gauge_percentage = (value, max, base) =>
   (value <=   0) ?   '0%' :
   (value >= max) ? '100%' : (Math.log(value + 1) * base).toFixed(3) + '%';
 
-function set_item_gauges(index, title_container) {
-  const gauge_above_a   = title_container.firstElementChild;
-  if  (!gauge_above_a)    return;
+function set_item_gauges(index, gauge_above_a, gauge_above_b, gauge_below_a, gauge_below_b) {
+  if  (!gauge_above_a) return;
   const gauge_above_a_ratio   = gauges_raw_above_a[index];
   if   (gauge_above_a_ratio !== undefined) {
     const width = get_gauge_percentage(gauge_above_a_ratio, gauges_max_ratio, gauges_base_ratio);
     if   (width !== '0%') gauge_above_a.style.width = width;
   }
 
-  const gauge_above_b   = gauge_above_a.nextElementSibling;
-  if  (!gauge_above_b)    return;
+  if  (!gauge_above_b) return;
   const gauge_above_b_ratio   = gauges_raw_above_b[index];
   if   (gauge_above_b_ratio !== undefined) {
     const width = get_gauge_percentage(gauge_above_b_ratio, gauges_max_ratio, gauges_base_ratio);
     if   (width !== '0%') gauge_above_b.style.width = width;
   }
 
-  const title           = gauge_above_b.nextElementSibling;
-  if  (!title)            return;
-
-  const gauge_below_a   = title        .nextElementSibling;
-  if  (!gauge_below_a)    return;
+  if  (!gauge_below_a) return;
   const gauge_below_a_favorites   = gauges_raw_below_a[index];
   if   (gauge_below_a_favorites !== undefined) {
     const width = get_gauge_percentage(gauge_below_a_favorites, gauges_max_favorites, gauges_base_favorites);
     if   (width !== '0%') gauge_below_a.style.width = width;
   }
 
-  const gauge_below_b   = gauge_below_a.nextElementSibling;
-  if  (!gauge_below_b)    return;
+  if  (!gauge_below_b) return;
   const gauge_below_b_favorites   = gauges_raw_below_b[index];
   if   (gauge_below_b_favorites !== undefined) {
     const width = get_gauge_percentage(gauge_below_b_favorites, gauges_max_favorites, gauges_base_favorites);

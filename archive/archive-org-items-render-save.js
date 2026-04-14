@@ -79,9 +79,7 @@ function time_render() {
 function render_results(results_prev, date_prev, results_curr, date_curr, results_mark) {
   try {
 
-  const time_0    = performance.now();
-  const container = document.getElementById("results");
-        container . innerHTML = "";
+  const time_0 = performance.now();
 
   if (!results_prev.length && !results_curr.length) {
     process_error(error_compose("No items matched the filters"));
@@ -244,40 +242,13 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     }
   }
 
-  ///////////////////////////////////////////////
-  // Total counts displaying for expanded results
+  ////////////////////////////////////////////////
+  // Total counts calculating for expanded results
   //
   const curr_exp_totals = get_totals(results_curr_exp);
   const curr_exp_total  =  curr_exp_totals.audio +   curr_exp_totals.video;
   const curr_exp_media  =  curr_exp_totals.audio && !curr_exp_totals.video ? 'Audio ' :
                           !curr_exp_totals.audio &&  curr_exp_totals.video ? 'Video ' : "";
-
-  const totals_div      = document.createElement("div");
-  totals_div.className  ="subtitle text-center text-normal";
-  totals_div.innerHTML  =
-    format_nowrap(format_num_str(curr_exp_total,
-                                 curr_exp_media          +  'Item') + ':') + ' '  +
-
-                                (curr_exp_media ? "" :
-    format_nowrap(format_number (curr_exp_totals.audio)  + ' Audio' +    ' and '  +
-                  format_number (curr_exp_totals.video)  + ' Video' + ',') + ' ') +
-
-    format_nowrap(format_bytes  (curr_exp_totals.bytes)             + ',') + ' '  +
-    format_nowrap(format_num_str(curr_exp_totals.views,     'View') + ',') + ' '  +
-    format_nowrap(format_num_str(curr_exp_totals.favorites, 'Fav' ) +     ' on '  +
-                  format_num_str(curr_exp_totals.favorited, 'Item'));
-  container.appendChild(totals_div);
-
-  ///////////////////////////////////////////////////////////////////
-  // Both stats displaying (also sorts results_prev and results_curr)
-  //
-  render_stats(results_prev, date_prev, "prev", title_is, show_by, sort_by, container);
-  render_stats(results_curr, date_curr, "curr", title_is, show_by, sort_by, container);
-
-  ///////////////////
-  // Diffs displaying
-  //
-  render_diffs(results_prev, results_curr, curr_length, show_by, container);
 
   /////////////////////////////////////////////////////////////////////////
   // Compose items and calculate parameters for substantial changes marking
@@ -339,7 +310,66 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     plain_nomarked    += !is_subst && !item.marks;
   }
 
-  const plain_items = curr_length - subst_items;
+  const plain_items     = curr_length - subst_items;
+
+  process_du_render.pre = performance.now() - time_0;
+
+//render_results_dom(
+  setTimeout(render_results_dom, 0,
+    results_prev, date_prev, results_curr, date_curr, results_curr_exp, curr_length, map_prev,
+    curr_exp_totals, curr_exp_total, curr_exp_media,
+    only_prev, only_curr, only_both, plain_items, subst_items,
+    horz_marks, vert_marks, rank_marks, mood_marks,
+    marks_count, marks_populated, mark_counts, marked_by, marked_items, nomarked_items, plain_nomarked);
+
+  } catch (err) {
+    process_error(error_compose("Error: " + err.message));
+  }
+}
+
+function render_results_dom(
+    results_prev, date_prev, results_curr, date_curr, results_curr_exp, curr_length, map_prev,
+    curr_exp_totals, curr_exp_total, curr_exp_media,
+    only_prev, only_curr, only_both, plain_items, subst_items,
+    horz_marks, vert_marks, rank_marks, mood_marks,
+    marks_count, marks_populated, mark_counts, marked_by, marked_items, nomarked_items, plain_nomarked) {
+
+  try {
+
+  const time_0    = performance.now();
+
+  const container = document  . getElementById("results");
+        container . innerHTML = "";
+
+  ///////////////////////////////////////////////
+  // Total counts displaying for expanded results
+  //
+  const totals_div      = document.createElement("div");
+  totals_div.className  ="subtitle text-center text-normal";
+  totals_div.innerHTML  =
+    format_nowrap(format_num_str(curr_exp_total,
+                                 curr_exp_media          +  'Item') + ':') + ' '  +
+
+                                (curr_exp_media ? "" :
+    format_nowrap(format_number (curr_exp_totals.audio)  + ' Audio' +    ' and '  +
+                  format_number (curr_exp_totals.video)  + ' Video' + ',') + ' ') +
+
+    format_nowrap(format_bytes  (curr_exp_totals.bytes)             + ',') + ' '  +
+    format_nowrap(format_num_str(curr_exp_totals.views,     'View') + ',') + ' '  +
+    format_nowrap(format_num_str(curr_exp_totals.favorites, 'Fav' ) +     ' on '  +
+                  format_num_str(curr_exp_totals.favorited, 'Item'));
+  container.appendChild(totals_div);
+
+  ///////////////////////////////////////////////////////////////////
+  // Both stats displaying (also sorts results_prev and results_curr)
+  //
+  render_stats(results_prev, date_prev, "prev", title_is, show_by, sort_by, container);
+  render_stats(results_curr, date_curr, "curr", title_is, show_by, sort_by, container);
+
+  ///////////////////
+  // Diffs displaying
+  //
+  render_diffs(results_prev, results_curr, curr_length, show_by, container);
 
   ////////////////////////////////////////
   // Checkboxes chain (for arrows setting)
@@ -719,8 +749,6 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   /////////////////////////////////////
   // Show item list with flex alignment
   //
-  const time_1 = performance.now();
-  //
   compose_header(title_is, title_is_new => title_is = title_is_new,
                   show_by,  show_by_new =>  show_by =  show_by_new,
                   sort_by,  sort_by_new =>  sort_by =  sort_by_new,
@@ -1017,8 +1045,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
   defer_render(shown_cnt);
 
-  process_du_render.pre = time_1            - time_0;
-  process_du_render.dom = performance.now() - time_1;
+  process_du_render.dom = performance.now() - time_0;
 
   process_timings();
 
