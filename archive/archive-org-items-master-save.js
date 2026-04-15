@@ -1,13 +1,15 @@
 /* Deferred Render */
 
-const    defer_render_chunk_sz  = 51;   // 17 + 15 x 51 + 44 = 826
-const    defer_render_chunk_du  =  7;   // ms, max allowed duration for chunk
-const    defer_render_wait      = 14;   // ms, between chunks
+const    defer_render_chunk_sz  =  36;  // 12 + 22 x 36 + 22 = 826
+const    defer_render_chunk_du  =   4;  // ms, max allowed for chunk
+const    defer_render_wait      =   8;  // ms, between chunks
+const    defer_render_pending   = 300;  // ms, for items
 
 let      defer_render_shown     = 0;    // These set only in defer_render
 let      defer_render_time      = 0;    //
 
 let      defer_render_processed = 0;    // These set also in defer_render_step
+let      defer_render_chunks    = 0;    //
 let      defer_render_duration  = 0;    //
 let      defer_render_wrapper   = null; //
 
@@ -16,20 +18,21 @@ function defer_render            (shown) {
          defer_render_time      = performance.now();
 
          defer_render_processed = 0;
+         defer_render_chunks    = 0;
          defer_render_duration  = 0;
          defer_render_wrapper   = null;
 
   if (!shown) return;
 
-  const chunk_override = Math.max(Math.round(defer_render_chunk_sz / 3), 1); // Short first chunk
-  requestAnimationFrame(() => defer_render_step(defer_render_time, chunk_override)); // Fast start
+  const chunk_sz_override = Math.max(Math.round(defer_render_chunk_sz / 3), 1); // Short first chunk
+  requestAnimationFrame(() => defer_render_step(defer_render_time, chunk_sz_override)); // Fast start
 }
 
-function defer_render_pass(defer_factor = 1) {
-  setTimeout(defer_render_step, defer_render_wait * defer_factor, defer_render_time);
+function defer_render_pass(wait_override) {
+  setTimeout(defer_render_step, wait_override || defer_render_wait, defer_render_time);
 }
 
-function defer_render_step(defer_time, chunk_override) {
+function defer_render_step(defer_time, chunk_sz_override) {
   if (defer_time             !== defer_render_time ) return;
   if (defer_render_processed === defer_render_shown) return;
 
@@ -39,13 +42,13 @@ function defer_render_step(defer_time, chunk_override) {
   if (!defer_render_processed) {
     const container = document.getElementById("results");
           wrapper   = container.querySelector(".item-wrapper");
-    if  (!wrapper)  { defer_render_pass(10); return; } // No items yet
+    if  (!wrapper)  { defer_render_pass(defer_render_pending); return; } // No items yet
   }
   else {
           wrapper   = defer_render_wrapper;
   }
 
-  let count    = Math.min(chunk_override || defer_render_chunk_sz, defer_render_shown - defer_render_processed);
+  let count    = Math.min(chunk_sz_override || defer_render_chunk_sz, defer_render_shown - defer_render_processed);
   let duration = 0;
 
   do {
@@ -84,12 +87,13 @@ function defer_render_step(defer_time, chunk_override) {
 
   defer_render_wrapper   = wrapper;
   defer_render_duration += duration;
+  defer_render_chunks++;
 
   if (defer_render_processed < defer_render_shown) { defer_render_pass(); return; }
 
   const timing = document.getElementById("timings-render-by-timer");
   if   (timing)
-        timing.textContent = defer_render_duration.toFixed(1);
+        timing.textContent = defer_render_duration.toFixed(1) + " (" + defer_render_chunks + ')';
 }
 
 /* Title */
@@ -118,14 +122,12 @@ function set_item_title(index, container, shown_idx) {
   if   (!identifier)  return;
   const title       = title_raw_title_is_title ? title_raw_title[index] : null;
 
-  // Above gauges
   const item_gauge_above_a = document.createElement("div");
   item_gauge_above_a.className = "item-gauge-above-a";
 
   const item_gauge_above_b = document.createElement("div");
   item_gauge_above_b.className = "item-gauge-above-b";
 
-  // Link button
   const item_title = document.createElement("div");
   item_title.className = "item-title";
 
@@ -139,17 +141,14 @@ function set_item_title(index, container, shown_idx) {
     (title_raw_title_is_title ? title : identifier);
   item_title.appendChild(item_link);
 
-  // Below gauges
   const item_gauge_below_a = document.createElement("div");
   item_gauge_below_a.className = "item-gauge-below-a";
 
   const item_gauge_below_b = document.createElement("div");
   item_gauge_below_b.className = "item-gauge-below-b";
 
-  // Calculate and set width for gauges
   set_item_gauges(index, item_gauge_above_a, item_gauge_above_b, item_gauge_below_a, item_gauge_below_b);
 
-  // Assemble the hierarchy
   container.appendChild(item_gauge_above_a);
   container.appendChild(item_gauge_above_b);
   container.appendChild(item_title        );
@@ -236,11 +235,13 @@ function set_item_gauges(index, gauge_above_a, gauge_above_b, gauge_below_a, gau
 let prev_raw_23_30   = null;
 
 let prev_raw_data    = {};
+let prev_raw_rank_is = {};
 
 function init_prev_raw(show_by_old) {
     prev_raw_23_30   = show_by_old ? "23" : "30";
 
     prev_raw_data    = {};
+    prev_raw_rank_is = {};
 }
 
 function add_prev_raw(index,
@@ -253,28 +254,39 @@ function add_prev_raw(index,
     views_7,                     ratio_7 };
 }
 
+function add_prev_raw_rank_is(index,   rank_is) {
+             prev_raw_rank_is[index] = rank_is;
+}
+
 function set_item_prev(index, container) {
-  const  raw = prev_raw_data[index];
-  if   (!raw)  return;
+  const raw = prev_raw_data[index];
+  if  (!raw)  return;
 
-  const _old = raw.views_old_all.toString().padStart(6) + " /" +
-               raw. days_old_all.toString().padStart(5) + " =" +
-               raw.ratio_old_all.toFixed(3).padStart(7);
-  const _23  = raw.views_23_30  .toString().padStart(6) + " /   " + prev_raw_23_30 + " =" +
-               raw.ratio_23_30  .toFixed(3).padStart(7);
-  const _7   = raw.views_7      .toString().padStart(6) + " /    7 =" +
-               raw.ratio_7      .toFixed(3).padStart(7);
+  // Rank substantial changes marking: up and dn
+  const rank_is = prev_raw_rank_is[index];
+  const rank_is_class = rank_is > 0 ? " item-mark-up"
+                      : rank_is < 0 ? " item-mark-dn" : "";
 
-  const e_old  = container.firstElementChild;
-  if  (!e_old)   return;
-  const e_23   = e_old    . nextElementSibling;
-  if  (!e_23)    return;
-  const e_7    = e_23     . nextElementSibling;
-  if  (!e_7)     return;
+  const stat_prev_old       = document.createElement("div");
+  stat_prev_old.className   = "item-stat-prev-old" + rank_is_class;
 
-  e_old.textContent = _old;
-  e_23 .textContent = _23;
-  e_7  .textContent = _7;
+  const stat_prev_23        = document.createElement("div");
+  stat_prev_23.className    = "item-stat-prev-23"  + rank_is_class;
+
+  const stat_prev_7         = document.createElement("div");
+  stat_prev_7.className     = "item-stat-prev-7"   + rank_is_class;
+
+  stat_prev_old.textContent = raw.views_old_all.toString().padStart(6) + " /" +
+                              raw. days_old_all.toString().padStart(5) + " =" +
+                              raw.ratio_old_all.toFixed(3).padStart(7);
+  stat_prev_23 .textContent = raw.views_23_30  .toString().padStart(6) + " /   " + prev_raw_23_30 + " =" +
+                              raw.ratio_23_30  .toFixed(3).padStart(7);
+  stat_prev_7  .textContent = raw.views_7      .toString().padStart(6) + " /    7 =" +
+                              raw.ratio_7      .toFixed(3).padStart(7);
+
+  container.appendChild(stat_prev_old);
+  container.appendChild(stat_prev_23 );
+  container.appendChild(stat_prev_7  );
 }
 
 /* Curr */
@@ -282,11 +294,15 @@ function set_item_prev(index, container) {
 let curr_raw_23_30   = null;
 
 let curr_raw_data    = {};
+let curr_raw_horz_is = {};
+let curr_raw_vert_is = {};
 
 function init_curr_raw(show_by_old) {
     curr_raw_23_30   = show_by_old ? "23" : "30";
 
     curr_raw_data    = {};
+    curr_raw_horz_is = {};
+    curr_raw_vert_is = {};
 }
 
 function add_curr_raw(index,
@@ -299,28 +315,49 @@ function add_curr_raw(index,
     views_7,                     ratio_7 };
 }
 
+function add_curr_raw_horz_is(index,   horz_is) {
+             curr_raw_horz_is[index] = horz_is;
+}
+
+function add_curr_raw_vert_is(index,   vert_is) {
+             curr_raw_vert_is[index] = vert_is;
+}
+
 function set_item_curr(index, container) {
-  const  raw = curr_raw_data[index];
-  if   (!raw)  return;
+  const raw = curr_raw_data[index];
+  if  (!raw)  return;
 
-  const _old = raw.views_old_all.toString().padStart(6) + " /" +
-               raw. days_old_all.toString().padStart(5) + " =" +
-               raw.ratio_old_all.toFixed(3).padStart(7);
-  const _23  = raw.views_23_30  .toString().padStart(6) + " /   " + curr_raw_23_30 + " =" +
-               raw.ratio_23_30  .toFixed(3).padStart(7);
-  const _7   = raw.views_7      .toString().padStart(6) + " /    7 =" +
-               raw.ratio_7      .toFixed(3).padStart(7);
+  // Substantial changes marking: horizontal impact of old      from prev to     curr
+  // Substantial changes marking: vertical   impact of 23 and 7 into all  within curr
+  //
+  const horz_is = curr_raw_horz_is[index];
+  const horz_is_class = horz_is > 0 ? " item-mark-grow"
+                      : horz_is < 0 ? " item-mark-fall" : "";
+  //
+  const vert_is = curr_raw_vert_is[index];
+  const vert_is_class = vert_is > 0 ? " item-mark-grow"
+                      : vert_is < 0 ? " item-mark-fall" : "";
 
-  const e_old  = container.firstElementChild;
-  if  (!e_old)   return;
-  const e_23   = e_old    . nextElementSibling;
-  if  (!e_23)    return;
-  const e_7    = e_23     . nextElementSibling;
-  if  (!e_7)     return;
+  const stat_curr_old       = document.createElement("div");
+  stat_curr_old.className   = "item-stat-curr-old" + horz_is_class;
 
-  e_old.textContent = _old;
-  e_23 .textContent = _23;
-  e_7  .textContent = _7;
+  const stat_curr_23        = document.createElement("div");
+  stat_curr_23.className    = "item-stat-curr-23"  + vert_is_class;
+
+  const stat_curr_7         = document.createElement("div");
+  stat_curr_7.className     = "item-stat-curr-7"   + vert_is_class;
+
+  stat_curr_old.textContent = raw.views_old_all.toString().padStart(6) + " /" +
+                              raw. days_old_all.toString().padStart(5) + " =" +
+                              raw.ratio_old_all.toFixed(3).padStart(7);
+  stat_curr_23 .textContent = raw.views_23_30  .toString().padStart(6) + " /   " + curr_raw_23_30 + " =" +
+                              raw.ratio_23_30  .toFixed(3).padStart(7);
+  stat_curr_7  .textContent = raw.views_7      .toString().padStart(6) + " /    7 =" +
+                              raw.ratio_7      .toFixed(3).padStart(7);
+
+  container.appendChild(stat_curr_old);
+  container.appendChild(stat_curr_23 );
+  container.appendChild(stat_curr_7  );
 }
 
 /* Grow */

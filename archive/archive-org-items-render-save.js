@@ -854,13 +854,12 @@ function render_results_dom(
     const item_inner = document.createElement("div");
     item_inner.className = "item-inner";
 
-    ///////////////////////////////
     // 3. Title, see set_item_title
     const item_title_container = document.createElement("div");
     item_title_container.className = "item-title-container";
 
-    /////////////////////////////////////
-    // 4.1. Prev stat container (stacked)
+    ////////////////////////////////////////////////////////
+    // 4.1. Prev stat container (stacked), see set_item_prev
     const stat_prev_container = document.createElement("div"); // flex: 0 0 22ch;
 
     if (!no_prev) {
@@ -873,36 +872,16 @@ function render_results_dom(
     }
 
     // Rank substantial changes marking: up and dn
-    const add_rank_class = is_rank_up ? " item-mark-up"
-                         : is_rank_dn ? " item-mark-dn" : "";
+    //
+    let prev_is_subst = false;
+    //
+    if (is_rank_up) { add_prev_raw_rank_is(index, +1); prev_is_subst = true; }
+    if (is_rank_dn) { add_prev_raw_rank_is(index, -1); prev_is_subst = true; }
+    //
+    if (prev_is_subst) stat_prev_container.is_subst = true;
 
-    if   (add_rank_class) {
-      stat_prev_container.is_subst = true;
-    }
-
-    // 4.2. Prev: old stat line
-    const stat_prev_old = document.createElement("div");
-    stat_prev_old.className = "item-stat-prev-old" + add_rank_class;
-                              // 123456789 123456789 12
-    stat_prev_old.textContent = "                      "; // 22ch
-
-    // 4.3. Prev: 23-day stat line
-    const stat_prev_23 = document.createElement("div");
-    stat_prev_23.className = "item-stat-prev-23" + add_rank_class;
-    stat_prev_23.textContent = "                      "; // 22ch
-
-    // 4.4. Prev: 7-day stat line
-    const stat_prev_7 = document.createElement("div");
-    stat_prev_7.className = "item-stat-prev-7" + add_rank_class;
-    stat_prev_7.textContent = "                      "; // 22ch
-
-    // 4.5. Prev: assemble the hierarchy
-    stat_prev_container.appendChild(stat_prev_old);
-    stat_prev_container.appendChild(stat_prev_23 );
-    stat_prev_container.appendChild(stat_prev_7  );
-
-    /////////////////////////////////////
-    // 5.1. Curr stat container (stacked)
+    ////////////////////////////////////////////////////////
+    // 5.1. Curr stat container (stacked), see set_item_curr
     const stat_curr_container = document.createElement("div"); // flex: 0 0 22ch;
 
     if (!is_prev) {
@@ -914,40 +893,18 @@ function render_results_dom(
       stat_curr_container.is_empty = true;
     }
 
-    // Substantial changes marking: horizontal impact of old from prev to curr
-    const add_horz_class = is_horz_grow ? " item-mark-grow"
-                         : is_horz_fall ? " item-mark-fall" : "";
-
-    // Substantial changes marking: vertical impact of 23 and 7 into all within curr
-    const add_vert_class = is_vert_grow ? " item-mark-grow"
-                         : is_vert_fall ? " item-mark-fall" : "";
-
-    const add_hv_class = add_horz_class || add_vert_class;
-
-    if   (add_hv_class) {
-      stat_curr_container.is_subst = true;
-    }
-
-    // 5.2. Curr: old stat line
-    const stat_curr_old = document.createElement("div");
-    stat_curr_old.className = "item-stat-curr-old" + add_horz_class;
-                              // 123456789 123456789 12
-    stat_curr_old.textContent = "                      "; // 22ch
-
-    // 5.3. Curr: 23-day stat line
-    const stat_curr_23 = document.createElement("div");
-    stat_curr_23.className = "item-stat-curr-23" + add_vert_class;
-    stat_curr_23.textContent = "                      "; // 22ch
-
-    // 5.4. Curr: 7-day stat line
-    const stat_curr_7 = document.createElement("div");
-    stat_curr_7.className = "item-stat-curr-7" + add_vert_class;
-    stat_curr_7.textContent = "                      "; // 22ch
-
-    // 5.5. Curr: assemble the hierarchy
-    stat_curr_container.appendChild(stat_curr_old);
-    stat_curr_container.appendChild(stat_curr_23 );
-    stat_curr_container.appendChild(stat_curr_7  );
+    // Substantial changes marking: horizontal impact of old      from prev to     curr
+    // Substantial changes marking: vertical   impact of 23 and 7 into all  within curr
+    //
+    let curr_is_subst = false;
+    //
+    if (is_horz_grow) { add_curr_raw_horz_is(index, +1); curr_is_subst = true; }
+    if (is_horz_fall) { add_curr_raw_horz_is(index, -1); curr_is_subst = true; }
+    //
+    if (is_vert_grow) { add_curr_raw_vert_is(index, +1); curr_is_subst = true; }
+    if (is_vert_fall) { add_curr_raw_vert_is(index, -1); curr_is_subst = true; }
+    //
+    if (curr_is_subst) stat_curr_container.is_subst = true;
 
     ////////////////////////////////
     // 6.1. Grow container (stacked)
