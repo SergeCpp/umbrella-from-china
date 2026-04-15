@@ -466,7 +466,7 @@ function load_section(section) {
       section.items = undefined;
     })
     .finally(() => {
-      process_filter();
+      setTimeout(process_filter, 0);
     });
 }
 
@@ -677,7 +677,8 @@ function load_stat(date, what) {
         stat_prev_items = loaded_items;
         stat_prev_date  = date;
       }
-      process_filter();
+
+      setTimeout(process_filter, 0);
     })
     .catch(err => {
       process_error(error_compose("Error: " + err.message));
@@ -694,7 +695,7 @@ function load_stats() {
         stat_prev_items = loaded_items;
         stat_curr_items = loaded_items;
 
-        process_filter();
+        setTimeout(process_filter, 0);
       })
       .catch(err => {
         process_error(error_compose("Error: " + err.message));
@@ -708,7 +709,7 @@ function load_stats() {
       stat_prev_items = loaded_prev_items;
       stat_curr_items = loaded_curr_items;
 
-      process_filter();
+      setTimeout(process_filter, 0);
     })
     .catch(err => {
       process_error(error_compose("Error: " + err.message));

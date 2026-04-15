@@ -858,17 +858,17 @@ function render_results_dom(
     const item_title_container = document.createElement("div");
     item_title_container.className = "item-title-container";
 
-    ////////////////////////////////////////////////////////
-    // 4.1. Prev stat container (stacked), see set_item_prev
+    //////////////////////////////////////////////////////
+    // 4. Prev stat container (stacked), see set_item_prev
     const stat_prev_container = document.createElement("div"); // flex: 0 0 22ch;
 
     if (!no_prev) {
       stat_prev_container.className = "item-stat-container";
-      stat_prev_container.tabIndex = -1;
+      stat_prev_container.tabIndex  = -1;
     }
     else {
       stat_prev_container.className = "item-stat-container is-empty";
-      stat_prev_container.is_empty = true;
+      stat_prev_container.is_empty  = true;
     }
 
     // Rank substantial changes marking: up and dn
@@ -880,17 +880,17 @@ function render_results_dom(
     //
     if (prev_is_subst) stat_prev_container.is_subst = true;
 
-    ////////////////////////////////////////////////////////
-    // 5.1. Curr stat container (stacked), see set_item_curr
+    //////////////////////////////////////////////////////
+    // 5. Curr stat container (stacked), see set_item_curr
     const stat_curr_container = document.createElement("div"); // flex: 0 0 22ch;
 
     if (!is_prev) {
       stat_curr_container.className = "item-stat-container";
-      stat_curr_container.tabIndex = -1;
+      stat_curr_container.tabIndex  = -1;
     }
     else {
       stat_curr_container.className = "item-stat-container is-empty";
-      stat_curr_container.is_empty = true;
+      stat_curr_container.is_empty  = true;
     }
 
     // Substantial changes marking: horizontal impact of old      from prev to     curr
@@ -906,47 +906,27 @@ function render_results_dom(
     //
     if (curr_is_subst) stat_curr_container.is_subst = true;
 
-    ////////////////////////////////
-    // 6.1. Grow container (stacked)
+    /////////////////////////////////////////////////
+    // 6. Grow container (stacked), see set_item_grow
     const stat_grow_container = document.createElement("div"); // flex: 0 0 3ch;
 
     if (is_both) {
       stat_grow_container.className = "item-grow-container";
-      stat_grow_container.tabIndex = -1;
+      stat_grow_container.tabIndex  = -1;
     }
     else {
       stat_grow_container.className = "item-grow-container is-empty";
-      stat_grow_container.is_empty = true;
+      stat_grow_container.is_empty  = true;
     }
 
     // Grow mood substantial changes marking: positive and negative
-    const add_mood_class = is_mood_pos ? " item-mark-grow"
-                         : is_mood_neg ? " item-mark-fall" : "";
-
-    if   (add_mood_class) {
-      stat_grow_container.is_subst = true;
-    }
-
-    // 6.2. Grow: old
-    const stat_grow_old = document.createElement("div");
-    stat_grow_old.className = "item-grow-old" + add_mood_class;
-                              // 123
-    stat_grow_old.textContent = "   "; // 3ch
-
-    // 6.3. Grow: 23
-    const stat_grow_23 = document.createElement("div");
-    stat_grow_23.className = "item-grow-23" + add_mood_class;
-    stat_grow_23.textContent = "   "; // 3ch
-
-    // 6.4. Grow: 7
-    const stat_grow_7 = document.createElement("div");
-    stat_grow_7.className = "item-grow-7" + add_mood_class;
-    stat_grow_7.textContent = "   "; // 3ch
-
-    // 6.5. Grow: assemble the hierarchy
-    stat_grow_container.appendChild(stat_grow_old);
-    stat_grow_container.appendChild(stat_grow_23 );
-    stat_grow_container.appendChild(stat_grow_7  );
+    //
+    let grow_is_subst = false;
+    //
+    if (is_mood_pos) { add_grow_raw_mood_is(index, +1); grow_is_subst = true; }
+    if (is_mood_neg) { add_grow_raw_mood_is(index, -1); grow_is_subst = true; }
+    //
+    if (grow_is_subst) stat_grow_container.is_subst = true;
 
     ///////////////////
     // 7. Add all parts

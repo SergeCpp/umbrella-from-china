@@ -1,17 +1,18 @@
 /* Deferred Render */
 
-const    defer_render_chunk_sz  =  36;  // 12 + 22 x 36 + 22 = 826
-const    defer_render_chunk_du  =   4;  // ms, max allowed for chunk
-const    defer_render_wait      =   8;  // ms, between chunks
-const    defer_render_pending   = 300;  // ms, for items
+const    defer_render_chunk_sz  =  36;   // 12 + 22 x 36 + 22 = 826
+const    defer_render_chunk_du  =   4;   // ms, max allowed for chunk
+const    defer_render_wait      =   8;   // ms, between chunks
+const    defer_render_pend      = 300;   // ms, for items
 
-let      defer_render_shown     = 0;    // These set only in defer_render
-let      defer_render_time      = 0;    //
+let      defer_render_shown     = 0;     // These set only in defer_render
+let      defer_render_time      = 0;     //
 
-let      defer_render_processed = 0;    // These set also in defer_render_step
-let      defer_render_chunks    = 0;    //
-let      defer_render_duration  = 0;    //
-let      defer_render_wrapper   = null; //
+let      defer_render_processed = 0;     // These set also in defer_render_step
+let      defer_render_chunks    = 0;     //
+let      defer_render_duration  = 0;     //
+let      defer_render_wrapper   = null;  //
+let      defer_render_pend_done = false; //
 
 function defer_render            (shown) {
          defer_render_shown     = shown;
@@ -21,6 +22,7 @@ function defer_render            (shown) {
          defer_render_chunks    = 0;
          defer_render_duration  = 0;
          defer_render_wrapper   = null;
+         defer_render_pend_done = false;
 
   if (!shown) return;
 
@@ -39,13 +41,21 @@ function defer_render_step(defer_time, chunk_sz_override) {
   const time_0  = performance.now();
   let   wrapper = null;
 
-  if (!defer_render_processed) {
-    const container = document.getElementById("results");
-          wrapper   = container.querySelector(".item-wrapper");
-    if  (!wrapper)  { defer_render_pass(defer_render_pending); return; } // No items yet
+  if (defer_render_processed) {
+          wrapper   = defer_render_wrapper;
   }
   else {
-          wrapper   = defer_render_wrapper;
+    const container = document.getElementById("results");
+          wrapper   = container.querySelector(".item-wrapper");
+
+    if  (!wrapper) { // No items yet
+      if (!defer_render_pend_done) {
+           defer_render_pend_done = true;
+           defer_render_pass(defer_render_pend);
+      }
+
+      return;
+    }
   }
 
   let count    = Math.min(chunk_sz_override || defer_render_chunk_sz, defer_render_shown - defer_render_processed);
@@ -271,10 +281,10 @@ function set_item_prev(index, container) {
   stat_prev_old.className   = "item-stat-prev-old" + rank_is_class;
 
   const stat_prev_23        = document.createElement("div");
-  stat_prev_23.className    = "item-stat-prev-23"  + rank_is_class;
+  stat_prev_23 .className   = "item-stat-prev-23"  + rank_is_class;
 
   const stat_prev_7         = document.createElement("div");
-  stat_prev_7.className     = "item-stat-prev-7"   + rank_is_class;
+  stat_prev_7  .className   = "item-stat-prev-7"   + rank_is_class;
 
   stat_prev_old.textContent = raw.views_old_all.toString().padStart(6) + " /" +
                               raw. days_old_all.toString().padStart(5) + " =" +
@@ -342,10 +352,10 @@ function set_item_curr(index, container) {
   stat_curr_old.className   = "item-stat-curr-old" + horz_is_class;
 
   const stat_curr_23        = document.createElement("div");
-  stat_curr_23.className    = "item-stat-curr-23"  + vert_is_class;
+  stat_curr_23 .className   = "item-stat-curr-23"  + vert_is_class;
 
   const stat_curr_7         = document.createElement("div");
-  stat_curr_7.className     = "item-stat-curr-7"   + vert_is_class;
+  stat_curr_7  .className   = "item-stat-curr-7"   + vert_is_class;
 
   stat_curr_old.textContent = raw.views_old_all.toString().padStart(6) + " /" +
                               raw. days_old_all.toString().padStart(5) + " =" +
@@ -362,31 +372,47 @@ function set_item_curr(index, container) {
 
 /* Grow */
 
-let grow_raw_data = {};
+let grow_raw_data    = {};
+let grow_raw_mood_is = {};
 
 function init_grow_raw() {
-    grow_raw_data = {};
+    grow_raw_data    = {};
+    grow_raw_mood_is = {};
 }
 
 function add_grow_raw(index,     grow_old, grow_23, grow_7) {
         grow_raw_data[index] = { grow_old, grow_23, grow_7 };
 }
 
-function set_item_grow(index, grow_container) {
+function add_grow_raw_mood_is(index,   mood_is) {
+             grow_raw_mood_is[index] = mood_is;
+}
+
+function set_item_grow(index, container) {
   const raw = grow_raw_data[index];
   if  (!raw)  return;
 
-  const grow_old  = grow_container.firstElementChild;
-  if  (!grow_old)   return;
-  const grow_23   = grow_old      . nextElementSibling;
-  if  (!grow_23)    return;
-  const grow_7    = grow_23       . nextElementSibling;
-  if  (!grow_7)     return;
+  // Grow mood substantial changes marking: positive and negative
+  const mood_is = grow_raw_mood_is[index];
+  const mood_is_class = mood_is > 0 ? " item-mark-grow"
+                      : mood_is < 0 ? " item-mark-fall" : "";
 
-                    //  123
-  if (raw.grow_old !== "   ") grow_old.textContent = raw.grow_old;
-  if (raw.grow_23  !== "   ") grow_23 .textContent = raw.grow_23;
-  if (raw.grow_7   !== "   ") grow_7  .textContent = raw.grow_7;
+  const stat_grow_old       = document.createElement("div");
+  stat_grow_old.className   = "item-grow-old" + mood_is_class;
+
+  const stat_grow_23        = document.createElement("div");
+  stat_grow_23 .className   = "item-grow-23"  + mood_is_class;
+
+  const stat_grow_7         = document.createElement("div");
+  stat_grow_7  .className   = "item-grow-7"   + mood_is_class;
+
+  stat_grow_old.textContent = raw.grow_old;
+  stat_grow_23 .textContent = raw.grow_23;
+  stat_grow_7  .textContent = raw.grow_7;
+
+  container.appendChild(stat_grow_old);
+  container.appendChild(stat_grow_23 );
+  container.appendChild(stat_grow_7  );
 }
 
 /* Ordinals */
