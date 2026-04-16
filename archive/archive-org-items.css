@@ -526,6 +526,8 @@ input[type="checkbox"].changed.tab-e {
   align-items: center; /* Vertically center title, stats, and grow */
   border-radius: 0.5rem;
   display: flex;
+  font-family: monospace;
+  height: 3lh; /* To set the height for inner w/o stat and grow containers inside */
   justify-content: space-between;
 }
 .item-inner:hover {
@@ -539,6 +541,7 @@ input[type="checkbox"].changed.tab-e {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
+  font-family: sans-serif;
   overflow-x: hidden; /* To constrain the child, to use ellipsis there. Value "clip" not works here */
 }
 
@@ -601,7 +604,7 @@ input[type="checkbox"].changed.tab-e {
   flex: 0 0 22ch;
   flex-direction: column;
   font-family: monospace;
-  height: 3lh; /* To set the height for empty cell (w/o inners: old, 23, 7) */
+  height: 3lh; /* To set the height for empty stat (w/o old, 23, 7 inside) */
   outline-offset: -2px; /* For outline not to be clipped, to be within padding */
   white-space: pre;
 }
@@ -648,7 +651,7 @@ input[type="checkbox"].changed.tab-e {
   flex: 0 0 3ch;
   flex-direction: column;
   font-family: monospace;
-  height: 3lh; /* To set the height for empty cell (w/o inners: old, 23, 7) */
+  height: 3lh; /* To set the height for empty grow (w/o old, 23, 7 inside) */
   outline-offset: -2px; /* For outline not to be clipped, to be within padding */
   white-space: pre;
 }

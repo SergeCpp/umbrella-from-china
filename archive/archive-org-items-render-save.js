@@ -763,6 +763,8 @@ function render_results_dom(
   clr_details_div_inners();
   clr_linkage_for_items ();
   //
+  init_cells_raw();
+  //
   for (let index = 0; index < curr_length; index++) {
     const item = results_curr_exp[index];
 
@@ -854,6 +856,9 @@ function render_results_dom(
     const item_inner = document.createElement("div");
     item_inner.className = "item-inner";
 
+    add_cells_raw_is(index, is_prev, no_prev, is_both);
+
+/*
     // 3. Title, see set_item_title
     const item_title_container = document.createElement("div");
     item_title_container.className = "item-title-container";
@@ -870,6 +875,7 @@ function render_results_dom(
       stat_prev_container.className = "item-stat-container is-empty";
       stat_prev_container.is_empty  = true;
     }
+*/
 
     // Rank substantial changes marking: up and dn
     //
@@ -878,6 +884,8 @@ function render_results_dom(
     if (is_rank_up) { add_prev_raw_rank_is(index, +1); prev_is_subst = true; }
     if (is_rank_dn) { add_prev_raw_rank_is(index, -1); prev_is_subst = true; }
     //
+
+/*
     if (prev_is_subst) stat_prev_container.is_subst = true;
 
     //////////////////////////////////////////////////////
@@ -892,6 +900,7 @@ function render_results_dom(
       stat_curr_container.className = "item-stat-container is-empty";
       stat_curr_container.is_empty  = true;
     }
+*/
 
     // Substantial changes marking: horizontal impact of old      from prev to     curr
     // Substantial changes marking: vertical   impact of 23 and 7 into all  within curr
@@ -904,6 +913,8 @@ function render_results_dom(
     if (is_vert_grow) { add_curr_raw_vert_is(index, +1); curr_is_subst = true; }
     if (is_vert_fall) { add_curr_raw_vert_is(index, -1); curr_is_subst = true; }
     //
+
+/*
     if (curr_is_subst) stat_curr_container.is_subst = true;
 
     /////////////////////////////////////////////////
@@ -918,6 +929,7 @@ function render_results_dom(
       stat_grow_container.className = "item-grow-container is-empty";
       stat_grow_container.is_empty  = true;
     }
+*/
 
     // Grow mood substantial changes marking: positive and negative
     //
@@ -926,14 +938,23 @@ function render_results_dom(
     if (is_mood_pos) { add_grow_raw_mood_is(index, +1); grow_is_subst = true; }
     if (is_mood_neg) { add_grow_raw_mood_is(index, -1); grow_is_subst = true; }
     //
-    if (grow_is_subst) stat_grow_container.is_subst = true;
 
+/*
+    if (grow_is_subst) stat_grow_container.is_subst = true;
+*/
+
+    if                          (prev_is_subst || curr_is_subst || grow_is_subst) {
+      add_cells_raw_subst(index, prev_is_subst,   curr_is_subst,   grow_is_subst)
+    }
+
+/*
     ///////////////////
     // 7. Add all parts
     item_inner.appendChild(item_title_container);
     item_inner.appendChild(stat_prev_container );
     item_inner.appendChild(stat_curr_container );
     item_inner.appendChild(stat_grow_container );
+*/
 
     ////////////
     // 8.1. Wrap
@@ -964,12 +985,18 @@ function render_results_dom(
         is_prev ? null : item);
     }
 
+/*
     // 8.5. Add linkage for item
     add_linkage_for_items(index, shown_cnt,
       is_both && item.rank_change,  is_both && stat_prev_container,
       is_both && item.horz_change,  is_both && stat_curr_container,
      !is_prev && item.vert_change, !is_prev && stat_curr_container,
       is_both && item.grow._mood,   is_both && stat_grow_container);
+*/
+
+    if (is_both || !is_prev) {
+      add_cells_raw_changes(index, shown_cnt, item.rank_change, item.horz_change, item.vert_change, item.grow._mood);
+    }
   } // for (index) closing
 
   if (shown_cnt !== curr_length) update_diffs(shown_cnt, show_by);
