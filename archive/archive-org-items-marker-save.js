@@ -2,15 +2,15 @@
 
 let saved_focus_id = null;
 
-function save_focus(id) {
-  saved_focus_id = id;
+function save_focus (id) {
+    saved_focus_id = id;
 }
 
 function restore_focus() {
   if (!saved_focus_id) return;
 
   const elem = document.getElementById(saved_focus_id);
-  if   (elem) elem.focus();
+  if   (elem) elem.focus({ preventScroll: true });
 
   saved_focus_id = null;
 }
@@ -920,7 +920,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
   const vert_all_old   = [];  // Of curr_length anyway
   //
   // Mark rank changes
-  // Mark mood changes
+  // Mark mood
   //
   const rank_decay     = 160; // Scale divisor: 1 to 160
 //const rank_log_steep = 3;   // To more than log prioritize top items
@@ -1040,7 +1040,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
     // Rank change, 0 is no change
     //
     let   rank_change = 0;
-    const rank_diff = item.index_prev - index_curr; // No abs
+    const rank_diff   = item.index_prev - index_curr; // No abs
     if   (rank_diff) { // Also if length === 1 then index_prev === index_curr
       if (item.is_both) { // Item is markable
 //      const rank_scale  = get_scale_log(index_curr, curr_log_base, rank_log_steep, rank_decay);
@@ -1056,9 +1056,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
     //////////////////////////////
     // Grow and Mood, 0 is no Mood
     //
-    let   _mood = 0;
-    const _grow = {}; // _old, _23, _7 [, _mood]
-    //
+    let mood = 0;
     if (item.is_both) { // Item is markable
       const grow_old = show_by_old
                      ? get_grow_ratio(item_prev.ratio_old, item.ratio_old)
@@ -1068,10 +1066,6 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
                      : get_grow_fixed(item_prev.views_30,  item.views_30 );
       const grow_7   = get_grow_fixed(item_prev.views_7,   item.views_7  );
 
-//    _grow._old = grow_old;
-//    _grow._23  = grow_23;
-//    _grow._7   = grow_7;
-
       add_grow_raw(index_curr, grow_old, grow_23, grow_7);
 
       const grow_mood = get_grow_mood(grow_old, grow_23, grow_7, mood_by_same);
@@ -1079,18 +1073,12 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
 //      const mood_scale = get_scale_log(index_curr, curr_log_base, mood_log_steep, mood_decay);
         const mood_scale = get_scale_sig(index_curr, curr_length,
           mood_sig_base, mood_sig_steep, mood_decay, mood_sig_min, mood_sig_max);
-        _mood = grow_mood / mood_scale;
-        add_details_raw_mood(index_curr, grow_mood, mood_scale, _mood);
+        mood = grow_mood / mood_scale;
+        item.mood = mood; // Needed in markable item only, and if grow_mood is not 0 only
+        add_details_raw_mood(index_curr, grow_mood, mood_scale, mood);
       }
-      _grow._mood = _mood; // Needed in markable item only
     }
-//  else {
-//    _grow._old = "   ";
-//    _grow._23  = "   ";
-//    _grow._7   = "   ";
-//  }
-    item.grow = _grow;
-    mood_pos_neg.push({ index: index_curr, value: _mood }); // Needed in array anyway
+    mood_pos_neg.push({ index: index_curr, value: mood }); // Needed in array anyway
 
     /////////
     // Gauges

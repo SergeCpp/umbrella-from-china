@@ -691,6 +691,8 @@ function load_stats() {
 
   document.querySelector("footer").classList.add("collapse");
 
+  history.scrollRestoration = "manual";
+
   if (stat_prev_date === stat_curr_date) {
     load_stat_file(stat_prev_date)
       .then(loaded_items => {

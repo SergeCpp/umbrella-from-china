@@ -108,7 +108,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       horz_change  : 0,
       vert_change  : 0,
       rank_change  : 0,
-      grow         : null,
+      mood         : 0,
       marks        : null,
       is_rank_up   : null,
       is_rank_dn   : null,
@@ -135,7 +135,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
         horz_change  : 0,
         vert_change  : 0,
         rank_change  : 0,
-        grow         : null,
+        mood         : 0,
         marks        : null,
         is_rank_up   : null,
         is_rank_dn   : null,
@@ -288,8 +288,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     const is_vert_grow = !item.is_prev && (item.vert_change >= mark_grow_23_7);
     const is_vert_fall = !item.is_prev && (item.vert_change <= mark_fall_23_7);
 
-    const is_mood_pos  =  item.is_both && (item.grow._mood  >= mark_mood_pos);
-    const is_mood_neg  =  item.is_both && (item.grow._mood  <= mark_mood_neg);
+    const is_mood_pos  =  item.is_both && (item.mood        >= mark_mood_pos);
+    const is_mood_neg  =  item.is_both && (item.mood        <= mark_mood_neg);
 
     const is_subst     =  is_rank_up || is_horz_grow || is_vert_grow || is_mood_pos ||
                           is_rank_dn || is_horz_fall || is_vert_fall || is_mood_neg;
@@ -916,7 +916,7 @@ function render_results_dom(
     }
 
     if (is_both || !is_prev) {
-      add_cells_raw_changes(index, shown_cnt, item.rank_change, item.horz_change, item.vert_change, item.grow._mood);
+      add_cells_raw_changes(index, shown_cnt, item.rank_change, item.horz_change, item.vert_change, item.mood);
     }
   } // for (index) closing
 
