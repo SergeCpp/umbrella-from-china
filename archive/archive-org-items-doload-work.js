@@ -689,6 +689,8 @@ function load_stats() {
   const container = document.getElementById("results");
         container . innerHTML = '<div class="text-center text-comment">Loading...</div>';
 
+  document.querySelector("footer").classList.add("collapse");
+
   if (stat_prev_date === stat_curr_date) {
     load_stat_file(stat_prev_date)
       .then(loaded_items => {

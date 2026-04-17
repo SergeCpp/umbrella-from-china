@@ -70,6 +70,7 @@ function init_render() {
 
 /* Render */
 
+let       footer_is_hidden = true;
 const    process_du_render = { pre: 0, dom: 0 }; // ms
 
 function time_render() {
@@ -847,35 +848,18 @@ function render_results_dom(
       }
     }
 
-    // 1. Outer wrapper, for border/divider and spacing
-    const item_wrapper = document.createElement("div");
-    item_wrapper.className = "item-wrapper";
+    // Outer wrapper, for border/divider and spacing
+    const item_wrapper      = document.createElement("div");
+    item_wrapper.className  = "item-wrapper";
     item_wrapper.item_index = index;
 
-    // 2. Inner flex container
-    const item_inner = document.createElement("div");
-    item_inner.className = "item-inner";
+    // Inner flex container
+    const item_inner        = document.createElement("div");
+    item_inner.className    = "item-inner";
+
+    item_wrapper.appendChild  (item_inner);
 
     add_cells_raw_is(index, is_prev, no_prev, is_both);
-
-/*
-    // 3. Title, see set_item_title
-    const item_title_container = document.createElement("div");
-    item_title_container.className = "item-title-container";
-
-    //////////////////////////////////////////////////////
-    // 4. Prev stat container (stacked), see set_item_prev
-    const stat_prev_container = document.createElement("div"); // flex: 0 0 22ch;
-
-    if (!no_prev) {
-      stat_prev_container.className = "item-stat-container";
-      stat_prev_container.tabIndex  = -1;
-    }
-    else {
-      stat_prev_container.className = "item-stat-container is-empty";
-      stat_prev_container.is_empty  = true;
-    }
-*/
 
     // Rank substantial changes marking: up and dn
     //
@@ -883,24 +867,6 @@ function render_results_dom(
     //
     if (is_rank_up) { add_prev_raw_rank_is(index, +1); prev_is_subst = true; }
     if (is_rank_dn) { add_prev_raw_rank_is(index, -1); prev_is_subst = true; }
-    //
-
-/*
-    if (prev_is_subst) stat_prev_container.is_subst = true;
-
-    //////////////////////////////////////////////////////
-    // 5. Curr stat container (stacked), see set_item_curr
-    const stat_curr_container = document.createElement("div"); // flex: 0 0 22ch;
-
-    if (!is_prev) {
-      stat_curr_container.className = "item-stat-container";
-      stat_curr_container.tabIndex  = -1;
-    }
-    else {
-      stat_curr_container.className = "item-stat-container is-empty";
-      stat_curr_container.is_empty  = true;
-    }
-*/
 
     // Substantial changes marking: horizontal impact of old      from prev to     curr
     // Substantial changes marking: vertical   impact of 23 and 7 into all  within curr
@@ -912,24 +878,6 @@ function render_results_dom(
     //
     if (is_vert_grow) { add_curr_raw_vert_is(index, +1); curr_is_subst = true; }
     if (is_vert_fall) { add_curr_raw_vert_is(index, -1); curr_is_subst = true; }
-    //
-
-/*
-    if (curr_is_subst) stat_curr_container.is_subst = true;
-
-    /////////////////////////////////////////////////
-    // 6. Grow container (stacked), see set_item_grow
-    const stat_grow_container = document.createElement("div"); // flex: 0 0 3ch;
-
-    if (is_both) {
-      stat_grow_container.className = "item-grow-container";
-      stat_grow_container.tabIndex  = -1;
-    }
-    else {
-      stat_grow_container.className = "item-grow-container is-empty";
-      stat_grow_container.is_empty  = true;
-    }
-*/
 
     // Grow mood substantial changes marking: positive and negative
     //
@@ -937,30 +885,12 @@ function render_results_dom(
     //
     if (is_mood_pos) { add_grow_raw_mood_is(index, +1); grow_is_subst = true; }
     if (is_mood_neg) { add_grow_raw_mood_is(index, -1); grow_is_subst = true; }
-    //
-
-/*
-    if (grow_is_subst) stat_grow_container.is_subst = true;
-*/
 
     if                          (prev_is_subst || curr_is_subst || grow_is_subst) {
       add_cells_raw_subst(index, prev_is_subst,   curr_is_subst,   grow_is_subst)
     }
 
-/*
-    ///////////////////
-    // 7. Add all parts
-    item_inner.appendChild(item_title_container);
-    item_inner.appendChild(stat_prev_container );
-    item_inner.appendChild(stat_curr_container );
-    item_inner.appendChild(stat_grow_container );
-*/
-
-    ////////////
-    // 8.1. Wrap
-    item_wrapper.appendChild(item_inner);
-
-    // 8.2. Add mark indicators (if any)
+    // Add mark indicators (if any)
     if (item.marks) {
       const mark_last = item.marks.length - 1;
       for (let m = 0; m <= mark_last; m++) {
@@ -974,25 +904,16 @@ function render_results_dom(
       item_wrapper.style.borderBottom = "none"; // Mark will be the border
     }
 
-    // 8.3. Add item to the page
+    // Add item to the page
     container.appendChild(item_wrapper);
     shown_cnt++;
 
-    // 8.4. Count vievs and favorites for shown items
+    // Count vievs and favorites for shown items
     if (is_filtering) {
       add_views_favs_shown(
         no_prev ? null : is_prev ? item : map_prev[item.identifier],
         is_prev ? null : item);
     }
-
-/*
-    // 8.5. Add linkage for item
-    add_linkage_for_items(index, shown_cnt,
-      is_both && item.rank_change,  is_both && stat_prev_container,
-      is_both && item.horz_change,  is_both && stat_curr_container,
-     !is_prev && item.vert_change, !is_prev && stat_curr_container,
-      is_both && item.grow._mood,   is_both && stat_grow_container);
-*/
 
     if (is_both || !is_prev) {
       add_cells_raw_changes(index, shown_cnt, item.rank_change, item.horz_change, item.vert_change, item.grow._mood);
@@ -1012,6 +933,11 @@ function render_results_dom(
   process_du_render.dom = performance.now() - time_0;
 
   process_timings();
+
+  if (footer_is_hidden) {
+      footer_is_hidden = false;
+      document.querySelector("footer").classList.remove("collapse");
+  }
 
   } catch (err) {
     process_error(error_compose("Error: " + err.message));

@@ -65,19 +65,13 @@ function defer_render_step(defer_time, chunk_sz_override) {
     const index = wrapper.item_index;
     if   (index === undefined) return;
 
-    const inner           = wrapper        .firstElementChild;
-    if  (!inner)            return;
+    const inner = wrapper.firstElementChild;
+    if  (!inner)  return;
 
-    create_cells_raw(index, inner);
-
-    const title_container = inner          .firstElementChild;
-    if  (!title_container)  return;
-    const  prev_container = title_container. nextElementSibling;
-    if   (!prev_container)  return;
-    const  curr_container =  prev_container. nextElementSibling;
-    if   (!curr_container)  return;
-    const  grow_container =  curr_container. nextElementSibling;
-    if   (!grow_container)  return;
+    const [title_container,
+            prev_container,
+            curr_container,
+            grow_container] = create_cells_raw(index, inner);
 
     set_item_title(index, title_container, defer_render_processed);
     set_item_prev (index,  prev_container);
@@ -132,76 +126,85 @@ function add_cells_raw_changes(index,     shown, rank_change, horz_change, vert_
              cells_raw_changes[index] = { shown, rank_change, horz_change, vert_change, mood };
 }
 
-function create_cells_raw     (index, inner) {
-  const raw_is  = cells_raw_is[index];
-  if  (!raw_is)   return;
+function create_cells_raw(index, inner) {
+  const raw_is    = cells_raw_is[index];
+  if  (!raw_is)     return;
 
-  const is_prev = raw_is.is_prev;
-  const no_prev = raw_is.no_prev;
-  const is_both = raw_is.is_both;
+  const is_prev   = raw_is.is_prev;
+  const no_prev   = raw_is.no_prev;
+  const is_both   = raw_is.is_both;
 
-  const raw_subst   = cells_raw_subst  [index];
-  const raw_changes = cells_raw_changes[index];
+  const raw_subst = cells_raw_subst[index];
 
   // Cell 1. Title, see set_item_title
-  const item_title_container     = document.createElement("div");
-  item_title_container.className = "item-title-container";
+  const title_container     = document.createElement("div");
+  title_container.className = "item-title-container";
 
-  // Cell 2. Prev stat container (stacked), see set_item_prev
-  const stat_prev_container = document.createElement("div"); // flex: 0 0 22ch;
+  // Cell 2. Prev container (stacked), see set_item_prev
+  const prev_container = document.createElement("div"); // flex: 0 0 22ch;
 
   if (!no_prev) {
-    stat_prev_container.className = "item-stat-container";
-    stat_prev_container.tabIndex  = -1;
+    prev_container.className = "item-stat-container";
+    prev_container.tabIndex  = -1;
   }
   else {
-    stat_prev_container.className = "item-stat-container is-empty";
-    stat_prev_container.is_empty  = true;
+    prev_container.className = "item-stat-container is-empty";
+    prev_container.is_empty  = true;
   }
 
-  if (raw_subst?.prev_is_subst) stat_prev_container.is_subst = true;
+  if (raw_subst?.prev_is_subst) prev_container.is_subst = true;
 
-  // Cell 3. Curr stat container (stacked), see set_item_curr
-  const stat_curr_container = document.createElement("div"); // flex: 0 0 22ch;
+  // Cell 3. Curr container (stacked), see set_item_curr
+  const curr_container = document.createElement("div"); // flex: 0 0 22ch;
 
   if (!is_prev) {
-    stat_curr_container.className = "item-stat-container";
-    stat_curr_container.tabIndex  = -1;
+    curr_container.className = "item-stat-container";
+    curr_container.tabIndex  = -1;
   }
   else {
-    stat_curr_container.className = "item-stat-container is-empty";
-    stat_curr_container.is_empty  = true;
+    curr_container.className = "item-stat-container is-empty";
+    curr_container.is_empty  = true;
   }
 
-  if (raw_subst?.curr_is_subst) stat_curr_container.is_subst = true;
+  if (raw_subst?.curr_is_subst) curr_container.is_subst = true;
 
   // Cell 4. Grow container (stacked), see set_item_grow
-  const stat_grow_container = document.createElement("div"); // flex: 0 0 3ch;
+  const grow_container = document.createElement("div"); // flex: 0 0 3ch;
 
   if (is_both) {
-    stat_grow_container.className = "item-grow-container";
-    stat_grow_container.tabIndex  = -1;
+    grow_container.className = "item-grow-container";
+    grow_container.tabIndex  = -1;
   }
   else {
-    stat_grow_container.className = "item-grow-container is-empty";
-    stat_grow_container.is_empty  = true;
+    grow_container.className = "item-grow-container is-empty";
+    grow_container.is_empty  = true;
   }
 
-  if (raw_subst?.grow_is_subst) stat_grow_container.is_subst = true;
+  if (raw_subst?.grow_is_subst) grow_container.is_subst = true;
 
-  inner.appendChild(item_title_container);
-  inner.appendChild(stat_prev_container );
-  inner.appendChild(stat_curr_container );
-  inner.appendChild(stat_grow_container );
+  //
+  inner.appendChild(title_container);
+  inner.appendChild( prev_container);
+  inner.appendChild( curr_container);
+  inner.appendChild( grow_container);
 
-  if (raw_changes) {
+  //
+  const raw_changes = cells_raw_changes[index];
+
+  if   (raw_changes) {
     add_linkage_for_items(index,
                  raw_changes.shown,
-      is_both && raw_changes.rank_change,  is_both && stat_prev_container,
-      is_both && raw_changes.horz_change,  is_both && stat_curr_container,
-     !is_prev && raw_changes.vert_change, !is_prev && stat_curr_container,
-      is_both && raw_changes.mood,         is_both && stat_grow_container);
+      is_both && raw_changes.rank_change,  is_both && prev_container,
+      is_both && raw_changes.horz_change,  is_both && curr_container,
+     !is_prev && raw_changes.vert_change, !is_prev && curr_container,
+      is_both && raw_changes.mood,         is_both && grow_container);
   }
+
+  //
+  return [title_container,
+           prev_container,
+           curr_container,
+           grow_container];
 }
 
 /* Title */
