@@ -1,7 +1,7 @@
 /* Deferred Render */
 
-const    defer_render_chunk_sz  =  33;   // 11 + 24 x 33 + 23 = 826
-const    defer_render_chunk_du  =   4;   // ms, max allowed for chunk: 100 ms / 826 * 33 = 3.995 ms
+const    defer_render_chunk_sz  =  30;   // 16 + 27 x 30 = 826
+const    defer_render_chunk_du  =   4;   // ms, max allowed for chunk: 110 ms / 826 * 30 = 3.995 ms
 const    defer_render_wait      =   7;   // ms, between chunks
 const    defer_render_pend      = 300;   // ms, for items
 
@@ -26,7 +26,7 @@ function defer_render            (shown) {
 
   if (!shown) return;
 
-  const chunk_sz_override = Math.max(Math.round(defer_render_chunk_sz / 3), 1); // Short first chunk
+  const chunk_sz_override  =  Math .round(defer_render_chunk_sz / 2) + 1; // Shorter first chunk
   requestAnimationFrame(() => defer_render_step(defer_render_time, chunk_sz_override)); // Fast start
 }
 
@@ -65,13 +65,10 @@ function defer_render_step(defer_time, chunk_sz_override) {
     const index = wrapper.item_index;
     if   (index === undefined) return;
 
-    const inner = wrapper.firstElementChild;
-    if  (!inner)  return;
-
     const [title_container,
             prev_container,
             curr_container,
-            grow_container] = create_cells_raw(index, inner);
+            grow_container] = create_cells_raw(index, wrapper);
 
     set_item_title(index, title_container, defer_render_processed);
     set_item_prev (index,  prev_container);
@@ -126,7 +123,7 @@ function add_cells_raw_changes(index,     shown, rank_change, horz_change, vert_
              cells_raw_changes[index] = { shown, rank_change, horz_change, vert_change, mood };
 }
 
-function create_cells_raw(index, inner) {
+function create_cells_raw(index, wrapper) {
   const raw_is    = cells_raw_is[index];
   if  (!raw_is)     return;
 
@@ -135,6 +132,10 @@ function create_cells_raw(index, inner) {
   const is_both   = raw_is.is_both;
 
   const raw_subst = cells_raw_subst[index];
+
+  // Inner flex container
+  const inner     = document.createElement("div");
+  inner.className = "item-inner";
 
   // Cell 1. Title, see set_item_title
   const title_container     = document.createElement("div");
@@ -183,10 +184,14 @@ function create_cells_raw(index, inner) {
   if (raw_subst?.grow_is_subst) grow_container.is_subst = true;
 
   //
-  inner.appendChild(title_container);
-  inner.appendChild( prev_container);
-  inner.appendChild( curr_container);
-  inner.appendChild( grow_container);
+  inner  .appendChild(title_container);
+  inner  .appendChild( prev_container);
+  inner  .appendChild( curr_container);
+  inner  .appendChild( grow_container);
+
+  wrapper.appendChild(inner);
+  wrapper.style.fontFamily = "inherit"; // To clear values set in css for initial rendering only
+  wrapper.style.height     = "auto";    //
 
   //
   const raw_changes = cells_raw_changes[index];

@@ -517,6 +517,10 @@ input[type="checkbox"].changed.tab-e {
   border-bottom-color: #ebebeb; /* Gray92. Matches page header */
   border-bottom-style: solid;
   border-bottom-width: 3px; /* Medium. Matches page header */
+
+  /* These two are set here for initial rendering only, and will be reset in create_cells_raw */
+  font-family: monospace; /* To match inner and childs */
+  height: 3lh; /* To set the height for wrapper w/o inner inside */
 }
 .item-wrapper:has(.item-inner:hover) {
   border-bottom-color: #e3e3e3; /* Gray89 */

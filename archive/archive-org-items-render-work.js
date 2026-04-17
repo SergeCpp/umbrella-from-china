@@ -853,12 +853,6 @@ function render_results_dom(
     item_wrapper.className  = "item-wrapper";
     item_wrapper.item_index = index;
 
-    // Inner flex container
-    const item_inner        = document.createElement("div");
-    item_inner.className    = "item-inner";
-
-    item_wrapper.appendChild  (item_inner);
-
     add_cells_raw_is(index, is_prev, no_prev, is_both);
 
     // Rank substantial changes marking: up and dn
