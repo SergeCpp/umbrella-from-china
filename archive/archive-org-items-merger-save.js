@@ -1,68 +1,48 @@
 /* Deferred Render */
 
-const    defer_render_chunk_sz  =  30;   // 16 + 27 x 30 = 826
-const    defer_render_chunk_du  =   4;   // ms, max allowed for chunk: 110 ms / 826 * 30 = 3.995 ms
-const    defer_render_wait      =   7;   // ms, between chunks
-const    defer_render_pend      = 300;   // ms, for items
+const    defer_render_chunk_sz  = 30; // 16 + 27 x 30 = 826
+const    defer_render_chunk_du  = 4;  // ms, max allowed for chunk: 110 ms / 826 * 30 = 3.995 ms
+const    defer_render_wait      = 7;  // ms, between chunks
 
-let      defer_render_shown     = 0;     // These set only in defer_render
-let      defer_render_time      = 0;     //
+let      defer_render_id        = 0;  // Set in init only
 
-let      defer_render_processed = 0;     // These set also in defer_render_step
-let      defer_render_chunks    = 0;     //
-let      defer_render_duration  = 0;     //
-let      defer_render_wrapper   = null;  //
-let      defer_render_pend_done = false; //
+let      defer_render_processed = 0;  // Set in init and step
+let      defer_render_chunks    = 0;  //
+let      defer_render_duration  = 0;  //
 
-function defer_render            (shown) {
-         defer_render_shown     = shown;
-         defer_render_time      = performance.now();
+let      defer_render_wrappers  = []; // Set in init and add
 
-         defer_render_processed = 0;
-         defer_render_chunks    = 0;
-         defer_render_duration  = 0;
-         defer_render_wrapper   = null;
-         defer_render_pend_done = false;
+function init_defer_render() {
+         defer_render_id        = performance.now();
+         defer_render_wrappers  = [];
+}
 
-  if (!shown) return;
+function add_defer_render   (wrapper) {
+  defer_render_wrappers.push(wrapper);
+}
+
+function defer_render() {
+  defer_render_processed   =  0;
+  defer_render_chunks      =  0;
+  defer_render_duration    =  0;
 
   const chunk_sz_override  =  Math .round(defer_render_chunk_sz / 2) + 1; // Shorter first chunk
-  requestAnimationFrame(() => defer_render_step(defer_render_time, chunk_sz_override)); // Fast start
+  requestAnimationFrame(() => defer_render_step(defer_render_id, chunk_sz_override)); // Fast start
 }
 
-function defer_render_pass(wait_override) {
-  setTimeout(defer_render_step, wait_override || defer_render_wait, defer_render_time);
-}
+function defer_render_step(render_id, chunk_sz_override) {
+  if (render_id !== defer_render_id) return;
 
-function defer_render_step(defer_time, chunk_sz_override) {
-  if (defer_time             !== defer_render_time ) return;
-  if (defer_render_processed === defer_render_shown) return;
+  const defer_render_total = defer_render_wrappers.length;
+  if   (defer_render_processed === defer_render_total) return;
 
-  const time_0  = performance.now();
-  let   wrapper = null;
-
-  if (defer_render_processed) {
-          wrapper   = defer_render_wrapper;
-  }
-  else {
-    const container = document.getElementById("results");
-          wrapper   = container.querySelector(".item-wrapper");
-
-    if  (!wrapper) { // No items yet
-      if (!defer_render_pend_done) {
-           defer_render_pend_done = true;
-           defer_render_pass(defer_render_pend);
-      }
-
-      return;
-    }
-  }
-
-  let count    = Math.min(chunk_sz_override || defer_render_chunk_sz, defer_render_shown - defer_render_processed);
-  let duration = 0;
+  const time_0   = performance.now();
+  let   count    = Math.min(chunk_sz_override || defer_render_chunk_sz, defer_render_total - defer_render_processed);
+  let   duration = 0;
 
   do {
-    const index = wrapper.item_index;
+    const wrapper = defer_render_wrappers[defer_render_processed];
+    const index   = wrapper.item_index;
     if   (index === undefined) return;
 
     const [title_container,
@@ -79,24 +59,23 @@ function defer_render_step(defer_time, chunk_sz_override) {
     count--;
     duration = performance.now() - time_0;
 
-    if (defer_render_processed === defer_render_shown) { wrapper = null; break; }
-
-    wrapper = wrapper.nextElementSibling;
-    if (!wrapper) return;
-
     if (duration > defer_render_chunk_du) break;
   }
   while(count);
 
-  defer_render_wrapper   = wrapper;
-  defer_render_duration += duration;
   defer_render_chunks++;
+  defer_render_duration += duration;
 
-  if (defer_render_processed < defer_render_shown) { defer_render_pass(); return; }
+  if (defer_render_processed < defer_render_total) {
+    setTimeout(defer_render_step, defer_render_wait, defer_render_id);
+    return;
+  }
 
-  const timing = document.getElementById("timings-render-by-timer");
+  const timing = document.getElementById("timings-render-deferred");
   if   (timing)
         timing.textContent = defer_render_duration.toFixed(1) + " (" + defer_render_chunks + ')';
+
+  setTimeout(render_finished, 0);
 }
 
 /* Cells */
@@ -104,11 +83,13 @@ function defer_render_step(defer_time, chunk_sz_override) {
 let cells_raw_is      = [];
 let cells_raw_subst   = {};
 let cells_raw_changes = {};
+let cells_raw_marks   = {};
 
 function init_cells_raw () {
     cells_raw_is      = [];
     cells_raw_subst   = {};
     cells_raw_changes = {};
+    cells_raw_marks   = {};
 }
 
 function add_cells_raw_is     (index,     is_prev, no_prev, is_both) {
@@ -121,6 +102,10 @@ function add_cells_raw_subst  (index,     prev_is_subst, curr_is_subst, grow_is_
 
 function add_cells_raw_changes(index,     shown, rank_change, horz_change, vert_change, mood) {
              cells_raw_changes[index] = { shown, rank_change, horz_change, vert_change, mood };
+}
+
+function add_cells_raw_marks  (index,   marks) {
+             cells_raw_marks  [index] = marks;
 }
 
 function create_cells_raw(index, wrapper) {
@@ -190,8 +175,25 @@ function create_cells_raw(index, wrapper) {
   inner  .appendChild( grow_container);
 
   wrapper.appendChild(inner);
-  wrapper.style.fontFamily = "inherit"; // To clear values set in css for initial rendering only
-  wrapper.style.height     = "auto";    //
+  wrapper.classList.remove("item-wrapper-init"); // Was added for initial rendering only
+
+  //
+  const raw_marks = cells_raw_marks[index];
+
+  if   (raw_marks) {
+    const marks_num = raw_marks.length;
+    const mark_last = marks_num - 1;
+
+    for (let m = 0; m < marks_num; m++) {
+      const mark_div     = document.createElement("div");
+      mark_div.className = "item-mark-" + raw_marks[m];
+      if (m < mark_last) mark_div.style.borderBottom = "3px solid white";
+      wrapper.appendChild(mark_div);
+    }
+
+    wrapper.classList.remove("item-wrapper-init-" + marks_num + "-marks");
+//  wrapper.style.borderBottom = "none"; // Last mark replaces wrapper border (set in render_results_dom)
+  }
 
   //
   const raw_changes = cells_raw_changes[index];

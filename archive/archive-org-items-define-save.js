@@ -667,7 +667,7 @@ function process_timings() {
     //
     format_nowrap('Render: ' + du_render.pre.toFixed(1) +   ' / ' +
                                du_render.dom.toFixed(1) +   ' / ' +
-        '<span id="timings-render-by-timer">0.0</span>' + ' ms' );
+    '<span id="timings-render-deferred">0.0 (0)</span>' + ' ms' );
 }
 
 function process_error(error) {

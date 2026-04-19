@@ -517,13 +517,25 @@ input[type="checkbox"].changed.tab-e {
   border-bottom-color: #ebebeb; /* Gray92. Matches page header */
   border-bottom-style: solid;
   border-bottom-width: 3px; /* Medium. Matches page header */
-
-  /* These two are set here for initial rendering only, and will be reset in create_cells_raw */
-  font-family: monospace; /* To match inner and childs */
-  height: 3lh; /* To set the height for wrapper w/o inner inside */
 }
 .item-wrapper:has(.item-inner:hover) {
   border-bottom-color: #e3e3e3; /* Gray89 */
+}
+.item-wrapper-init { /* Init rules for initial rendering, added in render_results_dom, removed in create_cells_raw */
+  font-family: monospace; /* To match inner and childs */
+  height: 3lh; /* To set the height for wrapper w/o inner inside, no marks */
+}
+.item-wrapper-init-1-marks {
+  height: calc(3lh + 3px); /* +3px is for mark itself, last mark w/o mark border (replaces wrapper border) */
+}
+.item-wrapper-init-2-marks {
+  height: calc(3lh + 9px); /* +6px is 3px for mark itself and 3px for mark border */
+}
+.item-wrapper-init-3-marks {
+  height: calc(3lh + 15px); /* +12px is for 2 marks */
+}
+.item-wrapper-init-4-marks {
+  height: calc(3lh + 21px); /* +18px is for 3 marks */
 }
 
 .item-inner {

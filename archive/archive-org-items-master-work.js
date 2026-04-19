@@ -486,9 +486,27 @@ function item_details(container, ensure_open = false, jump_to_item = false, link
     inner.after(details_div);
   }
 
-  if (jump_to_item) container.focus(); // Jump to item
+  //
+  let scrolled = false;
 
-  details_div.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  if (jump_to_item) {
+    const wr_rect = wrapper.getBoundingClientRect();
+    const wr_mid  = (wr_rect.top + wr_rect.bottom) / 2;
+    const vi_mid  = window.innerHeight             / 2;
+    const wr_dist = Math.abs(wr_mid - vi_mid);
+    const is_near = wr_dist < window.innerHeight;
+
+    if   (is_near) {
+      container.focus({ preventScroll: true });
+      wrapper  .scrollIntoView({ behavior: "smooth", block: "nearest" });
+      scrolled = true;
+    }
+    else {
+      container.focus();
+    }
+  }
+
+  if (!scrolled) details_div.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
   focus_linkage(details_div, linkage_go);
 }

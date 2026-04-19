@@ -7,6 +7,8 @@ let   mood_by           = "same-signs"; // "same-signs" / "diff-signs"
 
 /* Which items to show */
 
+let   chks_chain        = []; // Checkboxes chain (for arrows setting)
+
 let   show_prev         = true; function inp_prev  (chk) { show_prev  = chk.checked; }
 let   show_curr         = true; function inp_curr  (chk) { show_curr  = chk.checked; }
 let   show_both         = true; function inp_both  (chk) { show_both  = chk.checked; }
@@ -315,7 +317,6 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
   process_du_render.pre = performance.now() - time_0;
 
-//render_results_dom(
   setTimeout(render_results_dom, 0,
     results_prev, date_prev, results_curr, date_curr, results_curr_exp, curr_length, map_prev,
     curr_exp_totals, curr_exp_total, curr_exp_media,
@@ -375,7 +376,7 @@ function render_results_dom(
   ////////////////////////////////////////
   // Checkboxes chain (for arrows setting)
   //
-  const chks_chain = [];
+  chks_chain = [];
 
   //////////////////////
   // Which items to show
@@ -714,9 +715,6 @@ function render_results_dom(
     }
   } // if (marks_count) closing
 
-  // Set arrows for checkboxes
-  set_chain_arrows_plane(chks_chain);
-
   // Add space before item list
   container.lastElementChild.style.marginBottom = "1em";
 
@@ -764,7 +762,8 @@ function render_results_dom(
   clr_details_div_inners();
   clr_linkage_for_items ();
   //
-  init_cells_raw();
+  init_defer_render();
+  init_cells_raw   ();
   //
   for (let index = 0; index < curr_length; index++) {
     const item = results_curr_exp[index];
@@ -850,9 +849,10 @@ function render_results_dom(
 
     // Outer wrapper, for border/divider and spacing
     const item_wrapper      = document.createElement("div");
-    item_wrapper.className  = "item-wrapper";
+    item_wrapper.className  = "item-wrapper item-wrapper-init";
     item_wrapper.item_index = index;
 
+    add_defer_render(item_wrapper);
     add_cells_raw_is(index, is_prev, no_prev, is_both);
 
     // Rank substantial changes marking: up and dn
@@ -884,18 +884,11 @@ function render_results_dom(
       add_cells_raw_subst(index, prev_is_subst,   curr_is_subst,   grow_is_subst)
     }
 
-    // Add mark indicators (if any)
     if (item.marks) {
-      const mark_last = item.marks.length - 1;
-      for (let m = 0; m <= mark_last; m++) {
-        const m_mark = item.marks[m];
+      item_wrapper.classList.add("item-wrapper-init-" + item.marks.length + "-marks");
+      item_wrapper.style.borderBottom = "none"; // Last mark replaces wrapper border (see create_cells_raw)
 
-        const mark_div = document.createElement("div");
-        mark_div.className = "item-mark-" + m_mark;
-        if (m < mark_last) mark_div.style.borderBottom = "3px solid white";
-        item_wrapper.appendChild(mark_div);
-      }
-      item_wrapper.style.borderBottom = "none"; // Mark will be the border
+      add_cells_raw_marks(index, item.marks);
     }
 
     // Add item to the page
@@ -922,7 +915,7 @@ function render_results_dom(
 
   restore_focus();
 
-  defer_render(shown_cnt);
+  if (shown_cnt) defer_render();
 
   process_du_render.dom = performance.now() - time_0;
 
@@ -936,6 +929,10 @@ function render_results_dom(
   } catch (err) {
     process_error(error_compose("Error: " + err.message));
   }
+}
+
+function render_finished() {
+  set_chain_arrows_plane(chks_chain);
 }
 
 // EOF
