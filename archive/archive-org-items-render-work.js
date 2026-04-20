@@ -933,6 +933,8 @@ function render_results_dom(
 
 function render_finished() {
   set_chain_arrows_plane(chks_chain);
+
+  process_timings();
 }
 
 // EOF

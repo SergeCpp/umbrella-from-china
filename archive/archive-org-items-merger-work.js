@@ -17,10 +17,17 @@ function init_defer_render() {
          defer_render_wrappers  = [];
 }
 
+function time_defer_render() {
+  return        defer_render_chunks        &&  defer_render_duration
+    ? { chunks: defer_render_chunks, duration: defer_render_duration }
+    : null;
+}
+
 function add_defer_render   (wrapper) {
   defer_render_wrappers.push(wrapper);
 }
 
+// defer_render_wrappers: not empty (but anyway checked downstream)
 function defer_render() {
   defer_render_processed   =  0;
   defer_render_chunks      =  0;
@@ -57,25 +64,20 @@ function defer_render_step(render_id, chunk_sz_override) {
 
     defer_render_processed++;
     count--;
-    duration = performance.now() - time_0;
 
-    if (duration > defer_render_chunk_du) break;
+    if ((count % 3) === 0) // To measure sparingly
+      if (count)
+        if ((performance.now() - time_0) > defer_render_chunk_du)
+          break;
   }
   while(count);
 
   defer_render_chunks++;
-  defer_render_duration += duration;
+  defer_render_duration += (performance.now() - time_0);
 
-  if (defer_render_processed < defer_render_total) {
-    setTimeout(defer_render_step, defer_render_wait, defer_render_id);
-    return;
-  }
+  if (defer_render_processed === defer_render_total) { setTimeout(render_finished, 0); return; }
 
-  const timing = document.getElementById("timings-render-deferred");
-  if   (timing)
-        timing.textContent = defer_render_duration.toFixed(1) + " (" + defer_render_chunks + ')';
-
-  setTimeout(render_finished, 0);
+  setTimeout(defer_render_step, defer_render_wait, defer_render_id);
 }
 
 /* Cells */
