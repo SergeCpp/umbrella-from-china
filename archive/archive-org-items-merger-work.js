@@ -67,7 +67,7 @@ function defer_render_step(render_id, chunk_sz_override) {
 
     if ((count % 3) === 0) // To measure sparingly
       if (count)
-        if ((performance.now() - time_0) > defer_render_chunk_du)
+        if ((performance.now() - time_0) > defer_render_chunk_du) // Takes 1 microsecond
           break;
   }
   while(count);

@@ -72,7 +72,7 @@ function init_render() {
 
 /* Render */
 
-let       footer_is_hidden = true;
+let      page_just_loaded  = true;
 const    process_du_render = { pre: 0, dom: 0 }; // ms
 
 function time_render() {
@@ -921,8 +921,8 @@ function render_results_dom(
 
   process_timings();
 
-  if (footer_is_hidden) {
-      footer_is_hidden = false;
+  if (page_just_loaded) {
+      page_just_loaded = false;
       document.querySelector("footer").classList.remove("collapse");
   }
 
