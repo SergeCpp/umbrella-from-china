@@ -17,14 +17,17 @@ https://umbrella-from-china.neocities.org/archive/archive-org-items-master-save.
 https://umbrella-from-china.neocities.org/archive/archive-org-items-master-work.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-merger-save.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-merger-work.js
+https://umbrella-from-china.neocities.org/archive/archive-org-items-planer-save.js
+https://umbrella-from-china.neocities.org/archive/archive-org-items-planer-work.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-render-save.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-render-work.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-runner-save.js
 https://umbrella-from-china.neocities.org/archive/archive-org-items-runner-work.js
+
 https://umbrella-from-china.neocities.org/archive/archive-org-items.css
 https://umbrella-from-china.neocities.org/archive/archive-org-items.html
 ---------------------------------
-1 css + 1 html + 18 js = 20 files
+1 css + 1 html + 20 js = 22 files
 
 Queries for xml generation are in the archive-org-items.html comment block
 --------------------------------------------------------------------------
