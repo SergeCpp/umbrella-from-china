@@ -492,9 +492,12 @@ function item_details(container, ensure_open = false, jump_to_item = false, link
   if (jump_to_item) {
     const wr_rect = wrapper.getBoundingClientRect();
     const wr_mid  = (wr_rect.top + wr_rect.bottom) / 2;
-    const vi_mid  = window.innerHeight             / 2;
-    const wr_dist = Math.abs(wr_mid - vi_mid);
-    const is_near = wr_dist < window.innerHeight;
+    const wr_half = (wr_rect.bottom - wr_rect.top) / 2;
+    const vi_mid  = window.innerHeight / 2;
+    const vi_half = vi_mid;
+    const wr_dist = Math.abs(wr_mid - vi_mid) - (wr_half + vi_half);
+    const vi_dist = window.innerHeight;
+    const is_near = wr_dist < vi_dist;
 
     if   (is_near) {
       container.focus({ preventScroll: true });

@@ -371,20 +371,29 @@ function get_grow_mood(grow_old, grow_23, grow_7, mood_by_same) {
 /* Substantial changes marking */
 
 function get_marks(rel, cnt, mid) {
-  if   (cnt <= 0)      return { above: { cnt: 0, val: +Infinity }, below: { cnt: 0, val: -Infinity } };
+  if   (cnt <= 0)      return { above: { cnt: 0, val: +Infinity, tim: null },
+                                below: { cnt: 0, val: -Infinity, tim: null } };
   const rel_len = rel.length;
-  if   (rel_len === 0) return { above: { cnt: 0, val: +Infinity }, below: { cnt: 0, val: -Infinity } };
+  if   (rel_len === 0) return { above: { cnt: 0, val: +Infinity, tim: null },
+                                below: { cnt: 0, val: -Infinity, tim: null } };
   if   (rel_len === 1) {
     const val = rel[0].value;
-    if   (val > mid)   return { above: { cnt: 1, val            }, below: { cnt: 0, val: -Infinity } };
-    if   (val < mid)   return { above: { cnt: 0, val: +Infinity }, below: { cnt: 1, val            } };
-                       return { above: { cnt: 0, val: +Infinity }, below: { cnt: 0, val: -Infinity } };
+    const tim = rel[0].time;
+
+    if   (val > mid)   return { above: { cnt: 1, val,            tim       },
+                                below: { cnt: 0, val: -Infinity, tim: null } };
+    if   (val < mid)   return { above: { cnt: 0, val: +Infinity, tim: null },
+                                below: { cnt: 1, val,            tim       } };
+                       return { above: { cnt: 0, val: +Infinity, tim: null },
+                                below: { cnt: 0, val: -Infinity, tim: null } };
   }
   if ((cnt + cnt) > rel_len) {
     cnt = Math.floor(rel_len / 2);
   }
 
-  rel.sort((above, below) => above.value - below.value); // Ascending
+  rel.sort((above, below) =>
+    (above.value - below.value) || // Lower value to start of array
+    (below.time  - above.time ));  // Older item  to start of array
 
   let above_cnt = cnt;
   let below_cnt = cnt;
@@ -392,22 +401,27 @@ function get_marks(rel, cnt, mid) {
   let below_idx = cnt     -   1;
   let above_val = rel[above_idx].value;
   let below_val = rel[below_idx].value;
+  let above_tim = rel[above_idx].time;
+  let below_tim = rel[below_idx].time;
 
   while (above_val <= mid) { // Above value is in below side, or at mid
     below_idx++; // Move below side to right
     below_val = rel[below_idx].value; // Update its value
+    below_tim = rel[below_idx].time;  //        and time
     below_cnt++; // Count it
 
     above_cnt--; // Use place
     if (!above_cnt) break; // Above side is empty
     above_idx++; // Move above side to right
     above_val = rel[above_idx].value; // Update its value
+    above_tim = rel[above_idx].time;  //        and time
   }
 
   while (below_val >= mid) { // Below value is in above side, or at mid
     if (above_cnt) { // Above side is not empty
       if (rel[above_idx - 1].value > mid) { // And something is present there to add to above side
         above_val = rel[above_idx - 1].value; // Update its value
+        above_tim = rel[above_idx - 1].time;  //        and time
         above_cnt++; // Count it
         above_idx--; // Move above side to left
       }
@@ -417,12 +431,17 @@ function get_marks(rel, cnt, mid) {
     if (!below_cnt) break; // Below side is empty
     below_idx--; // Move below side to left
     below_val = rel[below_idx].value; // Update its value
+    below_tim = rel[below_idx].time;  //        and time
   }
 
   // Possible array of all mid's is handled in return
   // Because both above_cnt and below_cnt will be zeroes
-  return { above: { cnt: above_cnt, val: above_cnt ? above_val : +Infinity },
-           below: { cnt: below_cnt, val: below_cnt ? below_val : -Infinity } };
+  return { above: { cnt: above_cnt,
+                    val: above_cnt ? above_val : +Infinity,
+                    tim: above_cnt ? above_tim :  null },
+           below: { cnt: below_cnt,
+                    val: below_cnt ? below_val : -Infinity,
+                    tim: below_cnt ? below_tim :  null } };
 }
 
 // index: 0..length-1, base: log(length), steep: 1..9, decay: max value (min value: 1)

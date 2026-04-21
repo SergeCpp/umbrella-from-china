@@ -263,17 +263,25 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     mood_marks
   } = compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, show_by, mood_by);
 
-  const mark_grow_old  = horz_marks.above.val;
-  const mark_fall_old  = horz_marks.below.val;
+  const mark_val_grow_old  = horz_marks.above.val;
+  const mark_val_fall_old  = horz_marks.below.val;
+  const mark_tim_grow_old  = horz_marks.above.tim;
+  const mark_tim_fall_old  = horz_marks.below.tim;
 
-  const mark_grow_23_7 = vert_marks.above.val;
-  const mark_fall_23_7 = vert_marks.below.val;
+  const mark_val_grow_23_7 = vert_marks.above.val;
+  const mark_val_fall_23_7 = vert_marks.below.val;
+  const mark_tim_grow_23_7 = vert_marks.above.tim;
+  const mark_tim_fall_23_7 = vert_marks.below.tim;
 
-  const mark_rank_up   = rank_marks.above.val;
-  const mark_rank_dn   = rank_marks.below.val;
+  const mark_val_rank_up   = rank_marks.above.val;
+  const mark_val_rank_dn   = rank_marks.below.val;
+  const mark_tim_rank_up   = rank_marks.above.tim;
+  const mark_tim_rank_dn   = rank_marks.below.tim;
 
-  const mark_mood_pos  = mood_marks.above.val;
-  const mark_mood_neg  = mood_marks.below.val;
+  const mark_val_mood_pos  = mood_marks.above.val;
+  const mark_val_mood_neg  = mood_marks.below.val;
+  const mark_tim_mood_pos  = mood_marks.above.tim;
+  const mark_tim_mood_neg  = mood_marks.below.tim;
 
   // Set substantial changes flags for items
   // Count substantially changed and plain items, also plain nomarked items
@@ -281,18 +289,45 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   let plain_nomarked = 0;
 
   for (const item of results_curr_exp) {
-    const is_rank_up   =  item.is_both && (item.rank_change >= mark_rank_up); // item.index_prev > index
-    const is_rank_dn   =  item.is_both && (item.rank_change <= mark_rank_dn); // item.index_prev < index
+    const time_all = item.time_all;
 
-    const is_horz_grow =  item.is_both && (item.horz_change >= mark_grow_old);
-    const is_horz_fall =  item.is_both && (item.horz_change <= mark_fall_old);
+    //
+    const is_rank_up   =  item.is_both && // item.index_prev > index
+      ( (item.rank_change  >  mark_val_rank_up)   ||
+       ((item.rank_change === mark_val_rank_up)   && (time_all <= mark_tim_rank_up)));
 
-    const is_vert_grow = !item.is_prev && (item.vert_change >= mark_grow_23_7);
-    const is_vert_fall = !item.is_prev && (item.vert_change <= mark_fall_23_7);
+    const is_rank_dn   =  item.is_both && // item.index_prev < index
+      ( (item.rank_change  <  mark_val_rank_dn)   ||
+       ((item.rank_change === mark_val_rank_dn)   && (time_all >= mark_tim_rank_dn)));
 
-    const is_mood_pos  =  item.is_both && (item.mood        >= mark_mood_pos);
-    const is_mood_neg  =  item.is_both && (item.mood        <= mark_mood_neg);
+    //
+    const is_horz_grow =  item.is_both &&
+      ( (item.horz_change  >  mark_val_grow_old)  ||
+       ((item.horz_change === mark_val_grow_old)  && (time_all <= mark_tim_grow_old)));
 
+    const is_horz_fall =  item.is_both &&
+      ( (item.horz_change  <  mark_val_fall_old)  ||
+       ((item.horz_change === mark_val_fall_old)  && (time_all >= mark_tim_fall_old)));
+
+    //
+    const is_vert_grow = !item.is_prev &&
+      ( (item.vert_change  >  mark_val_grow_23_7) ||
+       ((item.vert_change === mark_val_grow_23_7) && (time_all <= mark_tim_grow_23_7)));
+
+    const is_vert_fall = !item.is_prev &&
+      ( (item.vert_change  <  mark_val_fall_23_7) ||
+       ((item.vert_change === mark_val_fall_23_7) && (time_all >= mark_tim_fall_23_7)));
+
+    //
+    const is_mood_pos  =  item.is_both &&
+      ( (item.mood         >  mark_val_mood_pos)  ||
+       ((item.mood        === mark_val_mood_pos)  && (time_all <= mark_tim_mood_pos)));
+
+    const is_mood_neg  =  item.is_both &&
+      ( (item.mood         <  mark_val_mood_neg)  ||
+       ((item.mood        === mark_val_mood_neg)  && (time_all >= mark_tim_mood_neg)));
+
+    //
     const is_subst     =  is_rank_up || is_horz_grow || is_vert_grow || is_mood_pos ||
                           is_rank_dn || is_horz_fall || is_vert_fall || is_mood_neg;
 

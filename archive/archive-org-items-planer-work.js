@@ -243,7 +243,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
         add_details_raw_horz(index_curr, horz_impact, horz_factor, horz_change);
       }
     }
-    horz_curr_prev.push({ index: index_curr, value: horz_change }); // Needed in array anyway
+    horz_curr_prev.push({ index: index_curr, value: horz_change, time: item.time_all }); // Needed in array anyway
     //
     // Vert change
     //
@@ -263,7 +263,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
         add_details_raw_vert(index_curr, vert_impact, vert_factor, vert_change);
       }
     }
-    vert_all_old.push({ index: index_curr, value: vert_change }); // Needed in array anyway
+    vert_all_old.push({ index: index_curr, value: vert_change, time: item.time_all }); // Needed in array anyway
 
     //////////////////////////////
     // Rank change, 0 is no change
@@ -280,7 +280,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
         add_details_raw_rank(index_curr, rank_diff, item.index_prev + 1, index_curr + 1, rank_scale, rank_change);
       }
     }
-    rank_up_dn.push({ index: index_curr, value: rank_change }); // Needed in array anyway
+    rank_up_dn.push({ index: index_curr, value: rank_change, time: item.time_all }); // Needed in array anyway
 
     //////////////////////////////
     // Grow and Mood, 0 is no Mood
@@ -307,7 +307,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
         add_details_raw_mood(index_curr, grow_mood, mood_scale, mood);
       }
     }
-    mood_pos_neg.push({ index: index_curr, value: mood }); // Needed in array anyway
+    mood_pos_neg.push({ index: index_curr, value: mood, time: item.time_all }); // Needed in array anyway
 
     /////////
     // Gauges
