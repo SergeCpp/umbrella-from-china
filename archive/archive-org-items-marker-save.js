@@ -746,12 +746,15 @@ function render_stats(results, date, what, title_is, show_by, sort_by, container
 let diffs_text       = null;
 let diffs_text_inner = null;
 
-function create_diffs_inner(views_favs_prev, views_favs_curr, shown_cnt, show_by) {
+function create_diffs_inner(views_favs_prev, views_favs_curr, total_cnt, shown_cnt, show_by) {
   const show_by_old = (show_by === "old-23-7"); // Else by "all-30-7"
+
+  const hidden_cnt  =  total_cnt         -  shown_cnt;
+  const hidden_str  = hidden_cnt ?  ' (' + hidden_cnt + ' hidden)' : "";
 
   return "" +
     format_nowrap    ('Differences for ' +
-      format_num_str (shown_cnt, 'Item') + ' in:') + ' ' +
+      format_num_str (shown_cnt, 'Item') + hidden_str + ' in:') + ' ' +
     format_nowrap    ('Views: ' +
       format_num_sign(show_by_old
                     ? views_favs_curr.views_old - views_favs_prev.views_old  // \u200a is &hairsp;
@@ -765,22 +768,22 @@ function create_diffs_inner(views_favs_prev, views_favs_curr, shown_cnt, show_by
       format_num_sign(views_favs_curr.favorited - views_favs_prev.favorited));
 }
 
-function render_diffs(results_prev, results_curr, shown_cnt, show_by, container) {
+function render_diffs(results_prev, results_curr, total_cnt, show_by, container) {
   diffs_text = document.createElement("div");
   diffs_text.className  = "text-center text-comment";
 
   const views_favs_prev = get_views_favs(results_prev);
   const views_favs_curr = get_views_favs(results_curr);
 
-  diffs_text_inner      = create_diffs_inner(views_favs_prev, views_favs_curr, shown_cnt, show_by);
+  diffs_text_inner      = create_diffs_inner(views_favs_prev, views_favs_curr, total_cnt, total_cnt, show_by);
   diffs_text.innerHTML  = diffs_text_inner;
 
   container.appendChild(diffs_text);
 }
 
-function update_diffs(shown_cnt, show_by) {
-  const views_favs    = get_views_favs_shown();
-  const updated_inner = create_diffs_inner(views_favs.prev, views_favs.curr, shown_cnt, show_by);
+function update_diffs(total_cnt, shown_cnt, show_by) {
+  const views_favs      = get_views_favs_shown();
+  const updated_inner   = create_diffs_inner(views_favs.prev, views_favs.curr, total_cnt, shown_cnt, show_by);
 
   if (diffs_text_inner   !== updated_inner) {
       diffs_text.innerHTML = updated_inner;

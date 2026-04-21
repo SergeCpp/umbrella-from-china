@@ -23,10 +23,12 @@ const hide_noplain      = {}; // [noplain] = false / true
 let   show_nomark       = true;
 let   show_plain_nomark = true;
 
-const show_mark         = {}; // [mark] = true / false
-const hide_mark         = {}; // [mark] = false / true
+const show_mark         = {}; // [mark]  = true / false
+const hide_mark         = {}; // [mark]  = false / true
 
-const show_marked_by    = {}; // [num] = undefined (means true) / true / false
+const show_marked_by    = {}; // [num]   = undefined (means true) / true / false
+const show_marked_on_2  = {}; // [group] = undefined (means true) / true / false
+const show_marked_on_3  = {}; // [group] = undefined (means true) / true / false
 
 function inp_show_hide(chk, accent) {
   if (show_noplain[accent]) {
@@ -195,10 +197,12 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   // Marks
   //
   let mark_counts     = null;
-  let marks_count     = 0; // === mark_counts.length
-  let marks_populated = 0; // Marks that have items marked by this mark
-  let marks_zero      = 0; // Mark present, but no items marked by this mark
+  let marks_count     = 0;    // === mark_counts.length
+  let marks_populated = 0;    // Marks that have items marked by this mark
+  let marks_zero      = 0;    // Mark present, but no items marked by this mark
   let marked_by       = null;
+  let marked_on_2     = null;
+  let marked_on_3     = null;
   let marked_items    = 0;
   let nomarked_items  = curr_length;
 
@@ -207,23 +211,23 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       let mark_count = 0;
 
       for (const mark_item of rm.prev) {
-        const id = mark_item.identifier;
+        const id   = mark_item.identifier;
         const item = map_curr_exp[id];
-        if (!item || item.no_prev) continue;
+        if  (!item || item.no_prev) continue;
 
-        if (!item.marks) { item.marks = []; marked_items++; }
+        if  (!item.marks) { item.marks = []; marked_items++; }
         item.marks.push(rm.mark);
         mark_count++;
       }
 
       for (const mark_item of rm.curr) {
-        const id = mark_item.identifier;
+        const id   = mark_item.identifier;
         const item = map_curr_exp[id];
-        if (!item || item.is_prev) continue;
+        if  (!item || item.is_prev) continue;
 
-        if (item.marks && item.marks.includes(rm.mark)) continue; // Avoid duplication of mark
+        if   (item.marks && item.marks.includes(rm.mark)) continue; // Avoid duplication of mark
 
-        if (!item.marks) { item.marks = []; marked_items++; }
+        if  (!item.marks) { item.marks = []; marked_items++; }
         item.marks.push(rm.mark);
         mark_count++;
       }
@@ -237,13 +241,29 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     marks_populated = marks_count - marks_zero;
     nomarked_items -= marked_items;
 
-    // Gather "Marked by # marks" counts
+    // Gather "Marked by # marks" and "Marked on 2/3" counts
     for (const item of results_curr_exp) {
-      if (!item.marks) continue;
-      if (!marked_by) marked_by = {};
+      const marks = item.marks;
+      if  (!marks) continue;
+      if  (!marked_by) marked_by = {};
 
-      const num = item.marks.length;
+      const     num  = marks.length;
       marked_by[num] = (marked_by[num] || 0) + 1;
+
+      switch (num) {
+        case 2: {
+          const group = marks[0] + marks[1];
+          if  (!marked_on_2) marked_on_2 = {};
+          marked_on_2[group] = (marked_on_2[group] || 0) + 1;
+          break;
+        }
+        case 3: {
+          const group = marks[0] + marks[1] + marks[2];
+          if  (!marked_on_3) marked_on_3 = {};
+          marked_on_3[group] = (marked_on_3[group] || 0) + 1;
+          break;
+        }
+      }
     }
   }
 
@@ -359,7 +379,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     curr_exp_totals, curr_exp_total, curr_exp_media,
     only_prev, only_curr, only_both, plain_items, subst_items,
     horz_marks, vert_marks, rank_marks, mood_marks,
-    marks_count, marks_populated, mark_counts, marked_by, marked_items, nomarked_items, plain_nomarked);
+    marks_count, marks_populated, mark_counts, marked_by, marked_on_2, marked_on_3,
+    marked_items, nomarked_items, plain_nomarked);
 
   } catch (err) {
     process_error(error_compose("Error: " + err.message));
@@ -371,7 +392,8 @@ function render_results_dom(
     curr_exp_totals, curr_exp_total, curr_exp_media,
     only_prev, only_curr, only_both, plain_items, subst_items,
     horz_marks, vert_marks, rank_marks, mood_marks,
-    marks_count, marks_populated, mark_counts, marked_by, marked_items, nomarked_items, plain_nomarked) {
+    marks_count, marks_populated, mark_counts, marked_by, marked_on_2, marked_on_3,
+    marked_items, nomarked_items, plain_nomarked) {
 
   try {
 
@@ -540,6 +562,8 @@ function render_results_dom(
   // Marks displaying
   const chk_nomark       =  marks_count && nomarked_items;
   const chk_marked_by    = (marks_populated > 1);
+  const chk_marked_on_2  =  marked_on_2 && (Object.keys(marked_on_2).length > 1);
+  const chk_marked_on_3  =  marked_on_3 && (Object.keys(marked_on_3).length > 1);
   const chk_plain_nomark =  marks_count && plain_nomarked;
 
   if (marks_count) {
@@ -719,6 +743,134 @@ function render_results_dom(
       container.appendChild(marked_by_div);
     }
 
+    // Marked on 2 marks
+    if (chk_marked_on_2) {
+      const marked_on_div = document.createElement("div");
+      marked_on_div.className = "text-center text-comment";
+
+      const marked_on_2s = Object.keys(marked_on_2).sort();
+
+      const on_last = marked_on_2s.length - 1;
+      for (let n = 0; n <= on_last; n++) {
+        const group = marked_on_2s[n];
+        const m1    = group[0];
+        const m2    = group[1];
+        const cnt   = marked_on_2[group];
+
+        const on_span = document.createElement("span");
+        on_span.className = "text-nowrap";
+
+        const on_label = document.createElement("label");
+        on_label.htmlFor = "show-marked-on-2-" + group;
+        on_label.style.cursor = "pointer";
+
+        const m1_span = document.createElement("span");
+        m1_span.className = "item-mark-" + m1 + "-text";
+        m1_span.textContent = "Mark";
+        on_label.appendChild(m1_span);
+
+        on_label.appendChild(document.createTextNode(" x "));
+
+        const m2_span = document.createElement("span");
+        m2_span.className = "item-mark-" + m2 + "-text";
+        m2_span.textContent = "Mark";
+        on_label.appendChild(m2_span);
+
+        on_label.appendChild(document.createTextNode(": " + format_num_str(cnt, "Item")));
+
+        const on_chk = document.createElement("input");
+        chks_chain.push(on_chk);
+        if (show_marked_on_2[group] === undefined) show_marked_on_2[group] = true; // Initialize
+        on_chk.checked = show_marked_on_2[group];
+        on_chk.className = "in-chk";
+        on_chk.id = "show-marked-on-2-" + group;
+        on_chk.type = "checkbox";
+
+        on_chk.oninput = () => { show_marked_on_2[group] = on_chk.checked; };
+
+        on_chk.onkeyup = (event) => {
+          if (event.key === 'Enter') {
+            save_focus("show-marked-on-2-" + group);
+            process_filter();
+          }
+        };
+
+        on_span      .appendChild(on_label);
+        on_span      .appendChild(on_chk  );
+        marked_on_div.appendChild(on_span );
+        if (n < on_last) marked_on_div.appendChild(document.createTextNode(' '));
+      }
+      container.appendChild(marked_on_div);
+    }
+
+    // Marked on 3 marks
+    if (chk_marked_on_3) {
+      const marked_on_div = document.createElement("div");
+      marked_on_div.className = "text-center text-comment";
+
+      const marked_on_3s = Object.keys(marked_on_3).sort();
+
+      const on_last = marked_on_3s.length - 1;
+      for (let n = 0; n <= on_last; n++) {
+        const group = marked_on_3s[n];
+        const m1    = group[0];
+        const m2    = group[1];
+        const m3    = group[2];
+        const cnt   = marked_on_3[group];
+
+        const on_span = document.createElement("span");
+        on_span.className = "text-nowrap";
+
+        const on_label = document.createElement("label");
+        on_label.htmlFor = "show-marked-on-3-" + group;
+        on_label.style.cursor = "pointer";
+
+        const m1_span = document.createElement("span");
+        m1_span.className = "item-mark-" + m1 + "-text";
+        m1_span.textContent = "Mark";
+        on_label.appendChild(m1_span);
+
+        on_label.appendChild(document.createTextNode(" x "));
+
+        const m2_span = document.createElement("span");
+        m2_span.className = "item-mark-" + m2 + "-text";
+        m2_span.textContent = "Mark";
+        on_label.appendChild(m2_span);
+
+        on_label.appendChild(document.createTextNode(" x "));
+
+        const m3_span = document.createElement("span");
+        m3_span.className = "item-mark-" + m3 + "-text";
+        m3_span.textContent = "Mark";
+        on_label.appendChild(m3_span);
+
+        on_label.appendChild(document.createTextNode(": " + format_num_str(cnt, "Item")));
+
+        const on_chk = document.createElement("input");
+        chks_chain.push(on_chk);
+        if (show_marked_on_3[group] === undefined) show_marked_on_3[group] = true; // Initialize
+        on_chk.checked = show_marked_on_3[group];
+        on_chk.className = "in-chk";
+        on_chk.id = "show-marked-on-3-" + group;
+        on_chk.type = "checkbox";
+
+        on_chk.oninput = () => { show_marked_on_3[group] = on_chk.checked; };
+
+        on_chk.onkeyup = (event) => {
+          if (event.key === 'Enter') {
+            save_focus("show-marked-on-3-" + group);
+            process_filter();
+          }
+        };
+
+        on_span      .appendChild(on_label);
+        on_span      .appendChild(on_chk  );
+        marked_on_div.appendChild(on_span );
+        if (n < on_last) marked_on_div.appendChild(document.createTextNode(' '));
+      }
+      container.appendChild(marked_on_div);
+    }
+
     // Plain nomarked
     if (chk_plain_nomark) {
       const plain_nomark_div = document.createElement("div");
@@ -767,6 +919,14 @@ function render_results_dom(
     if (chk_marked_by)
       for (const marks_num in marked_by)
         if (!show_marked_by[marks_num]) return true;
+
+    if (chk_marked_on_2)
+      for (const group in marked_on_2)
+        if (!show_marked_on_2[group]) return true;
+
+    if (chk_marked_on_3)
+      for (const group in marked_on_3)
+        if (!show_marked_on_3[group]) return true;
 
     if (mark_counts) {
       for (const mc of mark_counts) {
@@ -828,6 +988,16 @@ function render_results_dom(
         const marks_num  = item.marks.length;
 
         if (chk_marked_by && !show_marked_by[marks_num]) continue;
+
+        if (chk_marked_on_2 && (marks_num === 2)) {
+          const group = item.marks[0] + item.marks[1];
+          if  (!show_marked_on_2[group]) continue;
+        }
+
+        if (chk_marked_on_3 && (marks_num === 3)) {
+          const group = item.marks[0] + item.marks[1] + item.marks[2];
+          if  (!show_marked_on_3[group]) continue;
+        }
 
         let to_show_mark = false;
         let to_hide_mark = false;
@@ -947,7 +1117,7 @@ function render_results_dom(
     }
   } // for (index) closing
 
-  if (shown_cnt !== curr_length) update_diffs(shown_cnt, show_by);
+  if (shown_cnt !== curr_length) update_diffs(curr_length, shown_cnt, show_by);
 
   container.onclick   = (event) => results_click  (event);
   container.onkeyup   = (event) => results_keyup  (event);
