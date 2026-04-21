@@ -100,7 +100,7 @@ function compose_header(title_is, title_is_set,
 /* Compose Items */
 
 // results_curr_exp is sorted
-function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, show_by, mood_by) {
+function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, show_by, mood_by, subst_scaled) {
   const title_is_title = (title_is === "title"     ); // Else is "identifier"
   const show_by_old    = (show_by  === "old-23-7"  ); // Else by "all-30-7"
   const mood_by_same   = (mood_by  === "same-signs"); // Else by "diff-signs"
@@ -235,10 +235,14 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
       }
       if (horz_impact) {
 //      const horz_scale  = get_scale_log(index_curr, curr_log_base, horz_log_steep, horz_decay);
-        const horz_scale  = get_scale_sig(index_curr, curr_length,
-          horz_sig_base, horz_sig_steep, horz_decay, horz_sig_min, horz_sig_max);
-        const horz_factor = horz_decay / horz_scale; // More suitable for log(close-to-one) result
-        horz_change = horz_impact * horz_factor;
+        const horz_scale  = subst_scaled
+          ? get_scale_sig(index_curr, curr_length,
+              horz_sig_base, horz_sig_steep, horz_decay, horz_sig_min, horz_sig_max)
+          : 1;
+        const horz_factor = subst_scaled
+          ? horz_decay / horz_scale // More suitable for log(close-to-one) result
+          : 1;
+        horz_change       = horz_impact * horz_factor;
         item.horz_change  = horz_change; // Needed in markable item only, and if not 0 only
         add_details_raw_horz(index_curr, horz_impact, horz_factor, horz_change);
       }
@@ -255,10 +259,14 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
         : 0;                                         // Possible zeroes in ratio_30 values
       if (vert_impact) {
 //      const vert_scale  = get_scale_log(index_curr, curr_log_base, vert_log_steep, vert_decay);
-        const vert_scale  = get_scale_sig(index_curr, curr_length,
-          vert_sig_base, vert_sig_steep, vert_decay, vert_sig_min, vert_sig_max);
-        const vert_factor = vert_decay / vert_scale; // More suitable for log(close-to-one) result
-        vert_change = vert_impact * vert_factor;
+        const vert_scale  = subst_scaled
+          ? get_scale_sig(index_curr, curr_length,
+              vert_sig_base, vert_sig_steep, vert_decay, vert_sig_min, vert_sig_max)
+          : 1;
+        const vert_factor = subst_scaled
+          ? vert_decay / vert_scale // More suitable for log(close-to-one) result
+          : 1;
+        vert_change       = vert_impact * vert_factor;
         item.vert_change  = vert_change; // Needed in markable item only, and if not 0 only
         add_details_raw_vert(index_curr, vert_impact, vert_factor, vert_change);
       }
@@ -273,8 +281,10 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
     if   (rank_diff) { // Also if length === 1 then index_prev === index_curr
       if (item.is_both) { // Item is markable
 //      const rank_scale  = get_scale_log(index_curr, curr_log_base, rank_log_steep, rank_decay);
-        const rank_scale  = get_scale_sig(index_curr, curr_length,
-          rank_sig_base, rank_sig_steep, rank_decay, rank_sig_min, rank_sig_max);
+        const rank_scale  = subst_scaled
+          ? get_scale_sig(index_curr, curr_length,
+              rank_sig_base, rank_sig_steep, rank_decay, rank_sig_min, rank_sig_max)
+          : 1;
         rank_change       = rank_diff / rank_scale;
         item.rank_change  = rank_change; // Needed in markable item only, and if rank_diff is not 0 only
         add_details_raw_rank(index_curr, rank_diff, item.index_prev + 1, index_curr + 1, rank_scale, rank_change);
@@ -300,10 +310,12 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
       const grow_mood = get_grow_mood(grow_old, grow_23, grow_7, mood_by_same);
       if   (grow_mood) {
 //      const mood_scale = get_scale_log(index_curr, curr_log_base, mood_log_steep, mood_decay);
-        const mood_scale = get_scale_sig(index_curr, curr_length,
-          mood_sig_base, mood_sig_steep, mood_decay, mood_sig_min, mood_sig_max);
-        mood = grow_mood / mood_scale;
-        item.mood = mood; // Needed in markable item only, and if grow_mood is not 0 only
+        const mood_scale = subst_scaled
+          ? get_scale_sig(index_curr, curr_length,
+              mood_sig_base, mood_sig_steep, mood_decay, mood_sig_min, mood_sig_max)
+          : 1;
+        mood             = grow_mood / mood_scale;
+        item.mood        = mood; // Needed in markable item only, and if grow_mood is not 0 only
         add_details_raw_mood(index_curr, grow_mood, mood_scale, mood);
       }
     }

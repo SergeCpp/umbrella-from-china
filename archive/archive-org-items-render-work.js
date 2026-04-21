@@ -5,6 +5,8 @@ let   show_by           = "old-23-7";   // "old-23-7"   / "all-30-7"
 let   sort_by           = "ratio";      // "ratio"      / "views"
 let   mood_by           = "same-signs"; // "same-signs" / "diff-signs"
 
+let  subst_scaled       = true; function inp_subst_scaled (chk) { subst_scaled = chk.checked; }
+
 /* Which items to show */
 
 let   chks_chain        = []; // Checkboxes chain (for arrows setting)
@@ -261,7 +263,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     vert_marks,
     rank_marks,
     mood_marks
-  } = compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, show_by, mood_by);
+  } = compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, show_by, mood_by, subst_scaled);
 
   const mark_val_grow_old  = horz_marks.above.val;
   const mark_val_fall_old  = horz_marks.below.val;
@@ -494,7 +496,10 @@ function render_results_dom(
     format_nowrap(
       pre_chk_html('show-mood-pos')  + 'Mood' + '</label>' +
       s_h_chk_html('show-mood-pos',    'mood-pos' )  +
-      s_h_chk_html('show-mood-neg',    'mood-neg' ));
+      s_h_chk_html('show-mood-neg',    'mood-neg' )) + ' ' +
+    format_nowrap(
+      pre_chk_html('subst-scaled')   + 'Scaled' +
+      suf_chk_html('subst-scaled', subst_scaled, 'inp_subst_scaled'));
   container.appendChild(subst_chk_div);
 
   // Substantial changes counts
