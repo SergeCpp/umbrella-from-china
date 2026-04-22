@@ -21,8 +21,8 @@ const show_noplain      = {}; // [noplain] = true / false
 const hide_noplain      = {}; // [noplain] = false / true
 
 let   show_nomark       = true;
-let   show_subst_marked = true;
 let   show_plain_nomark = true;
+let   show_subst_marked = true;
 
 const show_mark         = {}; // [mark]  = true / false
 const hide_mark         = {}; // [mark]  = false / true
@@ -205,7 +205,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   let marked_on_2     = null;
   let marked_on_3     = null;
   let marked_items    = 0;
-  let nomarked_items  = curr_length;
+  let nomark_items    = curr_length;
 
   if (results_mark) {
     for (const rm of results_mark) {
@@ -240,7 +240,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     }
 
     marks_populated = marks_count - marks_zero;
-    nomarked_items -= marked_items;
+    nomark_items   -= marked_items;
 
     // Gather "Marked by # marks" and "Marked on 2/3" counts
     for (const item of results_curr_exp) {
@@ -309,8 +309,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   // Set substantial changes flags for items
   // Count substantially changed and plain items, also subst marked and plain nomarked items
   let subst_items  = 0;
-  let subst_marked = 0;
   let plain_nomark = 0;
+  let subst_marked = 0;
 
   for (const item of results_curr_exp) {
     const time_all = item.time_all;
@@ -369,8 +369,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
     item.is_plain      = !is_subst;
     subst_items       +=  is_subst;
-    subst_marked      +=  is_subst && (item.marks !== null);
+
     plain_nomark      += !is_subst && (item.marks === null);
+    subst_marked      +=  is_subst && (item.marks !== null);
   }
 
   const plain_items     = curr_length - subst_items;
@@ -383,7 +384,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     only_prev, only_curr, only_both, plain_items, subst_items,
     horz_marks, vert_marks, rank_marks, mood_marks,
     marks_count, marks_populated, mark_counts, marked_by, marked_on_2, marked_on_3,
-    marked_items, nomarked_items, subst_marked, plain_nomark);
+    marked_items, nomark_items, plain_nomark, subst_marked);
 
   } catch (err) {
     process_error(error_compose("Error: " + err.message));
@@ -396,7 +397,7 @@ function render_results_dom(
     only_prev, only_curr, only_both, plain_items, subst_items,
     horz_marks, vert_marks, rank_marks, mood_marks,
     marks_count, marks_populated, mark_counts, marked_by, marked_on_2, marked_on_3,
-    marked_items, nomarked_items, subst_marked, plain_nomark) {
+    marked_items, nomark_items, plain_nomark, subst_marked) {
 
   try {
 
@@ -563,7 +564,7 @@ function render_results_dom(
   container.appendChild(subst_cnt_div);
 
   // Marks displaying
-  const chk_nomark       =  marks_count && nomarked_items;
+  const chk_nomark       =  marks_count && nomark_items;
   const chk_marked_by    = (marks_populated > 1);
 
   const     marked_on_2n =  marked_on_2 ? Object.keys(marked_on_2).length : 0;
@@ -572,8 +573,8 @@ function render_results_dom(
   const chk_marked_on_2  = (marked_on_2n > 1) || (marked_on_2n && marked_on_3n);
   const chk_marked_on_3  = (marked_on_3n > 1) || (marked_on_3n && marked_on_2n);
 
-  const chk_subst_marked =  marks_count && subst_marked;
   const chk_plain_nomark =  marks_count && plain_nomark;
+  const chk_subst_marked =  marks_count && subst_marked;
 
   if (marks_count) {
     const marks_div = document.createElement("div");
@@ -587,7 +588,7 @@ function render_results_dom(
       const nomark_label = document.createElement("label");
       nomark_label.htmlFor = "show-nomark";
       nomark_label.style.cursor = "pointer";
-      nomark_label.textContent = "Not marked: " + format_num_str(nomarked_items, "Item");
+      nomark_label.textContent = "Not marked: " + format_num_str(nomark_items, "Item");
 
       const nomark_chk = document.createElement("input");
       chks_chain.push(nomark_chk);
@@ -881,44 +882,9 @@ function render_results_dom(
     }
 
     // Line for two
-    if (chk_subst_marked || chk_plain_nomark) {
-      const subst_plain_div = document.createElement("div");
-      subst_plain_div.className = "text-center text-comment";
-
-      // Subst marked
-      if (chk_subst_marked) {
-        const subst_marked_span = document.createElement("span");
-        subst_marked_span.className = "text-nowrap";
-
-        const subst_marked_label = document.createElement("label");
-        subst_marked_label.htmlFor = "show-subst-marked";
-        subst_marked_label.style.cursor = "pointer";
-        subst_marked_label.textContent = "Substantial marked: " + format_num_str(subst_marked, "Item");
-
-        const subst_marked_chk = document.createElement("input");
-        chks_chain.push(subst_marked_chk);
-        subst_marked_chk.checked = show_subst_marked;
-        subst_marked_chk.className = "in-chk";
-        subst_marked_chk.id = "show-subst-marked";
-        subst_marked_chk.type = "checkbox";
-
-        subst_marked_chk.oninput = () => { show_subst_marked = subst_marked_chk.checked; };
-
-        subst_marked_chk.onkeyup = (event) => {
-          if (event.key === 'Enter') {
-            save_focus("show-subst-marked");
-            process_filter();
-          }
-        };
-
-        subst_marked_span.appendChild(subst_marked_label);
-        subst_marked_span.appendChild(subst_marked_chk  );
-        subst_plain_div  .appendChild(subst_marked_span );
-      }
-
-      if (chk_subst_marked && chk_plain_nomark) {
-        subst_plain_div.appendChild(document.createTextNode(' '));
-      }
+    if (chk_plain_nomark || chk_subst_marked) {
+      const for_two_div = document.createElement("div");
+      for_two_div.className = "text-center text-comment";
 
       // Plain nomark
       if (chk_plain_nomark) {
@@ -948,10 +914,45 @@ function render_results_dom(
 
         plain_nomark_span.appendChild(plain_nomark_label);
         plain_nomark_span.appendChild(plain_nomark_chk  );
-        subst_plain_div  .appendChild(plain_nomark_span );
+        for_two_div      .appendChild(plain_nomark_span );
       }
 
-      container.appendChild(subst_plain_div);
+      if (chk_plain_nomark && chk_subst_marked) {
+        for_two_div.appendChild(document.createTextNode(' '));
+      }
+
+      // Subst marked
+      if (chk_subst_marked) {
+        const subst_marked_span = document.createElement("span");
+        subst_marked_span.className = "text-nowrap";
+
+        const subst_marked_label = document.createElement("label");
+        subst_marked_label.htmlFor = "show-subst-marked";
+        subst_marked_label.style.cursor = "pointer";
+        subst_marked_label.textContent = "Substantial marked: " + format_num_str(subst_marked, "Item");
+
+        const subst_marked_chk = document.createElement("input");
+        chks_chain.push(subst_marked_chk);
+        subst_marked_chk.checked = show_subst_marked;
+        subst_marked_chk.className = "in-chk";
+        subst_marked_chk.id = "show-subst-marked";
+        subst_marked_chk.type = "checkbox";
+
+        subst_marked_chk.oninput = () => { show_subst_marked = subst_marked_chk.checked; };
+
+        subst_marked_chk.onkeyup = (event) => {
+          if (event.key === 'Enter') {
+            save_focus("show-subst-marked");
+            process_filter();
+          }
+        };
+
+        subst_marked_span.appendChild(subst_marked_label);
+        subst_marked_span.appendChild(subst_marked_chk  );
+        for_two_div      .appendChild(subst_marked_span );
+      }
+
+      container.appendChild(for_two_div);
     }
   } // if (marks_count) closing
 
@@ -984,8 +985,8 @@ function render_results_dom(
     }
 
     if (chk_nomark       && !show_nomark      ) return true;
-    if (chk_subst_marked && !show_subst_marked) return true;
     if (chk_plain_nomark && !show_plain_nomark) return true;
+    if (chk_subst_marked && !show_subst_marked) return true;
 
     if (!show_plain) return true;
     if (get_filtering_noplain()) return true;
