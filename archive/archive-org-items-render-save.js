@@ -5,22 +5,23 @@ let   show_by           = "old-23-7";   // "old-23-7"   / "all-30-7"
 let   sort_by           = "ratio";      // "ratio"      / "views"
 let   mood_by           = "same-signs"; // "same-signs" / "diff-signs"
 
-let  subst_scaled       = true; function inp_subst_scaled (chk) { subst_scaled = chk.checked; }
+let  subst_scaled       = true; function inp_scale (chk) { subst_scaled = chk.checked; }
 
 /* Which items to show */
 
 let   chks_chain        = []; // Checkboxes chain (for arrows setting)
 
-let   show_prev         = true; function inp_prev  (chk) { show_prev  = chk.checked; }
-let   show_curr         = true; function inp_curr  (chk) { show_curr  = chk.checked; }
-let   show_both         = true; function inp_both  (chk) { show_both  = chk.checked; }
+let   show_prev         = true; function inp_prev  (chk) { show_prev    = chk.checked; }
+let   show_curr         = true; function inp_curr  (chk) { show_curr    = chk.checked; }
+let   show_both         = true; function inp_both  (chk) { show_both    = chk.checked; }
 
-let   show_plain        = true; function inp_plain (chk) { show_plain = chk.checked; }
+let   show_plain        = true; function inp_plain (chk) { show_plain   = chk.checked; }
 
 const show_noplain      = {}; // [noplain] = true / false
 const hide_noplain      = {}; // [noplain] = false / true
 
 let   show_nomark       = true;
+let   show_subst_marked = true;
 let   show_plain_nomark = true;
 
 const show_mark         = {}; // [mark]  = true / false
@@ -306,9 +307,10 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   const mark_tim_mood_neg  = mood_marks.below.tim;
 
   // Set substantial changes flags for items
-  // Count substantially changed and plain items, also plain nomarked items
-  let subst_items    = 0;
-  let plain_nomarked = 0;
+  // Count substantially changed and plain items, also subst marked and plain nomarked items
+  let subst_items  = 0;
+  let subst_marked = 0;
+  let plain_nomark = 0;
 
   for (const item of results_curr_exp) {
     const time_all = item.time_all;
@@ -367,7 +369,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
     item.is_plain      = !is_subst;
     subst_items       +=  is_subst;
-    plain_nomarked    += !is_subst && !item.marks;
+    subst_marked      +=  is_subst && (item.marks !== null);
+    plain_nomark      += !is_subst && (item.marks === null);
   }
 
   const plain_items     = curr_length - subst_items;
@@ -380,7 +383,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     only_prev, only_curr, only_both, plain_items, subst_items,
     horz_marks, vert_marks, rank_marks, mood_marks,
     marks_count, marks_populated, mark_counts, marked_by, marked_on_2, marked_on_3,
-    marked_items, nomarked_items, plain_nomarked);
+    marked_items, nomarked_items, subst_marked, plain_nomark);
 
   } catch (err) {
     process_error(error_compose("Error: " + err.message));
@@ -393,7 +396,7 @@ function render_results_dom(
     only_prev, only_curr, only_both, plain_items, subst_items,
     horz_marks, vert_marks, rank_marks, mood_marks,
     marks_count, marks_populated, mark_counts, marked_by, marked_on_2, marked_on_3,
-    marked_items, nomarked_items, plain_nomarked) {
+    marked_items, nomarked_items, subst_marked, plain_nomark) {
 
   try {
 
@@ -521,7 +524,7 @@ function render_results_dom(
       s_h_chk_html('show-mood-neg',    'mood-neg' )) + ' ' +
     format_nowrap(
       pre_chk_html('subst-scaled')   + 'Scaled' +
-      suf_chk_html('subst-scaled', subst_scaled, 'inp_subst_scaled'));
+      suf_chk_html('subst-scaled', subst_scaled, 'inp_scale'));
   container.appendChild(subst_chk_div);
 
   // Substantial changes counts
@@ -562,9 +565,15 @@ function render_results_dom(
   // Marks displaying
   const chk_nomark       =  marks_count && nomarked_items;
   const chk_marked_by    = (marks_populated > 1);
-  const chk_marked_on_2  =  marked_on_2 && (Object.keys(marked_on_2).length > 1);
-  const chk_marked_on_3  =  marked_on_3 && (Object.keys(marked_on_3).length > 1);
-  const chk_plain_nomark =  marks_count && plain_nomarked;
+
+  const     marked_on_2n =  marked_on_2 ? Object.keys(marked_on_2).length : 0;
+  const     marked_on_3n =  marked_on_3 ? Object.keys(marked_on_3).length : 0;
+
+  const chk_marked_on_2  = (marked_on_2n > 1) || (marked_on_2n && marked_on_3n);
+  const chk_marked_on_3  = (marked_on_3n > 1) || (marked_on_3n && marked_on_2n);
+
+  const chk_subst_marked =  marks_count && subst_marked;
+  const chk_plain_nomark =  marks_count && plain_nomark;
 
   if (marks_count) {
     const marks_div = document.createElement("div");
@@ -769,7 +778,7 @@ function render_results_dom(
         m1_span.textContent = "Mark";
         on_label.appendChild(m1_span);
 
-        on_label.appendChild(document.createTextNode(" x "));
+        on_label.appendChild(document.createTextNode(' '));
 
         const m2_span = document.createElement("span");
         m2_span.className = "item-mark-" + m2 + "-text";
@@ -830,14 +839,14 @@ function render_results_dom(
         m1_span.textContent = "Mark";
         on_label.appendChild(m1_span);
 
-        on_label.appendChild(document.createTextNode(" x "));
+        on_label.appendChild(document.createTextNode(' '));
 
         const m2_span = document.createElement("span");
         m2_span.className = "item-mark-" + m2 + "-text";
         m2_span.textContent = "Mark";
         on_label.appendChild(m2_span);
 
-        on_label.appendChild(document.createTextNode(" x "));
+        on_label.appendChild(document.createTextNode(' '));
 
         const m3_span = document.createElement("span");
         m3_span.className = "item-mark-" + m3 + "-text";
@@ -871,39 +880,78 @@ function render_results_dom(
       container.appendChild(marked_on_div);
     }
 
-    // Plain nomarked
-    if (chk_plain_nomark) {
-      const plain_nomark_div = document.createElement("div");
-      plain_nomark_div.className = "text-center text-comment";
+    // Line for two
+    if (chk_subst_marked || chk_plain_nomark) {
+      const subst_plain_div = document.createElement("div");
+      subst_plain_div.className = "text-center text-comment";
 
-      const plain_nomark_span = document.createElement("span");
-      plain_nomark_span.className = "text-nowrap";
+      // Subst marked
+      if (chk_subst_marked) {
+        const subst_marked_span = document.createElement("span");
+        subst_marked_span.className = "text-nowrap";
 
-      const plain_nomark_label = document.createElement("label");
-      plain_nomark_label.htmlFor = "show-plain-nomark";
-      plain_nomark_label.style.cursor = "pointer";
-      plain_nomark_label.textContent = "Plain and not marked: " + format_num_str(plain_nomarked, "Item");
+        const subst_marked_label = document.createElement("label");
+        subst_marked_label.htmlFor = "show-subst-marked";
+        subst_marked_label.style.cursor = "pointer";
+        subst_marked_label.textContent = "Substantial marked: " + format_num_str(subst_marked, "Item");
 
-      const plain_nomark_chk = document.createElement("input");
-      chks_chain.push(plain_nomark_chk);
-      plain_nomark_chk.checked = show_plain_nomark;
-      plain_nomark_chk.className = "in-chk";
-      plain_nomark_chk.id = "show-plain-nomark";
-      plain_nomark_chk.type = "checkbox";
+        const subst_marked_chk = document.createElement("input");
+        chks_chain.push(subst_marked_chk);
+        subst_marked_chk.checked = show_subst_marked;
+        subst_marked_chk.className = "in-chk";
+        subst_marked_chk.id = "show-subst-marked";
+        subst_marked_chk.type = "checkbox";
 
-      plain_nomark_chk.oninput = () => { show_plain_nomark = plain_nomark_chk.checked; };
+        subst_marked_chk.oninput = () => { show_subst_marked = subst_marked_chk.checked; };
 
-      plain_nomark_chk.onkeyup = (event) => {
-        if (event.key === 'Enter') {
-          save_focus("show-plain-nomark");
-          process_filter();
-        }
-      };
+        subst_marked_chk.onkeyup = (event) => {
+          if (event.key === 'Enter') {
+            save_focus("show-subst-marked");
+            process_filter();
+          }
+        };
 
-      plain_nomark_span.appendChild(plain_nomark_label);
-      plain_nomark_span.appendChild(plain_nomark_chk  );
-      plain_nomark_div .appendChild(plain_nomark_span );
-      container        .appendChild(plain_nomark_div  );
+        subst_marked_span.appendChild(subst_marked_label);
+        subst_marked_span.appendChild(subst_marked_chk  );
+        subst_plain_div  .appendChild(subst_marked_span );
+      }
+
+      if (chk_subst_marked && chk_plain_nomark) {
+        subst_plain_div.appendChild(document.createTextNode(' '));
+      }
+
+      // Plain nomark
+      if (chk_plain_nomark) {
+        const plain_nomark_span = document.createElement("span");
+        plain_nomark_span.className = "text-nowrap";
+
+        const plain_nomark_label = document.createElement("label");
+        plain_nomark_label.htmlFor = "show-plain-nomark";
+        plain_nomark_label.style.cursor = "pointer";
+        plain_nomark_label.textContent = "Plain not marked: " + format_num_str(plain_nomark, "Item");
+
+        const plain_nomark_chk = document.createElement("input");
+        chks_chain.push(plain_nomark_chk);
+        plain_nomark_chk.checked = show_plain_nomark;
+        plain_nomark_chk.className = "in-chk";
+        plain_nomark_chk.id = "show-plain-nomark";
+        plain_nomark_chk.type = "checkbox";
+
+        plain_nomark_chk.oninput = () => { show_plain_nomark = plain_nomark_chk.checked; };
+
+        plain_nomark_chk.onkeyup = (event) => {
+          if (event.key === 'Enter') {
+            save_focus("show-plain-nomark");
+            process_filter();
+          }
+        };
+
+        plain_nomark_span.appendChild(plain_nomark_label);
+        plain_nomark_span.appendChild(plain_nomark_chk  );
+        subst_plain_div  .appendChild(plain_nomark_span );
+      }
+
+      container.appendChild(subst_plain_div);
     }
   } // if (marks_count) closing
 
@@ -936,6 +984,7 @@ function render_results_dom(
     }
 
     if (chk_nomark       && !show_nomark      ) return true;
+    if (chk_subst_marked && !show_subst_marked) return true;
     if (chk_plain_nomark && !show_plain_nomark) return true;
 
     if (!show_plain) return true;
@@ -1011,10 +1060,12 @@ function render_results_dom(
 
         if (!to_show_mark) continue;
         if ( to_hide_mark) continue;
+
+        if (chk_subst_marked && !show_subst_marked && !is_plain) continue;
       }
       else { // Item not marked
+        if (chk_plain_nomark && !show_plain_nomark &&  is_plain) continue;
         if (chk_nomark       && !show_nomark) continue;
-        if (chk_plain_nomark && !show_plain_nomark && is_plain) continue;
       }
     }
 
