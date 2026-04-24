@@ -643,20 +643,10 @@ function process_filter() {
 }
 
 function process_timings() {
-  const tdr_id = "time-defer-render";
-  const tdr    =  time_defer_render();
-  if   (tdr) {
-    const tdr_span = document.getElementById(tdr_id);
-    if   (tdr_span)
-          tdr_span.textContent = tdr.duration.toFixed(1) + " (" + tdr.chunks + ')';
+  const du_render = time_render();
 
-    return;
-  }
-
-  const   timings   = document.getElementById("timings");
-  const   du_render = time_render();
-
-  timings.innerHTML =
+  const timings   = document.getElementById("timings");
+        timings   . innerHTML =
     //
     format_nowrap('Cache: '  +
        cache_main('size'  )                             +   ' / ' +
@@ -677,7 +667,15 @@ function process_timings() {
     //
     format_nowrap('Render: ' + du_render.pre.toFixed(1) +   ' / ' +
                                du_render.dom.toFixed(1) +   ' / ' +
-      '<span id="' + tdr_id  + '">0.0 (0)</span>'       + ' ms' );
+    '<span id="' + "time-defer-render"  + '">0.0 (0)</span> ms' );
+}
+
+function process_timings_defer() {
+  const tdr      =  time_defer_render();
+  const tdr_id   = "time-defer-render";
+
+  const tdr_span = document.getElementById(tdr_id);
+        tdr_span . textContent = tdr.duration.toFixed(1) + " (" + tdr.chunks + ')';
 }
 
 function process_error(error) {

@@ -18,39 +18,36 @@ function init_defer_render() {
 }
 
 function time_defer_render() {
-  return        defer_render_chunks        &&  defer_render_duration
-    ? { chunks: defer_render_chunks, duration: defer_render_duration }
-    : null;
+  return { chunks: defer_render_chunks, duration: defer_render_duration };
 }
 
 function add_defer_render   (wrapper) {
   defer_render_wrappers.push(wrapper);
 }
 
-// defer_render_wrappers: not empty (but anyway checked downstream)
 function defer_render() {
   defer_render_processed   =  0;
   defer_render_chunks      =  0;
   defer_render_duration    =  0;
 
+  if (!defer_render_wrappers.length) { defer_render_finished(); return; }
+
   const chunk_sz_override  =  Math .round(defer_render_chunk_sz / 2) + 1; // Shorter first chunk
   requestAnimationFrame(() => defer_render_step(defer_render_id, chunk_sz_override)); // Fast start
 }
 
+// defer_render_processed < defer_render_wrappers.length
 function defer_render_step(render_id, chunk_sz_override) {
   if (render_id !== defer_render_id) return;
 
-  const defer_render_total = defer_render_wrappers.length;
-  if   (defer_render_processed === defer_render_total) return;
-
   const time_0   = performance.now();
-  let   count    = Math.min(chunk_sz_override || defer_render_chunk_sz, defer_render_total - defer_render_processed);
+  let   count    = Math.min(chunk_sz_override || defer_render_chunk_sz,
+                            defer_render_wrappers.length - defer_render_processed);
   let   duration = 0;
 
   do {
     const wrapper = defer_render_wrappers[defer_render_processed];
     const index   = wrapper.item_index;
-    if   (index === undefined) return;
 
     const [title_container,
             prev_container,
@@ -75,9 +72,13 @@ function defer_render_step(render_id, chunk_sz_override) {
   defer_render_chunks++;
   defer_render_duration += (performance.now() - time_0);
 
-  if (defer_render_processed === defer_render_total) { setTimeout(render_finished, 0); return; }
+  if (defer_render_processed === defer_render_wrappers.length) { defer_render_finished(); return; }
 
   setTimeout(defer_render_step, defer_render_wait, defer_render_id);
+}
+
+function defer_render_finished() {
+    setTimeout(render_finished, 0);
 }
 
 /* Cells */
@@ -112,7 +113,7 @@ function add_cells_raw_marks  (index,   marks) {
 
 function create_cells_raw(index, wrapper) {
   const raw_is    = cells_raw_is[index];
-  if  (!raw_is)     return;
+  if  (!raw_is)     return null;
 
   const is_prev   = raw_is.is_prev;
   const no_prev   = raw_is.no_prev;
@@ -525,7 +526,7 @@ function set_item_grow(index, container) {
   container.appendChild(stat_grow_7  );
 }
 
-//
+// EOF
 
 
 
