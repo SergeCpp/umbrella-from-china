@@ -181,6 +181,7 @@
 input[type="text"].changed {
   border-radius: 3px; /* 3 is better than 2 */
   border-style: solid;
+  border-width: 2px;
 }
 
 input[type="text"].changed.tab-a {
@@ -343,18 +344,21 @@ input[type="checkbox"].changed.tab-e {
   border-color: #cccccc; /* Gray80, the same as for text input changed hover */
   border-radius: 3px; /* The same as for text input */
   border-style: solid;
+  border-width: 2px;
 }
 .in-btn:active {
   background-color: #f2f2f2; /* Gray95, the same as for text input changed */
   border-color: #d4d4d4; /* Gray83, the same as for text input changed */
   border-radius: 3px; /* The same as for text input */
   border-style: solid;
+  border-width: 2px;
 }
 
 .span-btn {
   border-color: white; /* Invisible border */
   border-radius: 3px; /* The same as for text input */
   border-style: solid;
+  border-width: 2px;
   cursor: pointer;
   padding: 0 4px;
 }
