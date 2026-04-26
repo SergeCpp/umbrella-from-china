@@ -360,7 +360,7 @@ function date_change_menu(event, what) {
   const i_date  = m_dates.indexOf(date_main(what));
   const i_min   = 0;
   const i_max   = m_dates.length - 1;
-  const h_view  = 3;
+  const h_view  = 3; // Half view
   let   i_beg   = i_date - h_view;
   let   i_end   = i_date + h_view;
 
@@ -371,6 +371,11 @@ function date_change_menu(event, what) {
   if (i_end > i_max) {
       i_beg = Math.max(i_beg - (i_end - i_max), i_min);
       i_end = i_max; }
+
+  let   a_beg  =         i_beg; // Above beg
+  let   b_end  = i_max - i_end; // Below end
+
+  const m_size = i_end - i_beg + 1; // Normally 7 but can be less
 
   const  btn_other  = document.getElementById('span-btn-' + (what === "prev" ? "curr" : "prev"));
   const menu_caller = event.currentTarget;
@@ -411,7 +416,8 @@ function date_change_menu(event, what) {
     opt.onclick = () => {
       menu.remove_ex();
       save_focus('span-btn-' + what);
-      requestAnimationFrame(() => setTimeout(load_stat, 0, date, what)); // RAF handles cache hit (menu closing)
+      requestAnimationFrame(() => // RAF handles menu closing on cache hit
+        setTimeout(load_stat, 0, opt.textContent, what));
     };
 
     opt.onkeyup = (event) => {
@@ -441,11 +447,47 @@ function date_change_menu(event, what) {
         next =         0;
       } else if ((key === 'ArrowDown') && event.ctrlKey) {
         next =  all  - 1;
-      } else if ((key === 'ArrowUp') || (key === 'ArrowLeft') || ((key === 'Tab') && event.shiftKey)) {
+      } else if ((key === 'ArrowUp'  ) || ((key === 'Tab') && event.shiftKey)) {
         next = (curr - 1 + all) % all;
-      } else { // ArrowDown or ArrowRight or Tab
+      } else if ((key === 'ArrowDown') ||  (key === 'Tab')) {
         next = (curr + 1)       % all;
       }
+      else if (key === 'ArrowLeft') {
+
+        const m_shift = Math.min(m_size, a_beg);
+
+        i_beg -= m_shift;
+        i_end -= m_shift;
+        a_beg -= m_shift;
+        b_end += m_shift;
+
+        for (let i = i_beg; i <= i_end; i++) {
+          opts[i - i_beg].textContent = m_dates[i];
+        }
+
+        const i_shift = Math.min(m_size - m_shift, curr);
+        next = curr - i_shift;
+      }
+      else if (key === 'ArrowRight') {
+
+        const m_shift = Math.min(m_size, b_end);
+
+        i_beg += m_shift;
+        i_end += m_shift;
+        a_beg += m_shift;
+        b_end -= m_shift;
+
+        for (let i = i_beg; i <= i_end; i++) {
+          opts[i - i_beg].textContent = m_dates[i];
+        }
+
+        const i_shift = Math.min(m_size - m_shift, m_size - 1 - curr);
+        next = curr + i_shift;
+      }
+      else { // Other key. Normally never goes here
+        return;
+      }
+
       opts[next].focus();
     };
   };
