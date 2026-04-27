@@ -111,11 +111,11 @@ function init_tabs() {
       if ((key !== 'ArrowLeft') && (key !== 'ArrowRight')) return;
       event.preventDefault();
 
-      const all  = tab_names.length;
-      const next = ((key === 'ArrowLeft' ) && event.ctrlKey) ?           0 :
-                   ((key === 'ArrowRight') && event.ctrlKey) ?   all   - 1 :
-                    (key === 'ArrowLeft' )                   ? ((index - 1 + all) % all)
-                                                             : ((index + 1)       % all); // ArrowRight
+      const size = tab_names.length;
+      const next = ((key === 'ArrowLeft' ) && event.ctrlKey) ?   0         :
+                   ((key === 'ArrowRight') && event.ctrlKey) ?   size  - 1 :
+                    (key === 'ArrowLeft' )                   ? ((index - 1 + size) % size)
+                                                             : ((index + 1)        % size); // ArrowRight
 
       const button_next = document.getElementById('tab-' + tab_names[next]);
       if   (button_next) {
@@ -243,11 +243,11 @@ function tab_toggle(tab, shift) {
   if(tab === 'c') {
     if (!tab_mark_filters_count()) return;
 
-    const all  = tab_filter_modes.length;
+    const size = tab_filter_modes.length;
     const curr = tab_filter_modes.indexOf(tab_mode[tab]);
     const next = shift
-               ? ((curr - 1 + all) % all)
-               : ((curr + 1)       % all);
+               ? ((curr - 1 + size) % size)
+               : ((curr + 1)        % size);
 
     tab_mode[tab]  =  tab_filter_modes[next];
   } else {
@@ -360,7 +360,7 @@ function date_change_menu(event, what) {
   const i_date  = m_dates.indexOf(date_main(what));
   const i_min   = 0;
   const i_max   = m_dates.length - 1;
-  const h_view  = 3; // Half view
+  const h_view  = 3; // Half view (above and below the central option)
   let   i_beg   = i_date - h_view;
   let   i_end   = i_date + h_view;
 
@@ -372,10 +372,8 @@ function date_change_menu(event, what) {
       i_beg = Math.max(i_beg - (i_end - i_max), i_min);
       i_end = i_max; }
 
-  let   a_beg  =         i_beg; // Above beg
-  let   b_end  = i_max - i_end; // Below end
-
-  const m_size = i_end - i_beg + 1; // Normally 7 but can be less
+  let a_beg =         i_beg; // Above beg
+  let b_end = i_max - i_end; // Below end
 
   const  btn_other  = document.getElementById('span-btn-' + (what === "prev" ? "curr" : "prev"));
   const menu_caller = event.currentTarget;
@@ -404,6 +402,19 @@ function date_change_menu(event, what) {
     const key = event.key;
     if (key === 'Escape') {
       menu.remove_ex();
+    }
+  };
+
+  const menu_shift = (shift, opts) => {
+    if (!shift) return;
+
+    i_beg += shift;
+    i_end += shift;
+    a_beg += shift;
+    b_end -= shift;
+
+    for (let i = i_beg; i <= i_end; i++) {
+      opts[i - i_beg].textContent = m_dates[i];
     }
   };
 
@@ -439,50 +450,46 @@ function date_change_menu(event, what) {
 
       const menu = opt.parentElement;
       const opts = Array.from(menu.children);
-      const all  = opts.length;
+      const size = opts.length;
       const curr = opts.indexOf(opt);
       let   next;
 
-      if        ((key === 'ArrowUp'  ) && event.ctrlKey) {
-        next =         0;
+      if        ((key === 'ArrowUp'  ) && event.ctrlKey    && event.shiftKey) {
+
+        const m_shift = -a_beg;
+        menu_shift(m_shift, opts);
+
+        next =  0;
+      }
+      else if   ((key === 'ArrowDown') && event.ctrlKey    && event.shiftKey) {
+
+        const m_shift = +b_end;
+        menu_shift(m_shift, opts);
+
+        next =  size - 1;
+      }
+      else if   ((key === 'ArrowUp'  ) && event.ctrlKey) {
+        next =  0;
       } else if ((key === 'ArrowDown') && event.ctrlKey) {
-        next =  all  - 1;
+        next =  size - 1;
       } else if ((key === 'ArrowUp'  ) || ((key === 'Tab') && event.shiftKey)) {
-        next = (curr - 1 + all) % all;
+        next = (curr - 1 + size) % size;
       } else if ((key === 'ArrowDown') ||  (key === 'Tab')) {
-        next = (curr + 1)       % all;
+        next = (curr + 1)        % size;
       }
       else if (key === 'ArrowLeft') {
 
-        const m_shift = Math.min(m_size, a_beg);
+        const m_shift = -Math.min(size, a_beg);
+        menu_shift(m_shift, opts);
 
-        i_beg -= m_shift;
-        i_end -= m_shift;
-        a_beg -= m_shift;
-        b_end += m_shift;
-
-        for (let i = i_beg; i <= i_end; i++) {
-          opts[i - i_beg].textContent = m_dates[i];
-        }
-
-        const i_shift = Math.min(m_size - m_shift, curr);
-        next = curr - i_shift;
+        next = m_shift ? curr : 0;
       }
       else if (key === 'ArrowRight') {
 
-        const m_shift = Math.min(m_size, b_end);
+        const m_shift = +Math.min(size, b_end);
+        menu_shift(m_shift, opts);
 
-        i_beg += m_shift;
-        i_end += m_shift;
-        a_beg += m_shift;
-        b_end -= m_shift;
-
-        for (let i = i_beg; i <= i_end; i++) {
-          opts[i - i_beg].textContent = m_dates[i];
-        }
-
-        const i_shift = Math.min(m_size - m_shift, m_size - 1 - curr);
-        next = curr + i_shift;
+        next = m_shift ? curr : size - 1;
       }
       else { // Other key. Normally never goes here
         return;
