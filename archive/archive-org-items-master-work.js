@@ -496,7 +496,7 @@ function item_details(container, ensure_open = false, jump_to_item = false, link
     const vi_mid  = window.innerHeight / 2;
     const vi_half = vi_mid;
     const wr_dist = Math.abs(wr_mid - vi_mid) - (wr_half + vi_half);
-    const vi_dist = window.innerHeight;
+    const vi_dist = window.innerHeight * 2;
     const is_near = wr_dist < vi_dist;
 
     if   (is_near) {
@@ -540,26 +540,39 @@ function add_details_linkage(name, index, linkage_arr, linkage_idx) {
                  span_next ? format_nowrap(                      type + to_next + span_next) :
     null;
 
-  const prev = linkage_arr[linkage_idx - 1];
-  const next = linkage_arr[linkage_idx + 1];
+  const ei = linkage_arr.length - 1;
 
-  const sh_ord_prev  = sh_ord(prev?.shown, prev?.ordinal, "prev");
-  const sh_ord_next  = sh_ord(next?.shown, next?.ordinal, "next");
+  // The same idx logic is also in item_linkage
+  //
+  const prev_idx = linkage_idx > 0  ? linkage_idx - 1 : -1;
+  const next_idx = linkage_idx < ei ? linkage_idx + 1 : -1;
 
-  const near_linkage = make_linkage("Near", sh_ord_prev, sh_ord_next);
+  const prev_lnk = linkage_arr[prev_idx];
+  const next_lnk = linkage_arr[next_idx];
 
-  const pr10 = linkage_arr[linkage_idx - 10];
-  const nx10 = linkage_arr[linkage_idx + 10];
+  const prev_txt = sh_ord(prev_lnk?.shown, prev_lnk?.ordinal, "prev");
+  const next_txt = sh_ord(next_lnk?.shown, next_lnk?.ordinal, "next");
 
-  const sh_ord_pr10  = sh_ord(pr10?.shown, pr10?.ordinal, "pr10");
-  const sh_ord_nx10  = sh_ord(nx10?.shown, nx10?.ordinal, "nx10");
+  const near_lnk = make_linkage("Near", prev_txt, next_txt);
 
-  const dist_linkage = make_linkage("Dist", sh_ord_pr10, sh_ord_nx10);
+  // The same idx logic is also in item_linkage
+  //
+  const pr10_idx = linkage_idx > 0  ? (linkage_idx <      10 ? 0  : linkage_idx - 10) : -1;
+  const nx10_idx = linkage_idx < ei ? (linkage_idx > ei - 10 ? ei : linkage_idx + 10) : -1;
 
-  const linkage = near_linkage && dist_linkage ? near_linkage + '\n' + dist_linkage
-                : near_linkage                 ? near_linkage        : dist_linkage;
+  const pr10_lnk = linkage_arr[pr10_idx];
+  const nx10_lnk = linkage_arr[nx10_idx];
 
-  if (!linkage) return;
+  const pr10_txt = sh_ord(pr10_lnk?.shown, pr10_lnk?.ordinal, "pr10");
+  const nx10_txt = sh_ord(nx10_lnk?.shown, nx10_lnk?.ordinal, "nx10");
+
+  const dist_lnk = make_linkage("Dist", pr10_txt, nx10_txt);
+
+  //
+  const linkage = near_lnk && dist_lnk ? near_lnk + '\n' + dist_lnk
+                : near_lnk             ? near_lnk        : dist_lnk;
+
+  if  (!linkage)  return;
 
   switch (name) {
     case "horz":
@@ -909,12 +922,22 @@ function item_linkage(linkage) {
   const index_from = linkage_arr.findIndex(lnk => lnk.index === index);
   if   (index_from === -1) return;
 
+  // The same idx logic is also in add_details_linkage
+
+  const ei = linkage_arr.length - 1;
+
+  const prev_idx = index_from > 0  ? index_from - 1 : -1;
+  const next_idx = index_from < ei ? index_from + 1 : -1;
+
+  const pr10_idx = index_from > 0  ? (index_from <      10 ? 0  : index_from - 10) : -1;
+  const nx10_idx = index_from < ei ? (index_from > ei - 10 ? ei : index_from + 10) : -1;
+
   let container_go = null;
   switch (dir) {
-    case "prev": container_go = linkage_arr[index_from - 1 ].container; break;
-    case "next": container_go = linkage_arr[index_from + 1 ].container; break;
-    case "pr10": container_go = linkage_arr[index_from - 10].container; break;
-    case "nx10": container_go = linkage_arr[index_from + 10].container; break;
+    case "prev": container_go = linkage_arr[prev_idx].container; break;
+    case "next": container_go = linkage_arr[next_idx].container; break;
+    case "pr10": container_go = linkage_arr[pr10_idx].container; break;
+    case "nx10": container_go = linkage_arr[nx10_idx].container; break;
   }
   if (!container_go) return;
 
