@@ -479,14 +479,14 @@ function date_change_menu(event, what) {
       }
       else if    (key === 'ArrowLeft' ) {
 
-        const m_shift = -Math.min(size, a_beg);
+        const m_shift = -Math.min(size - 1, a_beg); // -1 to show one opt from prev page
         menu_shift(m_shift, opts);
 
         next = m_shift ? curr : 0;
       }
       else if    (key === 'ArrowRight') {
 
-        const m_shift = +Math.min(size, b_end);
+        const m_shift = +Math.min(size - 1, b_end); // -1 to show one opt from prev page
         menu_shift(m_shift, opts);
 
         next = m_shift ? curr : size - 1;
