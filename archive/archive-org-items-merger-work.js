@@ -105,8 +105,8 @@ function add_cells_raw_subst  (index,     prev_is_subst, curr_is_subst, grow_is_
              cells_raw_subst  [index] = { prev_is_subst, curr_is_subst, grow_is_subst };
 }
 
-function add_cells_raw_changes(index,     shown, rank_change, horz_change, vert_change, mood) {
-             cells_raw_changes[index] = { shown, rank_change, horz_change, vert_change, mood };
+function add_cells_raw_changes(index,     shown, time, rank_change, horz_change, vert_change, mood) {
+             cells_raw_changes[index] = { shown, time, rank_change, horz_change, vert_change, mood };
 }
 
 function add_cells_raw_marks  (index,   marks) {
@@ -206,6 +206,7 @@ function create_cells_raw(index, wrapper) {
   if   (raw_changes) {
     add_linkage_for_items(index,
                  raw_changes.shown,
+                 raw_changes.time,
       is_both && raw_changes.rank_change,  is_both && prev_container,
       is_both && raw_changes.horz_change,  is_both && curr_container,
      !is_prev && raw_changes.vert_change, !is_prev && curr_container,

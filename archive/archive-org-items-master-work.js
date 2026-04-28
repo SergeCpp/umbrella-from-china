@@ -104,20 +104,20 @@ function clr_details_raw() {
     details_are_ready = false;
 }
 
-function add_details_raw_horz(index,     impact, factor, change) {
-             details_raw_horz[index] = { impact, factor, change };
+function add_details_raw_horz(index,     impact,         factor,  change) {
+             details_raw_horz[index] = { impact,         factor,  change };
 }
 
-function add_details_raw_vert(index,     impact, factor, change) {
-             details_raw_vert[index] = { impact, factor, change };
+function add_details_raw_vert(index,     impact,         factor,  change) {
+             details_raw_vert[index] = { impact,         factor,  change };
 }
 
 function add_details_raw_rank(index,     diff, from, to, divisor, change) {
              details_raw_rank[index] = { diff, from, to, divisor, change };
 }
 
-function add_details_raw_mood(index,     mood, divisor, scaled) {
-             details_raw_mood[index] = { mood, divisor, scaled };
+function add_details_raw_mood(index,     mood,           divisor, scaled) {
+             details_raw_mood[index] = { mood,           divisor, scaled };
 }
 
 function set_details_for_items() {
@@ -606,29 +606,30 @@ function clr_linkage_for_items() {
 
 // index is 0-based
 // shown is 1-based
-function add_linkage_for_items(index, shown,
+function add_linkage_for_items(index, shown, time,
   rank_change, rank_container,
   horz_change, horz_container,
   vert_change, vert_container,
   mood,        mood_container) {
   if (rank_change)
-      rank_linkage.push({ index, shown, value: rank_change, container: rank_container, ordinal: null });
+      rank_linkage.push({ index, shown, time, value: rank_change, container: rank_container, ordinal: null });
 
   if (horz_change)
-      horz_linkage.push({ index, shown, value: horz_change, container: horz_container, ordinal: null });
+      horz_linkage.push({ index, shown, time, value: horz_change, container: horz_container, ordinal: null });
 
   if (vert_change)
-      vert_linkage.push({ index, shown, value: vert_change, container: vert_container, ordinal: null });
+      vert_linkage.push({ index, shown, time, value: vert_change, container: vert_container, ordinal: null });
 
   if (mood)
-      mood_linkage.push({ index, shown, value: mood,        container: mood_container, ordinal: null });
+      mood_linkage.push({ index, shown, time, value: mood,        container: mood_container, ordinal: null });
 }
 
 function set_linkage_for_items() {
-  rank_linkage.sort((above, below) => below.value - above.value); // Descending
-  horz_linkage.sort((above, below) => below.value - above.value); // Descending
-  vert_linkage.sort((above, below) => below.value - above.value); // Descending
-  mood_linkage.sort((above, below) => below.value - above.value); // Descending
+  // Descending || Ascending
+  rank_linkage.sort((above, below) => (below.value - above.value) || (above.time - below.time));
+  horz_linkage.sort((above, below) => (below.value - above.value) || (above.time - below.time));
+  vert_linkage.sort((above, below) => (below.value - above.value) || (above.time - below.time));
+  mood_linkage.sort((above, below) => (below.value - above.value) || (above.time - below.time));
 
   // Get Ordinal
   for (let i = 0; i < rank_linkage.length; i++)

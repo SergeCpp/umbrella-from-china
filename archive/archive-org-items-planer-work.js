@@ -175,6 +175,12 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
     const item      = results_curr_exp[index_curr];
     const item_prev = map_prev[item.identifier];
 
+    const is_prev   = item.is_prev;
+    const no_prev   = item.no_prev;
+    const is_both   = item.is_both;
+
+    const time_all  = item.time_all;
+
     ////////
     // Title
     //
@@ -188,7 +194,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
     ///////
     // Prev
     //
-    if (!item.no_prev) {
+    if (!no_prev) {
       if (show_by_old) {
         add_prev_raw(index_curr, item_prev.views_old, item_prev.days_old, item_prev.ratio_old,
                                  item_prev.views_23,                      item_prev.ratio_23,
@@ -204,7 +210,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
     ///////
     // Curr
     //
-    if (!item.is_prev) {
+    if (!is_prev) {
       if (show_by_old) {
         add_curr_raw(index_curr, item.views_old, item.days_old, item.ratio_old,
                                  item.views_23,                 item.ratio_23,
@@ -221,7 +227,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
     // Horz and Vert substantial changes, 0 is no change
     //
     let horz_change = 0;
-    if (item.is_both) { // Item is markable
+    if (is_both) { // Item is markable
       let horz_impact = 0;
       if (show_by_old) {
         horz_impact = (item.ratio_old && item_prev.ratio_old)
@@ -247,12 +253,12 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
         add_details_raw_horz(index_curr, horz_impact, horz_factor, horz_change);
       }
     }
-    horz_curr_prev.push({ index: index_curr, value: horz_change, time: item.time_all }); // Needed in array anyway
+    horz_curr_prev.push({ index: index_curr, value: horz_change, time: time_all }); // Needed in array anyway
     //
     // Vert change
     //
     let vert_change = 0;
-    if (!item.is_prev) { // Item is markable
+    if (!is_prev) { // Item is markable
       const vert_impact =
                   (item.ratio_all && item.ratio_old) // The same change for both show_by values
         ? Math.log(item.ratio_all /  item.ratio_old) // "30 / old" not suits here because of
@@ -271,7 +277,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
         add_details_raw_vert(index_curr, vert_impact, vert_factor, vert_change);
       }
     }
-    vert_all_old.push({ index: index_curr, value: vert_change, time: item.time_all }); // Needed in array anyway
+    vert_all_old.push({ index: index_curr, value: vert_change, time: time_all }); // Needed in array anyway
 
     //////////////////////////////
     // Rank change, 0 is no change
@@ -279,7 +285,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
     let   rank_change = 0;
     const rank_diff   = item.index_prev - index_curr; // No abs
     if   (rank_diff) { // Also if length === 1 then index_prev === index_curr
-      if (item.is_both) { // Item is markable
+      if (is_both) { // Item is markable
 //      const rank_scale  = get_scale_log(index_curr, curr_log_base, rank_log_steep, rank_decay);
         const rank_scale  = subst_scaled
           ? get_scale_sig(index_curr, curr_length,
@@ -290,13 +296,13 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
         add_details_raw_rank(index_curr, rank_diff, item.index_prev + 1, index_curr + 1, rank_scale, rank_change);
       }
     }
-    rank_up_dn.push({ index: index_curr, value: rank_change, time: item.time_all }); // Needed in array anyway
+    rank_up_dn.push({ index: index_curr, value: rank_change, time: time_all }); // Needed in array anyway
 
     //////////////////////////////
     // Grow and Mood, 0 is no Mood
     //
     let mood = 0;
-    if (item.is_both) { // Item is markable
+    if (is_both) { // Item is markable
       const grow_old = show_by_old
                      ? get_grow_ratio(item_prev.ratio_old, item.ratio_old)
                      : get_grow_ratio(item_prev.ratio_all, item.ratio_all);
@@ -319,16 +325,16 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
         add_details_raw_mood(index_curr, grow_mood, mood_scale, mood);
       }
     }
-    mood_pos_neg.push({ index: index_curr, value: mood, time: item.time_all }); // Needed in array anyway
+    mood_pos_neg.push({ index: index_curr, value: mood, time: time_all }); // Needed in array anyway
 
     /////////
     // Gauges
     //
-    if (!item.no_prev) {
+    if (!no_prev) {
       // Display favorites prev count on the below a gauge
       add_gauge_below_a(index_curr, item_prev.favorites);
     }
-    if (!item.is_prev) {
+    if (!is_prev) {
       // Display favorites curr count on the below b gauge
       add_gauge_below_b(index_curr, item.favorites);
 

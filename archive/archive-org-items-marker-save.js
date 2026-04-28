@@ -649,9 +649,7 @@ function low_first(str) {
 
 /* Sorting */
 
-function sort_results(results, title_is, show_by, sort_by) {
-  const title_is_title = (title_is === "title"); // Else is "identifier"
-
+function sort_results(results, show_by, sort_by) {
   let field_1 = null;
   let field_2 = null;
   let field_3 = null;
@@ -666,20 +664,18 @@ function sort_results(results, title_is, show_by, sort_by) {
   }
 
   // Descending by value: max >> min
-  //  Ascending by title:   A >> Z
+  //  Ascending by time : min >> max
   results.sort((above, below) =>
     (below[field_1] - above[field_1]) ||
     (below[field_2] - above[field_2]) ||
     (below[field_3] - above[field_3]) ||
-    (title_is_title
-     ? above.title     .localeCompare(below.title     )
-     : above.identifier.localeCompare(below.identifier)));
+    (above.time_all - below.time_all));
 }
 
 /* Stats */
 
 // what: "prev" / "curr"
-function render_stats(results, date, what, title_is, show_by, sort_by, container) {
+function render_stats(results, date, what, show_by, sort_by, container) {
   let field = null;
 
   switch (show_by + sort_by) {
@@ -698,7 +694,7 @@ function render_stats(results, date, what, title_is, show_by, sort_by, container
     case "views": format = (value) => format_number(value); break;
   }
 
-  sort_results(results, title_is, show_by, sort_by);
+  sort_results(results, show_by, sort_by);
 
   // Show stats: Min, 10%, 25%, 50%, 75%, 90%, Max
   const stats_text = document.createElement("div");

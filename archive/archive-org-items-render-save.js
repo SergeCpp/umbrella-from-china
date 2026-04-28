@@ -175,8 +175,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   only_both = curr_length - only_curr - only_prev;
 
   // Sort expanded arrays for show in list (curr) and rank changes calculations (both)
-  sort_results(results_curr_exp, title_is, show_by, sort_by);
-  sort_results(results_prev_exp, title_is, show_by, sort_by);
+  sort_results(results_curr_exp, show_by, sort_by);
+  sort_results(results_prev_exp, show_by, sort_by);
 
   // Create a map of curr expanded results by identifier
   // Set no_prev actual values in curr expanded results
@@ -313,41 +313,44 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   let subst_marked = 0;
 
   for (const item of results_curr_exp) {
+    const is_prev  = item.is_prev;
+    const is_both  = item.is_both;
+
     const time_all = item.time_all;
 
     //
-    const is_rank_up   =  item.is_both && // item.index_prev > index
+    const is_rank_up   =  is_both && // item.index_prev > index
       ( (item.rank_change  >  mark_val_rank_up)   ||
        ((item.rank_change === mark_val_rank_up)   && (time_all <= mark_tim_rank_up)));
 
-    const is_rank_dn   =  item.is_both && // item.index_prev < index
+    const is_rank_dn   =  is_both && // item.index_prev < index
       ( (item.rank_change  <  mark_val_rank_dn)   ||
        ((item.rank_change === mark_val_rank_dn)   && (time_all >= mark_tim_rank_dn)));
 
     //
-    const is_horz_grow =  item.is_both &&
+    const is_horz_grow =  is_both &&
       ( (item.horz_change  >  mark_val_grow_old)  ||
        ((item.horz_change === mark_val_grow_old)  && (time_all <= mark_tim_grow_old)));
 
-    const is_horz_fall =  item.is_both &&
+    const is_horz_fall =  is_both &&
       ( (item.horz_change  <  mark_val_fall_old)  ||
        ((item.horz_change === mark_val_fall_old)  && (time_all >= mark_tim_fall_old)));
 
     //
-    const is_vert_grow = !item.is_prev &&
+    const is_vert_grow = !is_prev &&
       ( (item.vert_change  >  mark_val_grow_23_7) ||
        ((item.vert_change === mark_val_grow_23_7) && (time_all <= mark_tim_grow_23_7)));
 
-    const is_vert_fall = !item.is_prev &&
+    const is_vert_fall = !is_prev &&
       ( (item.vert_change  <  mark_val_fall_23_7) ||
        ((item.vert_change === mark_val_fall_23_7) && (time_all >= mark_tim_fall_23_7)));
 
     //
-    const is_mood_pos  =  item.is_both &&
+    const is_mood_pos  =  is_both &&
       ( (item.mood         >  mark_val_mood_pos)  ||
        ((item.mood        === mark_val_mood_pos)  && (time_all <= mark_tim_mood_pos)));
 
-    const is_mood_neg  =  item.is_both &&
+    const is_mood_neg  =  is_both &&
       ( (item.mood         <  mark_val_mood_neg)  ||
        ((item.mood        === mark_val_mood_neg)  && (time_all >= mark_tim_mood_neg)));
 
@@ -428,8 +431,8 @@ function render_results_dom(
   ///////////////////////////////////////////////////////////////////
   // Both stats displaying (also sorts results_prev and results_curr)
   //
-  render_stats(results_prev, date_prev, "prev", title_is, show_by, sort_by, container);
-  render_stats(results_curr, date_curr, "curr", title_is, show_by, sort_by, container);
+  render_stats(results_prev, date_prev, "prev", show_by, sort_by, container);
+  render_stats(results_curr, date_curr, "curr", show_by, sort_by, container);
 
   ///////////////////
   // Diffs displaying
@@ -677,7 +680,7 @@ function render_results_dom(
   init_cells_raw   ();
   //
   for (let index = 0; index < curr_length; index++) {
-    const item = results_curr_exp[index];
+    const item    = results_curr_exp[index];
 
     const is_prev = item.is_prev;
     const no_prev = item.no_prev;
@@ -825,8 +828,9 @@ function render_results_dom(
         is_prev ? null : item);
     }
 
-    if (is_both || !is_prev) {
-      add_cells_raw_changes(index, shown_cnt, item.rank_change, item.horz_change, item.vert_change, item.mood);
+    if (is_both || !is_prev) { // Explicitly two conditions used
+      add_cells_raw_changes(index, shown_cnt, item.time_all,
+        item.rank_change, item.horz_change, item.vert_change, item.mood);
     }
   } // for (index) closing
 
