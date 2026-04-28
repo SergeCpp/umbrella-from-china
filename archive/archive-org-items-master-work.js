@@ -320,7 +320,7 @@ function item_arrows(container, event) {
   };
 
   if (event.altKey) {
-    event.preventDefault(); // Prewent browser actions
+    event.preventDefault(); // Prevent browser actions
   }
 
   if (is_left || is_right) {
