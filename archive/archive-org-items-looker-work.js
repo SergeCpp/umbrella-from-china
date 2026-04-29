@@ -72,12 +72,8 @@ function init_tabs() {
   tab_to_values   ("");
 
   for (const tab of tab_names) {
-    tab_input_values[tab] = {};
-
-    for (const id in tab_input_values[""]) {
-      tab_input_values[tab][id] = tab_input_values[""][id];
-    }
-
+    tab_input_values [tab] = {};
+    tab_to_initial   (tab);
     tab_change_marked[tab] = false;
   }
 
@@ -92,12 +88,12 @@ function init_tabs() {
     const button = document.getElementById('tab-' + tab);
     if  (!button) return;
 
-    button.onclick = (event) => tab_click(tab, event.shiftKey, event.ctrlKey);
+    button.onclick = (event) => tab_click(tab, event.shiftKey, event.ctrlKey, event.altKey);
 
     button.onkeyup = (event) => {
       const key = event.key;
       if ((key === 'Enter') || (key === ' ')) {
-        tab_click(tab, event.shiftKey, event.ctrlKey); // button.click() not passes *Key modifiers
+        tab_click(tab, event.shiftKey, event.ctrlKey, event.altKey); // button.click() not passes *Key modifiers
       }
     };
 
@@ -150,12 +146,41 @@ function tab_to_inputs(tab) {
   });
 }
 
+function tab_to_initial(tab) {
+  for (const id in tab_input_values[""]) {
+        tab_input_values[tab][id]  =  tab_input_values[""][id];
+  }
+}
+
 function tab_is_changed(tab) {
   for (const id in tab_input_values[""]) {
     if (tab_input_values[tab][id] !== tab_input_values[""][id]) return true;
   }
 
   return false;
+}
+
+// Clear
+
+function tab_clear(tab, shift) {
+  if (shift) {
+    for (const tab of tab_names)
+      tab_clear(tab, false);
+
+    return;
+  }
+
+  if (tab === tab_active) {
+    tab_to_values (tab);
+    tab_inputs_lo (tab);
+
+    tab_to_initial(tab);
+    tab_to_inputs (tab);
+  } else {
+    tab_to_initial(tab);
+  }
+
+  tab_mark(tab, false);
 }
 
 // Changed Inputs Marking
@@ -255,6 +280,7 @@ function tab_toggle(tab, shift) {
     const tab_text = (tab_mode[tab] === "Filter") ? "Mark x Filter" : "Mark";
     tab_set_text(tab, tab_text);
   }
+
   tab_set_center();
 }
 
@@ -318,8 +344,10 @@ function tab_switch(tab, shift) {
 
 // Click Handler
 
-function tab_click(tab, shift, ctrl) {
-  if (ctrl)
+function tab_click(tab, shift, ctrl, alt) {
+  if (alt)
+    tab_clear (tab, shift);
+  else if (ctrl)
     tab_toggle(tab, shift);
   else
     tab_switch(tab, shift);
