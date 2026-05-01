@@ -59,8 +59,9 @@ https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-202
 
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2026-03-01.xml.txt
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2026-04-01.xml.txt
+https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2026-05-01.xml.txt
 -----------------------------------------------------------
-1 dates + 19 stats + 1 subjects + 1 descriptions = 22 files
+1 dates + 20 stats + 1 subjects + 1 descriptions = 23 files
 
 All images listed are used actually
 -----------------------------------
