@@ -271,7 +271,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   ////////////////////////////////////////////////
   // Total counts calculating for expanded results
   //
-  const curr_exp_totals = get_totals(results_curr_exp);
+  const curr_exp_totals = get_totals(results_curr_exp, map_prev);
   const curr_exp_total  =  curr_exp_totals.audio +   curr_exp_totals.video;
   const curr_exp_media  =  curr_exp_totals.audio && !curr_exp_totals.video ? 'Audio ' :
                           !curr_exp_totals.audio &&  curr_exp_totals.video ? 'Video ' : "";
@@ -670,8 +670,7 @@ function render_results_dom(
   //
   let shown_cnt = 0;
   //
-  if (is_filtering) clr_views_favs_shown();
-  //
+  clr_views_favs_shown  ();
   clr_details_for_items ();
   clr_details_div_inners();
   clr_linkage_for_items ();
@@ -821,12 +820,10 @@ function render_results_dom(
     container.appendChild(item_wrapper);
     shown_cnt++;
 
-    // Count vievs and favorites for shown items
-    if (is_filtering) {
-      add_views_favs_shown(
-        no_prev ? null : is_prev ? item : map_prev[item.identifier],
-        is_prev ? null : item);
-    }
+    // Count vievs and favorites diff for shown items
+    add_views_favs_shown(
+      no_prev ? null : is_prev ? item : map_prev[item.identifier],
+      is_prev ? null : item);
 
     if (is_both || !is_prev) { // Explicitly two conditions used
       add_cells_raw_changes(index, shown_cnt, item.time_all,
@@ -834,7 +831,7 @@ function render_results_dom(
     }
   } // for (index) closing
 
-  if (shown_cnt !== curr_length) update_diffs(curr_length, shown_cnt, show_by);
+  update_diffs(curr_length, shown_cnt, show_by);
 
   container.onclick   = (event) => results_click  (event);
   container.onkeyup   = (event) => results_keyup  (event);
