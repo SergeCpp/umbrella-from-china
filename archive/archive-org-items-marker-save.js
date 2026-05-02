@@ -472,12 +472,12 @@ function get_scale_sig(index, length, base, steep, decay, sig_min, sig_max) {
 
 /* Stats */
 
-function get_totals(results, map_prev) {
+function get_totals(results_curr_exp, map_prev) {
   const totals = { audio: 0, video: 0, bytes: 0, views: 0, favorites: 0, favorited: 0,
                    max_favorites: 0, max_ratio_old: 0, max_ratio_all: 0 };
 
-  for (let i = 0; i < results.length; i++) {
-    const item = results[i];
+  for (let i = 0; i < results_curr_exp.length; i++) {
+    const item = results_curr_exp[i];
 
     if      (item.mediatype === "movies") totals.video++; // Most frequent type
     else if (item.mediatype === "audio" ) totals.audio++;
@@ -508,60 +508,76 @@ function get_totals(results, map_prev) {
   return totals;
 }
 
-// Views and Favorites (plain counters)
+// Views and Favorites
 
-const views_favs_empty = { views_all: 0, views_old: 0, views_30: 0, views_23: 0, views_7: 0,
-                           favorites: 0, favorited: 0 };
+const views_empty = { views_all: 0, views_old: 0, views_30: 0, views_23: 0, views_7: 0 };
 
-function add_views_favs(item, views_favs) {
-  if (!item) return;
+function new_views_favs() {
+  const views_favs = {};
 
-  views_favs.views_all += item.views_all;
-  views_favs.views_old += item.views_old;
-  views_favs.views_30  += item.views_30;
-  views_favs.views_23  += item.views_23;
-  views_favs.views_7   += item.views_7;
+  views_favs.prev = { ...views_empty };
+  views_favs.curr = { ...views_empty };
 
-  views_favs.favorites +=  item.favorites;
-  views_favs.favorited += (item.favorites > 0);
-}
-
-function get_views_favs(results) {
-  const views_favs = { ...views_favs_empty };
-
-  for (const item of results) add_views_favs(item, views_favs);
+  views_favs.diff = {
+    favs_grow: 0, favs_fall: 0,
+    favd_grow: 0, favd_fall: 0
+  };
 
   return views_favs;
 }
 
-// Views and Favorites (diff counters added)
+function add_to_views(item, views) {
+  if (!item) return;
 
-const views_favs_shown = {};
-
-function clr_views_favs_shown() {
-  views_favs_shown.prev = { ...views_favs_empty };
-  views_favs_shown.curr = { ...views_favs_empty };
-
-  views_favs_shown.diff = {
-    favs_grow: 0, favs_fall: 0,
-    favd_grow: 0, favd_fall: 0
-  };
+  views.views_all += item.views_all;
+  views.views_old += item.views_old;
+  views.views_30  += item.views_30;
+  views.views_23  += item.views_23;
+  views.views_7   += item.views_7;
 }
 
-function add_views_favs_shown(item_prev, item_curr) {
-  add_views_favs(item_prev, views_favs_shown.prev);
-  add_views_favs(item_curr, views_favs_shown.curr);
-
+function add_to_diff(item_prev, item_curr, diff) {
   const p_fs = item_prev ?  item_prev.favorites      : 0;
   const p_fd = item_prev ? (item_prev.favorites > 0) : 0;
 
   const c_fs = item_curr ?  item_curr.favorites      : 0;
   const c_fd = item_curr ? (item_curr.favorites > 0) : 0;
 
-  const diff = views_favs_shown.diff;
-
   if (c_fs > p_fs) diff.favs_grow += (c_fs - p_fs); else diff.favs_fall += (p_fs - c_fs);
   if (c_fd > p_fd) diff.favd_grow += (c_fd - p_fd); else diff.favd_fall += (p_fd - c_fd);
+}
+
+function get_views_favs(results_curr_exp, map_prev) {
+  const views_favs = new_views_favs();
+
+  for (const item of results_curr_exp) {
+    const item_prev = item.no_prev ? null : item.is_prev ? item : map_prev[item.identifier];
+    const item_curr = item.is_prev ? null : item;
+
+    add_to_views(item_prev,            views_favs.prev);
+    add_to_views(           item_curr, views_favs.curr);
+
+    add_to_diff (item_prev, item_curr, views_favs.diff);
+  }
+
+  return views_favs;
+}
+
+// Views and Favorites shown
+
+let views_favs_shown = {};
+
+function clr_views_favs_shown() {
+  views_favs_shown = new_views_favs();
+}
+
+function add_views_favs_shown(
+               item_prev, item_curr) {
+
+  add_to_views(item_prev,            views_favs_shown.prev);
+  add_to_views(           item_curr, views_favs_shown.curr);
+
+  add_to_diff (item_prev, item_curr, views_favs_shown.diff);
 }
 
 function get_views_favs_shown() {
@@ -770,23 +786,16 @@ let diffs_text_inner = null;
 function create_diffs_inner(views_favs_prev, views_favs_curr, total_cnt, shown_cnt, show_by, diff) {
   const show_by_old = (show_by === "old-23-7"); // Else by "all-30-7"
 
-  const d_favs_str  = diff && diff.favs_fall
+  const d_favs_str  =  diff.favs_fall
+    ? format_num_sign(+diff.favs_grow) + ' (' + format_num_sign(-diff.favs_fall) + ')'
+    : format_num_sign( diff.favs_grow);
 
-    ?       format_num_sign(+diff.favs_grow) + ' ' +
-      '(' + format_num_sign(-diff.favs_fall) + ')'
+  const d_favd_str  =  diff.favd_fall
+    ? format_num_sign(+diff.favd_grow) + ' (' + format_num_sign(-diff.favd_fall) + ')'
+    : format_num_sign( diff.favd_grow);
 
-    :       format_num_sign(views_favs_curr.favorites -
-                            views_favs_prev.favorites);
-
-  const d_favd_str  = diff && diff.favd_fall
-
-    ?       format_num_sign(+diff.favd_grow) + ' ' +
-      '(' + format_num_sign(-diff.favd_fall) + ')'
-
-    :       format_num_sign(views_favs_curr.favorited -
-                            views_favs_prev.favorited);
-
-  const d_spacer    = diff && (diff.favs_fall || diff.favd_fall)     ? ' / ' : '\u200a/\u200a'; // \u200a is &hairsp;
+  const d_fav_part  =  diff.favs_fall ||       // \u200a is &hairsp;
+                       diff.favd_fall  ? ' / ' : '\u200a/\u200a';
 
   const hidden_cnt  =  total_cnt         -  shown_cnt;
   const hidden_str  = hidden_cnt  ? ' (' + hidden_cnt + ' hidden)' : "";
@@ -804,26 +813,27 @@ function create_diffs_inner(views_favs_prev, views_favs_curr, total_cnt, shown_c
                     : views_favs_curr.views_30  - views_favs_prev.views_30 ) + '\u200a/\u200a' +
       format_num_sign(views_favs_curr.views_7   - views_favs_prev.views_7  ) + ',') + ' ' +
 
-    format_nowrap    ('Favs: ' + d_favs_str + d_spacer + d_favd_str);
+    format_nowrap    ('Favs: ' + d_favs_str + d_fav_part + d_favd_str);
 }
 
-function render_diffs(results_prev, results_curr, total_cnt, show_by, container) {
+function render_diffs(results_curr_exp, map_prev, total_cnt, show_by, container) {
   diffs_text = document.createElement("div");
-  diffs_text.className  = "text-center text-comment";
+  diffs_text.className = "text-center text-comment";
 
-  const views_favs_prev = get_views_favs(results_prev);
-  const views_favs_curr = get_views_favs(results_curr);
+  const views_favs     = get_views_favs(results_curr_exp, map_prev);
+  const diff           = views_favs.diff;
 
-  diffs_text_inner      = create_diffs_inner(views_favs_prev, views_favs_curr, total_cnt, total_cnt, show_by, null);
-  diffs_text.innerHTML  = diffs_text_inner;
+  diffs_text_inner     = create_diffs_inner(views_favs.prev, views_favs.curr, total_cnt, total_cnt, show_by, diff);
+  diffs_text.innerHTML = diffs_text_inner;
 
   container.appendChild(diffs_text);
 }
 
 function update_diffs(total_cnt, shown_cnt, show_by) {
-  const views_favs      = get_views_favs_shown();
-  const diff            = views_favs.diff;
-  const updated_inner   = create_diffs_inner(views_favs.prev, views_favs.curr, total_cnt, shown_cnt, show_by, diff);
+  const views_favs     = get_views_favs_shown();
+  const diff           = views_favs.diff;
+
+  const updated_inner  = create_diffs_inner(views_favs.prev, views_favs.curr, total_cnt, shown_cnt, show_by, diff);
 
   if (diffs_text_inner   !== updated_inner) {
       diffs_text.innerHTML = updated_inner;

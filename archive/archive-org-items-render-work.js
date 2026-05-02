@@ -437,7 +437,7 @@ function render_results_dom(
   ///////////////////
   // Diffs displaying
   //
-  render_diffs(results_prev, results_curr, curr_length, show_by, container);
+  render_diffs(results_curr_exp, map_prev, curr_length, show_by, container);
 
   ////////////////////////////////////////
   // Checkboxes chain (for arrows setting)
@@ -670,7 +670,8 @@ function render_results_dom(
   //
   let shown_cnt = 0;
   //
-  clr_views_favs_shown  ();
+  if (is_filtering) clr_views_favs_shown();
+  //
   clr_details_for_items ();
   clr_details_div_inners();
   clr_linkage_for_items ();
@@ -821,9 +822,11 @@ function render_results_dom(
     shown_cnt++;
 
     // Count vievs and favorites diff for shown items
-    add_views_favs_shown(
-      no_prev ? null : is_prev ? item : map_prev[item.identifier],
-      is_prev ? null : item);
+    if (is_filtering) {
+      add_views_favs_shown(
+        no_prev ? null : is_prev ? item : map_prev[item.identifier],
+        is_prev ? null : item);
+    }
 
     if (is_both || !is_prev) { // Explicitly two conditions used
       add_cells_raw_changes(index, shown_cnt, item.time_all,
@@ -831,7 +834,7 @@ function render_results_dom(
     }
   } // for (index) closing
 
-  update_diffs(curr_length, shown_cnt, show_by);
+  if (shown_cnt !== curr_length) update_diffs(curr_length, shown_cnt, show_by);
 
   container.onclick   = (event) => results_click  (event);
   container.onkeyup   = (event) => results_keyup  (event);
