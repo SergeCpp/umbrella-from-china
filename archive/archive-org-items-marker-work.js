@@ -786,19 +786,23 @@ let diffs_text_inner = null;
 function create_diffs_inner(views_favs_prev, views_favs_curr, total_cnt, shown_cnt, show_by, diff) {
   const show_by_old = (show_by === "old-23-7"); // Else by "all-30-7"
 
-  const d_favs_str  =  diff.favs_fall
-    ? format_num_sign(+diff.favs_grow) + ' (' + format_num_sign(-diff.favs_fall) + ')'
-    : format_num_sign( diff.favs_grow);
+  // \u200a is &hairsp;
+  // \u2212 is &minus;
+  //
+  // Explicit signs are needed in diff even for zeroes
 
-  const d_favd_str  =  diff.favd_fall
-    ? format_num_sign(+diff.favd_grow) + ' (' + format_num_sign(-diff.favd_fall) + ')'
-    : format_num_sign( diff.favd_grow);
+  const  d_favs_str
+    = diff.favs_fall ? '+' + format_number(diff.favs_grow) + '\u200a(\u2212' + format_number(diff.favs_fall) + ')'
+    : diff.favs_grow ? '+' + format_number(diff.favs_grow)
+                     : '0';
 
-  const d_fav_part  =  diff.favs_fall ||       // \u200a is &hairsp;
-                       diff.favd_fall  ? ' / ' : '\u200a/\u200a';
+  const  d_favd_str
+    = diff.favd_fall ? '+' + format_number(diff.favd_grow) + '\u200a(\u2212' + format_number(diff.favd_fall) + ')'
+    : diff.favd_grow ? '+' + format_number(diff.favd_grow)
+                     : '0';
 
-  const hidden_cnt  =  total_cnt         -  shown_cnt;
-  const hidden_str  = hidden_cnt  ? ' (' + hidden_cnt + ' hidden)' : "";
+  const hidden_cnt =  total_cnt          -  shown_cnt;
+  const hidden_str = hidden_cnt   ? ' (' + hidden_cnt + ' hidden)' : "";
 
   return "" +
     format_nowrap    ('Differences for ' +
@@ -813,7 +817,7 @@ function create_diffs_inner(views_favs_prev, views_favs_curr, total_cnt, shown_c
                     : views_favs_curr.views_30  - views_favs_prev.views_30 ) + '\u200a/\u200a' +
       format_num_sign(views_favs_curr.views_7   - views_favs_prev.views_7  ) + ',') + ' ' +
 
-    format_nowrap    ('Favs: ' + d_favs_str + d_fav_part + d_favd_str);
+    format_nowrap    ('Favs: ' + d_favs_str + '\u200a/\u200a' + d_favd_str);
 }
 
 function render_diffs(results_curr_exp, map_prev, total_cnt, show_by, container) {

@@ -541,30 +541,39 @@ function render_results_dom(
   subst_cnt_div.appendChild(subst_cnt_span);
   subst_cnt_div.appendChild(document.createTextNode(' '));
 
+  // \u200a is &hairsp;
+  // \u2212 is &minus;
+  //
+  // Explicit signs are needed in subst even for zeroes
+
   const subst_cnt_rank = document.createElement("span");
-  subst_cnt_rank.className = "text-nowrap";                    // \u200a is &hairsp;
-  subst_cnt_rank.textContent = "Rank: " + rank_marks.above.cnt + '\u200a/\u200a' + rank_marks.below.cnt + ',';
+  subst_cnt_rank.className = "text-nowrap";
+  subst_cnt_rank.textContent = "Rank: " + '+'      + rank_marks.above.cnt + '\u200a/\u200a' +
+                                          '\u2212' + rank_marks.below.cnt + ',';
   subst_cnt_div.appendChild(subst_cnt_rank);
   subst_cnt_div.appendChild(document.createTextNode(' '));
 
   const subst_cnt_horz = document.createElement("span");
   subst_cnt_horz.className = "text-nowrap";
-  subst_cnt_horz.textContent = "Horz: " + horz_marks.above.cnt + '\u200a/\u200a' + horz_marks.below.cnt + ',';
+  subst_cnt_horz.textContent = "Horz: " + '+'      + horz_marks.above.cnt + '\u200a/\u200a' +
+                                          '\u2212' + horz_marks.below.cnt + ',';
   subst_cnt_div.appendChild(subst_cnt_horz);
   subst_cnt_div.appendChild(document.createTextNode(' '));
 
   const subst_cnt_vert = document.createElement("span");
   subst_cnt_vert.className = "text-nowrap";
-  subst_cnt_vert.textContent = "Vert: " + vert_marks.above.cnt + '\u200a/\u200a' + vert_marks.below.cnt + ',';
+  subst_cnt_vert.textContent = "Vert: " + '+'      + vert_marks.above.cnt + '\u200a/\u200a' +
+                                          '\u2212' + vert_marks.below.cnt + ',';
   subst_cnt_div.appendChild(subst_cnt_vert);
   subst_cnt_div.appendChild(document.createTextNode(' '));
 
   const subst_cnt_mood = document.createElement("span");
   subst_cnt_mood.className = "text-nowrap";
-  subst_cnt_mood.textContent = "Mood: " + mood_marks.above.cnt + '\u200a/\u200a' + mood_marks.below.cnt;
+  subst_cnt_mood.textContent = "Mood: " + '+'      + mood_marks.above.cnt + '\u200a/\u200a' +
+                                          '\u2212' + mood_marks.below.cnt;
   subst_cnt_div.appendChild(subst_cnt_mood);
 
-  container.appendChild(subst_cnt_div);
+  container    .appendChild(subst_cnt_div );
 
   // Marks displaying
   const chk_nomark       =  marks_count && nomark_items;
