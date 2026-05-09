@@ -148,13 +148,21 @@ function goto_song(song_id, pl) {
       if     (pa && (pa.networkState !== HTMLMediaElement.NETWORK_NO_SOURCE /* 3 */ )) { pl = 'a'; }
       else if(pb && (pb.networkState !== HTMLMediaElement.NETWORK_NO_SOURCE /* 3 */ )) { pl = 'b'; }
       else if(pv && (pv.networkState !== HTMLMediaElement.NETWORK_NO_SOURCE /* 3 */ )) { pl = 'v'; }
+
+      /*
+      alert('pl: ' + pl + '\n' +
+            'pa: ' + pa.paused + ' / ' + pa.networkState + ' / ' + pa.readyState + '\n' +
+            'pb: ' + pb.paused + ' / ' + pb.networkState + ' / ' + pb.readyState + '\n' +
+            'pv: ' + pv.paused + ' / ' + pv.networkState + ' / ' + pv.readyState);
+      */
     }
 
     const player = document.getElementById(play_base + pl);
     if  (!player) return;
 
     /*
-    alert('[' + player.paused       + ']\n' +
+    alert('[' + pl                  + ']\n' +
+          '[' + player.paused       + ']\n' +
           '[' + player.networkState + ']\n' +
           '[' + player.readyState   + ']');
     */
@@ -794,6 +802,10 @@ function coll_update_player_song_states(coll_key) {
 
   players.forEach(player => {
     if(!player) return;
+
+    if (player.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) // === 3
+      if(!player.paused) // can be played state for an empty source
+        player.pause();
 
     const song_id = get_song_id_curr(player, "coll", coll_key);
     if  (!song_id) return;
