@@ -151,10 +151,10 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
   // Mark rank changes
   // Mark mood
   //
-  const rank_decay     = 220; // Scale divisor: 1 to 220
+  const rank_decay     = Math.round(1 + Math.sqrt(curr_length - 1) * 9); // Scale divisor: 1 to 260 (for 826)
 //const rank_log_steep = 3;   // To more than log prioritize top items
-  const rank_sig_base  = 0.2;
-  const rank_sig_steep = 11;
+  const rank_sig_base  = 0.3;
+  const rank_sig_steep = 9;
   const rank_sig_min   = 1 / (1 + Math.exp((rank_sig_base - 0) * rank_sig_steep));
   const rank_sig_max   = 1 / (1 + Math.exp((rank_sig_base - 1) * rank_sig_steep));
   const rank_up_dn     = [];  // Of curr_length anyway
