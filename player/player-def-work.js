@@ -805,7 +805,7 @@ function coll_update_player_song_states(coll_key) {
 
     if (player.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) // === 3
       if(!player.paused) // can be played state for an empty source
-        player.pause();
+          player.pause();
 
     const song_id = get_song_id_curr(player, "coll", coll_key);
     if  (!song_id) return;
