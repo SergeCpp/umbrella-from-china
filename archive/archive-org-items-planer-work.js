@@ -136,35 +136,40 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
 //const horz_log_steep = 1;   // No steep here, just log
   const horz_sig_base  = 0.1;
   const horz_sig_steep = 2;
-  const horz_sig_min   = 1 / (1 + Math.exp((horz_sig_base - 0) * horz_sig_steep));
-  const horz_sig_max   = 1 / (1 + Math.exp((horz_sig_base - 1) * horz_sig_steep));
+  const horz_sig_rc    = 1.0; // Richards curve
+  const horz_sig_min   = 1 / Math.pow(1 + Math.exp((horz_sig_base - 0) * horz_sig_steep), horz_sig_rc);
+  const horz_sig_max   = 1 / Math.pow(1 + Math.exp((horz_sig_base - 1) * horz_sig_steep), horz_sig_rc);
   const horz_curr_prev = [];  // Of curr_length anyway
   //
   const vert_decay     = 20;  // Scale divisor: 1 to 20
 //const vert_log_steep = 1;   // No steep here, just log
   const vert_sig_base  = 0.1;
   const vert_sig_steep = 2;
-  const vert_sig_min   = 1 / (1 + Math.exp((vert_sig_base - 0) * vert_sig_steep));
-  const vert_sig_max   = 1 / (1 + Math.exp((vert_sig_base - 1) * vert_sig_steep));
+  const vert_sig_rc    = 1.0; // Richards curve
+  const vert_sig_min   = 1 / Math.pow(1 + Math.exp((vert_sig_base - 0) * vert_sig_steep), vert_sig_rc);
+  const vert_sig_max   = 1 / Math.pow(1 + Math.exp((vert_sig_base - 1) * vert_sig_steep), vert_sig_rc);
   const vert_all_old   = [];  // Of curr_length anyway
   //
   // Mark rank changes
   // Mark mood
   //
-  const rank_decay     = Math.round(1 + Math.sqrt(curr_length - 1) * 9); // Scale divisor: 1 to 260 (for 826)
+  // 1:1, 4:20, 10:43, 20:72, 30:96, 50:138, 75:184, 100:225, 150:300, 200:367, 300:488, 500:697, 800:969, 826:991
+  const rank_decay     = Math.round(1 + Math.pow(curr_length - 1, 0.7) * 9.0); // Scale divisor: 1 to (see above)
 //const rank_log_steep = 3;   // To more than log prioritize top items
   const rank_sig_base  = 0.3;
   const rank_sig_steep = 9;
-  const rank_sig_min   = 1 / (1 + Math.exp((rank_sig_base - 0) * rank_sig_steep));
-  const rank_sig_max   = 1 / (1 + Math.exp((rank_sig_base - 1) * rank_sig_steep));
+  const rank_sig_rc    = 1.4; // Richards curve
+  const rank_sig_min   = 1 / Math.pow(1 + Math.exp((rank_sig_base - 0) * rank_sig_steep), rank_sig_rc);
+  const rank_sig_max   = 1 / Math.pow(1 + Math.exp((rank_sig_base - 1) * rank_sig_steep), rank_sig_rc);
   const rank_up_dn     = [];  // Of curr_length anyway
   //
   const mood_decay     = 30;  // Scale divisor: 1 to 30
 //const mood_log_steep = 2;   // To more than log prioritize top items
   const mood_sig_base  = 0.1;
   const mood_sig_steep = 3;
-  const mood_sig_min   = 1 / (1 + Math.exp((mood_sig_base - 0) * mood_sig_steep));
-  const mood_sig_max   = 1 / (1 + Math.exp((mood_sig_base - 1) * mood_sig_steep));
+  const mood_sig_rc    = 1.0; // Richards curve
+  const mood_sig_min   = 1 / Math.pow(1 + Math.exp((mood_sig_base - 0) * mood_sig_steep), mood_sig_rc);
+  const mood_sig_max   = 1 / Math.pow(1 + Math.exp((mood_sig_base - 1) * mood_sig_steep), mood_sig_rc);
   const mood_pos_neg   = [];  // Of curr_length anyway
   //
   // Details
@@ -243,7 +248,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
 //      const horz_scale  = get_scale_log(index_curr, curr_log_base, horz_log_steep, horz_decay);
         const horz_scale  = subst_scaled
           ? get_scale_sig(index_curr, curr_length,
-              horz_sig_base, horz_sig_steep, horz_decay, horz_sig_min, horz_sig_max)
+              horz_sig_base, horz_sig_steep, horz_sig_rc, horz_decay, horz_sig_min, horz_sig_max)
           : 1;
         const horz_factor = subst_scaled
           ? horz_decay / horz_scale // More suitable for log(close-to-one) result
@@ -267,7 +272,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
 //      const vert_scale  = get_scale_log(index_curr, curr_log_base, vert_log_steep, vert_decay);
         const vert_scale  = subst_scaled
           ? get_scale_sig(index_curr, curr_length,
-              vert_sig_base, vert_sig_steep, vert_decay, vert_sig_min, vert_sig_max)
+              vert_sig_base, vert_sig_steep, vert_sig_rc, vert_decay, vert_sig_min, vert_sig_max)
           : 1;
         const vert_factor = subst_scaled
           ? vert_decay / vert_scale // More suitable for log(close-to-one) result
@@ -282,14 +287,17 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
     //////////////////////////////
     // Rank change, 0 is no change
     //
+    // Sigmoid scaling of rank change: diff / sig(max(rank))
+    // Can be seen as the transformed relative rank change: diff / max(rank)
+    //
     let   rank_change = 0;
     const rank_diff   = item.index_prev - index_curr; // No abs
     if   (rank_diff) { // Also if length === 1 then index_prev === index_curr
-      if (is_both) { // Item is markable
+      if   (is_both) { // Item is markable
 //      const rank_scale  = get_scale_log(index_curr, curr_log_base, rank_log_steep, rank_decay);
         const rank_scale  = subst_scaled
-          ? get_scale_sig(index_curr, curr_length,
-              rank_sig_base, rank_sig_steep, rank_decay, rank_sig_min, rank_sig_max)
+          ? get_scale_sig(Math.max(item.index_prev, index_curr), curr_length,
+              rank_sig_base, rank_sig_steep, rank_sig_rc, rank_decay, rank_sig_min, rank_sig_max)
           : 1;
         rank_change       = rank_diff / rank_scale;
         item.rank_change  = rank_change; // Needed in markable item only, and if rank_diff is not 0 only
@@ -318,7 +326,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
 //      const mood_scale = get_scale_log(index_curr, curr_log_base, mood_log_steep, mood_decay);
         const mood_scale = subst_scaled
           ? get_scale_sig(index_curr, curr_length,
-              mood_sig_base, mood_sig_steep, mood_decay, mood_sig_min, mood_sig_max)
+              mood_sig_base, mood_sig_steep, mood_sig_rc, mood_decay, mood_sig_min, mood_sig_max)
           : 1;
         mood             = grow_mood / mood_scale;
         item.mood        = mood; // Needed in markable item only, and if grow_mood is not 0 only

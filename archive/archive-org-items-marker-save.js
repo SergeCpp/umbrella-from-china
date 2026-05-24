@@ -455,15 +455,15 @@ function get_scale_log(index, base, steep, decay) {
   return scale;
 }
 
-// index: 0..length-1, base: 0..1 (of length), steep: 1..9, decay: max value (min value: 1)
+// index: 0..length-1, base: 0..1 (of length), steep: 1..9, rc: Richards curve, decay: max value (min value: 1)
 // sig_* are precomputed
-function get_scale_sig(index, length, base, steep, decay, sig_min, sig_max) {
+function get_scale_sig(index, length, base, steep, rc, decay, sig_min, sig_max) {
   if (length === 1) return 1; // length === 0 cannot be here
 
   const i_norm     = index / (length - 1); // 0..1
-//const sig_min    = 1 / (1 + Math.exp((base - 0)      * steep));  // Passed
-  const sig_i_norm = 1 / (1 + Math.exp((base - i_norm) * steep));
-//const sig_max    = 1 / (1 + Math.exp((base - 1)      * steep));  // Passed
+//const sig_min    = 1 / Math.pow(1 + Math.exp((base - 0)      * steep), rc); // Passed
+  const sig_i_norm = 1 / Math.pow(1 + Math.exp((base - i_norm) * steep), rc);
+//const sig_max    = 1 / Math.pow(1 + Math.exp((base - 1)      * steep), rc); // Passed
   const o_norm     = (sig_i_norm - sig_min) / (sig_max - sig_min); // 0..1
   const scale      = o_norm * (decay - 1) + 1; // 1..decay
 
