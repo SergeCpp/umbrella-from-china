@@ -158,7 +158,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
 //const rank_log_steep = 3;   // To more than log prioritize top items
   const rank_sig_base  = 0.3;
   const rank_sig_steep = 9;
-  const rank_sig_rc    = 1.4; // Richards curve
+  const rank_sig_rc    = 1.7; // Richards curve
   const rank_sig_min   = 1 / Math.pow(1 + Math.exp((rank_sig_base - 0) * rank_sig_steep), rank_sig_rc);
   const rank_sig_max   = 1 / Math.pow(1 + Math.exp((rank_sig_base - 1) * rank_sig_steep), rank_sig_rc);
   const rank_up_dn     = [];  // Of curr_length anyway
