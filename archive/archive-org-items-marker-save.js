@@ -467,7 +467,10 @@ function get_scale_sig(index, length, base, steep, rc, decay, sig_min, sig_max) 
                    : 1 / Math.pow(1 + Math.exp((base - i_norm) * steep), rc); // Richards
 //const sig_max    = 1 / Math.pow(1 + Math.exp((base - 1)      * steep), rc); // Passed
   const o_norm     = (sig_i_norm - sig_min) / (sig_max - sig_min); // 0..1
-  const scale      = o_norm * (decay - 1) + 1; // 1..decay
+  const start      =
+        rc === 1.0 ? 1
+                   : 0.23; // Attenuation of 0.23 is for rc = 1.7 only
+  const scale      = o_norm * (decay - start) + start; // start..decay
 
   return scale;
 }
