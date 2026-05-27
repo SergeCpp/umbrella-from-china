@@ -263,7 +263,7 @@ function conv_raw_str_to_arr(field, to_lowercase) {
 
   if (to_lowercase) field = field.toLowerCase();
 
-  if (!field.startsWith("<str>") && !field.endsWith("</str>")) return [field];
+  if (!field.startsWith("<str>")) return [field]; // XML considered correct
 
   return field.slice(5, -6).split("</str><str>");
 }
