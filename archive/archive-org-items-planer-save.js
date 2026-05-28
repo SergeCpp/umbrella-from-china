@@ -154,8 +154,8 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
   // Mark mood
   //
   // 1:1, 4:20, 10:43, 20:72, 30:96, 50:138, 75:184, 100:225, 150:300, 200:367, 300:488, 500:697, 800:969, 826:991
-  const rank_decay     = Math.round(1 + Math.pow(curr_length - 1, 0.7) * 9.0); // Scale divisor: 1 to (see above)
-//const rank_log_steep = 3;   // To more than log prioritize top items
+  const rank_decay     = Math.round(1 + Math.pow(curr_length - 1, 0.7) * 9.0); // Scale divisor: * to (see above)
+//const rank_log_steep = 3;   // To more than log prioritize top items         //                * see get_scale_sig
   const rank_sig_base  = 0.3;
   const rank_sig_steep = 9;
   const rank_sig_rc    = 1.7; // Richards curve

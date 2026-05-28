@@ -455,7 +455,8 @@ function get_scale_log(index, base, steep, decay) {
   return scale;
 }
 
-// index: 0..length-1, base: 0..1 (of length), steep: 1..9, rc: Richards curve, decay: max value (min value: 1)
+// index: 0..length-1, base: 0..1 (of length), steep: 1..9
+// rc: Richards curve, decay: max value (min value: see start below)
 // sig_* are precomputed
 function get_scale_sig(index, length, base, steep, rc, decay, sig_min, sig_max) {
   if (length === 1) return 1; // length === 0 cannot be here
