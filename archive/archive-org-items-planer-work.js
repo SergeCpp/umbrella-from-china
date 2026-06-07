@@ -102,8 +102,8 @@ function compose_header(title_is, title_is_set,
 // results_curr_exp is sorted
 function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, show_by, mood_by, subst_scaled) {
   const title_is_title = (title_is === "title"     ); // Else is "identifier"
-  const show_by_old    = (show_by  === "old-23-7"  ); // Else by "all-30-7"
-  const mood_by_same   = (mood_by  === "same-signs"); // Else by "diff-signs"
+  const  show_by_old   = ( show_by === "old-23-7"  ); // Else by "all-30-7"
+  const  mood_by_same  = ( mood_by === "same-signs"); // Else by "diff-signs"
 
   ////////////////////////
   // Log scaling of gauges
