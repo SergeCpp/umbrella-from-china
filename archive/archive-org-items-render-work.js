@@ -174,9 +174,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   // Sets
   only_both = curr_length - only_curr - only_prev;
 
-  // Sort expanded arrays for show in list (curr) and rank changes calculations (both)
-  sort_results(results_curr_exp, show_by, sort_by);
+  // Sort expanded arrays for rank changes calculations (prev and curr) and show in list (curr)
   sort_results(results_prev_exp, show_by, sort_by);
+  sort_results(results_curr_exp, show_by, sort_by);
 
   // Create a map of curr expanded results by identifier
   // Set no_prev actual values in curr expanded results
