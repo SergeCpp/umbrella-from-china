@@ -456,9 +456,9 @@ function get_scale_log(index, base, steep, decay) {
 }
 
 // index: 0..length-1, base: 0..1 (of length), steep: 1..9
-// rc: Richards curve, decay: max value (min value: see start below)
+// rc: Richards curve, start: min value, decay: max value
 // sig_* are precomputed
-function get_scale_sig(index, length, base, steep, rc, decay, sig_min, sig_max) {
+function get_scale_sig(index, length, base, steep, rc, start, decay, sig_min, sig_max) {
   if (length === 1) return 1; // length === 0 cannot be here
 
   const i_norm     = index / (length - 1); // 0..1
@@ -468,9 +468,6 @@ function get_scale_sig(index, length, base, steep, rc, decay, sig_min, sig_max) 
                    : 1 / Math.pow(1 + Math.exp((base - i_norm) * steep), rc); // Richards
 //const sig_max    = 1 / Math.pow(1 + Math.exp((base - 1)      * steep), rc); // Passed
   const o_norm     = (sig_i_norm - sig_min) / (sig_max - sig_min); // 0..1
-  const start      =
-        rc === 1.0 ? 1
-                   : 0.23; // Attenuation of 0.23 is for rc = 1.7 only
   const scale      = o_norm * (decay - start) + start; // start..decay
 
   return scale;
