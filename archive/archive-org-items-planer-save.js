@@ -304,6 +304,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
     //
     // Sigmoid scaling of rank change: diff / sig(max(rank))
     // Can be seen as the transformed relative rank change: diff / max(rank)
+    // And max(rank) is better here than either avg(rank) or min(rank)
     //
     let   rank_change = 0;
     const rank_diff   = item.index_prev - index_curr; // No abs
