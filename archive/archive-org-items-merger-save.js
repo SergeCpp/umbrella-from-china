@@ -384,29 +384,35 @@ function add_prev_raw_rank_is(index,   rank_is) {
 
 function set_item_prev(index, container) {
   const raw = prev_raw_data[index];
-  if  (!raw)  return;
 
   // Rank substantial changes marking: up and dn
   const rank_is = prev_raw_rank_is[index];
   const rank_is_class = rank_is > 0 ? " item-mark-up"
                       : rank_is < 0 ? " item-mark-dn" : "";
 
-  const stat_prev_old       = document.createElement("div");
-  stat_prev_old.className   = "item-stat-prev-old" + rank_is_class;
+  const stat_prev_old     = document.createElement("div");
+  stat_prev_old.className = "item-stat-prev-old" + rank_is_class;
 
-  const stat_prev_23        = document.createElement("div");
-  stat_prev_23 .className   = "item-stat-prev-23"  + rank_is_class;
+  const stat_prev_23      = document.createElement("div");
+  stat_prev_23 .className = "item-stat-prev-23"  + rank_is_class;
 
-  const stat_prev_7         = document.createElement("div");
-  stat_prev_7  .className   = "item-stat-prev-7"   + rank_is_class;
+  const stat_prev_7       = document.createElement("div");
+  stat_prev_7  .className = "item-stat-prev-7"   + rank_is_class;
 
-  stat_prev_old.textContent = raw.views_old_all.toString().padStart(6) + " /" +
-                              raw. days_old_all.toString().padStart(5) + " =" +
-                              raw.ratio_old_all.toFixed(3).padStart(7);
-  stat_prev_23 .textContent = raw.views_23_30  .toString().padStart(6) + " /   " + prev_raw_23_30 + " =" +
-                              raw.ratio_23_30  .toFixed(3).padStart(7);
-  stat_prev_7  .textContent = raw.views_7      .toString().padStart(6) + " /    7 =" +
-                              raw.ratio_7      .toFixed(3).padStart(7);
+  if (raw) {
+    stat_prev_old.textContent = raw.views_old_all.toString().padStart(6) + " /" +
+                                raw. days_old_all.toString().padStart(5) + " =" +
+                                raw.ratio_old_all.toFixed(3).padStart(7);
+    stat_prev_23 .textContent = raw.views_23_30  .toString().padStart(6) + " /   " + prev_raw_23_30 + " =" +
+                                raw.ratio_23_30  .toFixed(3).padStart(7);
+    stat_prev_7  .textContent = raw.views_7      .toString().padStart(6) + " /    7 =" +
+                                raw.ratio_7      .toFixed(3).padStart(7);
+  }
+  else {                      // 1...5...901...5...9012
+    stat_prev_old.textContent = "                      ";
+    stat_prev_23 .textContent = "                      ";
+    stat_prev_7  .textContent = "                      ";
+  }
 
   container.appendChild(stat_prev_old);
   container.appendChild(stat_prev_23 );
@@ -449,7 +455,6 @@ function add_curr_raw_vert_is(index,   vert_is) {
 
 function set_item_curr(index, container) {
   const raw = curr_raw_data[index];
-  if  (!raw)  return;
 
   // Substantial changes marking: horizontal impact of old      from prev to     curr
   // Substantial changes marking: vertical   impact of 23 and 7 into all  within curr
@@ -462,22 +467,29 @@ function set_item_curr(index, container) {
   const vert_is_class = vert_is > 0 ? " item-mark-grow"
                       : vert_is < 0 ? " item-mark-fall" : "";
 
-  const stat_curr_old       = document.createElement("div");
-  stat_curr_old.className   = "item-stat-curr-old" + horz_is_class;
+  const stat_curr_old     = document.createElement("div");
+  stat_curr_old.className = "item-stat-curr-old" + horz_is_class;
 
-  const stat_curr_23        = document.createElement("div");
-  stat_curr_23 .className   = "item-stat-curr-23"  + vert_is_class;
+  const stat_curr_23      = document.createElement("div");
+  stat_curr_23 .className = "item-stat-curr-23"  + vert_is_class;
 
-  const stat_curr_7         = document.createElement("div");
-  stat_curr_7  .className   = "item-stat-curr-7"   + vert_is_class;
+  const stat_curr_7       = document.createElement("div");
+  stat_curr_7  .className = "item-stat-curr-7"   + vert_is_class;
 
-  stat_curr_old.textContent = raw.views_old_all.toString().padStart(6) + " /" +
-                              raw. days_old_all.toString().padStart(5) + " =" +
-                              raw.ratio_old_all.toFixed(3).padStart(7);
-  stat_curr_23 .textContent = raw.views_23_30  .toString().padStart(6) + " /   " + curr_raw_23_30 + " =" +
-                              raw.ratio_23_30  .toFixed(3).padStart(7);
-  stat_curr_7  .textContent = raw.views_7      .toString().padStart(6) + " /    7 =" +
-                              raw.ratio_7      .toFixed(3).padStart(7);
+  if (raw) {
+    stat_curr_old.textContent = raw.views_old_all.toString().padStart(6) + " /" +
+                                raw. days_old_all.toString().padStart(5) + " =" +
+                                raw.ratio_old_all.toFixed(3).padStart(7);
+    stat_curr_23 .textContent = raw.views_23_30  .toString().padStart(6) + " /   " + curr_raw_23_30 + " =" +
+                                raw.ratio_23_30  .toFixed(3).padStart(7);
+    stat_curr_7  .textContent = raw.views_7      .toString().padStart(6) + " /    7 =" +
+                                raw.ratio_7      .toFixed(3).padStart(7);
+  }
+  else {                      // 1...5...901...5...9012
+    stat_curr_old.textContent = "                      ";
+    stat_curr_23 .textContent = "                      ";
+    stat_curr_7  .textContent = "                      ";
+  }
 
   container.appendChild(stat_curr_old);
   container.appendChild(stat_curr_23 );
@@ -504,25 +516,31 @@ function add_grow_raw_mood_is(index,   mood_is) {
 
 function set_item_grow(index, container) {
   const raw = grow_raw_data[index];
-  if  (!raw)  return;
 
   // Grow mood substantial changes marking: positive and negative
   const mood_is = grow_raw_mood_is[index];
   const mood_is_class = mood_is > 0 ? " item-mark-grow"
                       : mood_is < 0 ? " item-mark-fall" : "";
 
-  const stat_grow_old       = document.createElement("div");
-  stat_grow_old.className   = "item-grow-old" + mood_is_class;
+  const stat_grow_old     = document.createElement("div");
+  stat_grow_old.className = "item-grow-old" + mood_is_class;
 
-  const stat_grow_23        = document.createElement("div");
-  stat_grow_23 .className   = "item-grow-23"  + mood_is_class;
+  const stat_grow_23      = document.createElement("div");
+  stat_grow_23 .className = "item-grow-23"  + mood_is_class;
 
-  const stat_grow_7         = document.createElement("div");
-  stat_grow_7  .className   = "item-grow-7"   + mood_is_class;
+  const stat_grow_7       = document.createElement("div");
+  stat_grow_7  .className = "item-grow-7"   + mood_is_class;
 
-  stat_grow_old.textContent = raw.grow_old;
-  stat_grow_23 .textContent = raw.grow_23;
-  stat_grow_7  .textContent = raw.grow_7;
+  if (raw) {
+    stat_grow_old.textContent = raw.grow_old;
+    stat_grow_23 .textContent = raw.grow_23;
+    stat_grow_7  .textContent = raw.grow_7;
+  }
+  else {                      // 123
+    stat_grow_old.textContent = "   ";
+    stat_grow_23 .textContent = "   ";
+    stat_grow_7  .textContent = "   ";
+  }
 
   container.appendChild(stat_grow_old);
   container.appendChild(stat_grow_23 );
