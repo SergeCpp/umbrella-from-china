@@ -1,6 +1,6 @@
 /* Deferred Render */
 
-const    defer_render_chunk_sz  = 30; // 16 + 27 x 30 = 826
+const    defer_render_chunk_sz  = 30; // 1 x 16 + 27 x 30 = 826
 const    defer_render_chunk_du  = 4;  // ms, max allowed for chunk: 110 ms / 826 * 30 = 3.995 ms
 const    defer_render_wait      = 7;  // ms, between chunks
 
@@ -48,18 +48,7 @@ function defer_render_step(render_id, chunk_sz_override) {
 
   do {
     const wrapper = defer_render_wrappers[defer_render_processed];
-    const index   = wrapper.item_index;
-    if   (index === undefined)  return;
-
-    const [title_container,
-            prev_container,
-            curr_container,
-            grow_container] = create_cells_raw(index, wrapper);
-
-    set_item_title(index, title_container, defer_render_processed);
-    set_item_prev (index,  prev_container);
-    set_item_curr (index,  curr_container);
-    set_item_grow (index,  grow_container);
+    if  (!create_cells_raw      (wrapper, defer_render_processed)) return;
 
     defer_render_processed++;
     count--;
@@ -113,13 +102,16 @@ function add_cells_raw_marks  (index,   marks) {
              cells_raw_marks  [index] = marks;
 }
 
-function create_cells_raw(index, wrapper) {
-  const raw_is    = cells_raw_is[index];
-  if  (!raw_is)     return null;
+function create_cells_raw(wrapper, shown_idx) {
+  const   index   = wrapper.item_index;
+  if     (index === undefined)   return false;
 
-  const is_prev   = raw_is.is_prev;
-  const no_prev   = raw_is.no_prev;
-  const is_both   = raw_is.is_both;
+  const  raw_is   = cells_raw_is[index];
+  if   (!raw_is)    return false;
+
+  const  is_prev  = raw_is.is_prev;
+  const  no_prev  = raw_is.no_prev;
+  const  is_both  = raw_is.is_both;
 
   const raw_subst = cells_raw_subst[index];
 
@@ -174,12 +166,18 @@ function create_cells_raw(index, wrapper) {
   if (raw_subst?.grow_is_subst) grow_container.is_subst = true;
 
   //
-  inner  .appendChild(title_container);
-  inner  .appendChild( prev_container);
-  inner  .appendChild( curr_container);
-  inner  .appendChild( grow_container);
+  set_item_title(index, title_container, shown_idx);
+  set_item_prev (index,  prev_container);
+  set_item_curr (index,  curr_container);
+  set_item_grow (index,  grow_container);
 
-  wrapper.appendChild(inner);
+  //
+  inner  .appendChild  (title_container);
+  inner  .appendChild  ( prev_container);
+  inner  .appendChild  ( curr_container);
+  inner  .appendChild  ( grow_container);
+
+  wrapper.appendChild  (inner);
   wrapper.classList.remove("item-wrapper-init"); // Was added for initial rendering only
 
   //
@@ -214,10 +212,7 @@ function create_cells_raw(index, wrapper) {
   }
 
   //
-  return [title_container,
-           prev_container,
-           curr_container,
-           grow_container];
+  return true;
 }
 
 /* Title */
@@ -244,7 +239,8 @@ function add_title_raw  (index,   identifier, title) {
 function set_item_title(index, container, shown_idx) {
   const  identifier = title_raw_identifier[index];
   if   (!identifier)  return;
-  const title       = title_raw_title_is_title ? title_raw_title[index] : null;
+
+  const  title      = title_raw_title_is_title ? title_raw_title[index] : null;
 
   const item_gauge_above_a = document.createElement("div");
   item_gauge_above_a.className = "item-gauge-above-a";
