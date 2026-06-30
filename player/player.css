@@ -5,11 +5,12 @@ audio, video {
 
 .media-desc {
   margin: 0 auto 1.5rem;
-  max-width: 960px; /* 240 x 4 */
+  max-width: 960px; /* 240 x 4, 1920 / 2 */
+  overflow-wrap: break-word; /* For URLs to break */
 }
 .media-container {
   margin: 0 auto 1rem;
-  max-width: 960px; /* 240 x 4 */
+  max-width: 960px; /* 240 x 4, 1920 / 2 */
   text-align: center; /* For a fallback "not supported" text to be centered */
 }
 .media-container:has(.media-poster) {
