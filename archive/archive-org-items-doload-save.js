@@ -656,7 +656,7 @@ function load_stat_file(date) {
     });
 }
 
-function load_stat(date, what) {
+function load_stat(date, what, focus_id = null) {
   if (!stat_file_dates.includes(date)) return;
 
   if (what === "curr") {
@@ -677,6 +677,8 @@ function load_stat(date, what) {
         stat_prev_items = loaded_items;
         stat_prev_date  = date;
       }
+
+      if (focus_id) save_focus(focus_id);
 
       setTimeout(process_filter, 0);
     })

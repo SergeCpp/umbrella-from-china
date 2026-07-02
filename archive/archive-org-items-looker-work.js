@@ -454,9 +454,10 @@ function date_change_menu(event, what) {
 
     opt.onclick = () => {
       menu.remove_ex();
-      save_focus('span-btn-' + what);
+
+      const focus_id = 'span-btn-' + what; // To save in load_stat if needed
       requestAnimationFrame(() => // RAF handles menu closing on cache hit
-        setTimeout(load_stat, 0, opt.textContent, what));
+        setTimeout(load_stat, 0, opt.textContent, what, focus_id));
     };
 
     opt.onkeyup = (event) => {
