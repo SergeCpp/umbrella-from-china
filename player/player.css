@@ -102,11 +102,12 @@ audio, video {
 }
 .line-left {
   flex: 1 1 auto;
-  min-width: 0; /* For ellipsis to work */
+  min-width: 0; /* For ellipsis to work when min-width is auto */
 }
 .line-right {
   flex: 0 0 auto;
   font-style: italic;
+  max-width: 100%; /* For ellipsis to work when flex-shrink is 0 */
 }
 
 /* EOF */

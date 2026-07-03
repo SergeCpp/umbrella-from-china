@@ -340,10 +340,10 @@ function item_load_song_list(item_key) {
          'onkeydown="kbd(event)" ' +
          'onkeyup  ="kbu(event)" ' +
          'onclick  ="mou(event)">';
-        song_line_html += title_right ? '<span class="line-left text-ellipsis">' : "";
+        song_line_html += title_right ? '<span class="line-left '  + 'text-ellipsis">' : "";
         song_line_html += song_hms + ' ' + song_num + ' ' + title_left;
         song_line_html += title_right ? '</span>' : "";
-        song_line_html += title_right ? '<span class="line-right">' + title_right + '</span>' : "";
+        song_line_html += title_right ? '<span class="line-right ' + 'text-ellipsis">' + title_right + '</span>' : "";
         song_line_html += '</span>';               // not needed \n at end for flex         in line-flex
         song_line_html += title_right ? "" : '\n'; //     needed \n at end for inline-block in song-line
 
