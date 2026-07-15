@@ -527,6 +527,29 @@ let   sf_cache_misses = 0;    // Non-negative integer
 let   sf_du_load      = 0;    // Duration of load
 let   sf_du_parse     = 0;    // Duration of parse
 
+function chk_main(what, date) {
+  switch (what) {
+    case "prev": return (stat_prev_date === date) && (stat_prev_items !== null);
+    case "curr": return (stat_curr_date === date) && (stat_curr_items !== null);
+
+    default    : return false; // Unknown what
+  }
+}
+
+function set_main(what, date, items) {
+  switch  (what) {
+    case  "prev":
+      stat_prev_date  = date;
+      stat_prev_items = items;
+      return;
+
+    case  "curr":
+      stat_curr_date  = date;
+      stat_curr_items = items;
+      return;
+  }
+}
+
 function dates_main() {
   return stat_file_dates;
 }
@@ -628,6 +651,7 @@ function load_stat_file(date) {
       if (!response.ok) throw new Error(date + " &mdash; XML file not found");
       return response.text();
     })
+//  .then(text => new Promise(resolve => setTimeout(resolve, 10000, text))) // Testing
     .then(text => {
       const time_1 = performance.now();
       const stats  = parse_stat_text(text);
@@ -656,33 +680,62 @@ function load_stat_file(date) {
     });
 }
 
+let load_stat_loading  = {};
+let load_stat_recent   = { prev: null, curr: null };
+let load_stat_focus_id = null;
+
 function load_stat(date, what, focus_id = null) {
   if (!stat_file_dates.includes(date)) return;
+  if (chk_main(what, date)) return;
 
-  if (what === "curr") {
-    if (stat_curr_date === date) return;
-  } else { //  "prev"
-    if (stat_prev_date === date) return;
-  }
+  if (focus_id) load_stat_focus_id = focus_id;
+
+  load_stat_recent[what] = date;
+
+  if (load_stat_loading[date]) return;
+      load_stat_loading[date] = true;
 
   sf_du_load  = 0; // Clear
   sf_du_parse = 0; //
 
   load_stat_file(date)
+//  .then(loaded_items => new Promise(resolve => setTimeout(resolve, 10000, loaded_items))) // Testing
     .then(loaded_items => {
-      if (what === "curr") {
-        stat_curr_items = loaded_items;
-        stat_curr_date  = date;
-      } else { //  "prev"
-        stat_prev_items = loaded_items;
-        stat_prev_date  = date;
-      }
+      delete load_stat_loading[date];
 
-      if (focus_id) save_focus(focus_id);
+      let is_loading = false;
+      let to_process = false;
+
+      const chk_load = _what => {
+        if (load_stat_recent[_what] === date) {
+            load_stat_recent[_what]  =  null;
+
+          set_main(_what, date, loaded_items);
+          to_process = true;
+          return;
+        }
+
+        if (load_stat_recent[_what]) {
+          is_loading = true;
+        }
+      };
+
+      chk_load("prev");
+      chk_load("curr");
+
+      if ( is_loading) return;
+      if (!to_process) return;
+
+      if (load_stat_focus_id) { save_focus(load_stat_focus_id); load_stat_focus_id = null; }
 
       setTimeout(process_filter, 0);
     })
     .catch(err => {
+      delete load_stat_loading[date];
+
+      if (load_stat_recent["prev"] === date) load_stat_recent["prev"] = null;
+      if (load_stat_recent["curr"] === date) load_stat_recent["curr"] = null;
+
       process_error(error_compose("Error: " + err.message));
     });
 }
