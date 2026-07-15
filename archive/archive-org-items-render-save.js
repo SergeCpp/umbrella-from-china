@@ -858,7 +858,7 @@ function render_results_dom(
 
   if (page_just_loaded) {
       page_just_loaded = false;
-      document.querySelector("footer").classList.remove("collapse");
+      document.querySelector("footer").classList.add("show");
   }
 
   } catch (err) {

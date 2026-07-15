@@ -1,3 +1,11 @@
+/* To prevent Cumulative Layout Shift */
+
+@media (scripting: enabled) {
+  footer:not(.show) {
+    display: none;
+  }
+}
+
 /* Tabs */
 
 .tab-row {
