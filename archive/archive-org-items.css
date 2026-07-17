@@ -487,7 +487,6 @@ input[type="checkbox"].changed.tab-e {
 
 .header-title-wrapper:focus-visible,
 .header-stat-wrapper:focus-visible,
-.header-stat-wrapper:focus-visible,
 .header-grow-wrapper:focus-visible {
   border-radius: 3px; /* To hide outside corners */
 }
