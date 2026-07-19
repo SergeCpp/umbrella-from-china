@@ -113,7 +113,11 @@ function create_cells_raw(wrapper, shown_idx) {
   const  no_prev  = raw_is.no_prev;
   const  is_both  = raw_is.is_both;
 
-  const raw_subst = cells_raw_subst[index];
+  const raw_subst     = cells_raw_subst[index];
+
+  const prev_is_subst = raw_subst?.prev_is_subst;
+  const curr_is_subst = raw_subst?.curr_is_subst;
+  const grow_is_subst = raw_subst?.grow_is_subst;
 
   // Inner flex container
   const inner     = document.createElement("div");
@@ -122,6 +126,8 @@ function create_cells_raw(wrapper, shown_idx) {
   // Cell 1. Title, see set_item_title
   const title_container     = document.createElement("div");
   title_container.className = "item-title-container";
+
+  if (prev_is_subst || curr_is_subst || grow_is_subst) title_container.is_subst = true;
 
   // Cell 2. Prev container (stacked), see set_item_prev
   const prev_container = document.createElement("div"); // flex: 0 0 22ch;
@@ -135,7 +141,7 @@ function create_cells_raw(wrapper, shown_idx) {
     prev_container.is_empty  = true;
   }
 
-  if (raw_subst?.prev_is_subst) prev_container.is_subst = true;
+  if (prev_is_subst) prev_container.is_subst = true;
 
   // Cell 3. Curr container (stacked), see set_item_curr
   const curr_container = document.createElement("div"); // flex: 0 0 22ch;
@@ -149,7 +155,7 @@ function create_cells_raw(wrapper, shown_idx) {
     curr_container.is_empty  = true;
   }
 
-  if (raw_subst?.curr_is_subst) curr_container.is_subst = true;
+  if (curr_is_subst) curr_container.is_subst = true;
 
   // Cell 4. Grow container (stacked), see set_item_grow
   const grow_container = document.createElement("div"); // flex: 0 0 3ch;
@@ -163,7 +169,7 @@ function create_cells_raw(wrapper, shown_idx) {
     grow_container.is_empty  = true;
   }
 
-  if (raw_subst?.grow_is_subst) grow_container.is_subst = true;
+  if (grow_is_subst) grow_container.is_subst = true;
 
   //
   set_item_title(index, title_container, shown_idx);

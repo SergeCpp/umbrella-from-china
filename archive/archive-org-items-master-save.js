@@ -399,6 +399,26 @@ function item_arrows(container, event) {
 
     if (!wrapper_go) wrapper_go = wr_ne;
   }
+  else if (event.ctrlKey && event.shiftKey) { // To beg/end of prev/next not empty region (do not circulate)
+    let wr_go = wrapper;
+    let steps = 0;
+
+    do {
+      wr_go = wr_forw(wr_go);
+      steps++;
+      if (!is_empty(wr_go)) { wrapper_go = wr_go; break; }
+    }
+    while (is_item(wr_go));
+
+    if ((steps === 1) && wrapper_go) { // Stepped into not empty region
+      do {
+        wrapper_go = wr_go;
+        wr_go      = wr_forw(wr_go);
+        if (is_empty(wr_go)) break;
+      }
+      while(is_item(wr_go));
+    }
+  }
   else if (event.ctrlKey) { // To beg/end
     wrapper_go = fw_term();
   }
@@ -411,6 +431,9 @@ function item_arrows(container, event) {
         ix_cell === 2 ? ["horz-prev",
                          "vert-prev"] :
         ix_cell === 3 ?  "mood-prev"  : "");
+    }
+    else if (is_up) { // Close details
+      item_details_close(container);
     }
 
     return;
@@ -430,6 +453,14 @@ function item_arrows(container, event) {
   }
 
   go_cell(wr_cell(wrapper_go));
+}
+
+function item_details_close(container) {
+  const inner   = container.parentElement;
+  const wrapper = inner    .parentElement;
+
+  const details_div = wrapper.querySelector(".item-details");
+  if   (details_div)  details_div.classList.add ("collapse");
 }
 
 function item_details(container, ensure_open = false, jump_to_item = false, linkage_go = null) {
