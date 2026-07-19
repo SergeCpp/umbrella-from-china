@@ -410,13 +410,13 @@ function item_arrows(container, event) {
     }
     while (is_item(wr_go));
 
-    if ((steps === 1) && wrapper_go) { // Stepped into not empty region
+    if ((steps === 1) && wrapper_go) { // Stepped thro not empty region
       do {
         wrapper_go = wr_go;
         wr_go      = wr_forw(wr_go);
         if (is_empty(wr_go)) break;
       }
-      while(is_item(wr_go));
+      while (is_item(wr_go));
     }
   }
   else if (event.ctrlKey) { // To beg/end
