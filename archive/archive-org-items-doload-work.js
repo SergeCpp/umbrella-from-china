@@ -186,7 +186,7 @@ function parse_sect_desc(text) {
   return descs;
 }
 
-// Text: 10.4 ms / 10
+// Text: 10.3 ms / 10
 // DOM : 70.4 ms / 1
 function parse_stat_text_10(text) { // Rename: text_10 <-> text
   let du_min = Infinity;
