@@ -9,8 +9,10 @@ function save_focus (id) {
 function restore_focus() {
   if (!saved_focus_id) return;
 
-  const elem = document.getElementById(saved_focus_id);
-  if   (elem) elem.focus({ preventScroll: true });
+  if (!document.querySelector(".menu")) {
+    const elem = document.getElementById(saved_focus_id);
+    if   (elem) elem.focus({ preventScroll: true });
+  }
 
   saved_focus_id = null;
 }

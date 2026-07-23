@@ -410,15 +410,19 @@ function date_change_menu(event, what) {
   menu.id           = 'date-change-menu';
   menu.setAttribute  ('role',     'menu');
 
-  menu.remove_ex = () => {
+  menu.remove_ex = (skip_focus = false) => {
     document.removeEventListener('click', menu.outside_click);
     menu.remove();
-    if ( btn_other  && document.body.contains( btn_other )) {  btn_other .style.pointerEvents = 'auto'; }
-    if (menu_caller && document.body.contains(menu_caller)) { menu_caller.focus(); }
+
+    if    (btn_other && document.body.contains(btn_other)) { btn_other.style.pointerEvents = 'auto'; }
+
+    if   (skip_focus) return;
+    const menu_caller = document.getElementById('span-btn-' + what);
+    if   (menu_caller) { menu_caller.focus(); }
   };
 
   menu.outside_click = (event) => {
-    if (!menu.contains(event.target)) { menu.remove_ex(); }
+    if (!menu.contains(event.target)) { menu.remove_ex('skip-focus'); }
   };
 
   // Defer adding until all currently pending event handlers (menu creation click) have finished
