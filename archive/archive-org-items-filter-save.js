@@ -46,6 +46,8 @@ const err_views =
   'Prefix ^ switches Month fields to 23 = Month &minus; Week. 23 is displayed in the table<br />' +
   'Prefix ^ does nothing to Week fields. Week is always 7 days. Week is displayed in the table' +
   '</p><p>' +
+  'Integer range is for views count, float range is for views/day ratio<br />' +
+  '</p><p>' +
   'Range min/max values can be numbers, with empty field as no-limit value<br />' +
   'Aggregate range uses aggregate function in any field (or in both fields) of min/max pair<br />' +
   'Examples: min 10 / 20, min 10 / avg 30, also: max 20 / min 10 (reversed aggregate range)<br />' +
@@ -66,6 +68,10 @@ const err_views =
   err_end;
 const err_views_range =
   err_beg + 'Min views count must be less than or equal to max views count' +
+  err_end;
+
+const err_ratios_range =
+  err_beg + 'Min ratio must be less than or equal to max ratio' +
   err_end;
 
 const err_favs =
@@ -732,6 +738,44 @@ function filter_route(base_prev_items, base_prev_date,
   [is_mo_23,  mo_min_str, mo_max_str] = get_views_prefix(mo_min_str, mo_max_str);
   [is_wk_7,   wk_min_str, wk_max_str] = get_views_prefix(wk_min_str, wk_max_str);
 
+  // Ratios: values
+  const [is_dl_ratios, dl_min_ratio, dl_max_ratio] = get_ratios(dl_min_str, dl_max_str);
+  const [is_mo_ratios, mo_min_ratio, mo_max_ratio] = get_ratios(mo_min_str, mo_max_str);
+  const [is_wk_ratios, wk_min_ratio, wk_max_ratio] = get_ratios(wk_min_str, wk_max_str);
+
+  if (is_dl_ratios) {
+    dl_min_str = ""; // Clear fields used by Ratios
+    dl_max_str = ""; //
+
+    if ((dl_min_ratio !== null) && (dl_max_ratio !== null)) {
+      if (dl_min_ratio > dl_max_ratio) {
+        return { error: err_ratios_range };
+      }
+    }
+  }
+
+  if (is_mo_ratios) {
+    mo_min_str = ""; // Clear fields used by Ratios
+    mo_max_str = ""; //
+
+    if ((mo_min_ratio !== null) && (mo_max_ratio !== null)) {
+      if (mo_min_ratio > mo_max_ratio) {
+        return { error: err_ratios_range };
+      }
+    }
+  }
+
+  if (is_wk_ratios) {
+    wk_min_str = ""; // Clear fields used by Ratios
+    wk_max_str = ""; //
+
+    if ((wk_min_ratio !== null) && (wk_max_ratio !== null)) {
+      if (wk_min_ratio > wk_max_ratio) {
+        return { error: err_ratios_range };
+      }
+    }
+  }
+
   // Views: keys
   let dl_min_kv = null;
   let dl_max_kv = null;
@@ -997,7 +1041,17 @@ function filter_route(base_prev_items, base_prev_date,
     results_curr = filtered_views.curr;
   }
 
-  // 5. Favs
+  // 5. Ratios
+  const filtered_ratios = filter_ratios(results_prev, results_curr,
+    is_dl_ratios, dl_min_ratio, dl_max_ratio, is_dl_old,
+    is_mo_ratios, mo_min_ratio, mo_max_ratio, is_mo_23,
+    is_wk_ratios, wk_min_ratio, wk_max_ratio);
+  if (filtered_ratios.done) {
+    results_prev = filtered_ratios.prev;
+    results_curr = filtered_ratios.curr;
+  }
+
+  // 6. Favs
   const filtered_favs = filter_favs(results_prev, results_curr,
     favs_min_str, favs_min_kv, favs_min_no, favs_min_agg,
     favs_max_str, favs_max_kv, favs_max_no, favs_max_agg);
@@ -1006,7 +1060,7 @@ function filter_route(base_prev_items, base_prev_date,
     results_curr = filtered_favs.curr;
   }
 
-  // 6. Sets. Must be the last filter
+  // 7. Sets. Must be the last filter
   const only_prev = input_values["only-prev"];
   const only_curr = input_values["only-curr"];
 

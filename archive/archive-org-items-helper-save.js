@@ -170,6 +170,38 @@ function get_views_prefix(min_str, max_str) {
   return [ is_min_prefix || is_max_prefix, min_str, max_str ];
 }
 
+// Syntax: [non-negative float | non-negative integer]
+// Return: [ok, is_float, ratio]
+function get_ratio(str) {
+  if (!str) return [ false, false, null ];
+
+  if (str.indexOf('.') !== -1) {
+    if ((/^\d{1,6}\.\d{1,3}$/.test(str)) ||
+        (       /^\.\d{1,3}$/.test(str)) ||
+        (/^\d{1,6}\.$/       .test(str))) return [ true, true,  parseFloat(str)     ];
+  }
+  else {
+    if  (/^\d{1,6}$/         .test(str))  return [ true, false, parseInt  (str, 10) ];
+  }
+
+  return [ false, false, null ];
+}
+
+// Syntax: [non-negative float | non-negative integer]
+// Return: [ok, min_ratio, max_ratio]
+//          ok if at least one float
+function get_ratios(min_str, max_str) {
+  if (!min_str && !max_str) return [ false, null, null ];
+
+  const [min_ok, is_min_float, min_ratio] = get_ratio(min_str);
+  const [max_ok, is_max_float, max_ratio] = get_ratio(max_str);
+
+  if (!min_str) return [ max_ok && is_max_float, null,      max_ratio ];
+  if (!max_str) return [ min_ok && is_min_float, min_ratio, null      ];
+
+  return [ (min_ok && max_ok) && (is_min_float || is_max_float), min_ratio, max_ratio ];
+}
+
 // Syntax: (grow or / | fall or \ | same or = | diff or !) [non-negative integer [%]]
 function get_key(str) {
   let sl    = 0;
@@ -779,6 +811,45 @@ function filter_views(items_prev, items_curr,
     return ((dl_views >= dl_min_cnt) && (dl_views <= dl_max_cnt)) &&
            ((mo_views >= mo_min_cnt) && (mo_views <= mo_max_cnt)) &&
            ((wk_views >= wk_min_cnt) && (wk_views <= wk_max_cnt));
+  };
+
+  const results_prev = items_prev.filter(pass);
+  const results_curr = items_curr.filter(pass);
+
+  return { done: true, prev: results_prev, curr: results_curr };
+}
+
+/* Filter Ratios */
+
+// Filtering by ratios: from min to max
+function filter_ratios(items_prev, items_curr,
+  is_dl_ratios, dl_min_ratio, dl_max_ratio, is_dl_old,
+  is_mo_ratios, mo_min_ratio, mo_max_ratio, is_mo_23,
+  is_wk_ratios, wk_min_ratio, wk_max_ratio) {
+  if (!is_dl_ratios && !is_mo_ratios && !is_wk_ratios) return { done: false };
+
+  const get_dl = is_dl_old ? (item => item.ratio_old) : (item => item.ratio_all);
+  const get_mo = is_mo_23  ? (item => item.ratio_23 ) : (item => item.ratio_30 );
+
+  // Range ratios for prev and for curr independently
+
+  if (!is_dl_ratios || (dl_min_ratio === null)) dl_min_ratio = 0;
+  if (!is_dl_ratios || (dl_max_ratio === null)) dl_max_ratio = Infinity;
+
+  if (!is_mo_ratios || (mo_min_ratio === null)) mo_min_ratio = 0;
+  if (!is_mo_ratios || (mo_max_ratio === null)) mo_max_ratio = Infinity;
+
+  if (!is_wk_ratios || (wk_min_ratio === null)) wk_min_ratio = 0;
+  if (!is_wk_ratios || (wk_max_ratio === null)) wk_max_ratio = Infinity;
+
+  const pass = (item) => {
+    const dl_ratio = get_dl(item);
+    const mo_ratio = get_mo(item);
+    const wk_ratio = item.ratio_7;
+
+    return ((dl_ratio >= dl_min_ratio) && (dl_ratio <= dl_max_ratio)) &&
+           ((mo_ratio >= mo_min_ratio) && (mo_ratio <= mo_max_ratio)) &&
+           ((wk_ratio >= wk_min_ratio) && (wk_ratio <= wk_max_ratio));
   };
 
   const results_prev = items_prev.filter(pass);
