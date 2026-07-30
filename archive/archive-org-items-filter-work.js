@@ -61,7 +61,7 @@ const err_views =
   'Equally ranked items ordered by date archived: min selects newer, max selects older' +
   '</p><p>' +
   'Keys: grow, fall, same, diff (aliases: / \\ = !) switch min/max logic to prev/curr logic<br />' +
-  'Key allows number after it, and percent sign % can be after number' +
+  'Key allows number or range min-max after it, and percent sign % can be after that' +
   '</p><p>' +
   'Number in prev/curr logic (alone, not after key) allows prefix: a, ae, b, be, e, ne' +
   err_ed +
@@ -78,7 +78,7 @@ const err_favs =
   err_beg +
   err_bds + 'Allowed are numbers: 0 to 9999, and keys: grow, fall, same, diff' +
   err_es  +
-  'Keys have aliases: / \\ = ! and allow number after them<br />' +
+  'Keys have aliases: / \\ = ! and allow number or range min-max after them<br />' +
   'For / and \\ number is distance, for = and ! number is tolerance<br />' +
   'Defaults: / is /1, \\ is \\1, = is =0, ! is !0' +
   '</p><p>' +
@@ -92,6 +92,9 @@ const err_favs_range =
   err_beg + 'Min favorites count must be less than or equal to max favorites count' +
   err_end;
 
+const err_key_range =
+  err_beg + 'Min key value must be less than or equal to max key value' +
+  err_end;
 const err_keys_agg =
   err_beg + 'Aggregate functions are not allowed with keys' +
   err_end;
@@ -791,6 +794,14 @@ function filter_route(base_prev_items, base_prev_date,
   [wk_min_str, wk_min_kv] = get_key(wk_min_str);
   [wk_max_str, wk_max_kv] = get_key(wk_max_str);
 
+  const kv_range_error = kv => kv && (kv.min !== undefined) && (kv.max !== undefined) && (kv.min > kv.max);
+
+  if (kv_range_error(dl_min_kv) || kv_range_error(dl_max_kv) ||
+      kv_range_error(mo_min_kv) || kv_range_error(mo_max_kv) ||
+      kv_range_error(wk_min_kv) || kv_range_error(wk_max_kv)) {
+    return { error: err_key_range };
+  }
+
   // Views: number prefixes
   let dl_min_no = null;
   let dl_max_no = null;
@@ -929,6 +940,10 @@ function filter_route(base_prev_items, base_prev_date,
 
   [favs_min_str, favs_min_kv] = get_key(favs_min_str);
   [favs_max_str, favs_max_kv] = get_key(favs_max_str);
+
+  if (kv_range_error(favs_min_kv) || kv_range_error(favs_max_kv)) {
+    return { error: err_key_range };
+  }
 
   // Favs: number prefixes
   let favs_min_no = null;

@@ -202,41 +202,77 @@ function get_ratios(min_str, max_str) {
   return [ (min_ok && max_ok) && (is_min_float || is_max_float), min_ratio, max_ratio ];
 }
 
-// Syntax: (grow or / | fall or \ | same or = | diff or !) [non-negative integer [%]]
+// Syntax: (grow or / | fall or \ | same or = | diff or !) [non-negative integer [- non-negative integer] [%]]
 function get_key(str) {
-  let sl    = 0;
-  let name  = null;
-  let value = null;
+  let slc  = 0;
+  let name = null;
 
-  const  s1 = str.slice(0, 1);
-  const  s4 = str.slice(0, 4);
+  const s1 = str.slice(0, 1);
+  const s4 = str.slice(0, 4);
 
-  if      (s4 === "grow") { sl = 4; name = "grow"; value = 1; }
-  else if (s1 === '/'   ) { sl = 1; name = "grow"; value = 1; }
-  else if (s4 === "fall") { sl = 4; name = "fall"; value = 1; }
-  else if (s1 === '\\'  ) { sl = 1; name = "fall"; value = 1; }
-  else if (s4 === "same") { sl = 4; name = "same"; value = 0; }
-  else if (s1 === '='   ) { sl = 1; name = "same"; value = 0; }
-  else if (s4 === "diff") { sl = 4; name = "diff"; value = 0; }
-  else if (s1 === '!'   ) { sl = 1; name = "diff"; value = 0; }
-  else return [ str, null ];
+  if      (s4 === "grow") { slc = 4; name = "grow"; }
+  else if (s1 === '/'   ) { slc = 1; name = "grow"; }
+  else if (s4 === "fall") { slc = 4; name = "fall"; }
+  else if (s1 === '\\'  ) { slc = 1; name = "fall"; }
+  else if (s4 === "same") { slc = 4; name = "same"; }
+  else if (s1 === '='   ) { slc = 1; name = "same"; }
+  else if (s4 === "diff") { slc = 4; name = "diff"; }
+  else if (s1 === '!'   ) { slc = 1; name = "diff"; }
+  else return [ str, null ]; // Unknown key
 
-  let   s = str.slice(sl).trimStart();
-  const p = s.endsWith('%');
+  let s = str.slice(slc).trimStart();
+  if (s === "") { // Defaults
+    switch (name) {
+      case "grow":
+      case "fall": return [ name, { min: 1, max: Infinity, is_percent: false } ];
 
-  if (p) {
+      case "same":
+      case "diff": return [ name, { tolerance: 0,          is_percent: false } ];
+
+      default    : return [ str,  null ]; // Unknown key
+    }
+  }
+
+  const is_percent = s.endsWith('%');
+  if   (is_percent) {
     s = s.slice(0, -1).trimEnd();
     if (s === "") return [ str, null ]; // For % must be a value
   }
 
-  if (s !== "") {
-    if (!/^\d{1,8}$/.test(s)) return [ str, null ];
-    const v = parseInt(s, 10);
-    if (isNaN(v) || (v < 0))  return [ str, null ];
-    value = v;
+  switch (name) { // Values
+    case "grow":
+    case "fall": {
+      const limits = s.split('-');
+      if   (limits.length > 2) return [ str, null ]; // Must be no more than two limits
+
+      const min_str = limits[0];
+      if (!/^\d{1,8}$/.test(min_str)) return [ str, null ]; // Not a valid number
+
+      const min = parseInt(min_str, 10);
+      let   max = Infinity;
+
+      if (limits.length === 2) {
+        const max_str = limits[1];
+        if (!/^\d{1,8}$/.test(max_str)) return [ str, null ]; // Not a valid number
+
+        max = parseInt(max_str, 10);
+      }
+
+      return [ name, { min, max, is_percent } ];
+    }
+    case "same":
+    case "diff": {
+      if (!/^\d{1,8}$/.test(s)) return [ str, null ]; // Not a valid number
+
+      const tolerance = parseInt(s, 10);
+
+      return [ name, { tolerance, is_percent } ];
+    }
+    default:
+      return [ str,  null ]; // Unknown key
   }
 
-  return [ name, { value, is_percent: p } ];
+  return [ str, null ]; // Some error. Normally never goes here
 }
 
 // Syntax: [[ae for >= | a for > | be for <= | b for < | e for == | ne for !=] non-negative integer]
@@ -358,47 +394,67 @@ function get_agg(str) {
 
 /* Filter Count */
 
-// Whether a > b by at least k.v
+// Whether a > b by at least k.min to no more than k.max
 // a and b are non-negative integers
-// k.v: n means           a >= (b + n)
-// k.v: 2 means           a >= (b + 2)
-// k.v: 1 means a >  b // a >= (b + 1)
-// k.v: 0 means a >= b
-// k.v is non-negative integer or percent
+//
+// k.min: n means           a >= (b + n)
+// k.min: 2 means           a >= (b + 2)
+// k.min: 1 means a >  b // a >= (b + 1)
+// k.min: 0 means a >= b // a >= (b + 0)
+// k.min is non-negative integer or percent
+//
+// k.max: x means           a <= (b + x)
+// k.max is non-negative integer or percent
 //
 function is_grow(a, b, k) {
-  if (k.is_percent) return (b !== 0) ? // Or (a > 0) can be returned for !0 percents from 0
-        (a >= (b * (1 + k.value / 100))) : (k.value !== 0) ? false : true;
-  return a >= (b      + k.value);
+  if (k.is_percent) {
+    if (b === 0) return (k.min === 0) ? true : false; // Or (a > 0) can be returned for !0 percents from 0
+
+    return ((a >= (b * (1 + k.min / 100))) &&
+            (a <= (b * (1 + k.max / 100))));
+  }
+
+  return (a >= (b + k.min)) &&
+         (a <= (b + k.max));
 }
 
-// Whether a < b by at least k.v
+// Whether a < b by at least k.min to no more than k.max
 // a and b are non-negative integers
-// k.v: n means           a <= (b - n)
-// k.v: 2 means           a <= (b - 2)
-// k.v: 1 means a <  b // a <= (b - 1)
-// k.v: 0 means a <= b
-// k.v is non-negative integer or percent
+//
+// k.min: n means           a <= (b - n)
+// k.min: 2 means           a <= (b - 2)
+// k.min: 1 means a <  b // a <= (b - 1)
+// k.min: 0 means a <= b // a <= (b - 0)
+// k.min is non-negative integer or percent
+//
+// k.max: x means           a >= (b - x)
+// k.max is non-negative integer or percent
 //
 function is_fall(a, b, k) {
-  if (k.is_percent) return (b !== 0) ?
-        (a <= (b * (1 - k.value / 100))) : (k.value !== 0) ? false : (a === 0);
-  return a <= (b      - k.value);
+  if (k.is_percent) {
+    if (b === 0) return (k.min === 0) ? (a === 0) : false;
+
+    return ((a <= (b * (1 - k.min / 100))) &&
+            (a >= (b * (1 - k.max / 100))));
+  }
+
+  return (a <= (b - k.min)) &&
+         (a >= (b - k.max));
 }
 
-// Whether a === b with tolerance k.v
+// Whether a === b with k.tolerance
 // a and b are non-negative integers
-// k.v is non-negative integer or percent
+// k.tolerance is non-negative integer or percent
 //
 function is_same(a, b, k) {
   if (k.is_percent) return (b !== 0) ?
-        (Math.abs(a - b) <= (b * k.value / 100)) : (a === 0);
-  return Math.abs(a - b) <=      k.value;
+        (Math.abs(a - b) <= (b * k.tolerance / 100)) : (a === 0);
+  return Math.abs(a - b) <=      k.tolerance;
 }
 
-// Whether a !== b by more than k.v
+// Whether a !== b by more than k.tolerance
 // a and b are non-negative integers
-// k.v is non-negative integer or percent
+// k.tolerance is non-negative integer or percent
 //
 function  is_diff(a, b, k) {
   return !is_same(a, b, k);
