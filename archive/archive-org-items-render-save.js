@@ -431,8 +431,10 @@ function render_results_dom(
   ///////////////////////////////////////////////////////////////////
   // Both stats displaying (also sorts results_prev and results_curr)
   //
-  render_stats(results_prev, date_prev, "prev", show_by, sort_by, container);
-  render_stats(results_curr, date_curr, "curr", show_by, sort_by, container);
+  compose_stats_percentiles(results_prev, date_prev, "prev", show_by, sort_by);
+  compose_stats_percentiles(results_curr, date_curr, "curr", show_by, sort_by);
+   //
+   render_stats_percentiles(container);
 
   ///////////////////
   // Diffs displaying

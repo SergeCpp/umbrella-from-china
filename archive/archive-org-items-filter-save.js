@@ -349,6 +349,16 @@ function paren_depth(term, index) {
   return depth; // For index beyond term
 }
 
+function is_digit(char) {
+  if (!char) return false;
+
+  const code = char.charCodeAt(0);
+
+  if ((code >= 0x30) && (code <= 0x39)) return true;
+
+  return false;
+}
+
 function is_alnum(char) {
   if (!char) return false;
 

@@ -720,8 +720,11 @@ function sort_results(results, show_by, sort_by) {
 
 /* Stats */
 
+const stats_percentiles_text       = { prev: null, curr: null };
+const stats_percentiles_text_inner = { prev: null, curr: null };
+
 // what: "prev" / "curr"
-function render_stats(results, date, what, show_by, sort_by, container) {
+function compose_stats_percentiles(results, date, what, show_by, sort_by) {
   let field = null;
 
   switch (show_by + sort_by) {
@@ -746,6 +749,7 @@ function render_stats(results, date, what, show_by, sort_by, container) {
   const stats_text = document.createElement("div");
   stats_text.className = "text-center";
   stats_text.style.color = "#696969"; // DimGray, L41
+  stats_percentiles_text[what] = stats_text;
 
   // Calculate stats from sorted results
   const max = format(results[0                 ]?.[field] || 0);
@@ -763,7 +767,7 @@ function render_stats(results, date, what, show_by, sort_by, container) {
   const quartile3    = get_percentile(75);
   const percentile90 = get_percentile(90);
 
-  stats_text.innerHTML =
+  stats_percentiles_text_inner[what] =
     format_nowrap(cap_first(what) + '&thinsp;' +
       '<span ' +
       'class="span-btn" id="span-btn-' + what + '" role="button" tabindex="0" ' +
@@ -779,8 +783,51 @@ function render_stats(results, date, what, show_by, sort_by, container) {
     format_nowrap('75% ' + quartile3      + ',') + '&ensp;' +
     format_nowrap('90% ' + percentile90   + ',') + '&ensp;' +
     format_nowrap('Max ' + max);
+}
 
-  container.appendChild(stats_text);
+function align_stats_percentiles(prev, curr, name) {
+  const  name_sp = name + ' ';
+
+  const [prev_prefix, prev_suffix] = prev.split(name_sp);
+  const [curr_prefix, curr_suffix] = curr.split(name_sp);
+
+  if (prev_suffix.length === curr_suffix.length) return [prev, curr];
+
+  const is_prev_long = prev_suffix.length > curr_suffix.length;
+  const  long_suffix = is_prev_long ? prev_suffix : curr_suffix;
+  let   short_suffix = is_prev_long ? curr_suffix : prev_suffix;
+
+  for (let i = long_suffix.length - short_suffix.length - 1; i >= 0; i--) {
+    const  long_char = long_suffix[i];
+    const short_char = is_digit(long_char)              ? "\u2007" // \u2007 is  &numsp;
+                     :         (long_char === "\u2009") ? "\u2009" // \u2009 is &thinsp;
+                     : '#'; // For unexpected character
+
+    short_suffix = short_char + short_suffix;
+  }
+
+  if (is_prev_long) return [prev, curr_prefix + name_sp + short_suffix];
+
+  return [prev_prefix + name_sp + short_suffix, curr];
+}
+
+function render_stats_percentiles(container) {
+  let inner_prev = stats_percentiles_text_inner.prev;
+  let inner_curr = stats_percentiles_text_inner.curr;
+
+  if (inner_prev.length !== inner_curr.length) {
+    const names = ["Max", "90%", "75%", "50%", "25%", "10%", "Min"];
+
+    for (const name of names) {
+      [inner_prev, inner_curr] = align_stats_percentiles(inner_prev, inner_curr, name);
+    }
+  }
+
+  stats_percentiles_text.prev.innerHTML = inner_prev;
+  stats_percentiles_text.curr.innerHTML = inner_curr;
+
+  container.appendChild(stats_percentiles_text.prev);
+  container.appendChild(stats_percentiles_text.curr);
 }
 
 /* Diffs */
