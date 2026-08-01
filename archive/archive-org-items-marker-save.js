@@ -791,7 +791,7 @@ function align_stats_percentiles(prev, curr, name) {
   const [prev_prefix, prev_suffix] = prev.split(name_sp);
   const [curr_prefix, curr_suffix] = curr.split(name_sp);
 
-  if (prev_suffix.length === curr_suffix.length) return [prev, curr];
+  if (prev_suffix.length === curr_suffix.length) return null;
 
   const is_prev_long = prev_suffix.length > curr_suffix.length;
   const  long_suffix = is_prev_long ? prev_suffix : curr_suffix;
@@ -806,21 +806,21 @@ function align_stats_percentiles(prev, curr, name) {
     short_suffix = short_char + short_suffix;
   }
 
-  if (is_prev_long) return [prev, curr_prefix + name_sp + short_suffix];
-
-  return [prev_prefix + name_sp + short_suffix, curr];
+  return is_prev_long
+   ? [prev, curr_prefix + name_sp + short_suffix      ]
+   : [      prev_prefix + name_sp + short_suffix, curr];
 }
 
 function render_stats_percentiles(container) {
   let inner_prev = stats_percentiles_text_inner.prev;
   let inner_curr = stats_percentiles_text_inner.curr;
 
-  if (inner_prev.length !== inner_curr.length) {
-    const names = ["Max", "90%", "75%", "50%", "25%", "10%", "Min"];
+  // Dividers must be ordered from last ("Max") to first ("Min")
+  const names = ["Max", "90%", "75%", "50%", "25%", "10%", "Min"];
 
-    for (const name of names) {
-      [inner_prev, inner_curr] = align_stats_percentiles(inner_prev, inner_curr, name);
-    }
+  for (const name of names) {
+    const prev_curr = align_stats_percentiles(inner_prev, inner_curr, name);
+    if   (prev_curr) [inner_prev, inner_curr] = prev_curr;
   }
 
   stats_percentiles_text.prev.innerHTML = inner_prev;
