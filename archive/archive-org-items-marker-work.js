@@ -794,27 +794,27 @@ function align_stats_percentiles(prev, curr, name) {
   const prev_suf_ext = (prev.length - prev_name) - (curr.length - curr_name);
   if  (!prev_suf_ext)  return null;
 
+  const diff_str     =  prev_suf_ext > 0 ? prev      : curr;
+  const diff_beg     = (prev_suf_ext > 0 ? prev_name : curr_name) + name_sp_len;
+  const  suf_beg     = (prev_suf_ext > 0 ? curr_name : prev_name) + name_sp_len;
+
   const diff = Math.abs(prev_suf_ext);
+  let    pad = "";
 
-  const long_str     =  prev_suf_ext > 0 ? prev
-                                         : curr;
-  const long_ind     = (prev_suf_ext > 0 ? prev_name
-                                         : curr_name) + name_sp_len + diff; // For character after diff
-  let  short_suf     =  prev_suf_ext > 0 ? curr.slice(curr_name + name_sp_len)
-                                         : prev.slice(prev_name + name_sp_len);
+  for (let i = 0; i < diff; i++) {
+    const diff_char = diff_str[diff_beg + i];
+    const  pad_char = is_digit(diff_char)              ? "\u2007" // \u2007 is  &numsp;
+                    :         (diff_char === "\u2009") ? "\u2009" // \u2009 is &thinsp;
+                    : '#'; // For unexpected character
 
-  for (let i = 1; i <= diff; i++) { // Reversed traversal from the last extra character to first
-    const  long_char = long_str[long_ind - i];
-    const short_char = is_digit(long_char)              ? "\u2007" // \u2007 is  &numsp;
-                     :         (long_char === "\u2009") ? "\u2009" // \u2009 is &thinsp;
-                     : '#'; // For unexpected character
-
-    short_suf = short_char + short_suf;
+    pad += pad_char;
   }
 
   return prev_suf_ext > 0
-      ? [prev, curr.slice(0, curr_name + name_sp_len) + short_suf      ]
-      : [      prev.slice(0, prev_name + name_sp_len) + short_suf, curr];
+      ? [prev, curr.slice(0, suf_beg) + pad +
+               curr.slice(   suf_beg)       ]
+      : [      prev.slice(0, suf_beg) + pad +
+               prev.slice(   suf_beg),  curr];
 }
 
 function render_stats_percentiles(container) {
