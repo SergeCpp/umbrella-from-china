@@ -786,36 +786,42 @@ function compose_stats_percentiles(results, date, what, show_by, sort_by) {
 }
 
 function align_stats_percentiles(prev, curr, name) {
-  const  name_sp = name + ' ';
+  const name_sp_len  = name.length + 1; // For name + space
 
-  const [prev_prefix, prev_suffix] = prev.split(name_sp);
-  const [curr_prefix, curr_suffix] = curr.split(name_sp);
+  const prev_name    = prev.indexOf(name); if (prev_name === -1) return null;
+  const curr_name    = curr.indexOf(name); if (curr_name === -1) return null;
 
-  if (prev_suffix.length === curr_suffix.length) return null;
+  const prev_suf_ext = (prev.length - prev_name) - (curr.length - curr_name);
+  if  (!prev_suf_ext)  return null;
 
-  const is_prev_long = prev_suffix.length > curr_suffix.length;
-  const  long_suffix = is_prev_long ? prev_suffix : curr_suffix;
-  let   short_suffix = is_prev_long ? curr_suffix : prev_suffix;
+  const diff = Math.abs(prev_suf_ext);
 
-  for (let i = long_suffix.length - short_suffix.length - 1; i >= 0; i--) {
-    const  long_char = long_suffix[i];
+  const long_str     =  prev_suf_ext > 0 ? prev
+                                         : curr;
+  const long_ind     = (prev_suf_ext > 0 ? prev_name
+                                         : curr_name) + name_sp_len + diff; // For character after diff
+  let  short_suf     =  prev_suf_ext > 0 ? curr.slice(curr_name + name_sp_len)
+                                         : prev.slice(prev_name + name_sp_len);
+
+  for (let i = 1; i <= diff; i++) { // Reversed traversal from the last extra character to first
+    const  long_char = long_str[long_ind - i];
     const short_char = is_digit(long_char)              ? "\u2007" // \u2007 is  &numsp;
                      :         (long_char === "\u2009") ? "\u2009" // \u2009 is &thinsp;
                      : '#'; // For unexpected character
 
-    short_suffix = short_char + short_suffix;
+    short_suf = short_char + short_suf;
   }
 
-  return is_prev_long
-   ? [prev, curr_prefix + name_sp + short_suffix      ]
-   : [      prev_prefix + name_sp + short_suffix, curr];
+  return prev_suf_ext > 0
+      ? [prev, curr.slice(0, curr_name + name_sp_len) + short_suf      ]
+      : [      prev.slice(0, prev_name + name_sp_len) + short_suf, curr];
 }
 
 function render_stats_percentiles(container) {
   let inner_prev = stats_percentiles_text_inner.prev;
   let inner_curr = stats_percentiles_text_inner.curr;
 
-  // Dividers must be ordered from last ("Max") to first ("Min")
+  // Dividers must be ordered from the last ("Max") to first ("Min")
   const names = ["Max", "90%", "75%", "50%", "25%", "10%", "Min"];
 
   for (const name of names) {
