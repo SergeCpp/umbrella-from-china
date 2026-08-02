@@ -3,6 +3,9 @@
 function filter_base(stats_items, stats_date,
   archived_min, archived_max, created_min, created_max,
   collections, creators, title, is_title_identifier) {
+
+  // To count one day for an item published on the day before
+  const calc_date_ms   = new Date(stats_date + "T11:59:59.999Z").getTime();
   const filtered_items = [];
 
   for (let i = 0; i < stats_items.length; i++) {
@@ -45,9 +48,10 @@ function filter_base(stats_items, stats_date,
 
     // Archived
     const publicdate_str = doc.publicdate;
-    if  (!publicdate_str) continue;
-    const publicdate = new Date(publicdate_str);
-    if (isNaN(publicdate.getTime())) continue;
+    if  (!publicdate_str)  continue;
+    const publicdate     = new Date(publicdate_str);
+    const publicdate_ms  = publicdate.getTime();
+    if (isNaN(publicdate_ms)) continue;
     if (!filter_date(publicdate, archived_min, archived_max)) continue;
 
     // Views
@@ -97,9 +101,7 @@ function filter_base(stats_items, stats_date,
       }
     }
 
-    const calc_date = new Date(stats_date + "T11:59:59.999Z"); // To count a day for published on day before
-
-    const  time_all = calc_date - publicdate;
+    const  time_all = calc_date_ms - publicdate_ms;
     const  days_all = Math.round(  time_all / (24 * 60 * 60 * 1000));
     const views_all = downloads;
     const ratio_all = parseFloat((views_all / days_all).toFixed(3));
