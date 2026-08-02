@@ -785,14 +785,17 @@ function compose_stats_percentiles(results, date, what, show_by, sort_by) {
     format_nowrap('Max ' + max);
 }
 
-function align_stats_percentiles(prev, curr, name) {
+function align_stats_percentiles(prev_curr, name) {
+  const prev         = prev_curr[0];
+  const curr         = prev_curr[1];
+
   const name_sp_len  = name.length + 1; // For name + space
 
-  const prev_name    = prev.indexOf(name); if (prev_name === -1) return null;
-  const curr_name    = curr.indexOf(name); if (curr_name === -1) return null;
+  const prev_name    = prev.indexOf(name); if (prev_name === -1) return;
+  const curr_name    = curr.indexOf(name); if (curr_name === -1) return;
 
   const prev_suf_ext = (prev.length - prev_name) - (curr.length - curr_name);
-  if  (!prev_suf_ext)  return null;
+  if  (!prev_suf_ext)  return;
 
   const diff_str     =  prev_suf_ext > 0 ? prev      : curr;
   const diff_beg     = (prev_suf_ext > 0 ? prev_name : curr_name) + name_sp_len;
@@ -810,27 +813,25 @@ function align_stats_percentiles(prev, curr, name) {
     pad += pad_char;
   }
 
-  return prev_suf_ext > 0
-      ? [prev, curr.slice(0, suf_beg) + pad +
-               curr.slice(   suf_beg)       ]
-      : [      prev.slice(0, suf_beg) + pad +
-               prev.slice(   suf_beg),  curr];
+  if (prev_suf_ext > 0)
+      prev_curr[1] = curr.slice(0, suf_beg) +
+               pad + curr.slice(   suf_beg);
+  else
+      prev_curr[0] = prev.slice(0, suf_beg) +
+               pad + prev.slice(   suf_beg);
 }
 
 function render_stats_percentiles(container) {
-  let inner_prev = stats_percentiles_text_inner.prev;
-  let inner_curr = stats_percentiles_text_inner.curr;
+  const inner = [stats_percentiles_text_inner.prev,
+                 stats_percentiles_text_inner.curr];
 
   // Dividers must be ordered from the last ("Max") to first ("Min")
   const names = ["Max", "90%", "75%", "50%", "25%", "10%", "Min"];
 
-  for (const name of names) {
-    const prev_curr = align_stats_percentiles(inner_prev, inner_curr, name);
-    if   (prev_curr) [inner_prev, inner_curr] = prev_curr;
-  }
+  for (const name of names) align_stats_percentiles(inner, name);
 
-  stats_percentiles_text.prev.innerHTML = inner_prev;
-  stats_percentiles_text.curr.innerHTML = inner_curr;
+  stats_percentiles_text.prev.innerHTML = inner[0];
+  stats_percentiles_text.curr.innerHTML = inner[1];
 
   container.appendChild(stats_percentiles_text.prev);
   container.appendChild(stats_percentiles_text.curr);
