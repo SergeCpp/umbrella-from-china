@@ -371,6 +371,17 @@ function is_alnum(char) {
   return false;
 }
 
+function is_alpha(char) {
+  if (!char) return false;
+
+  const code = char.charCodeAt(0);
+
+  if ((code >= 0x41) && (code <= 0x5a)) return true;
+  if ((code >= 0x61) && (code <= 0x7a)) return true;
+
+  return false;
+}
+
 function parse_find_op(term, op, index) {
   if (!op.length) return -1;
 
