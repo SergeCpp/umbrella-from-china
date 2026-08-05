@@ -806,10 +806,8 @@ function align_stats_percentiles(prev_curr, name) {
 
   for (let i = 0; i < diff; i++) {
     const diff_char = diff_str[diff_beg + i];
-    const  pad_char = diff_char === '\u2009'  // \u2009 is &thinsp;
-                    ?               '\u2009'
-                    :               '\u2007'; // \u2007 is  &numsp;
-
+    const  pad_char = diff_char === '\u2009' ? '\u2009'  // \u2009 is &thinsp;
+                                             : '\u2007'; // \u2007 is  &numsp;
     pad += pad_char;
   }
 

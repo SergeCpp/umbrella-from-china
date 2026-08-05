@@ -243,7 +243,7 @@ function evaluate_term(term, values) {
       return term.terms.every(part => evaluate_term(part, values));
 
     case "OR":
-      return term.terms.some(part => evaluate_term(part, values));
+      return term.terms.some (part => evaluate_term(part, values));
 
     case "XOR": {
       //  XOR : Include if one match only
@@ -311,25 +311,28 @@ function evaluate_term(term, values) {
 }
 
 function is_b_text_b_in_value(bpre, text, bsuf, value) {
-  if (!text.length) return false;
+  const vlen = value.length;
+  const tlen = text .length;
+  if  (!tlen)  return false; // Not a valid query. Must not be empty
 
-  let index = 0;
+  for (let index = 0; (index + tlen) <= vlen; index++) {
+           index = value.indexOf(text, index);
+    if    (index === -1) return false;
 
-  do {
-    index = value.indexOf(text, index);
-    if (index === -1) return false;
+    if (bpre) {
+      const ipre =   index  -  1;
+      const vpre = ((ipre === -1)   || !is_alnum(value[ipre])) ? "no_alnum" : "alnum";
+      if   (vpre !== bpre) continue;
+    }
 
-    const inext = index + text.length;
-
-    const vpre = index === 0            ? "no_alnum" : is_alnum(value[index - 1]) ? "alnum" : "no_alnum";
-    const vsuf = inext === value.length ? "no_alnum" : is_alnum(value[inext    ]) ? "alnum" : "no_alnum";
-
-    if (bpre && (bpre !== vpre)) { index = inext; continue; }
-    if (bsuf && (bsuf !== vsuf)) { index = inext; continue; }
+    if (bsuf) {
+      const isuf =   index  + tlen;
+      const vsuf = ((isuf === vlen) || !is_alnum(value[isuf])) ? "no_alnum" : "alnum";
+      if   (vsuf !== bsuf) continue;
+    }
 
     return true;
   }
-  while ((index + text.length) <= value.length);
 
   return false;
 }
@@ -383,20 +386,21 @@ function is_alpha(char) {
 }
 
 function parse_find_op(term, op, index) {
-  if (!op.length) return -1;
+  const tlen = term.length;
+  const olen = op  .length;
+  if  (!olen)  return -1;
 
-  do {
-    index = term.indexOf(op, index);
-    if (index === -1) return -1;
+  while ((index + olen) <= tlen) {
+          index = term.indexOf(op, index);
+    if   (index === -1) return -1;
 
-    const inext = index + op.length;
+    const inext = index + olen;
 
-    if ((index > 0)           && is_alnum(term[index - 1])) { index = inext; continue; }
-    if ((inext < term.length) && is_alnum(term[inext    ])) { index = inext; continue; }
+    if  ((index > 0)    && is_alnum(term[index - 1])) { index = inext; continue; }
+    if  ((inext < tlen) && is_alnum(term[inext    ])) { index = inext; continue; }
 
     return index;
   }
-  while ((index + op.length) <= term.length);
 
   return -1;
 }
