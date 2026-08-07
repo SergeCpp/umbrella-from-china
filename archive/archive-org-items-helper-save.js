@@ -4,8 +4,15 @@ function filter_base(stats_items, stats_date,
   archived_min, archived_max, created_min, created_max,
   collections, creators, title, is_title_identifier) {
 
+  const archived_base_is_year  = archived_min.base === "year";
+  const  created_base_is_year  =  created_min.base === "year";
+
+  // UTC date, is the earliest for entire thematic stat
+  const  created_audio_default = Date.parse("2012-01-01T00:00:00Z");
+
   // To count one day for an item published on the day before
-  const calc_date_ms   = new Date(stats_date + "T11:59:59.999Z").getTime();
+  const calc_date_ms   = Date.parse(stats_date + "T11:59:59.999Z");
+
   const filtered_items = [];
 
   for (let i = 0; i < stats_items.length; i++) {
@@ -31,27 +38,28 @@ function filter_base(stats_items, stats_date,
 
     // Created
     const date_str = doc.date; // Can be not set for an item
-    let   date     = null;
+    let   date;
 
     if (date_str) {
-      date = new Date(date_str);
-      if (isNaN(date.getTime())) continue;
-    } else { // No date is set for an item
-      if (mediatype_str === "audio") { // Set default date to audio item only
-        date = new Date("2012-01-01T00:00:00Z"); // UTC date, is the earliest for entire thematic stat
-      } else {
-        continue;
-      }
+      date = Date.parse(date_str);
+      if (isNaN(date)) continue;
+    }
+    else { // No date is set for an item
+      if (mediatype_str !== "audio") continue; // Set default date to audio item only
+      date = created_audio_default;
     }
 
+    if (!created_base_is_year) date = new Date(date);
     if (!filter_date(date, created_min, created_max)) continue;
 
     // Archived
     const publicdate_str = doc.publicdate;
     if  (!publicdate_str)  continue;
-    const publicdate     = new Date(publicdate_str);
-    const publicdate_ms  = publicdate.getTime();
+
+    const publicdate_ms  = Date.parse(publicdate_str);
     if (isNaN(publicdate_ms)) continue;
+
+    const publicdate     = archived_base_is_year ? publicdate_ms : new Date(publicdate_ms);
     if (!filter_date(publicdate, archived_min, archived_max)) continue;
 
     // Views

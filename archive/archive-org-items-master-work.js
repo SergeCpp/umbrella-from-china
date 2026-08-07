@@ -283,8 +283,8 @@ function item_arrows(container, event) {
   const is_down  = key === 'ArrowDown';
   if  (!is_left && !is_right && !is_up && !is_down) return;
 
-  const is_item  = (elem) => elem && elem.className.includes("item" );
-  const is_title = (elem) => elem && elem.className.includes("title");
+  const is_item  = elem => elem && elem.className.includes("item" );
+  const is_title = elem => elem && elem.className.includes("title");
 
   const inner    = container.parentElement;
   const wrapper  = inner    .parentElement;
@@ -293,30 +293,30 @@ function item_arrows(container, event) {
   const in_chlds = Array.from(inner.children);
   const ix_cell  = in_chlds.indexOf(container);
 
-  const go_cell  = (cell) => {
-    if (!cell || (cell === container)) return;
+  const go_cell  =  cell => {
+    if   (!cell || (cell === container)) return;
     event.preventDefault();
-    if (is_title(cell)) cell.querySelector("a").focus(); else cell.focus();
+    if   (is_title (cell)) cell.querySelector("a").focus(); else cell.focus();
   };
 
-  const wr_cell  = (wrap) => {
-    if (!is_item(wrap)) return null;
+  const wr_cell  =  wrap => {
+    if   (!is_item (wrap)) return null;
 
-    const innr = wrap.firstElementChild;
-    if  (!innr) return null;
+    const  innr  =  wrap.firstElementChild;
+    if   (!innr) return null;
 
-    const  cell = innr.children[ix_cell];
+    const  cell  =  innr.children[ix_cell];
     return cell;
   };
 
-  const is_empty = (wrap) => { // If not plain then not empty
+  const is_empty =         wrap => { // If not plain then not empty
     const   cell = wr_cell(wrap);
-    return !cell || cell.is_empty;
+    return !cell ||   cell.is_empty;
   };
 
-  const is_plain = (wrap) => { // If empty then plain
+  const is_plain =         wrap => { // If empty then plain
     const   cell = wr_cell(wrap);
-    return !cell || !cell.is_subst;
+    return !cell ||  !cell.is_subst;
   };
 
   if (event.altKey) {
@@ -325,7 +325,7 @@ function item_arrows(container, event) {
 
   if (is_left || is_right) {
     let container_go = null;
-    let len = in_chlds.length;
+    let len          = in_chlds.length;
     let ix;
 
     if (event.ctrlKey) { // To beg/end
@@ -349,13 +349,13 @@ function item_arrows(container, event) {
     return;
   }
 
-  const wr_forw  = (wrap) => is_up ? wrap.previousElementSibling : wrap.    nextElementSibling;
-  const wr_back  = (wrap) => is_up ? wrap.    nextElementSibling : wrap.previousElementSibling;
+  const wr_forw  = wrap => is_up ? wrap.previousElementSibling : wrap.    nextElementSibling;
+  const wr_back  = wrap => is_up ? wrap.    nextElementSibling : wrap.previousElementSibling;
 
-  const fw_elem  = ()     => is_up ? results.firstElementChild   : results. lastElementChild;
-  const bk_elem  = ()     => is_up ? results. lastElementChild   : results.firstElementChild;
+  const fw_elem  = ()   => is_up ? results.firstElementChild   : results. lastElementChild;
+  const bk_elem  = ()   => is_up ? results. lastElementChild   : results.firstElementChild;
 
-  const fw_term  = ()     => {
+  const fw_term  = ()   => {
     let wr = fw_elem();
 
     while (is_empty(wr)) { // Will be found ok, at least wrapper
@@ -365,7 +365,7 @@ function item_arrows(container, event) {
     return wr;
   };
 
-  const bk_term  = ()     => {
+  const bk_term  = ()   => {
     let wr = bk_elem();
 
     while (is_empty(wr)) { // Will be found ok, at least wrapper
