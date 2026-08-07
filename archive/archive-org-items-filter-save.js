@@ -152,7 +152,7 @@ function filter_date(date, min, max) {
 }
 
 function get_date_range(date_str) {
-  if (!date_str) return null;
+  if   (!date_str) return null;
 
   // Catch empty parts like "2022-", "2022--", "2022-08-", "2022--08"
   const parts_str = date_str.split('-').map(part => part.trim());
@@ -161,39 +161,46 @@ function get_date_range(date_str) {
   const first_str = parts_str[0];
   const first_len = first_str.length;
 
-  const parts = parts_str.map(Number); // Ok with check above
+  const parts     = parts_str.map(Number); // Ok with check above
+  const parts_len = parts.length;
 
   if (first_len === 4) { // Year-based format
     const base = "year";
 
-    if (parts.length === 1) { // Year
+    if (parts_len === 1) { // Year
       const year = parts[0];
       if (!is_date_valid(year, 1, 1)) return null;
+
       return {
         base,
         min_ms: Date.UTC(year,     1 - 1,  1,      0,  0,  0,   0), // Beg of year
         max_ms: Date.UTC(year,    12 - 1, 31,     23, 59, 59, 999)  // End of year
       };
     }
-    if (parts.length === 2) { // Year-Month
+
+    if (parts_len === 2) { // Year-month
       const [year, month] = parts;
       if (!is_date_valid(year, month, 1)) return null;
       const e_mday = new Date(Date.UTC(year, month, 0)).getUTCDate();
+
       return {
         base,
         min_ms: Date.UTC(year, month - 1, 1,       0,  0,  0,   0), // Beg of month
         max_ms: Date.UTC(year, month - 1, e_mday, 23, 59, 59, 999)  // End of month
       };
     }
-    if (parts.length === 3) { // Year-Month-Day
+
+    if (parts_len === 3) { // Year-month-day
       const [year, month, day] = parts;
       if (!is_date_valid(year, month, day)) return null;
+
       return {
         base,
         min_ms: Date.UTC(year, month - 1, day,     0,  0,  0,   0), // Beg of day
         max_ms: Date.UTC(year, month - 1, day,    23, 59, 59, 999)  // End of day
       };
     }
+
     return null; // Invalid format
   }
 
@@ -202,29 +209,34 @@ function get_date_range(date_str) {
   const base = "month";
 
   if (first_len === 3) {
-    if (first_str === "520") return { base, month: 5, day: 20 }; // Happy 520 Day!
+    if (parts_len === 1) {
+      if (first_str === "520") return { base, month: 5, day: 20 }; // Happy 520 Day!
+    }
+
     return null;
   }
 
   const month = parts[0];
   if  ((month < 1) || (month > 12)) return null;
 
-  if (parts.length === 1) return { base, month };
+  if (parts_len === 1) return { base, month };
 
-  if (parts.length === 2) {
+  if (parts_len === 2) {
     const day = parts[1];
     if (!is_date_valid(2024, month, day)) return null; // Allow 29 days for February
+
     return { base, month, day };
   }
+
   return null; // Invalid format
 }
 
-function is_date_valid(year, month, day) {
-  // Create date and check if it "corrects" the input
-  const  date = new Date(Date.UTC(year, month - 1, day));
-  return date.getUTCFullYear() === year && 
-         date.getUTCMonth() === (month - 1) && 
-         date.getUTCDate() === day;
+// Construct date and check if it corrects the input
+function  is_date_valid               (year, month,     day) {
+  const      date = new Date(Date.UTC (year, month - 1, day));
+  return     date.getUTCFullYear() === year
+          && date.getUTCMonth   () ===      (month - 1)
+          && date.getUTCDate    () ===                  day;
 }
 
 /* Filter by Query */
