@@ -16,11 +16,8 @@ function init_controls() {
 
     input.oninput = () => tab_input_changed(input);
 
-    input.onkeyup = (event) => {
-      const key = event.key;
-      if (key === 'Enter') {
-        process_filter();
-      }
+    input.onkeyup = event => {
+      if (event.key === 'Enter') process_filter();
     };
   });
 
@@ -29,14 +26,14 @@ function init_controls() {
   if   (button) {
     button.onclick = process_filter;
 
-    button.onkeyup = (event) => {
+    button.onkeyup = event => {
       const key = event.key;
       if ((key === 'Enter') || (key === ' ')) {
         button.click();
       }
     };
 
-    button.onkeydown = (event) => {
+    button.onkeydown = event => {
       const key = event.key;
       if ((key === 'Enter') || (key === ' ')) {
         event.preventDefault();
@@ -88,16 +85,16 @@ function init_tabs() {
     const button = document.getElementById('tab-' + tab);
     if  (!button) return;
 
-    button.onclick = (event) => tab_click(tab, event.shiftKey, event.ctrlKey, event.altKey);
+    button.onclick = event => tab_click(tab, event.shiftKey, event.ctrlKey, event.altKey);
 
-    button.onkeyup = (event) => {
+    button.onkeyup = event => {
       const key = event.key;
       if ((key === 'Enter') || (key === ' ')) {
         tab_click(tab, event.shiftKey, event.ctrlKey, event.altKey); // button.click() not passes *Key modifiers
       }
     };
 
-    button.onkeydown = (event) => {
+    button.onkeydown = event => {
       const key = event.key;
       if ((key === 'Enter') || (key === ' ')) {
         event.preventDefault();
@@ -382,7 +379,7 @@ function tab_mark_is_filter(tab) {
 // what: "prev" / "curr"
 function date_change_menu(event, what) {
   const menu_old  = document.getElementById('date-change-menu');
-  if   (menu_old) { menu_old.remove_ex(); }
+  if   (menu_old)   menu_old.remove_ex('skip-focus');
 
   const m_dates = dates_main();
   const i_date  = m_dates.indexOf(date_main(what));
@@ -410,31 +407,28 @@ function date_change_menu(event, what) {
   menu.id           = 'date-change-menu';
   menu.setAttribute  ('role',     'menu');
 
-  menu.remove_ex = (skip_focus = false) => {
+  menu.remove_ex    = skip_focus => {
     document.removeEventListener('click', menu.outside_click);
     menu.remove();
 
-    if    (btn_other && document.body.contains(btn_other)) { btn_other.style.pointerEvents = 'auto'; }
+    if    (btn_other && document.body.contains(btn_other)) btn_other.style.pointerEvents = 'auto';
+    if   (skip_focus)   return;
 
-    if   (skip_focus) return;
     const menu_caller = document.getElementById('span-btn-' + what);
-    if   (menu_caller) { menu_caller.focus(); }
+    if   (menu_caller)  menu_caller.focus();
   };
 
-  menu.outside_click = (event) => {
-    if (!menu.contains(event.target)) { menu.remove_ex('skip-focus'); }
+  menu.outside_click = event => {
+    if (!menu.contains(event.target)) menu.remove_ex('skip-focus');
   };
 
   // Defer adding until all currently pending event handlers (menu creation click) have finished
   setTimeout(() => {
-    if (menu && document.body.contains(menu)) { document.addEventListener('click', menu.outside_click); }
+    if (menu && document.body.contains(menu)) document.addEventListener('click', menu.outside_click);
   }, 0);
 
-  menu.onkeydown = (event) => {
-    const key = event.key;
-    if (key === 'Escape') {
-      menu.remove_ex();
-    }
+  menu.onkeydown = event => {
+    if (event.key === 'Escape') menu.remove_ex();
   };
 
   const menu_shift = (shift, opts) => {
@@ -464,14 +458,14 @@ function date_change_menu(event, what) {
         setTimeout(load_stat, 0, opt.textContent, what, focus_id));
     };
 
-    opt.onkeyup = (event) => {
+    opt.onkeyup = event => {
       const key = event.key;
       if ((key === 'Enter') || (key === ' ')) {
         opt.click();
       }
     };
 
-    opt.onkeydown = (event) => {
+    opt.onkeydown = event => {
       const key = event.key;
       if ((key === 'Enter') || (key === ' ')) {
         event.preventDefault();
@@ -550,8 +544,12 @@ function date_change_menu(event, what) {
   const m_left = b_mid - m_half + window.scrollX;
 
   let   m_top  = b_rect.top     + window.scrollY - 2 - m_rect.height;
-  if   (m_top  <                  window.scrollY)     {
-        m_top  = b_rect.bottom  + window.scrollY + 2; }
+  if   (m_top  <                  window.scrollY) {
+        m_top  = b_rect.bottom  + window.scrollY + 2;
+
+    if (m_top  > window.innerHeight - m_rect.height + window.scrollY)
+        m_top  = window.innerHeight - m_rect.height + window.scrollY;
+  }
 
   menu.style.left       = m_left + 'px';
   menu.style.top        = m_top  + 'px';
@@ -565,7 +563,7 @@ function date_change_menu(event, what) {
     const is_overlap = (m_rect.bottom >= b_rect.top   ) &&
                        (m_rect.top    <= b_rect.bottom);
 
-    if   (is_overlap) { btn_other.style.pointerEvents = 'none'; }
+    if   (is_overlap) btn_other.style.pointerEvents = 'none';
   }
 }
 
