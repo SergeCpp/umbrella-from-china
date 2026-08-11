@@ -377,17 +377,17 @@ function tab_mark_is_filter(tab) {
 /* Date Change */
 
 // what: "prev" / "curr"
-function date_change_menu(event, what) {
-  const menu_old  = document.getElementById('date-change-menu');
-  if   (menu_old)   menu_old.remove_ex('skip-focus');
+// half_view: above and below the central option of menu
+function date_change_menu(what, half_view = 3) {
+  const menu_old = document.getElementById('date-change-menu');
+  if   (menu_old)  menu_old.remove_ex('skip-focus');
 
   const m_dates = dates_main();
   const i_date  = m_dates.indexOf(date_main(what));
   const i_min   = 0;
   const i_max   = m_dates.length - 1;
-  const h_view  = 3; // Half view (above and below the central option)
-  let   i_beg   = i_date - h_view;
-  let   i_end   = i_date + h_view;
+  let   i_beg   = i_date - half_view;
+  let   i_end   = i_date + half_view;
 
   if (i_beg < i_min) {
       i_end = Math.min(i_end + (i_min - i_beg), i_max);
@@ -400,22 +400,23 @@ function date_change_menu(event, what) {
   let a_beg =         i_beg; // Above beg
   let b_end = i_max - i_end; // Below end
 
-  const  btn_other  = document.getElementById('span-btn-' + (what === "prev" ? "curr" : "prev"));
-  const menu_caller = event.currentTarget;
-  const menu        = document.createElement('div');
-  menu.className    =             'menu';
-  menu.id           = 'date-change-menu';
-  menu.setAttribute  ('role',     'menu');
+  const btn_other  = document.getElementById('span-btn-' + (what === "prev" ? "curr" : "prev"));
+  const btn_caller = document.getElementById('span-btn-' +  what);
+  const menu       = document.createElement ('div');
+  menu.className   =             'menu';
+  menu.id          = 'date-change-menu';
+  menu.setAttribute ('role',     'menu');
 
-  menu.remove_ex    = skip_focus => {
+  menu.remove_ex   = skip_focus => {
     document.removeEventListener('click', menu.outside_click);
     menu.remove();
 
-    if    (btn_other && document.body.contains(btn_other)) btn_other.style.pointerEvents = 'auto';
-    if   (skip_focus)   return;
+    if   (btn_other && document.body.contains(btn_other)) btn_other.style.pointerEvents = 'auto';
+    if  (skip_focus)   return;
 
-    const menu_caller = document.getElementById('span-btn-' + what);
-    if   (menu_caller)  menu_caller.focus();
+    // Page can be reloaded here, so need to find the caller button
+    const btn_caller = document.getElementById('span-btn-' + what);
+    if   (btn_caller)  btn_caller.focus();
   };
 
   menu.outside_click = event => {
@@ -522,7 +523,7 @@ function date_change_menu(event, what) {
         return;
       }
 
-      opts[next].focus();
+      if (next !== -1) opts[next].focus();
     };
   };
 
@@ -536,19 +537,26 @@ function date_change_menu(event, what) {
   menu.style.visibility = 'hidden';
   document.body.appendChild(menu);
 
-  const b_rect = menu_caller.getBoundingClientRect();
-  const m_rect = menu       .getBoundingClientRect();
+  const b_rect = btn_caller.getBoundingClientRect();
+  const m_rect = menu      .getBoundingClientRect();
 
-  const b_mid  = b_rect.left + b_rect.width / 2;
-  const m_half =               m_rect.width / 2;
-  const m_left = b_mid - m_half + window.scrollX;
+  const b_mid  = b_rect.left    + b_rect.width  / 2;
+  const m_half =                  m_rect.width  / 2;
+  const m_left = window.scrollX + b_mid - m_half;
 
-  let   m_top  = b_rect.top     + window.scrollY - 2 - m_rect.height;
-  if   (m_top  <                  window.scrollY) {
-        m_top  = b_rect.bottom  + window.scrollY + 2;
+  let   m_top  = window.scrollY + b_rect.top    - 2 - m_rect.height;
+  if   (m_top  < window.scrollY) { // Does not fit above the caller button
+        m_top  = window.scrollY + b_rect.bottom + 2;
 
-    if (m_top  > window.innerHeight - m_rect.height + window.scrollY)
+    if (m_top  > window.innerHeight - m_rect.height + window.scrollY) // Does not fit below the caller button
         m_top  = window.innerHeight - m_rect.height + window.scrollY;
+
+    if (m_top  < window.scrollY) { // Does not fit in the window
+      if (half_view > 1) {
+        date_change_menu(what, half_view - 1); // Re-enter with menu shrinked
+        return;
+      }
+    }
   }
 
   menu.style.left       = m_left + 'px';

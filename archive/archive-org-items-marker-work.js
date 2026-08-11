@@ -773,8 +773,8 @@ function compose_stats_percentiles(results, date, what, show_by, sort_by) {
       'class="span-btn" id="span-btn-' + what + '" role="button" tabindex="0" ' +
       'onkeydown="if ((event.key === \'Enter\') || (event.key === \' \')) event.preventDefault();" ' +
       'onkeyup  ="if ((event.key === \'Enter\') || (event.key === \' \')) ' +
-                 'date_change_menu(event, \'' + what + '\');" ' +
-      'onclick  ="date_change_menu(event, \'' + what + '\')" ' +
+                 'date_change_menu(\'' + what + '\');" ' +
+      'onclick  ="date_change_menu(\'' + what + '\')" ' +
       '>' + date + '</span>' + '&thinsp;' + ':') + '&ensp;' +
     format_nowrap('Min ' + min            + ',') + '&ensp;' +
     format_nowrap('10% ' + percentile10   + ',') + '&ensp;' +
