@@ -754,7 +754,8 @@ function filter_route(base_prev_items, base_prev_date,
   // Title: ensure filtering field available
   ensure_title_can_filter(title, is_title_identifier);
 
-  // Views
+  /////////////////
+  // Views / Ratios
   let dl_min_str = input_values["downloads-min"].trim().toLowerCase();
   let dl_max_str = input_values["downloads-max"].trim().toLowerCase();
   let mo_min_str = input_values[    "month-min"].trim().toLowerCase();
@@ -769,7 +770,8 @@ function filter_route(base_prev_items, base_prev_date,
   let wk_min_str_t = null;
   let wk_max_str_t = null;
 
-  // Views: field prefixes
+  /////////////////////////////////
+  // Views / Ratios: field prefixes
   let is_dl_old = false; // Use old instead dl, old = dl without last month
   let is_mo_23  = false; // Use 23 days instead month, 23 days = month withoul last week
   let is_wk_7   = false; // This flag will not be used, week === 7 days
@@ -777,6 +779,97 @@ function filter_route(base_prev_items, base_prev_date,
   [is_dl_old, dl_min_str, dl_max_str] = get_views_prefix(dl_min_str, dl_max_str);
   [is_mo_23,  mo_min_str, mo_max_str] = get_views_prefix(mo_min_str, mo_max_str);
   [is_wk_7,   wk_min_str, wk_max_str] = get_views_prefix(wk_min_str, wk_max_str);
+
+  ///////////////
+  // Ratios: keys
+  const kv_range_error = kv => kv && (kv.min !== undefined) && (kv.max !== undefined) && (kv.min > kv.max);
+
+  let [dl_min_ratio_key, dl_min_ratio_kv] = get_key(dl_min_str, "need-ratio");
+  let [dl_max_ratio_key, dl_max_ratio_kv] = get_key(dl_max_str, "need-ratio");
+  let [mo_min_ratio_key, mo_min_ratio_kv] = get_key(mo_min_str, "need-ratio");
+  let [mo_max_ratio_key, mo_max_ratio_kv] = get_key(mo_max_str, "need-ratio");
+  let [wk_min_ratio_key, wk_min_ratio_kv] = get_key(wk_min_str, "need-ratio");
+  let [wk_max_ratio_key, wk_max_ratio_kv] = get_key(wk_max_str, "need-ratio");
+
+  if (dl_min_ratio_kv) dl_min_str = ""; else dl_min_ratio_key = null;
+  if (dl_max_ratio_kv) dl_max_str = ""; else dl_max_ratio_key = null;
+  if (mo_min_ratio_kv) mo_min_str = ""; else mo_min_ratio_key = null;
+  if (mo_max_ratio_kv) mo_max_str = ""; else mo_max_ratio_key = null;
+  if (wk_min_ratio_kv) wk_min_str = ""; else wk_min_ratio_key = null;
+  if (wk_max_ratio_kv) wk_max_str = ""; else wk_max_ratio_key = null;
+
+  if (kv_range_error(dl_min_ratio_kv) || kv_range_error(dl_max_ratio_kv) ||
+      kv_range_error(mo_min_ratio_kv) || kv_range_error(mo_max_ratio_kv) ||
+      kv_range_error(wk_min_ratio_kv) || kv_range_error(wk_max_ratio_kv)) {
+    return { error: err_key_range };
+  }
+
+  // Ratios: number prefixes
+  let dl_min_ratio_str = null;
+  let dl_max_ratio_str = null;
+  let mo_min_ratio_str = null;
+  let mo_max_ratio_str = null;
+  let wk_min_ratio_str = null;
+  let wk_max_ratio_str = null;
+
+  let dl_min_ratio_no = null;
+  let dl_max_ratio_no = null;
+  let mo_min_ratio_no = null;
+  let mo_max_ratio_no = null;
+  let wk_min_ratio_no = null;
+  let wk_max_ratio_no = null;
+
+  const [dl_min_ratio_str_t, dl_min_ratio_no_t] = get_num(dl_min_str, dl_max_ratio_key, "need-ratio");
+  const [dl_max_ratio_str_t, dl_max_ratio_no_t] = get_num(dl_max_str, dl_min_ratio_key, "need-ratio");
+  const [mo_min_ratio_str_t, mo_min_ratio_no_t] = get_num(mo_min_str, mo_max_ratio_key, "need-ratio");
+  const [mo_max_ratio_str_t, mo_max_ratio_no_t] = get_num(mo_max_str, mo_min_ratio_key, "need-ratio");
+  const [wk_min_ratio_str_t, wk_min_ratio_no_t] = get_num(wk_min_str, wk_max_ratio_key, "need-ratio");
+  const [wk_max_ratio_str_t, wk_max_ratio_no_t] = get_num(wk_max_str, wk_min_ratio_key, "need-ratio");
+
+  if (dl_max_ratio_key && dl_min_ratio_no_t) {
+      dl_min_ratio_no  =  dl_min_ratio_no_t;
+      dl_min_ratio_str =  dl_min_ratio_str_t;
+      dl_min_str       =  "";
+  }
+
+  if (dl_min_ratio_key && dl_max_ratio_no_t) {
+      dl_max_ratio_no  =  dl_max_ratio_no_t;
+      dl_max_ratio_str =  dl_max_ratio_str_t;
+      dl_max_str       =  "";
+  }
+
+  if (mo_max_ratio_key && mo_min_ratio_no_t) {
+      mo_min_ratio_no  =  mo_min_ratio_no_t;
+      mo_min_ratio_str =  mo_min_ratio_str_t;
+      mo_min_str       =  "";
+  }
+
+  if (mo_min_ratio_key && mo_max_ratio_no_t) {
+      mo_max_ratio_no  =  mo_max_ratio_no_t;
+      mo_max_ratio_str =  mo_max_ratio_str_t;
+      mo_max_str       =  "";
+  }
+
+  if (wk_max_ratio_key && wk_min_ratio_no_t) {
+      wk_min_ratio_no  =  wk_min_ratio_no_t;
+      wk_min_ratio_str =  wk_min_ratio_str_t;
+      wk_min_str       =  "";
+  }
+
+  if (wk_min_ratio_key && wk_max_ratio_no_t) {
+      wk_max_ratio_no  =  wk_max_ratio_no_t;
+      wk_max_ratio_str =  wk_max_ratio_str_t;
+      wk_max_str       =  "";
+  }
+
+  if ((!dl_min_ratio_key && dl_max_ratio_no_t && dl_max_ratio_str_t.includes('.')) ||
+      (!dl_max_ratio_key && dl_min_ratio_no_t && dl_min_ratio_str_t.includes('.')) ||
+      (!mo_min_ratio_key && mo_max_ratio_no_t && mo_max_ratio_str_t.includes('.')) ||
+      (!mo_max_ratio_key && mo_min_ratio_no_t && mo_min_ratio_str_t.includes('.')) ||
+      (!wk_min_ratio_key && wk_max_ratio_no_t && wk_max_ratio_str_t.includes('.')) ||
+      (!wk_max_ratio_key && wk_min_ratio_no_t && wk_min_ratio_str_t.includes('.'))) {
+    return { error: err_keys_no };
+  }
 
   // Ratios: values
   const [is_dl_ratios, dl_min_ratio, dl_max_ratio] = get_ratios(dl_min_str, dl_max_str);
@@ -816,6 +909,7 @@ function filter_route(base_prev_items, base_prev_date,
     }
   }
 
+  //////////////
   // Views: keys
   let dl_min_kv = null;
   let dl_max_kv = null;
@@ -830,8 +924,6 @@ function filter_route(base_prev_items, base_prev_date,
   [mo_max_str, mo_max_kv] = get_key(mo_max_str);
   [wk_min_str, wk_min_kv] = get_key(wk_min_str);
   [wk_max_str, wk_max_kv] = get_key(wk_max_str);
-
-  const kv_range_error = kv => kv && (kv.min !== undefined) && (kv.max !== undefined) && (kv.min > kv.max);
 
   if (kv_range_error(dl_min_kv) || kv_range_error(dl_max_kv) ||
       kv_range_error(mo_min_kv) || kv_range_error(mo_max_kv) ||
@@ -964,6 +1056,7 @@ function filter_route(base_prev_items, base_prev_date,
     }
   }
 
+  ///////
   // Favs
   let favs_min_str = input_values["favs-min"].trim().toLowerCase();
   let favs_max_str = input_values["favs-max"].trim().toLowerCase();
@@ -1037,6 +1130,9 @@ function filter_route(base_prev_items, base_prev_date,
     }
   }
 
+  ///////////
+  // Sections
+
   // Subjects Check: Wait for sect_subjects.items to load
   if (wait_section(sect_subjects, subjects)) return { wait: true };
 
@@ -1095,9 +1191,19 @@ function filter_route(base_prev_items, base_prev_date,
 
   // 5. Ratios
   const filtered_ratios = filter_ratios(results_prev, results_curr,
-    is_dl_ratios, dl_min_ratio, dl_max_ratio, is_dl_old,
-    is_mo_ratios, mo_min_ratio, mo_max_ratio, is_mo_23,
-    is_wk_ratios, wk_min_ratio, wk_max_ratio);
+
+    is_dl_ratios,        dl_min_ratio,    dl_max_ratio,   is_dl_old,
+       dl_min_ratio_key, dl_min_ratio_kv, dl_min_ratio_str,  dl_min_ratio_no,
+       dl_max_ratio_key, dl_max_ratio_kv, dl_max_ratio_str,  dl_max_ratio_no,
+
+    is_mo_ratios,        mo_min_ratio,    mo_max_ratio,   is_mo_23,
+       mo_min_ratio_key, mo_min_ratio_kv, mo_min_ratio_str,  mo_min_ratio_no,
+       mo_max_ratio_key, mo_max_ratio_kv, mo_max_ratio_str,  mo_max_ratio_no,
+
+    is_wk_ratios,        wk_min_ratio,    wk_max_ratio,
+       wk_min_ratio_key, wk_min_ratio_kv, wk_min_ratio_str,  wk_min_ratio_no,
+       wk_max_ratio_key, wk_max_ratio_kv, wk_max_ratio_str,  wk_max_ratio_no);
+
   if (filtered_ratios.done) {
     results_prev = filtered_ratios.prev;
     results_curr = filtered_ratios.curr;

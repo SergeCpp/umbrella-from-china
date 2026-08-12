@@ -185,7 +185,7 @@ function get_views_prefix(min_str, max_str) {
 function get_ratio(str) {
   if (!str) return [ false, false, null ];
 
-  if (str.indexOf('.') !== -1) {
+  if (str.includes('.')) {
     if ((/^\d{1,6}\.\d{1,3}$/.test(str)) ||
         (       /^\.\d{1,3}$/.test(str)) ||
         (/^\d{1,6}\.$/       .test(str))) return [ true, true,  parseFloat(str)     ];
@@ -212,13 +212,21 @@ function get_ratios(min_str, max_str) {
   return [ (min_ok && max_ok) && (is_min_float || is_max_float), min_ratio, max_ratio ];
 }
 
-// Syntax: (grow or / | fall or \ | same or = | diff or !) [non-negative integer [- non-negative integer] [%]]
-function get_key(str) {
+// str: (grow or / | fall or \ | same or = | diff or !) [non-negative number [- non-negative number] [%]]
+// need_ratio: if true then number can be float or integer, else number must be integer only
+function get_key(str, need_ratio = false) {
   let slc  = 0;
   let name = null;
 
-  const s1 = str.slice(0, 1);
-  const s4 = str.slice(0, 4);
+  let    s = str;
+
+  if (need_ratio) {
+    if (!s.startsWith('.')) return [ str, null ]; // Not a ratio key
+    s  = s.slice(1).trimStart();
+  }
+
+  const s1 = s.slice(0, 1);
+  const s4 = s.slice(0, 4);
 
   if      (s4 === "grow") { slc = 4; name = "grow"; }
   else if (s1 === '/'   ) { slc = 1; name = "grow"; }
@@ -230,14 +238,15 @@ function get_key(str) {
   else if (s1 === '!'   ) { slc = 1; name = "diff"; }
   else return [ str, null ]; // Unknown key
 
-  let s = str.slice(slc).trimStart();
+  s = s.slice(slc).trimStart();
   if (s === "") { // Defaults
+    const   min = need_ratio ? 0.001 : 1;
     switch (name) {
       case "grow":
-      case "fall": return [ name, { min: 1, max: Infinity, is_percent: false } ];
+      case "fall": return [ name, { min, max: Infinity, is_percent: false } ];
 
       case "same":
-      case "diff": return [ name, { tolerance: 0,          is_percent: false } ];
+      case "diff": return [ name, { tolerance: 0,       is_percent: false } ];
 
       default    : return [ str,  null ]; // Unknown key
     }
@@ -255,28 +264,52 @@ function get_key(str) {
       const limits = s.split('-');
       if   (limits.length > 2) return [ str, null ]; // Must be no more than two limits
 
-      const min_str = limits[0];
-      if (!/^\d{1,8}$/.test(min_str)) return [ str, null ]; // Not a valid number
+      const min_str = limits[0].trimEnd();
+      let   min;
 
-      const min = parseInt(min_str, 10);
-      let   max = Infinity;
+      if (need_ratio) {
+        const [min_ok, is_min_float, min_ratio] = get_ratio(min_str);
+        if   (!min_ok) return [ str, null ]; // Not a valid number
+        min  = min_ratio;
+      }
+      else {
+        if   (!/^\d{1,8}$/.test(min_str)) return [ str, null ]; // Not a valid number
+        min  = parseInt(min_str, 10);
+      }
+
+      let max = Infinity;
 
       if (limits.length === 2) {
-        const max_str = limits[1];
-        if (!/^\d{1,8}$/.test(max_str)) return [ str, null ]; // Not a valid number
+        const max_str = limits[1].trimStart();
 
-        max = parseInt(max_str, 10);
+        if (need_ratio) {
+          const [max_ok, is_max_float, max_ratio] = get_ratio(max_str);
+          if   (!max_ok) return [ str, null ]; // Not a valid number
+          max  = max_ratio;
+        }
+        else {
+          if   (!/^\d{1,8}$/.test(max_str)) return [ str, null ]; // Not a valid number
+          max  = parseInt(max_str, 10);
+        }
       }
 
       return [ name, { min, max, is_percent } ];
     }
     case "same":
     case "diff": {
-      if (!/^\d{1,8}$/.test(s)) return [ str, null ]; // Not a valid number
+      let tol;
 
-      const tolerance = parseInt(s, 10);
+      if (need_ratio) {
+        const [tol_ok, is_tol_float, tol_ratio] = get_ratio(s);
+        if   (!tol_ok) return [ str, null ]; // Not a valid number
+        tol  = tol_ratio;
+      }
+      else {
+        if   (!/^\d{1,8}$/.test(s)) return [ str, null ]; // Not a valid number
+        tol  = parseInt(s, 10);
+      }
 
-      return [ name, { tolerance, is_percent } ];
+      return [ name, { tolerance: tol, is_percent } ];
     }
     default:
       return [ str,  null ]; // Unknown key
@@ -285,8 +318,10 @@ function get_key(str) {
   return [ str, null ]; // Some error. Normally never goes here
 }
 
-// Syntax: [[ae for >= | a for > | be for <= | b for < | e for == | ne for !=] non-negative integer]
-function get_num(str, key_other) {
+//  str: [[ae for >= | a for > | be for <= | b for < | e for == | ne for !=] non-negative number]
+//  key_other: key name from other paired field (max for min, min for max)
+// need_ratio: if true then number can be float or integer, else number must be integer only
+function get_num(str, key_other, need_ratio = false) {
   if (!str) return [ "", null ]; // Any number on this side
 
   let   sl = 0;
@@ -303,9 +338,17 @@ function get_num(str, key_other) {
   else if (s2 === "ne") { sl = 2; op = "ne"; }
 
   let s = sl ? str.slice(sl).trimStart() : str;
-  if (!/^\d{1,8}$/.test(s))    return [ str, null ];
-  const num = parseInt(s, 10);
-  if (isNaN(num) || (num < 0)) return [ str, null ];
+//let num;
+
+  if (need_ratio) {
+    const [num_ok, is_num_float, num_ratio] = get_ratio(s);
+    if   (!num_ok) return [ str, null ];
+//  num  = num_ratio;
+  }
+  else {
+    if   (!/^\d{1,8}$/.test(s)) return [ str, null ];
+//  num  = parseInt(s, 10);
+  }
 
   if (!op) { // Defaults
     if      (key_other === "grow") op = "be"; // This side must be <= num to check other for grow from num
@@ -820,9 +863,9 @@ function filter_views_keys_agg(items_prev, items_curr,
         wk_prev_str, wk_curr_str, item => item.views_7);
 
   const all_res = {}; // Intersect all three res
-  for (const identifier in dl_res) {
-    if (mo_res[identifier] && wk_res[identifier]) {
-      all_res[identifier] = true;
+  for    (const identifier  in dl_res) {
+    if  (mo_res[identifier] && wk_res[identifier]) {
+        all_res[identifier] =  true;
     }
   }
 
@@ -887,15 +930,92 @@ function filter_views(items_prev, items_curr,
 
 /* Filter Ratios */
 
-// Filtering by ratios: from min to max
+function filter_ratios_keys(items_prev, items_curr,
+
+  is_dl_ratios,        dl_min_ratio,    dl_max_ratio,   get_dl,
+     dl_min_ratio_key, dl_min_ratio_kv, dl_min_ratio_str,   dl_min_ratio_no,
+     dl_max_ratio_key, dl_max_ratio_kv, dl_max_ratio_str,   dl_max_ratio_no,
+
+  is_mo_ratios,        mo_min_ratio,    mo_max_ratio,   get_mo,
+     mo_min_ratio_key, mo_min_ratio_kv, mo_min_ratio_str,   mo_min_ratio_no,
+     mo_max_ratio_key, mo_max_ratio_kv, mo_max_ratio_str,   mo_max_ratio_no,
+
+  is_wk_ratios,        wk_min_ratio,    wk_max_ratio,
+     wk_min_ratio_key, wk_min_ratio_kv, wk_min_ratio_str,   wk_min_ratio_no,
+     wk_max_ratio_key, wk_max_ratio_kv, wk_max_ratio_str,   wk_max_ratio_no) {
+
+  const is_dl_key = dl_min_ratio_key || dl_max_ratio_key;
+  const is_mo_key = mo_min_ratio_key || mo_max_ratio_key;
+  const is_wk_key = wk_min_ratio_key || wk_max_ratio_key;
+
+  if  (!is_dl_key && !is_mo_key && !is_wk_key) return { done: false };
+
+  const dl_res
+   = is_dl_key
+   ? {} //...
+   : {};//...
+
+  const mo_res
+   = is_mo_key
+   ? {} //...
+   : {};//...
+
+  const wk_res
+   = is_wk_key
+   ? {} //...
+   : {};//...
+
+  const all_res = {}; // Intersect all three res
+  for    (const identifier  in dl_res) {
+    if  (mo_res[identifier] && wk_res[identifier]) {
+        all_res[identifier] =  true;
+    }
+  }
+
+  const results_prev = items_prev.filter(item => all_res[item.identifier]);
+  const results_curr = items_curr.filter(item => all_res[item.identifier]);
+
+  return { done: true, prev: results_prev, curr: results_curr };
+}
+
+// Filtering by ratios: from min to max, or by keys logic
 function filter_ratios(items_prev, items_curr,
-  is_dl_ratios, dl_min_ratio, dl_max_ratio, is_dl_old,
-  is_mo_ratios, mo_min_ratio, mo_max_ratio, is_mo_23,
-  is_wk_ratios, wk_min_ratio, wk_max_ratio) {
-  if (!is_dl_ratios && !is_mo_ratios && !is_wk_ratios) return { done: false };
+
+  is_dl_ratios,        dl_min_ratio,    dl_max_ratio,   is_dl_old,
+     dl_min_ratio_key, dl_min_ratio_kv, dl_min_ratio_str,  dl_min_ratio_no,
+     dl_max_ratio_key, dl_max_ratio_kv, dl_max_ratio_str,  dl_max_ratio_no,
+
+  is_mo_ratios,        mo_min_ratio,    mo_max_ratio,   is_mo_23,
+     mo_min_ratio_key, mo_min_ratio_kv, mo_min_ratio_str,  mo_min_ratio_no,
+     mo_max_ratio_key, mo_max_ratio_kv, mo_max_ratio_str,  mo_max_ratio_no,
+
+  is_wk_ratios,        wk_min_ratio,    wk_max_ratio,
+     wk_min_ratio_key, wk_min_ratio_kv, wk_min_ratio_str,  wk_min_ratio_no,
+     wk_max_ratio_key, wk_max_ratio_kv, wk_max_ratio_str,  wk_max_ratio_no) {
+
+  if (!is_dl_ratios     && !is_mo_ratios     && !is_wk_ratios      &&
+
+      !dl_min_ratio_key && !mo_min_ratio_key && !wk_min_ratio_key  &&
+      !dl_max_ratio_key && !mo_max_ratio_key && !wk_max_ratio_key) return { done: false };
 
   const get_dl = is_dl_old ? (item => item.ratio_old) : (item => item.ratio_all);
   const get_mo = is_mo_23  ? (item => item.ratio_23 ) : (item => item.ratio_30 );
+
+  const ratios_keys = filter_ratios_keys(items_prev, items_curr,
+
+  is_dl_ratios,        dl_min_ratio,    dl_max_ratio,   get_dl,
+     dl_min_ratio_key, dl_min_ratio_kv, dl_min_ratio_str,   dl_min_ratio_no,
+     dl_max_ratio_key, dl_max_ratio_kv, dl_max_ratio_str,   dl_max_ratio_no,
+
+  is_mo_ratios,        mo_min_ratio,    mo_max_ratio,   get_mo,
+     mo_min_ratio_key, mo_min_ratio_kv, mo_min_ratio_str,   mo_min_ratio_no,
+     mo_max_ratio_key, mo_max_ratio_kv, mo_max_ratio_str,   mo_max_ratio_no,
+
+  is_wk_ratios,        wk_min_ratio,    wk_max_ratio,
+     wk_min_ratio_key, wk_min_ratio_kv, wk_min_ratio_str,   wk_min_ratio_no,
+     wk_max_ratio_key, wk_max_ratio_kv, wk_max_ratio_str,   wk_max_ratio_no);
+
+  if (ratios_keys.done) return ratios_keys;
 
   // Range ratios for prev and for curr independently
 
