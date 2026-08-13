@@ -61,7 +61,8 @@ const err_views =
   'Equally ranked items ordered by date archived: min selects newer, max selects older' +
   '</p><p>' +
   'Keys: grow, fall, same, diff (aliases: / \\ = !) switch min/max logic to prev/curr logic<br />' +
-  'Key allows number or range min-max after it, and percent sign % can be after that' +
+  'Key allows number or range min-max after it, and percent sign % can be after that<br />' +
+  'Key prefixed by . (dot) means views/day ratio key: ./ or .grow (at 0.001 by default)' +
   '</p><p>' +
   'Number in prev/curr logic (alone, not after key) allows prefix: a, ae, b, be, e, ne' +
   err_ed +
@@ -805,12 +806,12 @@ function filter_route(base_prev_items, base_prev_date,
   }
 
   // Ratios: number prefixes
-  let dl_min_ratio_str = null;
-  let dl_max_ratio_str = null;
-  let mo_min_ratio_str = null;
-  let mo_max_ratio_str = null;
-  let wk_min_ratio_str = null;
-  let wk_max_ratio_str = null;
+  let dl_min_ratio_str = "";
+  let dl_max_ratio_str = "";
+  let mo_min_ratio_str = "";
+  let mo_max_ratio_str = "";
+  let wk_min_ratio_str = "";
+  let wk_max_ratio_str = "";
 
   let dl_min_ratio_no = null;
   let dl_max_ratio_no = null;

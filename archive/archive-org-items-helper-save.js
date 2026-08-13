@@ -463,12 +463,12 @@ function is_grow(a, b, k) {
   if (k.is_percent) {
     if (b === 0) return (k.min === 0) ? true : false; // Or (a > 0) can be returned for !0 percents from 0
 
-    return ((a >= (b * (1 + k.min / 100))) &&
-            (a <= (b * (1 + k.max / 100))));
+    return (((a + 0.000_001) >= (b * (1 + k.min / 100))) &&
+            ((a - 0.000_001) <= (b * (1 + k.max / 100))));
   }
 
-  return (a >= (b + k.min)) &&
-         (a <= (b + k.max));
+  return ((a + 0.000_001) >= (b + k.min)) &&
+         ((a - 0.000_001) <= (b + k.max));
 }
 
 // Whether a < b by at least k.min to no more than k.max
@@ -487,12 +487,12 @@ function is_fall(a, b, k) {
   if (k.is_percent) {
     if (b === 0) return (k.min === 0) ? (a === 0) : false;
 
-    return ((a <= (b * (1 - k.min / 100))) &&
-            (a >= (b * (1 - k.max / 100))));
+    return (((a - 0.000_001) <= (b * (1 - k.min / 100))) &&
+            ((a + 0.000_001) >= (b * (1 - k.max / 100))));
   }
 
-  return (a <= (b - k.min)) &&
-         (a >= (b - k.max));
+  return ((a - 0.000_001) <= (b - k.min)) &&
+         ((a + 0.000_001) >= (b - k.max));
 }
 
 // Whether a === b with k.tolerance
@@ -501,8 +501,8 @@ function is_fall(a, b, k) {
 //
 function is_same(a, b, k) {
   if (k.is_percent) return (b !== 0) ?
-        (Math.abs(a - b) <= (b * k.tolerance / 100)) : (a === 0);
-  return Math.abs(a - b) <=      k.tolerance;
+        (Math.abs(a - b) <= ((b * k.tolerance / 100) + 0.000_001)) : (a === 0);
+  return Math.abs(a - b) <= (     k.tolerance        + 0.000_001);
 }
 
 // Whether a !== b by more than k.tolerance
@@ -548,7 +548,14 @@ function get_count_map(items, is_key_exp, count, count_op, get_count) {
 
 // Usage: At least one of *_str must be a key
 function filter_count_keys(items_prev, items_curr,
-  prev_str, prev_kv, prev_no, curr_str, curr_kv, curr_no, get_count) {
+  prev_str, prev_kv, prev_no, curr_str, curr_kv, curr_no, get_count, ratios = false) {
+
+  /*
+  alert(
+    "prev_str: " + (prev_str === undefined ? "undefined" : prev_str === null ? "null" : ('"' + prev_str + '"')) + ' ' +
+    "curr_str: " + (curr_str === undefined ? "undefined" : curr_str === null ? "null" : ('"' + curr_str + '"')));
+  */
+
   const is_key     = (s) => ["grow", "fall", "same", "diff"    ].includes(s);
   const is_key_exp = (s) => ["grow", "fall", "same", "diff", ""].includes(s);
 
@@ -561,8 +568,8 @@ function filter_count_keys(items_prev, items_curr,
   const is_prev_diff = (prev_str === "diff");
   const is_curr_diff = (curr_str === "diff");
 
-  const cp = parseInt(prev_str, 10); // NaN for key_exp
-  const cc = parseInt(curr_str, 10); // NaN for key_exp
+  const cp = ratios ? parseFloat(prev_str) : parseInt(prev_str, 10); // NaN for key_exp
+  const cc = ratios ? parseFloat(curr_str) : parseInt(curr_str, 10); // NaN for key_exp
 
   const ncp = isNaN(cp);
   const ncc = isNaN(cc);
@@ -763,9 +770,22 @@ function filter_count_range_agg(items_prev, items_curr,
 }
 
 function filter_count_range_val(items_prev, items_curr,
-  min_str, max_str, get_count) {
-  const min = min_str ? parseInt(min_str, 10) : 0;
-  const max = max_str ? parseInt(max_str, 10) : Infinity;
+  min_str, max_str, get_count,
+  ratios = false, is_ratios = false, min_ratio = null, max_ratio = null) {
+
+  let min;
+  let max;
+
+  if (ratios) {
+    min = (is_ratios && (min_ratio !== null)) ? min_ratio : 0;
+    max = (is_ratios && (max_ratio !== null)) ? max_ratio : Infinity;
+  }
+  else {
+    min = min_str ? parseInt(min_str, 10) : 0;
+    max = max_str ? parseInt(max_str, 10) : Infinity;
+  }
+
+  if ((min === 0) && (max === Infinity)) return null; // Full range shortcut
 
   const count_prev = {};
   const count_curr = {};
@@ -783,6 +803,56 @@ function filter_count_range_val(items_prev, items_curr,
 
     if (((icp >= min) && (icp <= max)) && ((icc >= min) && (icc <= max))) {
       res[identifier] = true;
+    }
+  }
+
+  return res;
+}
+
+// Usage: At least one of *_res must be not null
+function res_intersection(dl_res, mo_res, wk_res) {
+
+  /*
+  alert(
+    "dl_res: " + (dl_res === null ? "null" : Object.keys(dl_res).length) + '\n' +
+    "mo_res: " + (mo_res === null ? "null" : Object.keys(mo_res).length) + '\n' +
+    "wk_res: " + (wk_res === null ? "null" : Object.keys(wk_res).length));
+  */
+
+  let res_1;
+  let res_2;
+  let res_3;
+
+  if        (dl_res) {
+    res_1 =  dl_res;
+    if      (mo_res) { res_2 = mo_res; res_3 = wk_res; }
+    else if (wk_res) { res_2 = wk_res; res_3 = null;   }
+    else
+      return dl_res;
+  }
+  else if   (mo_res) {
+    res_1 =  mo_res;
+    if      (wk_res) { res_2 = wk_res; res_3 = null;   }
+    else
+      return mo_res;
+  }
+  else
+      return wk_res;
+
+  const res = {};
+
+  if   (res_3) {
+    for  (const identifier  in res_1) {
+      if (res_2[identifier] && res_3[identifier]) {
+          res  [identifier] =  true;
+      }
+    }
+  }
+  else {
+    for  (const identifier  in res_1) {
+      if (res_2[identifier]) {
+          res  [identifier] =  true;
+      }
     }
   }
 
@@ -811,7 +881,7 @@ function filter_views_keys_agg(items_prev, items_curr,
   const is_mo_agg = mo_prev_agg || mo_curr_agg;
   const is_wk_agg = wk_prev_agg || wk_curr_agg;
 
-  if (!is_dl_key && !is_mo_key && !is_wk_key &&
+  if (!is_dl_key && !is_mo_key && !is_wk_key  &&
       !is_dl_agg && !is_mo_agg && !is_wk_agg) return { done: false };
 
   const dl_res
@@ -862,12 +932,7 @@ function filter_views_keys_agg(items_prev, items_curr,
       items_curr,
         wk_prev_str, wk_curr_str, item => item.views_7);
 
-  const all_res = {}; // Intersect all three res
-  for    (const identifier  in dl_res) {
-    if  (mo_res[identifier] && wk_res[identifier]) {
-        all_res[identifier] =  true;
-    }
-  }
+  const all_res = res_intersection(dl_res, mo_res, wk_res);
 
   const results_prev = items_prev.filter(item => all_res[item.identifier]);
   const results_curr = items_curr.filter(item => all_res[item.identifier]);
@@ -932,45 +997,67 @@ function filter_views(items_prev, items_curr,
 
 function filter_ratios_keys(items_prev, items_curr,
 
-  is_dl_ratios,        dl_min_ratio,    dl_max_ratio,   get_dl,
-     dl_min_ratio_key, dl_min_ratio_kv, dl_min_ratio_str,   dl_min_ratio_no,
-     dl_max_ratio_key, dl_max_ratio_kv, dl_max_ratio_str,   dl_max_ratio_no,
+  is_dl_ratios,         dl_prev_ratio,    dl_curr_ratio,   get_dl,
+     dl_prev_ratio_key, dl_prev_ratio_kv, dl_prev_ratio_str,   dl_prev_ratio_no,
+     dl_curr_ratio_key, dl_curr_ratio_kv, dl_curr_ratio_str,   dl_curr_ratio_no,
 
-  is_mo_ratios,        mo_min_ratio,    mo_max_ratio,   get_mo,
-     mo_min_ratio_key, mo_min_ratio_kv, mo_min_ratio_str,   mo_min_ratio_no,
-     mo_max_ratio_key, mo_max_ratio_kv, mo_max_ratio_str,   mo_max_ratio_no,
+  is_mo_ratios,         mo_prev_ratio,    mo_curr_ratio,   get_mo,
+     mo_prev_ratio_key, mo_prev_ratio_kv, mo_prev_ratio_str,   mo_prev_ratio_no,
+     mo_curr_ratio_key, mo_curr_ratio_kv, mo_curr_ratio_str,   mo_curr_ratio_no,
 
-  is_wk_ratios,        wk_min_ratio,    wk_max_ratio,
-     wk_min_ratio_key, wk_min_ratio_kv, wk_min_ratio_str,   wk_min_ratio_no,
-     wk_max_ratio_key, wk_max_ratio_kv, wk_max_ratio_str,   wk_max_ratio_no) {
+  is_wk_ratios,         wk_prev_ratio,    wk_curr_ratio,
+     wk_prev_ratio_key, wk_prev_ratio_kv, wk_prev_ratio_str,   wk_prev_ratio_no,
+     wk_curr_ratio_key, wk_curr_ratio_kv, wk_curr_ratio_str,   wk_curr_ratio_no) {
 
-  const is_dl_key = dl_min_ratio_key || dl_max_ratio_key;
-  const is_mo_key = mo_min_ratio_key || mo_max_ratio_key;
-  const is_wk_key = wk_min_ratio_key || wk_max_ratio_key;
+  const is_dl_key = dl_prev_ratio_key || dl_curr_ratio_key;
+  const is_mo_key = mo_prev_ratio_key || mo_curr_ratio_key;
+  const is_wk_key = wk_prev_ratio_key || wk_curr_ratio_key;
 
   if  (!is_dl_key && !is_mo_key && !is_wk_key) return { done: false };
 
   const dl_res
    = is_dl_key
-   ? {} //...
-   : {};//...
+   ? filter_count_keys(
+       items_prev,
+         items_curr,
+           dl_prev_ratio_key || dl_prev_ratio_str, dl_prev_ratio_kv, dl_prev_ratio_no,
+           dl_curr_ratio_key || dl_curr_ratio_str, dl_curr_ratio_kv, dl_curr_ratio_no,
+       get_dl,    "ratios")
+   : filter_count_range_val(
+       items_prev,
+         items_curr,
+           null, null, get_dl,
+             "ratios",  is_dl_ratios, dl_prev_ratio, dl_curr_ratio);
 
   const mo_res
    = is_mo_key
-   ? {} //...
-   : {};//...
+   ? filter_count_keys(
+       items_prev,
+         items_curr,
+           mo_prev_ratio_key || mo_prev_ratio_str, mo_prev_ratio_kv, mo_prev_ratio_no,
+           mo_curr_ratio_key || mo_curr_ratio_str, mo_curr_ratio_kv, mo_curr_ratio_no,
+       get_mo,    "ratios")
+   : filter_count_range_val(
+       items_prev,
+         items_curr,
+           null, null, get_mo,
+             "ratios",  is_mo_ratios, mo_prev_ratio, mo_curr_ratio);
 
   const wk_res
    = is_wk_key
-   ? {} //...
-   : {};//...
+   ? filter_count_keys(
+       items_prev,
+         items_curr,
+           wk_prev_ratio_key || wk_prev_ratio_str, wk_prev_ratio_kv, wk_prev_ratio_no,
+           wk_curr_ratio_key || wk_curr_ratio_str, wk_curr_ratio_kv, wk_curr_ratio_no,
+           item => item.ratio_7, "ratios")
+   : filter_count_range_val(
+       items_prev,
+         items_curr,
+           null, null,  item => item.ratio_7,
+             "ratios",  is_wk_ratios, wk_prev_ratio, wk_curr_ratio);
 
-  const all_res = {}; // Intersect all three res
-  for    (const identifier  in dl_res) {
-    if  (mo_res[identifier] && wk_res[identifier]) {
-        all_res[identifier] =  true;
-    }
-  }
+  const all_res = res_intersection(dl_res, mo_res, wk_res);
 
   const results_prev = items_prev.filter(item => all_res[item.identifier]);
   const results_curr = items_curr.filter(item => all_res[item.identifier]);
