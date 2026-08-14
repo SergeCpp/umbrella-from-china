@@ -15,6 +15,10 @@ function filter_base(stats_items, stats_date,
 
   const filtered_items = [];
 
+//parse: 3.60 ms
+//round: 2.00 ms
+//const _ts = performance.now();
+
   for (let i = 0; i < stats_items.length; i++) {
     const doc = stats_items[i];
 
@@ -112,21 +116,26 @@ function filter_base(stats_items, stats_date,
     const  time_all = calc_date_ms - publicdate_ms;
     const  days_all = Math.round(  time_all / (24 * 60 * 60 * 1000));
     const views_all = downloads;
-    const ratio_all = parseFloat((views_all / days_all).toFixed(3));
+//  const ratio_all = parseFloat((views_all / days_all) . toFixed(3));
+    const ratio_all = Math.round((views_all / days_all) * 1000) / 1000;
 
     const  days_old = days_all - 30;
     if    (days_old < 1) continue; // Item should be at least 31 days of age
     const views_old = views_all - month;
-    const ratio_old = parseFloat((views_old / days_old).toFixed(3));
+//  const ratio_old = parseFloat((views_old / days_old) . toFixed(3));
+    const ratio_old = Math.round((views_old / days_old) * 1000) / 1000;
 
     const views_30  = month;
-    const ratio_30  = parseFloat((views_30  / 30)      .toFixed(3));
+//  const ratio_30  = parseFloat((views_30  / 30)       . toFixed(3));
+    const ratio_30  = Math.round((views_30  / 30)       * 1000) / 1000;
 
     const views_23  = month - week;
-    const ratio_23  = parseFloat((views_23  / 23)      .toFixed(3));
+//  const ratio_23  = parseFloat((views_23  / 23)       . toFixed(3));
+    const ratio_23  = Math.round((views_23  / 23)       * 1000) / 1000;
 
     const views_7   = week;
-    const ratio_7   = parseFloat((views_7   /  7)      .toFixed(3));
+//  const ratio_7   = parseFloat((views_7   /  7)       . toFixed(3));
+    const ratio_7   = Math.round((views_7   /  7)       * 1000) / 1000;
 
     filtered_items.push({
       identifier: identifier_str,
@@ -154,6 +163,8 @@ function filter_base(stats_items, stats_date,
       ratio_7
     });
   }
+
+//alert((performance.now() - _ts).toFixed(2));
 
   return filtered_items;
 }
