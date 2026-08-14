@@ -129,32 +129,16 @@ function filter_date(date, min, max) {
   if (min.base === "year") return (date >= min.min_ms) && (date <= max.max_ms);
 
   // Month-based
-  const same_year  = min.month <= max.month;
+  const  date_month = date.getUTCMonth() + 1;
+  const  date_day   = date.getUTCDate ();
 
-  const date_month = date.getUTCMonth() + 1;
-  const date_day   = date.getUTCDate();
+  const  date_ge_md = min.day   ? (date_month >  min.month) || ((date_month === min.month) && (date_day >= min.day))
+                                :  date_month >= min.month;
+  const  date_le_md = max.day   ? (date_month <  max.month) || ((date_month === max.month) && (date_day <= max.day))
+                                :  date_month <= max.month;
 
-  const date_ge_md = () => (date_month > min.month) || ((date_month === min.month) && (date_day >= min.day));
-  const date_le_md = () => (date_month < max.month) || ((date_month === max.month) && (date_day <= max.day));
-
-  if (min.day && max.day)
-    return same_year ? date_ge_md() && date_le_md()
-                     : date_ge_md() || date_le_md();
-
-  const date_ge_mo = date_month >= min.month;
-  const date_le_mo = date_month <= max.month;
-
-  if (min.day)
-    return same_year ? date_ge_md() && date_le_mo
-                     : date_ge_md() || date_le_mo;
-
-  if (max.day)
-    return same_year ? date_ge_mo   && date_le_md()
-                     : date_ge_mo   || date_le_md();
-
-  // Month only
-    return same_year ? date_ge_mo   && date_le_mo
-                     : date_ge_mo   || date_le_mo;
+  return min.month <= max.month ?  date_ge_md && date_le_md // Same year
+                                :  date_ge_md || date_le_md;
 }
 
 function get_date_range(date_str) {
