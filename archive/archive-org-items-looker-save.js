@@ -136,10 +136,15 @@ function tab_to_inputs(tab) {
     const input = document.getElementById(id);
     if  (!input) return;
 
-    if (input.type === 'checkbox')
+    if (input.type === 'checkbox') {
       input.checked = tab_input_values[tab][id];
-    else
-      input.value   = tab_input_values[tab][id];
+    }
+    else {
+      const value   = tab_input_values[tab][id];
+
+      tab_input_adjust(input, id, value);
+      input.value   =             value;
+    }
   });
 }
 
@@ -189,10 +194,14 @@ function tab_input_changed(input) {
 
   tab_input_mark(tab_active, input, id, changed);
 
-  if (changed)
+  if (changed) {
+    tab_input_adjust(input, id, value);
+
     tab_mark  (tab_active, true);
-  else
+  }
+  else {
     tab_update(tab_active); // Need to check whole tab
+  }
 }
 
 function tab_input_mark(tab, input, id, changed) {
@@ -237,6 +246,23 @@ function tab_inputs_lo(tab) {
 
 function tab_inputs_hi(tab) {
   tab_inputs_mark(tab, true);
+}
+
+// Inputs Size Adjust
+
+const    tab_input_adjustables = ['downloads-min', 'downloads-max', 'month-min', 'month-max', 'week-min', 'week-max'];
+
+// Note: value can be not an actual input.value, see tab_to_inputs
+function tab_input_adjust(input, id, value) {
+  if   (!tab_input_adjustables.includes(id)) return;
+
+  const len  = value.length;
+  const size = len < 10 ? 10
+             : len > 13 ? 15
+             : len +  1;
+
+  if (input.size !== size)
+      input.size =   size;
 }
 
 // Mode

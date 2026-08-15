@@ -314,6 +314,7 @@ input[type="checkbox"].changed.tab-e {
 }
 .in-mid {
   flex: 1;
+  min-width: 0;
 }
 .in-mid-flex {
   display: flex;
