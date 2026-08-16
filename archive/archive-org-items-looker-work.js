@@ -150,13 +150,13 @@ function tab_to_inputs(tab) {
 
 function tab_to_initial(tab) {
   for (const id in tab_input_values[""]) {
-        tab_input_values[tab][id]  =  tab_input_values[""][id];
+         tab_input_values[tab][id]  =  tab_input_values[""][id];
   }
 }
 
 function tab_is_changed(tab) {
   for (const id in tab_input_values[""]) {
-    if (tab_input_values[tab][id] !== tab_input_values[""][id]) return true;
+    if  (tab_input_values[tab][id] !== tab_input_values[""][id]) return true;
   }
 
   return false;
@@ -250,19 +250,31 @@ function tab_inputs_hi(tab) {
 
 // Inputs Size Adjust
 
-const    tab_input_adjustables = ['downloads-min', 'downloads-max', 'month-min', 'month-max', 'week-min', 'week-max'];
+const    tab_input_adjustables     = ['downloads-min', 'downloads-max', 'month-min', 'month-max', 'week-min', 'week-max'];
+const    tab_input_adjustables_lim = {};
 
-// Note: value can be not an actual input.value, see tab_to_inputs
-function tab_input_adjust(input, id, value) {
+// Note: value can be not   an input  actual value, see tab_to_inputs
+function tab_input_adjust     (input,   id,  value) {
   if   (!tab_input_adjustables.includes(id)) return;
 
-  const len  = value.length;
-  const size = len < 10 ? 10
-             : len > 13 ? 15
-             : len +  1;
+  let    lim  = tab_input_adjustables_lim[id];
+  if   (!lim) {
+         lim  = { min: input.size, max: input.maxLength };
 
-  if (input.size !== size)
+         tab_input_adjustables_lim[id] = lim;
+  }
+
+  const  min  = lim.min;
+  const  max  = lim.max;
+
+  const  len  = value .length;
+  const  size = len <= min ? min
+              : len >= max ? max
+              : len;
+
+  if (input.size !== size) {
       input.size =   size;
+  }
 }
 
 // Mode
