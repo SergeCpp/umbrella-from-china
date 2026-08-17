@@ -290,10 +290,29 @@ input[type="checkbox"].changed.tab-e {
   margin: 0.3em auto;
   max-width: 105ch;
 }
+.in-wrap-flex {
+  column-gap: 0.3em;
+  display: flex;
+}
 .in-wide {
   box-sizing: border-box;
   font-family: monospace;
   width: 100%;
+}
+.in-wide-flex {
+  flex: 1;
+}
+.in-info-flex {
+  box-sizing: border-box;
+  display: none;
+  flex: 0 1 auto;
+  font-family: monospace;
+  max-width: 27%; /* For in-info-flex to shrink proportionally with in-wide-flex */
+  min-width: 0;
+  pointer-events: none;
+}
+.in-wide-flex:not(:focus):not(:placeholder-shown) + .in-info-flex {
+  display: block;
 }
 
 .in-grid { /* 522px: 1 col, 523px..787px: 2 cols, 788px: 3 cols */
