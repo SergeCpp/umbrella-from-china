@@ -137,13 +137,13 @@ function tab_to_inputs(tab) {
     if  (!input) return;
 
     if (input.type === 'checkbox') {
-      input.checked = tab_input_values[tab][id];
+      input.checked =   tab_input_values[tab][id];
     }
     else {
-      const value   = tab_input_values[tab][id];
+      const value   =   tab_input_values[tab][id];
+      input.value   =             value;
 
       tab_input_adjust(input, id, value);
-      input.value   =             value;
     }
   });
 }
@@ -192,15 +192,14 @@ function tab_input_changed(input) {
   const value   = input.type === 'checkbox' ? input.checked : input.value;
   const changed = value !== tab_input_values[""][id];
 
-  tab_input_mark(tab_active, input, id, changed);
+  tab_input_mark  (tab_active, input, id, changed);
+  tab_input_adjust(            input, id, value  ); // Need for not changed also
 
   if (changed) {
-    tab_input_adjust(input, id, value);
-
-    tab_mark  (tab_active, true);
+      tab_mark    (tab_active, true);
   }
   else {
-    tab_update(tab_active); // Need to check whole tab
+      tab_update  (tab_active); // Need to check whole tab
   }
 }
 
@@ -250,27 +249,32 @@ function tab_inputs_hi(tab) {
 
 // Inputs Size Adjust
 
-const    tab_input_adjustables     = ['downloads-min', 'downloads-max', 'month-min', 'month-max', 'week-min', 'week-max'];
+const    tab_input_adjustables     = [];
 const    tab_input_adjustables_lim = {};
 
-// Note: value can be not   an input  actual value, see tab_to_inputs
-function tab_input_adjust     (input,   id,  value) {
+function tab_input_adjustables_init() {
+  tab_input_ids.forEach(id => {
+    const input = document.getElementById(id);
+    if  (!input) return;
+
+    if   (input.hasAttribute('adjustable')) {
+      tab_input_adjustables.push(id);
+      tab_input_adjustables_lim [id] = { min: input.size, max: input.maxLength };
+    }
+  });
+}
+
+function tab_input_adjust(input, id, value) {
+  if   (!tab_input_adjustables.length) tab_input_adjustables_init();
+
   if   (!tab_input_adjustables.includes(id)) return;
 
-  let    lim  = tab_input_adjustables_lim[id];
-  if   (!lim) {
-         lim  = { min: input.size, max: input.maxLength };
+  const { min, max } = tab_input_adjustables_lim[id];
 
-         tab_input_adjustables_lim[id] = lim;
-  }
-
-  const  min  = lim.min;
-  const  max  = lim.max;
-
-  const  len  = value .length;
-  const  size = len <= min ? min
-              : len >= max ? max
-              : len;
+  const len  = value .length;
+  const size = len <= min ? min
+             : len >= max ? max
+             : len;
 
   if (input.size !== size) {
       input.size =   size;
