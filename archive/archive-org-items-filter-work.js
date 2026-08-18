@@ -654,7 +654,8 @@ function input_allowed_favs(input) {
 function filter_route(base_prev_items, base_prev_date,
                       base_curr_items, base_curr_date,
   sect_subjects, sect_descriptions,
-  input_values) {
+  input_values,
+  no_wait = false) {
 
   // Archived Range
   const archived_min_str = input_values["archived-min"].trim();
@@ -1123,11 +1124,13 @@ function filter_route(base_prev_items, base_prev_date,
   ///////////
   // Sections
 
-  // Subjects Check: Wait for sect_subjects.items to load
-  if (wait_section(sect_subjects, subjects)) return { wait: true };
+  if (!no_wait) {
+    // Subjects Check: Wait for sect_subjects.items to load
+    if (wait_section(sect_subjects, subjects)) return { wait: true };
 
-  // Descriptions Check: Wait for sect_descriptions.items to load
-  if (wait_section(sect_descriptions, description)) return { wait: true };
+    // Descriptions Check: Wait for sect_descriptions.items to load
+    if (wait_section(sect_descriptions, description)) return { wait: true };
+  }
 
   /////////////////////////////////////////////////////////////////
   // 1. Checking and Initial Filtering Items, and Calculating Stats

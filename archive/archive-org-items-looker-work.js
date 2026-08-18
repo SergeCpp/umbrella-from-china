@@ -343,14 +343,12 @@ function tab_input_info(input) {
 
   if (vi.value === value) return;
 
-  vi.value = value;
-  vi.info  = 'Length:' + value.length.toString().padStart(3, ' ');//...
+  const  values = { ...tab_input_values[""], [id]: value };
 
-//const values = { ...tab_input_values[""], [id]: value };
+  vi.value      = value;
+  vi.info       = get_filter_info(values);
 
-//alert('Updating info_el for ' + id);//...
-
-  info_el.value = vi.info;//...
+  info_el.value = vi.info;
 }
 
 // Mode

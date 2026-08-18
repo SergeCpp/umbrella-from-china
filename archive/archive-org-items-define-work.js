@@ -182,6 +182,39 @@ function filter_by_marks(prev, curr, marks, mode) {
   return { prev: results_prev, curr: results_curr };
 }
 
+/* Filter Info */
+
+function get_filter_info(input_values) {
+  const main_prev_date  =  date_main("prev");
+  const main_prev_items = items_main("prev");
+
+  const main_curr_date  =  date_main("curr");
+  const main_curr_items = items_main("curr");
+
+  const results_filter  = filter_route(main_prev_items, main_prev_date,
+                                       main_curr_items, main_curr_date,
+    get_section("subjects"), get_section("descriptions"),
+    input_values,
+    "no-wait");
+
+  const error = results_filter.error;
+  if   (error) {
+    if (error.includes("characters" )) return "Characters";
+    if (error.includes("Parentheses")) return "Parens: ()";
+    if (error.includes("XML"        )) return "Not loaded";
+  }
+
+  if (!results_filter.done) return "Error";
+
+  const  prev_cnt = results_filter.prev.length;
+  const  curr_cnt = results_filter.curr.length;
+
+  return prev_cnt === curr_cnt
+       ? prev_cnt.toString().padStart(10, ' ')
+       : prev_cnt.toString().padStart( 4, ' ') + " / " +
+         curr_cnt.toString().padStart( 3, ' ');
+}
+
 /* Filter */
 
 let      process_du_filter = 0; // ms
@@ -202,9 +235,9 @@ function process_filter() {
   const main_curr_items = items_main("curr");
 
   // Filtering
-  const  inputs_filter = tab_filter_inputs();
-  const results_filter = filter_route(main_prev_items, main_prev_date,
-                                      main_curr_items, main_curr_date,
+  const  inputs_filter  = tab_filter_inputs();
+  const results_filter  = filter_route(main_prev_items, main_prev_date,
+                                       main_curr_items, main_curr_date,
     get_section("subjects"), get_section("descriptions"),
     inputs_filter.values);
 
