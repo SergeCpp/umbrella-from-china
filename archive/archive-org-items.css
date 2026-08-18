@@ -291,6 +291,7 @@ input[type="checkbox"].changed.tab-e {
   max-width: 105ch;
 }
 .in-wrap-flex {
+  align-items: center;
   column-gap: 0.3em;
   display: flex;
 }

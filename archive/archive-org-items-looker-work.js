@@ -9,19 +9,21 @@ const input_ids =
 // Initialization
 
 function init_controls() {
-  // Add Enter to inputs
   input_ids.forEach(id => {
     const input = document.getElementById(id);
-    if  (!input) return;
+    if  (!input)  return;
 
     input.oninput = () => tab_input_changed(input);
 
     input.onkeyup = event => {
       if (event.key === 'Enter') process_filter();
     };
+
+    if (tab_input_info_el(id)) {
+      input.onblur = () => tab_input_info(input);
+    }
   });
 
-  // Add click and Enter/Space to button
   const button = document.getElementById('process-filter');
   if   (button) {
     button.onclick = process_filter;
@@ -78,12 +80,12 @@ function init_tabs() {
     tab_input_change_marked[id] = false;
   }
 
-  tab_activate('c');
+  tab_infos_init();
+  tab_activate  ('c');
 
-  // Add click and Enter/Space/Arrows to tabs
   tab_names.forEach((tab, index) => {
     const button = document.getElementById('tab-' + tab);
-    if  (!button) return;
+    if  (!button)  return;
 
     button.onclick = event => tab_click(tab, event.shiftKey, event.ctrlKey, event.altKey);
 
@@ -182,7 +184,8 @@ function tab_clear(tab, shift) {
     tab_to_initial(tab);
   }
 
-  tab_mark(tab, false);
+  tab_infos_clr(tab);
+  tab_mark     (tab, false);
 }
 
 // Changed Inputs Marking
@@ -247,7 +250,7 @@ function tab_inputs_hi(tab) {
   tab_inputs_mark(tab, true);
 }
 
-// Inputs Size Adjust
+// Input Size Adjust
 
 const    tab_input_adjustables     = [];
 const    tab_input_adjustables_lim = {};
@@ -279,6 +282,75 @@ function tab_input_adjust(input, id, value) {
   if (input.size !== size) {
       input.size =   size;
   }
+}
+
+// Input Info
+
+const    tab_infos = {}; // [tab] = { [id] = { value, info } };
+
+function tab_infos_init() {
+  for (const tab of tab_names) {
+    tab_infos[tab] = {};
+
+    for (const id in tab_input_values[""]) {
+      if (tab_input_info_el(id)) {
+        tab_infos[tab][id] = { value: tab_input_values[""][id], info: "" };
+      }
+    }
+  }
+}
+
+function tab_infos_clr(tab) {
+  const infos = tab_infos[tab];
+
+  for (const id in infos) {
+    infos[id].value = "";
+    infos[id].info  = "";
+
+    if (tab === tab_active) {
+      const info_el = tab_input_info_el(id);
+      if   (info_el)  info_el.value = "";
+    }
+  }
+}
+
+function tab_infos_set(tab) {
+  const infos = tab_infos[tab];
+
+  for (const id in infos) {
+    const info_el = tab_input_info_el(id);
+    if   (info_el)  info_el.value = infos[id].info;
+  }
+}
+
+function tab_input_info_el(id) {
+  return document.getElementById('info-' + id);
+}
+
+function tab_input_info(input) {
+  const id      = input.id;
+  const value   = input.value;
+  const vi      = tab_infos[tab_active][id];
+  const info_el = tab_input_info_el(id);
+  if  (!info_el)  return;
+
+  if (!value) {
+    vi.value      = "";
+    vi.info       = "";
+    info_el.value = "";
+    return;
+  }
+
+  if (vi.value === value) return;
+
+  vi.value = value;
+  vi.info  = 'Length:' + value.length.toString().padStart(3, ' ');//...
+
+//const values = { ...tab_input_values[""], [id]: value };
+
+//alert('Updating info_el for ' + id);//...
+
+  info_el.value = vi.info;//...
 }
 
 // Mode
@@ -373,6 +445,7 @@ function tab_update(tab_new) {
     tab_inputs_lo(tab_active);
     tab_to_inputs(tab_new);
     tab_inputs_hi(tab_new);
+    tab_infos_set(tab_new);
   }
 }
 
