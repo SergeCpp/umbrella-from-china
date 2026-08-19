@@ -20,7 +20,7 @@ function init_controls() {
     };
 
     if (tab_input_info_el(id)) {
-      input.onblur = () => tab_input_info(input);
+      input.onblur = () => tab_input_info_upd(input);
     }
   });
 
@@ -46,14 +46,15 @@ function init_controls() {
 
 /* Tabbed Input */
 
-const tab_names        = ['a', 'b', 'c', 'd', 'e'];
-let   tab_active       = null;
+const tab_names          = ['a', 'b', 'c', 'd', 'e'];
+let   tab_active         = null;
 
-const tab_input_ids    = input_ids;
-const tab_input_values = {}; // [tab] = { values }; [""] = { defaults };
+const tab_input_ids      = input_ids;
+const tab_input_values   = {}; // [tab] = { [id] = value }; [""] = { [id] = default_value };
+const tab_input_defaults = {}; //                                    [id] = default_value
 
-const tab_filter_modes = ["OR", "AND", "DIFF", "MULTI", "NONE", "ONE", "TWO", "THREE", "FOUR"];
-const tab_mode         = {   // [tab] = "" / "Filter"; ['c'] see tab_filter_modes
+const tab_filter_modes   = ["OR", "AND", "DIFF", "MULTI", "NONE", "ONE", "TWO", "THREE", "FOUR"];
+const tab_mode           = {   // [tab] = "" / "Filter"; ['c'] see tab_filter_modes
   a: "",
   b: "",
   c: "OR",
@@ -67,7 +68,7 @@ const tab_input_change_marked = {}; // [id]  = tab  / false
 // Initialization
 
 function init_tabs() {
-  tab_input_values[""] = {};
+  tab_input_values[""] = tab_input_defaults;
   tab_to_values   ("");
 
   for (const tab of tab_names) {
@@ -76,7 +77,7 @@ function init_tabs() {
     tab_change_marked[tab] = false;
   }
 
-  for (const id in tab_input_values[""]) {
+  for (const id in tab_input_defaults) {
     tab_input_change_marked[id] = false;
   }
 
@@ -151,14 +152,14 @@ function tab_to_inputs(tab) {
 }
 
 function tab_to_initial(tab) {
-  for (const id in tab_input_values[""]) {
-         tab_input_values[tab][id]  =  tab_input_values[""][id];
+  for (const id in tab_input_defaults) {
+         tab_input_values[tab][id]  =  tab_input_defaults[id];
   }
 }
 
 function tab_is_changed(tab) {
-  for (const id in tab_input_values[""]) {
-    if  (tab_input_values[tab][id] !== tab_input_values[""][id]) return true;
+  for (const id in tab_input_defaults) {
+    if  (tab_input_values[tab][id] !== tab_input_defaults[id]) return true;
   }
 
   return false;
@@ -193,7 +194,7 @@ function tab_clear(tab, shift) {
 function tab_input_changed(input) {
   const id      = input.id;
   const value   = input.type === 'checkbox' ? input.checked : input.value;
-  const changed = value !== tab_input_values[""][id];
+  const changed = value !== tab_input_defaults[id];
 
   tab_input_mark  (tab_active, input, id, changed);
   tab_input_adjust(            input, id, value  ); // Need for not changed also
@@ -232,8 +233,8 @@ function tab_input_mark(tab, input, id, changed) {
 
 // What to do with changed inputs: mark / unmark
 function tab_inputs_mark(tab, mark) {
-  for (const id in tab_input_values[""]) {
-    if (tab_input_values[tab][id] === tab_input_values[""][id]) continue;
+  for (const id in tab_input_defaults) {
+    if (tab_input_values[tab][id] === tab_input_defaults[id]) continue;
 
     const input = document.getElementById(id);
     if   (input) {
@@ -291,11 +292,13 @@ const    tab_infos = {}; // [tab] = { [id] = { value, info } };
 function tab_infos_init() {
   for (const tab of tab_names) {
     tab_infos[tab] = {};
+  }
 
-    for (const id in tab_input_values[""]) {
-      if (tab_input_info_el(id)) {
-        tab_infos[tab][id] = { value: tab_input_values[""][id], info: "" };
-      }
+  for (const id in tab_input_defaults) {
+    if (!tab_input_info_el(id)) continue;
+
+    for (const tab of tab_names) {
+      tab_infos[tab][id] = { value: tab_input_defaults[id], info: "" };
     }
   }
 }
@@ -327,28 +330,28 @@ function tab_input_info_el(id) {
   return document.getElementById('info-' + id);
 }
 
-function tab_input_info(input) {
+function tab_input_info_upd(input) {
   const id      = input.id;
   const value   = input.value;
-  const vi      = tab_infos[tab_active][id];
+  const vinfo   = tab_infos[tab_active][id];
   const info_el = tab_input_info_el(id);
   if  (!info_el)  return;
 
   if (!value) {
-    vi.value      = "";
-    vi.info       = "";
+    vinfo.value   = "";
+    vinfo.info    = "";
     info_el.value = "";
     return;
   }
 
-  if (vi.value === value) return;
+  if (vinfo.value === value) return;
 
-  const  values = { ...tab_input_values[""], [id]: value };
+  const values  = { ...tab_input_defaults, [id]: value };
 
-  vi.value      = value;
-  vi.info       = get_filter_info(values);
+  vinfo.value   = value;
+  vinfo.info    = get_filter_info(values);
 
-  info_el.value = vi.info;
+  info_el.value = vinfo.info;
 }
 
 // Mode
