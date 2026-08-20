@@ -73,7 +73,7 @@ function init_tabs() {
 
   for (const tab of tab_names) {
     tab_input_values [tab] = {};
-    tab_to_initial   (tab);
+    tab_to_defaults  (tab);
     tab_change_marked[tab] = false;
   }
 
@@ -126,7 +126,7 @@ function init_tabs() {
 function tab_to_values(tab) {
   tab_input_ids.forEach(id => {
     const input = document.getElementById(id);
-    if  (!input) return;
+    if  (!input)  return;
 
     const value = input.type === 'checkbox' ? input.checked : input.value;
 
@@ -137,7 +137,7 @@ function tab_to_values(tab) {
 function tab_to_inputs(tab) {
   tab_input_ids.forEach(id => {
     const input = document.getElementById(id);
-    if  (!input) return;
+    if  (!input)  return;
 
     if (input.type === 'checkbox') {
       input.checked =   tab_input_values[tab][id];
@@ -151,13 +151,13 @@ function tab_to_inputs(tab) {
   });
 }
 
-function tab_to_initial(tab) {
+function tab_to_defaults(tab) {
   for (const id in tab_input_defaults) {
          tab_input_values[tab][id]  =  tab_input_defaults[id];
   }
 }
 
-function tab_is_changed(tab) {
+function tab_is_changed (tab) {
   for (const id in tab_input_defaults) {
     if  (tab_input_values[tab][id] !== tab_input_defaults[id]) return true;
   }
@@ -176,13 +176,13 @@ function tab_clear(tab, shift) {
   }
 
   if (tab === tab_active) {
-    tab_to_values (tab);
-    tab_inputs_lo (tab);
+    tab_to_values  (tab);
+    tab_inputs_lo  (tab);
 
-    tab_to_initial(tab);
-    tab_to_inputs (tab);
+    tab_to_defaults(tab);
+    tab_to_inputs  (tab);
   } else {
-    tab_to_initial(tab);
+    tab_to_defaults(tab);
   }
 
   tab_infos_clr(tab);
@@ -259,7 +259,7 @@ const    tab_input_adjustables_lim = {};
 function tab_input_adjustables_init() {
   tab_input_ids.forEach(id => {
     const input = document.getElementById(id);
-    if  (!input) return;
+    if  (!input)  return;
 
     if   (input.hasAttribute('adjustable')) {
       tab_input_adjustables.push(id);
@@ -395,7 +395,7 @@ function tab_mark_filters_count() {
 
 function tab_set_text(tab, text) {
   const button = document.getElementById('tab-' + tab);
-  if  (!button) return;
+  if  (!button)  return;
 
   const text_cur = button.textContent;
   if   (text_cur === text) return;
@@ -441,13 +441,13 @@ function tab_activate(tab_to, shift = false) {
   if   (tab_from) {
     const button_from = document.getElementById('tab-' + tab_from);
     if   (button_from) {
-      button_from.classList.remove('active');
+          button_from . classList.remove('active');
     }
   }
 
   const button_to = document.getElementById('tab-' + tab_to);
   if   (button_to) {
-    button_to.classList.add('active');
+        button_to . classList.add('active');
   }
 
   tab_active = tab_to;
@@ -459,7 +459,7 @@ function tab_mark(tab, changed) {
   if (tab_change_marked[tab] === changed) return;
 
   const button = document.getElementById('tab-' + tab);
-  if  (!button) return;
+  if  (!button)  return;
 
   if (changed)
     button.classList.add   ('changed');
