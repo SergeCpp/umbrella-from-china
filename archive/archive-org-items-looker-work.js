@@ -313,11 +313,16 @@ function tab_infos_clr(tab) {
   const infos = tab_infos[tab];
 
   for (const id in infos) {
-    infos[id].value = "";
-    infos[id].info  = "";
-
-    if (tab === tab_active) tab_infos_el[id].value = "";
+    infos[id].value     = "";
+    tab_info_set(tab, id, "");
   }
+}
+
+function tab_info_set(tab, id, info) {
+  if (tab_infos[tab][id].info === info) return;
+      tab_infos[tab][id].info  =  info;
+
+  if (tab === tab_active) tab_infos_el[id].value = info;
 }
 
 function tab_infos_set(tab) {
@@ -336,12 +341,14 @@ function tab_infos_upd(prev_date, curr_date) {
   tab_infos_curr_date = curr_date;
 
   for (const tab of tab_names) {
-    for (const id in tab_infos[tab]) {
-      tab_infos[tab][id].info = tab_input_info_calc(id, tab_infos[tab][id].value);
+    const infos = tab_infos[tab];
+
+    for (const id in infos) {
+      const info_calc = tab_input_info_calc(id, infos[id].value);
+
+      tab_info_set(tab, id, info_calc);
     }
   }
-
-  tab_infos_set(tab_active);
 }
 
 function tab_input_info_el(id) {
