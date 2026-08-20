@@ -234,6 +234,9 @@ function process_filter() {
   const main_curr_date  =  date_main("curr");
   const main_curr_items = items_main("curr");
 
+  // Input Info Updating
+  tab_infos_upd(main_prev_date, main_curr_date);
+
   // Filtering
   const  inputs_filter  = tab_filter_inputs();
   const results_filter  = filter_route(main_prev_items, main_prev_date,

@@ -269,8 +269,7 @@ function tab_input_adjustables_init() {
 }
 
 function tab_input_adjust(input, id, value) {
-  if   (!tab_input_adjustables.length) tab_input_adjustables_init();
-
+  if   (!tab_input_adjustables.length)       tab_input_adjustables_init();
   if   (!tab_input_adjustables.includes(id)) return;
 
   const { min, max } = tab_input_adjustables_lim[id];
@@ -287,7 +286,11 @@ function tab_input_adjust(input, id, value) {
 
 // Input Info
 
-const    tab_infos = {}; // [tab] = { [id] = { value, info } };
+let      tab_infos_prev_date = null;
+let      tab_infos_curr_date = null;
+
+const    tab_infos_el        = {}; //           [id] =          info_el;
+const    tab_infos           = {}; // [tab] = { [id] = { value, info     } };
 
 function tab_infos_init() {
   for (const tab of tab_names) {
@@ -295,7 +298,10 @@ function tab_infos_init() {
   }
 
   for (const id in tab_input_defaults) {
-    if (!tab_input_info_el(id)) continue;
+    const info_el = tab_input_info_el(id);
+    if  (!info_el)  continue;
+
+    tab_infos_el[id] = info_el;
 
     for (const tab of tab_names) {
       tab_infos[tab][id] = { value: tab_input_defaults[id], info: "" };
@@ -310,10 +316,7 @@ function tab_infos_clr(tab) {
     infos[id].value = "";
     infos[id].info  = "";
 
-    if (tab === tab_active) {
-      const info_el = tab_input_info_el(id);
-      if   (info_el)  info_el.value = "";
-    }
+    if (tab === tab_active) tab_infos_el[id].value = "";
   }
 }
 
@@ -321,21 +324,45 @@ function tab_infos_set(tab) {
   const infos = tab_infos[tab];
 
   for (const id in infos) {
-    const info_el = tab_input_info_el(id);
-    if   (info_el)  info_el.value = infos[id].info;
+    tab_infos_el[id].value = infos[id].info;
   }
+}
+
+function tab_infos_upd(prev_date, curr_date) {
+  if ((tab_infos_prev_date === prev_date)  &&
+      (tab_infos_curr_date === curr_date)) return;
+
+  tab_infos_prev_date = prev_date;
+  tab_infos_curr_date = curr_date;
+
+  for (const tab of tab_names) {
+    for (const id in tab_infos[tab]) {
+      tab_infos[tab][id].info = tab_input_info_calc(id, tab_infos[tab][id].value);
+    }
+  }
+
+  tab_infos_set(tab_active);
 }
 
 function tab_input_info_el(id) {
   return document.getElementById('info-' + id);
 }
 
+function tab_input_info_calc(id, value) {
+  if   (!value) return "";
+
+  const  values = { ...tab_input_defaults, [id]: value };
+
+  const  info   = get_filter_info(values);
+
+  return info;
+}
+
 function tab_input_info_upd(input) {
   const id      = input.id;
   const value   = input.value;
   const vinfo   = tab_infos[tab_active][id];
-  const info_el = tab_input_info_el(id);
-  if  (!info_el)  return;
+  const info_el = tab_infos_el[id];
 
   if (!value) {
     vinfo.value   = "";
@@ -346,12 +373,11 @@ function tab_input_info_upd(input) {
 
   if (vinfo.value === value) return;
 
-  const values  = { ...tab_input_defaults, [id]: value };
+  const info    = tab_input_info_calc(id, value);
 
   vinfo.value   = value;
-  vinfo.info    = get_filter_info(values);
-
-  info_el.value = vinfo.info;
+  vinfo.info    = info;
+  info_el.value = info;
 }
 
 // Mode
