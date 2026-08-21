@@ -211,8 +211,8 @@ function get_filter_info(input_values) {
 
   return prev_cnt === curr_cnt
        ? prev_cnt.toString().padStart(10, ' ')
-       : prev_cnt.toString().padStart( 4, ' ') + " / " +
-         curr_cnt.toString().padStart( 3, ' ');
+       : prev_cnt.toString().padStart( 4, ' ') + " /" +
+         curr_cnt.toString().padStart( 4, ' ');
 }
 
 /* Filter */

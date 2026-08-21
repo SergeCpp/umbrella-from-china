@@ -20,7 +20,8 @@ function init_controls() {
     };
 
     if (tab_input_info_el(id)) {
-      input.onblur = () => tab_input_info_upd(input);
+      input.onfocus = ()      => tab_input_info_focus(id);
+      input.onblur  = (event) => tab_input_info_blur (input, event.relatedTarget);
     }
   });
 
@@ -289,8 +290,8 @@ function tab_input_adjust(input, id, value) {
 let      tab_infos_prev_date = null;
 let      tab_infos_curr_date = null;
 
-const    tab_infos_el        = {}; //           [id] =          info_el;
-const    tab_infos           = {}; // [tab] = { [id] = { value, info     } };
+const    tab_infos_el        = {}; //           [id] = info_el;
+const    tab_infos           = {}; // [tab] = { [id] = info };
 
 function tab_infos_init() {
   for (const tab of tab_names) {
@@ -304,32 +305,45 @@ function tab_infos_init() {
     tab_infos_el[id] = info_el;
 
     for (const tab of tab_names) {
-      tab_infos[tab][id] = { value: tab_input_defaults[id], info: "" };
+      tab_infos[tab][id] = "";
     }
   }
+}
+
+function tab_info_to_el(id, info) {
+  const info_el = tab_infos_el[id];
+
+  info_el.value         = info;
+  info_el.style.display = info ? 'block' : 'none';
+}
+
+function tab_info_set(tab, id, info) {
+  tab_infos[tab][id] = info;
+
+  if (tab === tab_active) {
+    tab_info_to_el(id, info);
+  }
+}
+
+function tab_info_upd(tab, id) {
+  const info = tab_input_info_calc(tab, id);
+
+  tab_info_set(tab, id, info);
 }
 
 function tab_infos_clr(tab) {
   const infos = tab_infos[tab];
 
   for (const id in infos) {
-    infos[id].value     = "";
     tab_info_set(tab, id, "");
   }
-}
-
-function tab_info_set(tab, id, info) {
-  if (tab_infos[tab][id].info === info) return;
-      tab_infos[tab][id].info  =  info;
-
-  if (tab === tab_active) tab_infos_el[id].value = info;
 }
 
 function tab_infos_set(tab) {
   const infos = tab_infos[tab];
 
   for (const id in infos) {
-    tab_infos_el[id].value = infos[id].info;
+    tab_info_to_el(id, infos[id]);
   }
 }
 
@@ -344,19 +358,14 @@ function tab_infos_upd(prev_date, curr_date) {
     const infos = tab_infos[tab];
 
     for (const id in infos) {
-      const info_calc = tab_input_info_calc(id, infos[id].value);
-
-      tab_info_set(tab, id, info_calc);
+      tab_info_upd(tab, id);
     }
   }
 }
 
-function tab_input_info_el(id) {
-  return document.getElementById('info-' + id);
-}
-
-function tab_input_info_calc(id, value) {
-  if   (!value) return "";
+function tab_input_info_calc(tab, id) {
+  const  value  = tab_input_values[tab][id];
+  if   (!value)   return "";
 
   const  values = { ...tab_input_defaults, [id]: value };
 
@@ -365,26 +374,28 @@ function tab_input_info_calc(id, value) {
   return info;
 }
 
-function tab_input_info_upd(input) {
-  const id      = input.id;
-  const value   = input.value;
-  const vinfo   = tab_infos[tab_active][id];
-  const info_el = tab_infos_el[id];
+function tab_input_info_el(id) {
+  return document.getElementById('info-' + id);
+}
 
-  if (!value) {
-    vinfo.value   = "";
-    vinfo.info    = "";
-    info_el.value = "";
-    return;
-  }
+function tab_input_info_focus(id) {
+  tab_infos_el[id].style.display = 'none';
+}
 
-  if (vinfo.value === value) return;
+function tab_input_info_blur(input, target) {
+  const id    = input.id;
+  const value = input.value;
 
-  const info    = tab_input_info_calc(id, value);
+  tab_input_values[tab_active][id] = value;
 
-  vinfo.value   = value;
-  vinfo.info    = info;
-  info_el.value = info;
+  let timeout = 10;
+
+  if (target)
+    if (target.classList.contains('tab-btn'))
+      if (target.id !== ('tab-' + tab_active))
+        timeout = 200;
+
+  setTimeout(tab_info_upd, timeout, tab_active, id);
 }
 
 // Mode

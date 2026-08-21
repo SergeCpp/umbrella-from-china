@@ -312,9 +312,6 @@ input[type="checkbox"].changed.tab-e {
   min-width: 0;
   pointer-events: none;
 }
-.in-wide-flex:not(:focus):not(:placeholder-shown) + .in-info-flex {
-  display: block;
-}
 
 .in-grid { /* 522px: 1 col, 523px..787px: 2 cols, 788px: 3 cols */
   display: grid;
