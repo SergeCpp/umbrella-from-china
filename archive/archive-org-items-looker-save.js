@@ -254,34 +254,36 @@ function tab_inputs_hi(tab) {
 
 // Input Size Adjust
 
-const    tab_input_adjustables     = [];
-const    tab_input_adjustables_lim = {};
+let      tab_input_adjustables_range = null;
 
-function tab_input_adjustables_init() {
+function tab_input_adjustables_init    () {
+         tab_input_adjustables_range = {};
+
   tab_input_ids.forEach(id => {
     const input = document.getElementById(id);
     if  (!input)  return;
 
     if   (input.hasAttribute('adjustable')) {
-      tab_input_adjustables.push(id);
-      tab_input_adjustables_lim [id] = { min: input.size, max: input.maxLength };
+      tab_input_adjustables_range[id] = { min: input.size, size: input.size, max: input.maxLength };
     }
   });
 }
 
 function tab_input_adjust(input, id, value) {
-  if   (!tab_input_adjustables.length)       tab_input_adjustables_init();
-  if   (!tab_input_adjustables.includes(id)) return;
+  if   (!tab_input_adjustables_range)
+         tab_input_adjustables_init();
 
-  const { min, max } = tab_input_adjustables_lim[id];
+  const range  = tab_input_adjustables_range[id];
+  if  (!range)   return;
 
-  const len  = value .length;
-  const size = len <= min ? min
-             : len >= max ? max
-             : len;
+  const length = value.length;
+  const size   =       length <= range.min ? range.min
+               :       length >= range.max ? range.max
+               :       length;
 
-  if (input.size !== size) {
-      input.size =   size;
+  if   (range.size !== size) {
+        range.size =   size;
+        input.size =   size;
   }
 }
 
@@ -318,7 +320,10 @@ function tab_info_to_el(id, info) {
 }
 
 function tab_info_set(tab, id, info) {
-  tab_infos[tab][id] = info;
+  const infos = tab_infos[tab];
+
+  if (infos[id] === info) return;
+      infos[id]  =  info;
 
   if (tab === tab_active) {
     tab_info_to_el(id, info);
