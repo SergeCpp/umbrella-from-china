@@ -264,7 +264,7 @@ function tab_input_adjustables_init    () {
     if  (!input)  return;
 
     if   (input.hasAttribute('adjustable')) {
-      tab_input_adjustables_range[id] = { min: input.size, max: input.maxLength };
+      tab_input_adjustables_range[id] = { min: input.size, size: input.size, max: input.maxLength };
     }
   });
 }
@@ -273,21 +273,26 @@ function tab_input_adjust(input, id, value) {
   if   (!tab_input_adjustables_range)
          tab_input_adjustables_init();
 
-  const range = tab_input_adjustables_range[id];
-  if  (!range)  return;
+  const range  = tab_input_adjustables_range[id];
+  if  (!range)   return;
 
-  input.size  = value.length <= range.min ? range.min
-              : value.length >= range.max ? range.max
-              : value.length;
+  const length = value.length;
+  const size   =       length < range.min ? range.min
+               :       length > range.max ? range.max
+               :       length;
+
+  if   (range.size !== size) {
+        range.size =   size;
+        input.size =   size;
+  }
 }
 
 // Input Info
 
-let      tab_infos_prev_date = null;
-let      tab_infos_curr_date = null;
+let      tab_infos_upd_key = null;
 
-const    tab_infos_el        = {}; //           [id] = info_el;
-const    tab_infos           = {}; // [tab] = { [id] = info };
+const    tab_infos_el      = {}; //           [id] = info_el;
+const    tab_infos         = {}; // [tab] = { [id] = info };
 
 function tab_infos_init() {
   for (const tab of tab_names) {
@@ -343,12 +348,12 @@ function tab_infos_set(tab) {
   }
 }
 
-function tab_infos_upd(prev_date, curr_date) {
-  if ((tab_infos_prev_date === prev_date)  &&
-      (tab_infos_curr_date === curr_date)) return;
+function tab_infos_upd        (upd_key) {
+  if   (!tab_infos_upd_key)
+         tab_infos_upd_key  =  upd_key; // For no update on page load (all are "")
 
-  tab_infos_prev_date = prev_date;
-  tab_infos_curr_date = curr_date;
+  if    (tab_infos_upd_key === upd_key) return;
+         tab_infos_upd_key  =  upd_key;
 
   for (const tab of tab_names) {
     const infos = tab_infos[tab];

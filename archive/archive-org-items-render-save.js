@@ -77,7 +77,7 @@ function init_render() {
 
 /* Render */
 
-let      page_just_loaded  = true;
+let        is_first_render = true;
 const    process_du_render = { pre: 0, dom: 0 }; // ms
 
 function time_render() {
@@ -858,8 +858,9 @@ function render_results_dom(
   process_du_render.dom = performance.now() - time_0;
   process_timings();
 
-  if (page_just_loaded) {
-      page_just_loaded = false;
+  if (is_first_render) {
+      is_first_render = false;
+
       document.querySelector("footer").classList.add("show");
   }
 

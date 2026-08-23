@@ -651,10 +651,16 @@ function input_allowed_favs(input) {
 
 /* Filter Route */
 
-function filter_route(base_prev_items, base_prev_date,
-                      base_curr_items, base_curr_date,
-  sect_subjects, sect_descriptions,
+function filter_route(
+
+  base_prev_items, base_prev_date,
+  base_curr_items, base_curr_date,
+
+  sect_subjects,
+  sect_descriptions,
+
   input_values,
+
   no_wait = false) {
 
   // Archived Range
@@ -1123,7 +1129,10 @@ function filter_route(base_prev_items, base_prev_date,
 
   ///////////
   // Sections
-
+  //
+  // After last input_values check
+  // Before first filter
+  //
   if (!no_wait) {
     // Subjects Check: Wait for sect_subjects.items to load
     if (wait_section(sect_subjects, subjects)) return { wait: true };

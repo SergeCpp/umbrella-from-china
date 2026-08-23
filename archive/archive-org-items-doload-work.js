@@ -427,9 +427,9 @@ const stat_descriptions = {       // Section
 function wait_section(section, section_terms) {
   if (!section_terms || !section_terms.length) return false; // No or empty filter for section
 
-  if (section.items)               return false; // Section is already loaded
-  if (section.items === undefined) return false; // Section cannot be  loaded
-  if (section.items !== null)      return false; // Error, must be null here
+  if  (section.items)               return false; // Section is already loaded
+  if  (section.items === undefined) return false; // Section is loading, or cannot be loaded
+  if  (section.items !== null)      return false; // Error, must be null here
 
   load_section(section);
 
@@ -470,11 +470,21 @@ function load_section(section) {
     });
 }
 
+function is_section_loaded    (name) {
+   const section = get_section(name);
+
+  return section       !== null &&
+         section.items !== null &&
+         section.items !== undefined;
+}
+
 function get_section(name) {
   switch (name) {
     case "subjects"    : return stat_subjects;
     case "descriptions": return stat_descriptions;
   }
+
+  return null; // Unknown section
 }
 
 function time_section(name, metric) {

@@ -191,10 +191,16 @@ function get_filter_info(input_values) {
   const main_curr_date  =  date_main("curr");
   const main_curr_items = items_main("curr");
 
-  const results_filter  = filter_route(main_prev_items, main_prev_date,
-                                       main_curr_items, main_curr_date,
-    get_section("subjects"), get_section("descriptions"),
+  const results_filter  = filter_route(
+
+    main_prev_items, main_prev_date,
+    main_curr_items, main_curr_date,
+
+    get_section("subjects"    ),
+    get_section("descriptions"),
+
     input_values,
+
     "no-wait");
 
   const error = results_filter.error;
@@ -235,13 +241,23 @@ function process_filter() {
   const main_curr_items = items_main("curr");
 
   // Input Info Updating
-  tab_infos_upd(main_prev_date, main_curr_date);
+  const         upd_key =  main_prev_date +
+                           main_curr_date +
+
+                           is_section_loaded("subjects"    ) +
+                           is_section_loaded("descriptions");
+  tab_infos_upd(upd_key);
 
   // Filtering
   const  inputs_filter  = tab_filter_inputs();
-  const results_filter  = filter_route(main_prev_items, main_prev_date,
-                                       main_curr_items, main_curr_date,
-    get_section("subjects"), get_section("descriptions"),
+  const results_filter  = filter_route(
+
+    main_prev_items, main_prev_date,
+    main_curr_items, main_curr_date,
+
+    get_section("subjects"    ),
+    get_section("descriptions"),
+
     inputs_filter.values);
 
   if (results_filter.error) {
@@ -280,9 +296,14 @@ function process_filter() {
       marking_base = { prev: base_prev, curr: base_curr };
     }
 
-    const marks = filter_route(marking_base.prev, main_prev_date,
-                               marking_base.curr, main_curr_date,
-      get_section("subjects"), get_section("descriptions"),
+    const marks = filter_route(
+
+      marking_base.prev, main_prev_date,
+      marking_base.curr, main_curr_date,
+
+      get_section("subjects"    ),
+      get_section("descriptions"),
+
       inputs.values);
 
     if (marks.error) {
