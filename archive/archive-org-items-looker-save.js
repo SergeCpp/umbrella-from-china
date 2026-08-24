@@ -273,17 +273,17 @@ function tab_input_adjust(input, id, value) {
   if   (!tab_input_adjustables_range)
          tab_input_adjustables_init();
 
-  const range  = tab_input_adjustables_range[id];
-  if  (!range)   return;
+  const  range  = tab_input_adjustables_range[id];
+  if   (!range)   return;
 
-  const length = value.length;
-  const size   =       length < range.min ? range.min
-               :       length > range.max ? range.max
-               :       length;
+  const  length = value.length;
+  const  size   =       length < range.min ? range.min
+                :       length > range.max ? range.max
+                :       length;
 
-  if   (range.size !== size) {
-        range.size =   size;
-        input.size =   size;
+  if    (range.size !== size) {
+         range.size =   size;
+         input.size =   size;
   }
 }
 
