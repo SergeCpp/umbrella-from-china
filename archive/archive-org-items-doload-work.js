@@ -408,7 +408,7 @@ const stat_subjects     = {       // Section
   name_data : "subject",          // Name for arr/str data node
   name_error: "Subjects",         // Name for error messages
   text_error: null,               // Error message
-  items     : null,               // null / {} / undefined
+  items     : null,               // null / {} / undefined (as shared marker of loading/error)
   du_load   : 0,
   du_parse  : 0
 };
@@ -428,7 +428,7 @@ function wait_section(section, section_terms) {
   if (!section_terms || !section_terms.length) return false; // No or empty filter for section
 
   if  (section.items)               return false; // Section is already loaded
-  if  (section.items === undefined) return false; // Section is loading, or cannot be loaded
+  if  (section.items === undefined) return false; // Section is loading, or cannot be loaded (error)
   if  (section.items !== null)      return false; // Error, must be null here
 
   load_section(section);
@@ -438,7 +438,7 @@ function wait_section(section, section_terms) {
 
 function load_section(section) {
   if (section.items !== null) return;
-      section.items = undefined;
+      section.items =   undefined; // Set undefined as marker of loading
 
   const time_0    = performance.now();
   const container = document.getElementById("results");
@@ -463,7 +463,7 @@ function load_section(section) {
       section.du_parse = (time_2 - time_1); //
     })
     .catch(() => {
-      section.items = undefined;
+      section.items = undefined; // Set undefined as marker of error
     })
     .finally(() => {
       setTimeout(process_filter, 0);
