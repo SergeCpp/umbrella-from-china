@@ -611,8 +611,11 @@ function date_change_menu(what, half_view = 3) {
   };
 
   const opt_date = (opt, date) => {
-    opt.className   = 'menu-opt' + (date === d_prev ? ' menu-opt-prev' : "")
-                                 + (date === d_curr ? ' menu-opt-curr' : "");
+    opt.className   = 'menu-opt'
+                    + (is_date_loading(date) ? ' menu-opt-loading' : "")
+                    + (is_date_cached (date) ? ' menu-opt-cached'  : "")
+                    + (date === d_prev       ? ' menu-opt-prev'    : "")
+                    + (date === d_curr       ? ' menu-opt-curr'    : "");
     opt.textContent =  date;
   };
 

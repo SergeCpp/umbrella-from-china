@@ -537,13 +537,21 @@ let   sf_cache_misses = 0;    // Non-negative integer
 let   sf_du_load      = 0;    // Duration of load
 let   sf_du_parse     = 0;    // Duration of parse
 
+/* Dates */
+
+function   is_date_cached(date) {
+  return stat_file_cache [date] !== undefined;
+}
+
+/* Main */
+
 function chk_main(what, date) {
   switch (what) {
     case "prev": return (stat_prev_date === date) && (stat_prev_items !== null);
     case "curr": return (stat_curr_date === date) && (stat_curr_items !== null);
-
-    default    : return false; // Unknown what
   }
+
+  return false; // Unknown what
 }
 
 function set_main(what, date, items) {
@@ -661,7 +669,7 @@ function load_stat_file(date) {
       if (!response.ok) throw new Error(date + " &mdash; XML file not found");
       return response.text();
     })
-//  .then(text => new Promise(resolve => setTimeout(resolve, 10000, text))) // Testing
+//  .then(text => new Promise(resolve => setTimeout(resolve, 15000, text))) // For testing
     .then(text => {
       const time_1 = performance.now();
       const stats  = parse_stat_text(text);
@@ -690,9 +698,13 @@ function load_stat_file(date) {
     });
 }
 
-let load_stat_loading  = {};
-let load_stat_recent   = { prev: null, curr: null };
-let load_stat_focus_id = null;
+const load_stat_loading  = {};
+const load_stat_recent   = { prev: null, curr: null };
+let   load_stat_focus_id = null;
+
+function   is_date_loading(date) {
+  return load_stat_loading[date];
+}
 
 function load_stat(date, what, focus_id = null) {
   if (!stat_file_dates.includes(date)) return;
@@ -709,7 +721,7 @@ function load_stat(date, what, focus_id = null) {
   sf_du_parse = 0; //
 
   load_stat_file(date)
-//  .then(loaded_items => new Promise(resolve => setTimeout(resolve, 10000, loaded_items))) // Testing
+//  .then(loaded_items => new Promise(resolve => setTimeout(resolve, 15000, loaded_items))) // For testing
     .then(loaded_items => {
       delete load_stat_loading[date];
 
