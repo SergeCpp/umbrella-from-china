@@ -543,9 +543,6 @@ function date_change_menu(what, half_view = 3) {
   const menu_old = document.getElementById('date-change-menu');
   if   (menu_old)  menu_old.remove_ex('skip-focus');
 
-  const d_prev   = date_main("prev");
-  const d_curr   = date_main("curr");
-
   const m_dates  = dates_main();
   const i_date   = m_dates.indexOf(date_main(what));
   const i_min    = 0;
@@ -576,7 +573,7 @@ function date_change_menu(what, half_view = 3) {
     document.removeEventListener('click', menu.outside_click);
     menu.remove();
 
-    if   (btn_other && document.body.contains(btn_other)) btn_other.style.pointerEvents = 'auto';
+    if   (btn_other && btn_other.isConnected) btn_other.style.pointerEvents = 'auto';
     if  (skip_focus)   return;
 
     // Page can be reloaded here, so need to find the caller button
@@ -590,11 +587,36 @@ function date_change_menu(what, half_view = 3) {
 
   // Defer adding until all currently pending event handlers (menu creation click) have finished
   setTimeout(() => {
-    if (menu && document.body.contains(menu)) document.addEventListener('click', menu.outside_click);
+    if (menu && menu.isConnected) document.addEventListener('click', menu.outside_click);
   }, 0);
 
   menu.onkeydown = event => {
     if (event.key === 'Escape') menu.remove_ex();
+  };
+
+  const menu_update = opts => {
+    if (!opts[0].isConnected) return;
+
+    for (let i = 0; i < opts.length; i++) {
+      opt_update(opts[i]);
+    }
+
+    setTimeout(menu_update, 400, opts);
+  };
+
+  const opt_update = opt => {
+    const date = opt.textContent;
+
+    opt.className = 'menu-opt'
+                  + (is_date_loading(date)      ? ' menu-opt-loading' : "")
+                  + (is_date_cached (date)      ? ' menu-opt-cached'  : "")
+                  + (date === date_main("prev") ? ' menu-opt-prev'    : "")
+                  + (date === date_main("curr") ? ' menu-opt-curr'    : "");
+  };
+
+  const opt_todate = (opt, date) => {
+    opt.textContent = date;
+    opt_update(opt);
   };
 
   const menu_shift = (shift, opts) => {
@@ -606,21 +628,12 @@ function date_change_menu(what, half_view = 3) {
     b_end -= shift;
 
     for (let i = i_beg; i <= i_end; i++) {
-      opt_date(opts[i - i_beg], m_dates[i]);
+      opt_todate(opts[i - i_beg], m_dates[i]);
     }
   };
 
-  const opt_date = (opt, date) => {
-    opt.className   = 'menu-opt'
-                    + (is_date_loading(date) ? ' menu-opt-loading' : "")
-                    + (is_date_cached (date) ? ' menu-opt-cached'  : "")
-                    + (date === d_prev       ? ' menu-opt-prev'    : "")
-                    + (date === d_curr       ? ' menu-opt-curr'    : "");
-    opt.textContent =  date;
-  };
-
   const init_opt = (opt, date) => {
-    opt_date(opt, date);
+    opt_todate(opt, date);
     opt.setAttribute('role', 'menuitem');
     opt.tabIndex = 0;
 
@@ -746,6 +759,8 @@ function date_change_menu(what, half_view = 3) {
 
     if   (is_overlap) btn_other.style.pointerEvents = 'none';
   }
+
+  setTimeout(menu_update, 400, Array.from(menu.children));
 }
 
 // EOF
