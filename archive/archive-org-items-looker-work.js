@@ -543,27 +543,31 @@ function date_change_menu(what, half_view = 3) {
   const menu_old = document.getElementById('date-change-menu');
   if   (menu_old)  menu_old.remove_ex('skip-focus');
 
-  const m_dates = dates_main();
-  const i_date  = m_dates.indexOf(date_main(what));
-  const i_min   = 0;
-  const i_max   = m_dates.length - 1;
-  let   i_beg   = i_date - half_view;
-  let   i_end   = i_date + half_view;
+  const d_prev   = date_main("prev");
+  const d_curr   = date_main("curr");
 
-  if (i_beg < i_min) {
-      i_end = Math.min(i_end + (i_min - i_beg), i_max);
-      i_beg = i_min; }
+  const m_dates  = dates_main();
+  const i_date   = m_dates.indexOf(date_main(what));
+  const i_min    = 0;
+  const i_max    = m_dates.length - 1;
+  let   i_beg    = i_date - half_view;
+  let   i_end    = i_date + half_view;
 
-  if (i_end > i_max) {
-      i_beg = Math.max(i_beg - (i_end - i_max), i_min);
-      i_end = i_max; }
+  if   (i_beg < i_min) {
+        i_end = Math.min(i_end + (i_min - i_beg), i_max);
+        i_beg = i_min; }
 
-  let a_beg =         i_beg; // Above beg
-  let b_end = i_max - i_end; // Below end
+  if   (i_end > i_max) {
+        i_beg = Math.max(i_beg - (i_end - i_max), i_min);
+        i_end = i_max; }
+
+  let   a_beg =         i_beg; // Above beg
+  let   b_end = i_max - i_end; // Below end
 
   const btn_other  = document.getElementById('span-btn-' + (what === "prev" ? "curr" : "prev"));
   const btn_caller = document.getElementById('span-btn-' +  what);
   const menu       = document.createElement ('div');
+
   menu.className   =             'menu';
   menu.id          = 'date-change-menu';
   menu.setAttribute ('role',     'menu');
@@ -602,17 +606,22 @@ function date_change_menu(what, half_view = 3) {
     b_end -= shift;
 
     for (let i = i_beg; i <= i_end; i++) {
-      opts[i - i_beg].textContent = m_dates[i];
+      opt_date(opts[i - i_beg], m_dates[i]);
     }
   };
 
-  const init_opt = (opt, date) => {
-    opt.className    = 'menu-opt';
-    opt.setAttribute  ('role', 'menuitem');
-    opt.tabIndex     = 0;
-    opt.textContent  = date;
+  const opt_date = (opt, date) => {
+    opt.className   = 'menu-opt' + (date === d_prev ? ' menu-opt-prev' : "")
+                                 + (date === d_curr ? ' menu-opt-curr' : "");
+    opt.textContent =  date;
+  };
 
-    opt.onclick = () => {
+  const init_opt = (opt, date) => {
+    opt_date(opt, date);
+    opt.setAttribute('role', 'menuitem');
+    opt.tabIndex = 0;
+
+    opt.onclick  = () => {
       menu.remove_ex();
 
       const focus_id = 'span-btn-' + what; // To save in load_stat if needed
