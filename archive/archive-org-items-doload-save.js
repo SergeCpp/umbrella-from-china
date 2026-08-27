@@ -703,7 +703,7 @@ const load_stat_recent   = { prev: null, curr: null };
 let   load_stat_focus_id = null;
 
 function   is_date_loading(date) {
-  return load_stat_loading[date];
+  return load_stat_loading[date] !== undefined;
 }
 
 function load_stat(date, what, focus_id = null) {

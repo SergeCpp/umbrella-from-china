@@ -601,17 +601,17 @@ function date_change_menu(what, half_view = 3) {
       opt_update(opts[i]);
     }
 
-    setTimeout(menu_update, 400, opts);
+    setTimeout(menu_update, 300, opts);
   };
 
   const opt_update = opt => {
     const date = opt.textContent;
 
-    opt.className = 'menu-opt'
-                  + (is_date_loading(date)      ? ' menu-opt-loading' : "")
-                  + (is_date_cached (date)      ? ' menu-opt-cached'  : "")
-                  + (date === date_main("prev") ? ' menu-opt-prev'    : "")
-                  + (date === date_main("curr") ? ' menu-opt-curr'    : "");
+    opt.classList.toggle('menu-opt-loading', is_date_loading(date));
+    opt.classList.toggle('menu-opt-cached',  is_date_cached (date));
+
+    opt.classList.toggle('menu-opt-prev', date === date_main("prev"));
+    opt.classList.toggle('menu-opt-curr', date === date_main("curr"));
   };
 
   const opt_todate = (opt, date) => {
@@ -633,11 +633,12 @@ function date_change_menu(what, half_view = 3) {
   };
 
   const init_opt = (opt, date) => {
-    opt_todate(opt, date);
+    opt.className   = 'menu-opt';
+    opt.tabIndex    = 0;
+    opt.textContent = date;
     opt.setAttribute('role', 'menuitem');
-    opt.tabIndex = 0;
 
-    opt.onclick  = () => {
+    opt.onclick = () => {
       menu.remove_ex();
 
       const focus_id = 'span-btn-' + what; // To save in load_stat if needed
@@ -662,7 +663,6 @@ function date_change_menu(what, half_view = 3) {
       if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab'].includes(key)) return;
       event.preventDefault();
 
-      const menu = opt.parentElement;
       const opts = Array.from(menu.children);
       const size = opts.length;
       const curr = opts.indexOf(opt);
@@ -748,7 +748,10 @@ function date_change_menu(what, half_view = 3) {
   menu.style.left       = m_left + 'px';
   menu.style.top        = m_top  + 'px';
   menu.style.visibility = 'visible';
-  menu.children [i_date - i_beg] .focus();
+
+  const opts = Array.from(menu.children);
+  menu_update(opts);
+  opts[i_date - i_beg].focus();
 
   if (btn_other) {
     const b_rect = btn_other.getBoundingClientRect();
@@ -759,8 +762,6 @@ function date_change_menu(what, half_view = 3) {
 
     if   (is_overlap) btn_other.style.pointerEvents = 'none';
   }
-
-  setTimeout(menu_update, 400, Array.from(menu.children));
 }
 
 // EOF
