@@ -335,6 +335,9 @@ function process_filter() {
     results_filter_curr = filtered_by_marks.curr;
   }
 
+  // Mark all inputs as filtered
+  tab_filtered_mark();
+
   // Filtering and Marking Duration
   process_du_filter = performance.now() - time_0;
 

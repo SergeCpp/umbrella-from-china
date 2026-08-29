@@ -16,7 +16,7 @@ function init_controls() {
     input.oninput = () => tab_input_changed(input);
 
     input.onkeyup = event => {
-      if (event.key === 'Enter') process_filter();
+      if (event.key === 'Enter') tab_action();
     };
 
     if (tab_input_info_el(id)) {
@@ -27,7 +27,7 @@ function init_controls() {
 
   const button = document.getElementById('process-filter');
   if   (button) {
-    button.onclick = process_filter;
+    button.onclick = tab_action;
 
     button.onkeyup = event => {
       const key = event.key;
@@ -53,6 +53,7 @@ let   tab_active         = null;
 const tab_input_ids      = input_ids;
 const tab_input_values   = {}; // [tab] = { [id] = value }; [""] = { [id] = default_value };
 const tab_input_defaults = {}; //                                    [id] = default_value
+const tab_input_filtered = {}; // [tab] = { [id] = value };
 
 const tab_filter_modes   = ["OR", "AND", "DIFF", "MULTI", "NONE", "ONE", "TWO", "THREE", "FOUR"];
 const tab_mode           = {   // [tab] = "" / "Filter"; ['c'] see tab_filter_modes
@@ -63,9 +64,6 @@ const tab_mode           = {   // [tab] = "" / "Filter"; ['c'] see tab_filter_mo
   e: ""
 };
 
-const tab_change_marked       = {}; // [tab] = true / false
-const tab_input_change_marked = {}; // [id]  = tab  / false
-
 // Initialization
 
 function init_tabs() {
@@ -73,17 +71,14 @@ function init_tabs() {
   tab_to_values   ("");
 
   for (const tab of tab_names) {
-    tab_input_values [tab] = {};
-    tab_to_defaults  (tab);
-    tab_change_marked[tab] = false;
+    tab_input_values  [tab] = {};
+    tab_input_filtered[tab] = {};
+    tab_to_defaults   (tab);
   }
 
-  for (const id in tab_input_defaults) {
-    tab_input_change_marked[id] = false;
-  }
-
+  tab_filtered_upd();
   tab_infos_init();
-  tab_activate  ('c');
+  tab_activate('c');
 
   tab_names.forEach((tab, index) => {
     const button = document.getElementById('tab-' + tab);
@@ -166,6 +161,45 @@ function tab_is_changed (tab) {
   return false;
 }
 
+function tab_is_filtered(tab) {
+  for (const id in tab_input_defaults) {
+    if  (tab_input_values[tab][id] !== tab_input_filtered[tab][id]) return false;
+  }
+
+  return true;
+}
+
+// Filtered
+
+function tab_filtered_upd() {
+  for (const tab of tab_names) {
+    for (const id in tab_input_defaults) {
+      tab_input_filtered[tab][id] = tab_input_values[tab][id];
+    }
+  }
+}
+
+function tab_filtered_mark() {
+  tab_filtered_upd();
+
+  for (const id in tab_input_defaults) {
+    const input = document.getElementById(id);
+    if  (!input)  continue;
+
+    const  changed = tab_input_values[tab_active][id] !== tab_input_defaults[id];
+    const filtered = true;
+
+    tab_input_mark(tab_active, input, changed, filtered);
+  }
+
+  for (const tab of tab_names) {
+    const  changed = tab_is_changed (tab);
+    const filtered = tab_is_filtered(tab);
+
+    tab_mark(tab, changed, filtered);
+  }
+}
+
 // Clear
 
 function tab_clear(tab, shift) {
@@ -187,59 +221,52 @@ function tab_clear(tab, shift) {
   }
 
   tab_infos_clr(tab);
-  tab_mark     (tab, false);
+  tab_mark     (tab, false, true);
 }
 
 // Changed Inputs Marking
 
 function tab_input_changed(input) {
-  const id      = input.id;
-  const value   = input.type === 'checkbox' ? input.checked : input.value;
-  const changed = value !== tab_input_defaults[id];
+  const id       = input.id;
+  const value    = input.type === 'checkbox' ? input.checked : input.value;
 
-  tab_input_mark  (tab_active, input, id, changed);
-  tab_input_adjust(            input, id, value  ); // Need for not changed also
+  tab_input_values[tab_active][id] = value;
 
-  if (changed) {
-      tab_mark    (tab_active, true);
+  const  changed = value !== tab_input_defaults            [id];
+  const filtered = value === tab_input_filtered[tab_active][id];
+
+  tab_input_mark  (tab_active, input, changed, filtered);
+  tab_input_adjust(input, id, value); // Need for not changed also
+
+  if (changed || !filtered) {
+    tab_mark  (tab_active, changed, filtered);
   }
   else {
-      tab_update  (tab_active); // Need to check whole tab
+    tab_update(tab_active); // Need to check whole tab
   }
 }
 
-function tab_input_mark(tab, input, id, changed) {
-  const marked = tab_input_change_marked[id];
-
-  if (changed) {
-    if (marked === tab) return;
-
-    if (marked) { // Other tab. Normally never goes here
-      input.classList.remove('tab-' + marked);
-      input.classList.add   ('tab-' + tab);
-      tab_input_change_marked[id]   = tab;
-      return;
-    }
-  } else { // Not changed
-    if (!marked) return;
-  }
-
-  if (changed)
+function tab_input_mark(tab, input, changed, filtered) {
+  if (changed || !filtered)
     input.classList.add   ('changed', 'tab-' + tab);
   else
     input.classList.remove('changed', 'tab-' + tab);
 
-  tab_input_change_marked[id] = changed ? tab : false;
+  input.classList.toggle('not-filtered', !filtered);
 }
 
-// What to do with changed inputs: mark / unmark
+// What to do with changed/not-filtered inputs: mark / unmark
 function tab_inputs_mark(tab, mark) {
   for (const id in tab_input_defaults) {
-    if (tab_input_values[tab][id] === tab_input_defaults[id]) continue;
-
     const input = document.getElementById(id);
-    if   (input) {
-      tab_input_mark(tab, input, id, mark);
+    if  (!input)  continue;
+
+    const  changed = tab_input_values[tab][id] !== tab_input_defaults     [id];
+    const filtered = tab_input_values[tab][id] === tab_input_filtered[tab][id];
+
+    if (changed || !filtered) {
+      if (mark) tab_input_mark(tab, input, changed, filtered);
+      else      tab_input_mark(tab, input, false,   true    );
     }
   }
 }
@@ -350,7 +377,7 @@ function tab_infos_set(tab) {
 
 function tab_infos_upd        (upd_key) {
   if   (!tab_infos_upd_key)
-         tab_infos_upd_key  =  upd_key; // For no update on page load (all are "")
+       { tab_infos_upd_key  =  upd_key; return; } // No update on page load (all are "")
 
   if    (tab_infos_upd_key === upd_key) return;
          tab_infos_upd_key  =  upd_key;
@@ -386,8 +413,6 @@ function tab_input_info_focus(id) {
 function tab_input_info_blur(input, target) {
   const id    = input.id;
   const value = input.value;
-
-  tab_input_values[tab_active][id] = value;
 
   let timeout = 10;
 
@@ -467,25 +492,19 @@ function tab_activate(tab_to, shift = false) {
   if (shift) tab_toggle(tab_to, shift);
 }
 
-function tab_mark(tab, changed) {
-  if (tab_change_marked[tab] === changed) return;
-
+function tab_mark(tab, changed, filtered) {
   const button = document.getElementById('tab-' + tab);
   if  (!button)  return;
 
-  if (changed)
-    button.classList.add   ('changed');
-  else
-    button.classList.remove('changed');
-
-  tab_change_marked[tab] = changed;
+  button.classList.toggle(     'changed', changed || !filtered);
+  button.classList.toggle('not-filtered',            !filtered);
 }
 
 // Transition
 
 function tab_update(tab_new) {
   tab_to_values(tab_active);
-  tab_mark     (tab_active, tab_is_changed(tab_active));
+  tab_mark     (tab_active, tab_is_changed(tab_active), tab_is_filtered(tab_active));
 
   if (tab_new !== tab_active) {
     tab_inputs_lo(tab_active);
@@ -500,7 +519,7 @@ function tab_switch(tab, shift) {
   tab_activate(tab, shift);
 }
 
-// Click Handler
+// Click Handlers
 
 function tab_click(tab, shift, ctrl, alt) {
   if (alt)
@@ -509,6 +528,12 @@ function tab_click(tab, shift, ctrl, alt) {
     tab_toggle(tab, shift);
   else
     tab_switch(tab, shift);
+}
+
+function tab_action() {
+  tab_update(tab_active);
+
+  process_filter(); // Go out
 }
 
 // Interface
