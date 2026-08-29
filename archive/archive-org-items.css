@@ -242,6 +242,11 @@ input[type="text"].changed.tab-e:hover {
   border-color: hsl(0.91turn 75% 80%);
 }
 
+input[type="text"].default.not-filtered,
+input[type="text"].default.not-filtered:hover {
+  background-color: white;
+}
+
 input[type="checkbox"].changed.tab-a {
   accent-color: hsl(0.07turn 75% 71%);
 }

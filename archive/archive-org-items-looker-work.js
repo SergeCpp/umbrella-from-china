@@ -216,12 +216,13 @@ function tab_clear(tab, shift) {
 
     tab_to_defaults(tab);
     tab_to_inputs  (tab);
+    tab_inputs_hi  (tab);
   } else {
     tab_to_defaults(tab);
   }
 
   tab_infos_clr(tab);
-  tab_mark     (tab, false, true);
+  tab_mark     (tab, false, tab_is_filtered(tab));
 }
 
 // Changed Inputs Marking
@@ -252,6 +253,7 @@ function tab_input_mark(tab, input, changed, filtered) {
   else
     input.classList.remove('changed', 'tab-' + tab);
 
+  input.classList.toggle(     'default',  !changed);
   input.classList.toggle('not-filtered', !filtered);
 }
 
@@ -508,8 +510,10 @@ function tab_update(tab_new) {
 
   if (tab_new !== tab_active) {
     tab_inputs_lo(tab_active);
+
     tab_to_inputs(tab_new);
     tab_inputs_hi(tab_new);
+
     tab_infos_set(tab_new);
   }
 }
