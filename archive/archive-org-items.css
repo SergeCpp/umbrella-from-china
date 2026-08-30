@@ -359,6 +359,52 @@ input[type="checkbox"].changed.tab-e {
   accent-color: hsl(0.91turn 75% 74%);
 }
 
+input[type="checkbox"].not-filtered {
+  outline-offset: 2px;
+  outline-style: dashed;
+  outline-width: 2px;
+}
+
+input[type="checkbox"].not-filtered.tab-a {
+  outline-color: hsl(0.07turn 75% 74%);
+}
+input[type="checkbox"].not-filtered.tab-b {
+  outline-color: hsl(0.42turn 75% 62%);
+}
+input[type="checkbox"].not-filtered.tab-c {
+  outline-color: #bdbdbd;  /* Gray74 */
+}
+input[type="checkbox"].not-filtered.tab-d {
+  outline-color: hsl(0.58turn 75% 74%);
+}
+input[type="checkbox"].not-filtered.tab-e {
+  outline-color: hsl(0.91turn 75% 74%);
+}
+
+input[type="checkbox"].not-filtered.tab-a:hover {
+  outline-color: hsl(0.07turn 75% 71%);
+}
+input[type="checkbox"].not-filtered.tab-b:hover {
+  outline-color: hsl(0.42turn 75% 59%);
+}
+input[type="checkbox"].not-filtered.tab-c:hover {
+  outline-color: #b5b5b5;  /* Gray71 */
+}
+input[type="checkbox"].not-filtered.tab-d:hover {
+  outline-color: hsl(0.58turn 75% 71%);
+}
+input[type="checkbox"].not-filtered.tab-e:hover {
+  outline-color: hsl(0.91turn 75% 71%);
+}
+
+input[type="checkbox"].not-filtered:focus-visible,
+input[type="checkbox"].not-filtered:focus-visible:hover {
+  outline-color: revert;
+  outline-offset: revert;
+  outline-style: revert;
+  outline-width: revert;
+}
+
 /* Inputs in Show Selector */
 
 .in-chk.rank-up {
@@ -487,6 +533,18 @@ input[type="checkbox"].changed.tab-e {
   border-radius: 3px; /* The same as for text input */
   border-style: solid;
   border-width: 2px;
+}
+body:has(.tab-btn.not-filtered) #process-filter {
+  border-color: #bdbdbd; /* Gray74, the same as for text input not-filtered */
+  border-radius: 3px; /* The same as for text input */
+  border-style: dashed;
+  border-width: 2px;
+}
+body:has(.tab-btn.not-filtered) #process-filter:hover {
+  border-color: #b5b5b5; /* Gray71, the same as for text input not-filtered hover */
+}
+body:has(.tab-btn.not-filtered) #process-filter:active {
+  border-color: #bdbdbd; /* Gray74. Higher Lightness by 3 from 71 (like in-btn itself) */
 }
 
 .span-btn {
