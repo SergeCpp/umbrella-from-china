@@ -6,11 +6,13 @@ const input_ids =
     'archived-min',  'archived-max', 'created-min', 'created-max',    'favs-min', 'favs-max',
        'only-prev',     'only-curr'];
 
+const input_els = {}; // [id] = element;
+
 // Initialization
 
 function init_controls() {
   input_ids.forEach(id => {
-    const input = document.getElementById(id);
+    const input = input_els[id];
     if  (!input)  return;
 
     input.oninput = () => tab_input_changed(input);
@@ -51,8 +53,10 @@ const tab_names          = ['a', 'b', 'c', 'd', 'e'];
 let   tab_active         = null;
 
 const tab_input_ids      = input_ids;
+const tab_input_els      = input_els;
+
 const tab_input_values   = {}; // [tab] = { [id] = value }; [""] = { [id] = default_value };
-const tab_input_defaults = {}; //                                    [id] = default_value
+const tab_input_defaults = {}; //                                    [id] = default_value;
 const tab_input_filtered = {}; // [tab] = { [id] = value };
 
 const tab_filter_modes   = ["OR", "AND", "DIFF", "MULTI", "NONE", "ONE", "TWO", "THREE", "FOUR"];
@@ -67,6 +71,8 @@ const tab_mode           = {   // [tab] = "" / "Filter"; ['c'] see tab_filter_mo
 // Initialization
 
 function init_tabs() {
+  tab_inputs_get();
+
   tab_input_values[""] = tab_input_defaults;
   tab_to_values   ("");
 
@@ -77,7 +83,9 @@ function init_tabs() {
   }
 
   tab_filtered_upd();
-  tab_infos_init();
+  tab_infos_init  ();
+
+  tab_attach  ('c');
   tab_activate('c');
 
   tab_names.forEach((tab, index) => {
@@ -117,11 +125,42 @@ function init_tabs() {
   });
 }
 
+// Base
+
+function tab_inputs_get() {
+  tab_input_ids.forEach(id => {
+    const input = document.getElementById(id);
+    if  (!input)  return;
+
+    tab_input_els[id] = input;
+  });
+}
+
+// Attachment
+
+function tab_attach(tab) {
+  for (const id in tab_input_defaults) {
+    const input  = tab_input_els[id];
+    if  (!input)   continue;
+
+    input.classList.add   ('tab-' + tab);
+  }
+}
+
+function tab_detach(tab) {
+  for (const id in tab_input_defaults) {
+    const input  = tab_input_els[id];
+    if  (!input)   continue;
+
+    input.classList.remove('tab-' + tab);
+  }
+}
+
 // Data
 
 function tab_to_values(tab) {
   tab_input_ids.forEach(id => {
-    const input = document.getElementById(id);
+    const input = tab_input_els[id];
     if  (!input)  return;
 
     const value = input.type === 'checkbox' ? input.checked : input.value;
@@ -132,7 +171,7 @@ function tab_to_values(tab) {
 
 function tab_to_inputs(tab) {
   tab_input_ids.forEach(id => {
-    const input = document.getElementById(id);
+    const input = tab_input_els[id];
     if  (!input)  return;
 
     if (input.type === 'checkbox') {
@@ -183,13 +222,13 @@ function tab_filtered_mark() {
   tab_filtered_upd();
 
   for (const id in tab_input_defaults) {
-    const input = document.getElementById(id);
-    if  (!input)  continue;
+    const input  = tab_input_els[id];
+    if  (!input)   continue;
 
     const  changed = tab_input_values[tab_active][id] !== tab_input_defaults[id];
     const filtered = true;
 
-    tab_input_mark(tab_active, input, changed, filtered);
+    tab_input_mark(input, changed, filtered);
   }
 
   for (const tab of tab_names) {
@@ -236,7 +275,7 @@ function tab_input_changed(input) {
   const  changed = value !== tab_input_defaults            [id];
   const filtered = value === tab_input_filtered[tab_active][id];
 
-  tab_input_mark  (tab_active, input, changed, filtered);
+  tab_input_mark  (input, changed, filtered);
   tab_input_adjust(input, id, value); // Need for not changed also
 
   if (changed || !filtered) {
@@ -247,28 +286,24 @@ function tab_input_changed(input) {
   }
 }
 
-function tab_input_mark(tab, input, changed, filtered) {
-  if (changed || !filtered)
-    input.classList.add   ('changed', 'tab-' + tab);
-  else
-    input.classList.remove('changed', 'tab-' + tab);
-
-  input.classList.toggle(     'default',  !changed);
-  input.classList.toggle('not-filtered', !filtered);
+function tab_input_mark (input,           changed,    filtered) {
+  input.classList.toggle(     'changed',  changed || !filtered);
+  input.classList.toggle(     'default', !changed             );
+  input.classList.toggle('not-filtered',             !filtered);
 }
 
 // What to do with changed/not-filtered inputs: mark / unmark
 function tab_inputs_mark(tab, mark) {
   for (const id in tab_input_defaults) {
-    const input = document.getElementById(id);
-    if  (!input)  continue;
+    const input  = tab_input_els[id];
+    if  (!input)   continue;
 
     const  changed = tab_input_values[tab][id] !== tab_input_defaults     [id];
     const filtered = tab_input_values[tab][id] === tab_input_filtered[tab][id];
 
     if (changed || !filtered) {
-      if (mark) tab_input_mark(tab, input, changed, filtered);
-      else      tab_input_mark(tab, input, false,   true    );
+      if (mark) tab_input_mark(input, changed, filtered);
+      else      tab_input_mark(input, false,   true    );
     }
   }
 }
@@ -289,7 +324,7 @@ function tab_input_adjustables_init    () {
          tab_input_adjustables_range = {};
 
   tab_input_ids.forEach(id => {
-    const input = document.getElementById(id);
+    const input = tab_input_els[id];
     if  (!input)  return;
 
     if   (input.hasAttribute('adjustable')) {
@@ -328,9 +363,9 @@ function tab_infos_init() {
     tab_infos[tab] = {};
   }
 
-  for (const id in tab_input_defaults) {
-    const info_el = tab_input_info_el(id);
-    if  (!info_el)  continue;
+  for   (const id in tab_input_defaults) {
+    const info_el  = tab_input_info_el(id);
+    if  (!info_el)   continue;
 
     tab_infos_el[id] = info_el;
 
@@ -510,7 +545,9 @@ function tab_update(tab_new) {
 
   if (tab_new !== tab_active) {
     tab_inputs_lo(tab_active);
+    tab_detach   (tab_active);
 
+    tab_attach   (tab_new);
     tab_to_inputs(tab_new);
     tab_inputs_hi(tab_new);
 
