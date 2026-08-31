@@ -413,9 +413,6 @@ function tab_infos_set(tab) {
 }
 
 function tab_infos_upd        (upd_key) {
-  if   (!tab_infos_upd_key)
-       { tab_infos_upd_key  =  upd_key; return; } // No update on page load (all are "")
-
   if    (tab_infos_upd_key === upd_key) return;
          tab_infos_upd_key  =  upd_key;
 
