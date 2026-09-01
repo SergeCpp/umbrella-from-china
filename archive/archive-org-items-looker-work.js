@@ -20,11 +20,6 @@ function init_controls() {
     input.onkeyup = event => {
       if (event.key === 'Enter') tab_action();
     };
-
-    if (tab_input_info_el(id)) {
-      input.onfocus = ()      => tab_input_info_focus(id);
-      input.onblur  = (event) => tab_input_info_blur (input, event.relatedTarget);
-    }
   });
 
   const button = document.getElementById('process-filter');
@@ -364,14 +359,20 @@ function tab_infos_init() {
   }
 
   for   (const id in tab_input_defaults) {
-    const info_el  = tab_input_info_el(id);
+    const info_el  = document.getElementById('info-' + id);
     if  (!info_el)   continue;
+
+    const input    = tab_input_els[id];
+    if  (!input)     continue;
 
     tab_infos_el[id] = info_el;
 
     for (const tab of tab_names) {
       tab_infos[tab][id] = "";
     }
+
+    input.onfocus = ()    => tab_input_info_focus(id);
+    input.onblur  = event => tab_input_info_blur (input, event.relatedTarget);
   }
 }
 
@@ -413,6 +414,9 @@ function tab_infos_set(tab) {
 }
 
 function tab_infos_upd        (upd_key) {
+  if   (!tab_infos_upd_key)
+       { tab_infos_upd_key  =  upd_key; return; } // No update on page load (all infos are "")
+
   if    (tab_infos_upd_key === upd_key) return;
          tab_infos_upd_key  =  upd_key;
 
@@ -434,10 +438,6 @@ function tab_input_info_calc(tab, id) {
   const  info   = get_filter_info(values);
 
   return info;
-}
-
-function tab_input_info_el(id) {
-  return document.getElementById('info-' + id);
 }
 
 function tab_input_info_focus(id) {
