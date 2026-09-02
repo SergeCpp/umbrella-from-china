@@ -273,11 +273,11 @@ function tab_input_changed(input) {
   tab_input_mark  (input, changed, filtered);
   tab_input_adjust(input, id, value); // Need for not changed also
 
-  if (changed || !filtered) {
-    tab_mark  (tab_active, changed, filtered);
+  if (!filtered) {
+    tab_mark  (tab_active, undefined, false); // Mark tab as not-filtered
   }
   else {
-    tab_update(tab_active); // Need to check whole tab
+    tab_update(tab_active); // Need to check whole tab to determine tab marker
   }
 }
 
