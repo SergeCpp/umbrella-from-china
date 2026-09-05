@@ -371,9 +371,13 @@ input[type="checkbox"].changed.tab-e {
 }
 
 input[type="checkbox"].not-filtered {
-  outline-offset: 2px;
+  outline-color: #bdbdbd; /* Gray74 */
+  outline-offset: 1px; /* For the same appearance as text input and button (style and width also) */
   outline-style: dashed;
   outline-width: 2px;
+}
+input[type="checkbox"].not-filtered:hover {
+  outline-color: #b5b5b5; /* Gray71 */
 }
 
 input[type="checkbox"].not-filtered.tab-a {
@@ -447,6 +451,15 @@ input[type="checkbox"].not-filtered:focus-visible:hover {
 }
 .in-chk.show-mark-e {
   accent-color: hsl(0.91turn 75% 74%);
+}
+
+span.text-nowrap:has(.in-chk.not-filtered) {
+  border-bottom-color: #bdbdbd; /* Gray74 */
+  border-bottom-style: dashed;
+  border-bottom-width: 2px;
+}
+span.text-nowrap:has(.in-chk.not-filtered):hover {
+  border-bottom-color: #b5b5b5; /* Gray71 */
 }
 
 /* Inputs */

@@ -458,7 +458,7 @@ function render_results_dom(
     return '<input id="' + id + '" ' +
       'class="in-chk' + (accent && !hide ? ' ' + accent : "") + '" ' +
       'type="checkbox" ' + (show || hide ? 'checked ' : "") +
-      'oninput="' + input + '(this, \'' + accent + '\')" ' +
+      'oninput="' + input + '(this, \'' + accent + '\'); upd_chk_filtered_state(\'' + id + '\');" ' +
       'onkeyup="if (event.key === \'Enter\') { save_focus(\'' + id + '\'); process_filter(); }">';
   };
 
@@ -628,7 +628,7 @@ function render_results_dom(
       show_subst_marked,
       show_subst_marked_new => show_subst_marked = show_subst_marked_new,
 
-      chks_chain, container);
+      chks_chain, upd_chk_filtered_state, container);
   }
 
   // Add space before item list
@@ -847,9 +847,9 @@ function render_results_dom(
 
   if (shown_cnt !== curr_length) update_diffs(curr_length, shown_cnt, show_by);
 
-  container.onclick   = (event) => results_click  (event);
-  container.onkeyup   = (event) => results_keyup  (event);
-  container.onkeydown = (event) => results_keydown(event);
+  container.onclick   = event => results_click  (event);
+  container.onkeyup   = event => results_keyup  (event);
+  container.onkeydown = event => results_keydown(event);
 
   restore_focus();
 
@@ -870,7 +870,8 @@ function render_results_dom(
 }
 
 function render_finished() {
-  set_chain_arrows_plane(chks_chain);
+  set_chain_arrows_plane   (chks_chain);
+  init_chks_filtered_states(chks_chain);
 
   process_timings_defer();
 }

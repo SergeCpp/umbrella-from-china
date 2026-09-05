@@ -36,7 +36,7 @@ function render_marks_chks(
   show_subst_marked,
   show_subst_marked_set,
 
-  chks_chain, container) {
+  chain, updater, container) {
 
   const marks_div = document.createElement("div");
   marks_div.className = "text-center text-comment";
@@ -53,15 +53,15 @@ function render_marks_chks(
     nomark_label.textContent = "Not marked: " + format_num_str(nomark_items, "Item");
 
     const nomark_chk = document.createElement("input");
-    chks_chain.push(nomark_chk);
+    chain.push(nomark_chk);
     nomark_chk.checked = show_nomark;
     nomark_chk.className = "in-chk";
     nomark_chk.id = "show-nomark";
     nomark_chk.type = "checkbox";
 
-    nomark_chk.oninput = () => { show_nomark_set(nomark_chk.checked); };
+    nomark_chk.oninput = () => { show_nomark_set(nomark_chk.checked); updater(nomark_chk.id); };
 
-    nomark_chk.onkeyup = (event) => {
+    nomark_chk.onkeyup = event => {
       if (event.key === 'Enter') {
         save_focus("show-nomark");
         process_filter();
@@ -105,7 +105,7 @@ function render_marks_chks(
       mark_label.style.cursor = "pointer";
 
       const mark_chk_show = document.createElement("input");
-      chks_chain.push(mark_chk_show);
+      chain.push(mark_chk_show);
       mark_chk_show.checked = show_mark[m_mark];
       mark_chk_show.className = "in-chk" + ' ' + "show-mark-" + m_mark;
       mark_chk_show.id = "show-mark-" + m_mark;
@@ -118,9 +118,11 @@ function render_marks_chks(
             mark_chk_hide.checked = false;
             hide_mark[m_mark]     = false;
         }
+
+        updater(mark_chk_show.id, mark_chk_hide.id);
       };
 
-      mark_chk_show.onkeyup = (event) => {
+      mark_chk_show.onkeyup = event => {
         if (event.key === 'Enter') {
           save_focus("show-mark-" + m_mark);
           process_filter();
@@ -128,7 +130,7 @@ function render_marks_chks(
       };
 
       const mark_chk_hide = document.createElement("input");
-      chks_chain.push(mark_chk_hide);
+      chain.push(mark_chk_hide);
       mark_chk_hide.checked = hide_mark[m_mark];
       mark_chk_hide.className = "in-chk";
       mark_chk_hide.id = "hide-mark-" + m_mark;
@@ -141,9 +143,11 @@ function render_marks_chks(
             mark_chk_show.checked = false;
             show_mark[m_mark]     = false;
         }
+
+        updater(mark_chk_hide.id, mark_chk_show.id);
       };
 
-      mark_chk_hide.onkeyup = (event) => {
+      mark_chk_hide.onkeyup = event => {
         if (event.key === 'Enter') {
           save_focus("hide-mark-" + m_mark);
           process_filter();
@@ -194,16 +198,16 @@ function render_marks_chks(
       by_label.textContent = format_num_str(num, "Mark") + ": " + format_num_str(items, "Item");
 
       const by_chk = document.createElement("input");
-      chks_chain.push(by_chk);
+      chain.push(by_chk);
       if (show_marked_by[num] === undefined) show_marked_by[num] = true; // Initialize
       by_chk.checked = show_marked_by[num];
       by_chk.className = "in-chk";
       by_chk.id = "show-marked-by-" + num;
       by_chk.type = "checkbox";
 
-      by_chk.oninput = () => { show_marked_by[num] = by_chk.checked; };
+      by_chk.oninput = () => { show_marked_by[num] = by_chk.checked; updater(by_chk.id); };
 
-      by_chk.onkeyup = (event) => {
+      by_chk.onkeyup = event => {
         if (event.key === 'Enter') {
           save_focus("show-marked-by-" + num);
           process_filter();
@@ -256,16 +260,16 @@ function render_marks_chks(
       on_label.appendChild(document.createTextNode(": " + format_num_str(cnt, "Item")));
 
       const on_chk = document.createElement("input");
-      chks_chain.push(on_chk);
+      chain.push(on_chk);
       if (show_marked_on_2[group] === undefined) show_marked_on_2[group] = true; // Initialize
       on_chk.checked = show_marked_on_2[group];
       on_chk.className = "in-chk";
       on_chk.id = "show-marked-on-2-" + group;
       on_chk.type = "checkbox";
 
-      on_chk.oninput = () => { show_marked_on_2[group] = on_chk.checked; };
+      on_chk.oninput = () => { show_marked_on_2[group] = on_chk.checked; updater(on_chk.id); };
 
-      on_chk.onkeyup = (event) => {
+      on_chk.onkeyup = event => {
         if (event.key === 'Enter') {
           save_focus("show-marked-on-2-" + group);
           process_filter();
@@ -326,16 +330,16 @@ function render_marks_chks(
       on_label.appendChild(document.createTextNode(": " + format_num_str(cnt, "Item")));
 
       const on_chk = document.createElement("input");
-      chks_chain.push(on_chk);
+      chain.push(on_chk);
       if (show_marked_on_3[group] === undefined) show_marked_on_3[group] = true; // Initialize
       on_chk.checked = show_marked_on_3[group];
       on_chk.className = "in-chk";
       on_chk.id = "show-marked-on-3-" + group;
       on_chk.type = "checkbox";
 
-      on_chk.oninput = () => { show_marked_on_3[group] = on_chk.checked; };
+      on_chk.oninput = () => { show_marked_on_3[group] = on_chk.checked; updater(on_chk.id); };
 
-      on_chk.onkeyup = (event) => {
+      on_chk.onkeyup = event => {
         if (event.key === 'Enter') {
           save_focus("show-marked-on-3-" + group);
           process_filter();
@@ -369,15 +373,15 @@ function render_marks_chks(
       plain_nomark_label.textContent = "Plain not marked: " + format_num_str(plain_nomark, "Item");
 
       const plain_nomark_chk = document.createElement("input");
-      chks_chain.push(plain_nomark_chk);
+      chain.push(plain_nomark_chk);
       plain_nomark_chk.checked = show_plain_nomark;
       plain_nomark_chk.className = "in-chk";
       plain_nomark_chk.id = "show-plain-nomark";
       plain_nomark_chk.type = "checkbox";
 
-      plain_nomark_chk.oninput = () => { show_plain_nomark_set(plain_nomark_chk.checked); };
+      plain_nomark_chk.oninput = () => { show_plain_nomark_set(plain_nomark_chk.checked); updater(plain_nomark_chk.id); };
 
-      plain_nomark_chk.onkeyup = (event) => {
+      plain_nomark_chk.onkeyup = event => {
         if (event.key === 'Enter') {
           save_focus("show-plain-nomark");
           process_filter();
@@ -405,15 +409,15 @@ function render_marks_chks(
       subst_marked_label.textContent = "Substantial marked: " + format_num_str(subst_marked, "Item");
 
       const subst_marked_chk = document.createElement("input");
-      chks_chain.push(subst_marked_chk);
+      chain.push(subst_marked_chk);
       subst_marked_chk.checked = show_subst_marked;
       subst_marked_chk.className = "in-chk";
       subst_marked_chk.id = "show-subst-marked";
       subst_marked_chk.type = "checkbox";
 
-      subst_marked_chk.oninput = () => { show_subst_marked_set(subst_marked_chk.checked); };
+      subst_marked_chk.oninput = () => { show_subst_marked_set(subst_marked_chk.checked); updater(subst_marked_chk.id); };
 
-      subst_marked_chk.onkeyup = (event) => {
+      subst_marked_chk.onkeyup = event => {
         if (event.key === 'Enter') {
           save_focus("show-subst-marked");
           process_filter();

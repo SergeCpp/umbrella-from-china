@@ -598,6 +598,46 @@ function tab_mark_is_filter(tab) {
   return tab_mode[tab] === "Filter";
 }
 
+/* Checkboxes Filtered States */
+
+let chks_filtered_states = null;
+
+function init_chks_filtered_states(chks_chain) {
+  chks_filtered_states = {};
+
+  const count = chks_chain.length;
+
+  for (let index = 0; index < count; index++) {
+    const elem    = chks_chain[index];
+
+    const id      = elem.id;
+    if  (!id)       return;
+
+    const checked = elem.checked;
+    const accent  = window.getComputedStyle(elem).accentColor;
+
+    chks_filtered_states[id] = { elem, checked, accent };
+  }
+}
+
+function upd_chk_filtered_state(id, id_linked = null) {
+  if   (id_linked) upd_chk_filtered_state(id_linked);
+
+  const state    = chks_filtered_states[id];
+  if  (!state)     return;
+
+  const elem     = state.elem;
+
+  const checked  = elem.checked;
+  const accent   = window.getComputedStyle(elem).accentColor;
+
+  const filtered = checked !== state.checked ? false
+                 : checked
+                 ? accent  === state.accent  : true;
+
+  elem.classList.toggle('not-filtered', !filtered);
+}
+
 /* Date Change */
 
 // what: "prev" / "curr"
