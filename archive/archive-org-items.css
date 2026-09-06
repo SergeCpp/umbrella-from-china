@@ -666,11 +666,12 @@ body:has(.tab-btn.not-filtered) #process-filter:active {
   flex: 1 1 auto;
   outline-offset: -2px; /* For outline not to be clipped, to be within padding */
   overflow-x: hidden; /* To constrain the child, to use ellipsis there. Value "clip" not works here */
-  padding: 0.5rem 0.5rem;
+/*padding: 0.5rem 0.5rem; */ /* Padding moved to inner to allow wrapper to shrink to zero */
 }
 .header-title-inner { /* Title holder */
   font-family: sans-serif;
   letter-spacing: 1px;
+  padding: 0.5rem 0.5rem;
   word-spacing: 0.15em;
 }
 
