@@ -675,12 +675,15 @@ body:has(.tab-btn.not-filtered) #process-filter:active {
   word-spacing: 0.15em;
 }
 
-.header-stat-wrapper { /* For 22ch of non-bold monospaced */
+.header-stat-wrapper { /* For non-bold monospaced */
   cursor: pointer;
   flex: 0 0 22ch;
   font-family: monospace;
   outline-offset: -2px; /* For outline not to be clipped, to be within padding */
   padding: 0.5rem 0 0.5rem 0.5rem;
+}
+.header-stat-wrapper.compact {
+  flex-basis: 7ch;
 }
 .header-stat-inner { /* For bold subtitle of other font */
   font-family: sans-serif;
@@ -874,6 +877,9 @@ body:has(.tab-btn.not-filtered) #process-filter:active {
   height: 3lh; /* To set the height for empty stat (w/o old, 23, 7 inside) */
   outline-offset: -2px; /* For outline not to be clipped, to be within padding */
   white-space: pre;
+}
+.item-stat-container.compact {
+  flex-basis: 7ch;
 }
 .item-stat-container.is-empty {
   cursor: default;

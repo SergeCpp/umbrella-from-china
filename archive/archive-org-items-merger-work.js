@@ -130,7 +130,7 @@ function create_cells_raw(wrapper, shown_idx) {
   if (prev_is_subst || curr_is_subst || grow_is_subst) title_container.is_subst = true;
 
   // Cell 2. Prev container (stacked), see set_item_prev
-  const prev_container = document.createElement("div"); // flex: 0 0 22ch;
+  const prev_container = document.createElement("div");
 
   if (!no_prev) {
     prev_container.className = "item-stat-container";
@@ -144,7 +144,7 @@ function create_cells_raw(wrapper, shown_idx) {
   if (prev_is_subst) prev_container.is_subst = true;
 
   // Cell 3. Curr container (stacked), see set_item_curr
-  const curr_container = document.createElement("div"); // flex: 0 0 22ch;
+  const curr_container = document.createElement("div");
 
   if (!is_prev) {
     curr_container.className = "item-stat-container";
@@ -158,7 +158,7 @@ function create_cells_raw(wrapper, shown_idx) {
   if (curr_is_subst) curr_container.is_subst = true;
 
   // Cell 4. Grow container (stacked), see set_item_grow
-  const grow_container = document.createElement("div"); // flex: 0 0 3ch;
+  const grow_container = document.createElement("div");
 
   if (is_both) {
     grow_container.className = "item-grow-container";
@@ -359,12 +359,17 @@ function set_item_gauges(index, gauge_above_a, gauge_above_b, gauge_below_a, gau
 /* Prev */
 
 let prev_raw_23_30   = null;
+let prev_raw_ratio   = null;
+let prev_raw_compact = null;
 
 let prev_raw_data    = {};
 let prev_raw_rank_is = {};
 
-function init_prev_raw(show_by_old) {
-    prev_raw_23_30   = show_by_old ? "23" : "30";
+function init_prev_raw(show_by_old, sort_by_ratio, compact) {
+    prev_raw_23_30   = show_by_old
+                     ? "23" : "30";
+    prev_raw_ratio   =              sort_by_ratio;
+    prev_raw_compact =                             compact;
 
     prev_raw_data    = {};
     prev_raw_rank_is = {};
@@ -401,19 +406,42 @@ function set_item_prev(index, container) {
   const stat_prev_7       = document.createElement("div");
   stat_prev_7  .className = "item-stat-prev-7"   + rank_is_class;
 
-  if (raw) {
-    stat_prev_old.textContent = raw.views_old_all.toString().padStart(6) + " /" +
-                                raw. days_old_all.toString().padStart(5) + " =" +
-                                raw.ratio_old_all.toFixed(3).padStart(7);
-    stat_prev_23 .textContent = raw.views_23_30  .toString().padStart(6) + " /   " + prev_raw_23_30 + " =" +
-                                raw.ratio_23_30  .toFixed(3).padStart(7);
-    stat_prev_7  .textContent = raw.views_7      .toString().padStart(6) + " /    7 =" +
-                                raw.ratio_7      .toFixed(3).padStart(7);
+  if (prev_raw_compact) {
+    container.classList.add("compact");
+
+    if (raw) {
+      if (prev_raw_ratio) {
+        stat_prev_old.textContent = raw.ratio_old_all.toFixed(3).padStart(7);
+        stat_prev_23 .textContent = raw.ratio_23_30  .toFixed(3).padStart(7);
+        stat_prev_7  .textContent = raw.ratio_7      .toFixed(3).padStart(7);
+      }
+      else {
+        stat_prev_old.textContent = raw.views_old_all.toString().padStart(7);
+        stat_prev_23 .textContent = raw.views_23_30  .toString().padStart(7);
+        stat_prev_7  .textContent = raw.views_7      .toString().padStart(7);
+      }
+    }
+    else {                      // 1..4..7
+      stat_prev_old.textContent = "       ";
+      stat_prev_23 .textContent = "       ";
+      stat_prev_7  .textContent = "       ";
+    }
   }
-  else {                      // 1...5...901...5...9012
-    stat_prev_old.textContent = "                      ";
-    stat_prev_23 .textContent = "                      ";
-    stat_prev_7  .textContent = "                      ";
+  else {
+    if (raw) {
+      stat_prev_old.textContent = raw.views_old_all.toString().padStart(6) + " /" +
+                                  raw. days_old_all.toString().padStart(5) + " =" +
+                                  raw.ratio_old_all.toFixed(3).padStart(7);
+      stat_prev_23 .textContent = raw.views_23_30  .toString().padStart(6) + " /   " + prev_raw_23_30 + " =" +
+                                  raw.ratio_23_30  .toFixed(3).padStart(7);
+      stat_prev_7  .textContent = raw.views_7      .toString().padStart(6) + " /    7 =" +
+                                  raw.ratio_7      .toFixed(3).padStart(7);
+    }
+    else {                      // 1...5...901...5...9012
+      stat_prev_old.textContent = "                      ";
+      stat_prev_23 .textContent = "                      ";
+      stat_prev_7  .textContent = "                      ";
+    }
   }
 
   container.appendChild(stat_prev_old);
@@ -424,13 +452,18 @@ function set_item_prev(index, container) {
 /* Curr */
 
 let curr_raw_23_30   = null;
+let curr_raw_ratio   = null;
+let curr_raw_compact = null;
 
 let curr_raw_data    = {};
 let curr_raw_horz_is = {};
 let curr_raw_vert_is = {};
 
-function init_curr_raw(show_by_old) {
-    curr_raw_23_30   = show_by_old ? "23" : "30";
+function init_curr_raw(show_by_old, sort_by_ratio, compact) {
+    curr_raw_23_30   = show_by_old
+                     ? "23" : "30";
+    curr_raw_ratio   =              sort_by_ratio;
+    curr_raw_compact =                             compact;
 
     curr_raw_data    = {};
     curr_raw_horz_is = {};
@@ -478,19 +511,42 @@ function set_item_curr(index, container) {
   const stat_curr_7       = document.createElement("div");
   stat_curr_7  .className = "item-stat-curr-7"   + vert_is_class;
 
-  if (raw) {
-    stat_curr_old.textContent = raw.views_old_all.toString().padStart(6) + " /" +
-                                raw. days_old_all.toString().padStart(5) + " =" +
-                                raw.ratio_old_all.toFixed(3).padStart(7);
-    stat_curr_23 .textContent = raw.views_23_30  .toString().padStart(6) + " /   " + curr_raw_23_30 + " =" +
-                                raw.ratio_23_30  .toFixed(3).padStart(7);
-    stat_curr_7  .textContent = raw.views_7      .toString().padStart(6) + " /    7 =" +
-                                raw.ratio_7      .toFixed(3).padStart(7);
+  if (curr_raw_compact) {
+    container.classList.add("compact");
+
+    if (raw) {
+      if (curr_raw_ratio) {
+        stat_curr_old.textContent = raw.ratio_old_all.toFixed(3).padStart(7);
+        stat_curr_23 .textContent = raw.ratio_23_30  .toFixed(3).padStart(7);
+        stat_curr_7  .textContent = raw.ratio_7      .toFixed(3).padStart(7);
+      }
+      else {
+        stat_curr_old.textContent = raw.views_old_all.toString().padStart(7);
+        stat_curr_23 .textContent = raw.views_23_30  .toString().padStart(7);
+        stat_curr_7  .textContent = raw.views_7      .toString().padStart(7);
+      }
+    }
+    else {                      // 1..4..7
+      stat_curr_old.textContent = "       ";
+      stat_curr_23 .textContent = "       ";
+      stat_curr_7  .textContent = "       ";
+    }
   }
-  else {                      // 1...5...901...5...9012
-    stat_curr_old.textContent = "                      ";
-    stat_curr_23 .textContent = "                      ";
-    stat_curr_7  .textContent = "                      ";
+  else {
+    if (raw) {
+      stat_curr_old.textContent = raw.views_old_all.toString().padStart(6) + " /" +
+                                  raw. days_old_all.toString().padStart(5) + " =" +
+                                  raw.ratio_old_all.toFixed(3).padStart(7);
+      stat_curr_23 .textContent = raw.views_23_30  .toString().padStart(6) + " /   " + curr_raw_23_30 + " =" +
+                                  raw.ratio_23_30  .toFixed(3).padStart(7);
+      stat_curr_7  .textContent = raw.views_7      .toString().padStart(6) + " /    7 =" +
+                                  raw.ratio_7      .toFixed(3).padStart(7);
+    }
+    else {                      // 1...5...901...5...9012
+      stat_curr_old.textContent = "                      ";
+      stat_curr_23 .textContent = "                      ";
+      stat_curr_7  .textContent = "                      ";
+    }
   }
 
   container.appendChild(stat_curr_old);

@@ -77,7 +77,24 @@ function init_render() {
 
 /* Render */
 
-let        is_first_render = true;
+let      is_first_render = true;
+
+function is_screen_narrow() {
+  const grid = document.querySelector('.in-grid');
+  if  (!grid)  return false;
+
+  // "250px 250px 250px"
+  const cols = window.getComputedStyle(grid).getPropertyValue('grid-template-columns');
+
+  const co_1 = cols.indexOf('px');
+  if   (co_1 === -1) return false;
+
+  const co_2 = cols.indexOf('px', co_1 + 3);
+  if   (co_2 !== -1) return false;
+
+  return true;
+}
+
 const    process_du_render = { pre: 0, dom: 0 }; // ms
 
 function time_render() {
@@ -279,12 +296,16 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   /////////////////////////////////////////////////////////////////////////
   // Compose items and calculate parameters for substantial changes marking
   //
+  const compact = is_screen_narrow();
+  //
   const {
     horz_marks,
     vert_marks,
     rank_marks,
     mood_marks
-  } = compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, show_by, mood_by, subst_scaled);
+  } = compose_items(results_curr_exp, curr_exp_totals, map_prev,
+        title_is, show_by, sort_by, mood_by, subst_scaled,
+        compact);
 
   const mark_val_grow_old  = horz_marks.above.val;
   const mark_val_fall_old  = horz_marks.below.val;
@@ -387,7 +408,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     only_prev, only_curr, only_both, plain_items, subst_items,
     horz_marks, vert_marks, rank_marks, mood_marks,
     marks_count, marks_populated, mark_counts, marked_by, marked_on_2, marked_on_3,
-    marked_items, nomark_items, plain_nomark, subst_marked);
+    marked_items, nomark_items, plain_nomark, subst_marked,
+    compact);
 
   } catch (err) {
     process_error(error_compose("Error: " + err.message));
@@ -400,7 +422,8 @@ function render_results_dom(
     only_prev, only_curr, only_both, plain_items, subst_items,
     horz_marks, vert_marks, rank_marks, mood_marks,
     marks_count, marks_populated, mark_counts, marked_by, marked_on_2, marked_on_3,
-    marked_items, nomark_items, plain_nomark, subst_marked) {
+    marked_items, nomark_items, plain_nomark, subst_marked,
+    compact) {
 
   try {
 
@@ -677,7 +700,7 @@ function render_results_dom(
                   show_by,  show_by_new =>  show_by =  show_by_new,
                   sort_by,  sort_by_new =>  sort_by =  sort_by_new,
                   mood_by,  mood_by_new =>  mood_by =  mood_by_new,
-    container);
+    compact, container);
   //
   let shown_cnt = 0;
   //

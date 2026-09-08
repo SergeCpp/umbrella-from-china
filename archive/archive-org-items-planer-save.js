@@ -4,7 +4,7 @@ function compose_header(title_is, title_is_set,
                          show_by,  show_by_set,
                          sort_by,  sort_by_set,
                          mood_by,  mood_by_set,
-  container) {
+  compact, container) {
 
   const header_wrapper = document.createElement("div");
   header_wrapper.className = "header-wrapper";
@@ -30,7 +30,7 @@ function compose_header(title_is, title_is_set,
   };
 
   const header_stat_prev_wrapper = document.createElement("div");
-  const add_stat_prev_class = (show_by === "old-23-7") ? "bg-grow" : "bg-up";
+  const add_stat_prev_class = (show_by === "old-23-7" ? "bg-grow" : "bg-up") + (compact ? ' ' + "compact" : "");
   header_stat_prev_wrapper.className = "header-stat-wrapper" + ' ' + add_stat_prev_class;
   header_stat_prev_wrapper.id = "header-stat-prev-wrapper";
   const header_stat_prev_inner = document.createElement("div");
@@ -48,7 +48,7 @@ function compose_header(title_is, title_is_set,
   };
 
   const header_stat_curr_wrapper = document.createElement("div");
-  const add_stat_curr_class = (sort_by === "ratio") ? "bg-fall" : "bg-dn";
+  const add_stat_curr_class = (sort_by === "ratio" ? "bg-fall" : "bg-dn") + (compact ? ' ' + "compact" : "");
   header_stat_curr_wrapper.className = "header-stat-wrapper" + ' ' + add_stat_curr_class;
   header_stat_curr_wrapper.id = "header-stat-curr-wrapper";
   const header_stat_curr_inner = document.createElement("div");
@@ -100,9 +100,13 @@ function compose_header(title_is, title_is_set,
 /* Compose Items */
 
 // results_curr_exp is sorted
-function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, show_by, mood_by, subst_scaled) {
+function compose_items(results_curr_exp, curr_exp_totals, map_prev,
+  title_is, show_by, sort_by, mood_by, subst_scaled,
+  compact) {
+
   const title_is_title = (title_is === "title"     ); // Else is "identifier"
   const  show_by_old   = ( show_by === "old-23-7"  ); // Else by "all-30-7"
+  const  sort_by_ratio = ( sort_by === "ratio"     ); // Else by "views"
   const  mood_by_same  = ( mood_by === "same-signs"); // Else by "diff-signs"
 
   ////////////////////////
@@ -120,8 +124,8 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev, title_is, sh
   // Compose title, prev, curr, and grow
   //
   init_title_raw(title_is_title);
-  init_prev_raw (show_by_old);
-  init_curr_raw (show_by_old);
+  init_prev_raw (show_by_old, sort_by_ratio, compact);
+  init_curr_raw (show_by_old, sort_by_ratio, compact);
   init_grow_raw ();
   //
   // For log/sig scaling of marks
