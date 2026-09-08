@@ -600,10 +600,10 @@ function add_details_linkage(name, index, linkage_arr, linkage_idx) {
   const dist_lnk = make_linkage("Dist", pr10_txt, nx10_txt);
 
   //
-  const linkage = near_lnk && dist_lnk ? near_lnk + '\n' + dist_lnk
-                : near_lnk             ? near_lnk        : dist_lnk;
+  const linkage  = near_lnk && dist_lnk ? near_lnk + '\n' + dist_lnk
+                 : near_lnk             ? near_lnk        : dist_lnk;
 
-  if  (!linkage)  return;
+  if  (!linkage)   return;
 
   switch (name) {
     case "horz":
