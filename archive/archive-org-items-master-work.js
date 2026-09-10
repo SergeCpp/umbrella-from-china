@@ -561,14 +561,17 @@ function add_details_linkage(name, index, linkage_arr, linkage_idx) {
     ? '<span class="item-linkage ' + name + '-' + direction + '" role="button" tabindex="-1">' +
       '#' + shown + (ordinal ? ' is ' + ordinal : "") + '</span>'
     : null;
-                // \u2002 is &ensp;
+
+  // \u2002 is &ensp;
+  // \u200b is &ZeroWidthSpace; (ZWSP), and is needed to break there
+  //
   const to_prev = "\u2002<<\u2002";
   const to_next = "\u2002>>\u2002";
-
+  //
   const make_linkage = (type, span_prev, span_next) =>
-    span_prev && span_next ? format_nowrap(span_prev + to_prev + type + to_next + span_next) :
-    span_prev              ? format_nowrap(span_prev + to_prev + type                      ) :
-                 span_next ? format_nowrap(                      type + to_next + span_next) :
+    span_prev && span_next ? format_nowrap(span_prev + to_prev + type) + '\u200b' + format_nowrap(to_next + span_next) :
+    span_prev              ? format_nowrap(span_prev + to_prev + type) :
+                 span_next ? format_nowrap(                      type  +                          to_next + span_next) :
     null;
 
   const ei = linkage_arr.length - 1;
