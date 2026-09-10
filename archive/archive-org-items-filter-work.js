@@ -1,7 +1,7 @@
 /* Error Messages */
 
 const err_beg = '<div class="text-center text-comment">';
-const err_bds = '<details><summary class="text-ellipsis" style="width: fit-content; margin: 0 auto;">';
+const err_bds = '<details><summary class="text-ellipsis" style="width: fit-content; max-width: 100%; margin: 0 auto;">';
 const err_es  = '</summary><p>';
 const err_ed  = '</p></details>';
 const err_end = '</div>';
