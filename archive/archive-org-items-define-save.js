@@ -240,6 +240,9 @@ function process_filter() {
   const main_curr_date  =  date_main("curr");
   const main_curr_items = items_main("curr");
 
+  // Horizontal / Vertical Tab Buttons Positioning
+  tab_layout_upd();
+
   // Input Info Updating
   const         upd_key =  main_prev_date +
                            main_curr_date +

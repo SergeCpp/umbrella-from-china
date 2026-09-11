@@ -103,18 +103,21 @@ function init_tabs() {
         return;
       }
 
-      if ((key !== 'ArrowLeft') && (key !== 'ArrowRight')) return;
+      const is_prev = (key === 'ArrowLeft' ) || (key === 'ArrowUp'  );
+      const is_next = (key === 'ArrowRight') || (key === 'ArrowDown');
+
+      if  (!is_prev && !is_next) return;
       event.preventDefault();
 
       const size = tab_names.length;
-      const next = ((key === 'ArrowLeft' ) && event.ctrlKey) ?   0         :
-                   ((key === 'ArrowRight') && event.ctrlKey) ?   size  - 1 :
-                    (key === 'ArrowLeft' )                   ? ((index - 1 + size) % size)
-                                                             : ((index + 1)        % size); // ArrowRight
+      const goto = (is_prev && event.ctrlKey) ?   0         :
+                   (is_next && event.ctrlKey) ?   size  - 1 :
+                    is_prev                   ? ((index - 1 + size) % size)
+                                              : ((index + 1)        % size); // is_next
 
-      const button_next = document.getElementById('tab-' + tab_names[next]);
-      if   (button_next) {
-        button_next.focus();
+      const button_goto = document.getElementById('tab-' + tab_names[goto]);
+      if   (button_goto) {
+            button_goto.focus();
       }
     };
   });
@@ -572,6 +575,15 @@ function tab_action() {
   tab_update(tab_active);
 
   process_filter(); // Go out
+}
+
+// Layout
+
+function tab_layout_upd() {
+  const tab_row = document.querySelector('.tab-row');
+  if  (!tab_row)  return;
+
+  tab_row.classList.toggle('compact', is_screen_narrow());
 }
 
 // Interface

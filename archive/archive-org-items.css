@@ -12,6 +12,16 @@
   align-items: center;
   display: flex;
 }
+.tab-row.compact {
+  align-items: stretch;
+  flex-direction: column;
+}
+.tab-row.compact .tab-btn {
+  flex-basis: auto;
+}
+.tab-row.compact .tab-btn.tab-c {
+  flex-grow: 1;
+}
 
 .tab-btn {
   border-top-color: white;
