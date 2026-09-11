@@ -497,12 +497,12 @@ span.text-nowrap:has(.in-chk.not-filtered):hover {
   display: none;
   flex: 0 1 auto;
   font-family: monospace;
-  max-width: 27%; /* For in-info-flex to shrink proportionally with in-wide-flex */
+  max-width: 36%; /* For in-info-flex to shrink proportionally with in-wide-flex */
   min-width: 0;
   pointer-events: none;
 }
 
-.in-grid { /* 522px: 1 col, 523px..787px: 2 cols, 788px: 3 cols */
+.in-grid { /* 522px : 1 col, 523px .. 787px : 2 cols, 788px : 3 cols */
   display: grid;
   font-family: monospace;
   gap: 0.3em 1ch;

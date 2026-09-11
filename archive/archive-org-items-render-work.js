@@ -77,7 +77,11 @@ function init_render() {
 
 /* Render */
 
-let      is_first_render = true;
+let      is_first_render_flag = true;
+
+function is_first_render() {
+  return is_first_render_flag;
+}
 
 function is_screen_narrow() {
   const grid = document.querySelector('.in-grid');
@@ -881,8 +885,8 @@ function render_results_dom(
   process_du_render.dom = performance.now() - time_0;
   process_timings();
 
-  if (is_first_render) {
-      is_first_render = false;
+  if (is_first_render_flag) {
+      is_first_render_flag = false;
 
       document.querySelector("footer").classList.add("show");
   }

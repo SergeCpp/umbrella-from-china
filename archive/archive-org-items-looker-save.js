@@ -580,6 +580,8 @@ function tab_action() {
 // Layout
 
 function tab_layout_upd() {
+  if   (is_first_render()) return;
+
   const tab_row = document.querySelector('.tab-row');
   if  (!tab_row)  return;
 
