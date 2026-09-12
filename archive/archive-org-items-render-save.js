@@ -83,20 +83,8 @@ function is_first_render() {
   return is_first_render_flag;
 }
 
-function is_screen_narrow() {
-  const grid = document.querySelector('.in-grid');
-  if  (!grid)  return false;
-
-  // "250px 250px 250px"
-  const cols = window.getComputedStyle(grid).getPropertyValue('grid-template-columns');
-
-  const co_1 = cols.indexOf('px');
-  if   (co_1 === -1) return false;
-
-  const co_2 = cols.indexOf('px', co_1 + 3);
-  if   (co_2 !== -1) return false;
-
-  return true;
+function is_screen_narrow  () {
+  return grid_columns_count() === 1;
 }
 
 const    process_du_render = { pre: 0, dom: 0 }; // ms

@@ -243,6 +243,9 @@ function process_filter() {
   // Horizontal / Vertical Tab Buttons Positioning
   tab_layout_upd();
 
+  // Grid Inputs Positioning
+  grid_cells_order();
+
   // Input Info Updating
   const         upd_key =  main_prev_date +
                            main_curr_date +

@@ -612,6 +612,75 @@ function tab_mark_is_filter(tab) {
   return tab_mode[tab] === "Filter";
 }
 
+/* Grid Cells Order */
+
+let      grid_el = null;
+
+function grid_get() {
+  if   (!grid_el) grid_el = document.querySelector('.in-grid');
+
+  return grid_el;
+}
+
+function grid_columns_count() {
+  const  grid = grid_get();
+  if   (!grid)  return 0;
+
+  // "250px 250px 250px"
+  const columns = window.getComputedStyle(grid).getPropertyValue('grid-template-columns');
+  let   count   = 0;
+  let   start   = 0;
+
+  do {
+    const index = columns.indexOf('px', start);
+    if   (index === -1) break;
+
+    count++;
+    start = index + 3; // 'px' and space
+  }
+  while((start + 2) <= columns.length);
+
+  return count;
+}
+
+let      grid_cells_els = null;
+let      grid_cells_ord = null;
+
+function grid_cells_order() {
+  if (is_first_render()) return;
+
+  const  grid = grid_get();
+  if   (!grid)  return;
+
+  if   (!grid_cells_els) {
+         grid_cells_els = Array.from(grid.children);
+         grid_cells_ord = 3;
+  }
+
+  const   ord  =  grid_columns_count();
+  if     (ord === grid_cells_ord) return;
+
+  const   els  =  grid_cells_els;
+
+  const   focus_el = document.activeElement;
+  const   focus_in = grid.contains(focus_el);
+
+  switch (ord) {
+    case  1: grid.append(els[0], els[1], els[2], els[3], els[5], els[4]);
+      break;
+
+    case  2: grid.append(els[0], els[3], els[1], els[5], els[2], els[4]);
+      break;
+
+    case  3: grid.append(els[0], els[1], els[2], els[3], els[4], els[5]);
+      break;
+  }
+
+  if (focus_in) focus_el.focus({ preventScroll: true });
+
+  grid_cells_ord = ord;
+}
+
 /* Checkboxes Filtered States */
 
 let chks_filtered_states = null;
