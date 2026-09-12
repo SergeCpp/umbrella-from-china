@@ -662,21 +662,12 @@ function grid_cells_order() {
 
   const   els  =  grid_cells_els;
 
-  const   focus_el = document.activeElement;
-  const   focus_in = grid.contains(focus_el);
-
-  switch (ord) {
-    case  1: grid.append(els[0], els[1], els[2], els[3], els[5], els[4]);
-      break;
-
-    case  2: grid.append(els[0], els[3], els[1], els[5], els[2], els[4]);
-      break;
-
-    case  3: grid.append(els[0], els[1], els[2], els[3], els[4], els[5]);
-      break;
-  }
-
-  if (focus_in) focus_el.focus({ preventScroll: true });
+  const   arr  =  ord === 1 ? [0, 1, 2, 3, 5, 4] :
+                  ord === 2 ? [0, 3, 1, 5, 2, 4] :
+                  ord === 3 ? [0, 1, 2, 3, 4, 5] : null;
+  if     (arr)
+    for (const idx of arr)
+      grid.moveBefore(els[idx], null);
 
   grid_cells_ord = ord;
 }
