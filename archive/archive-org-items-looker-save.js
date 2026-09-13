@@ -649,10 +649,11 @@ function grid_columns_count() {
   return count;
 }
 
-let      grid_cells_els = null;
-let      grid_cells_ord = null;
+let      grid_cells_els  = null;
+let      grid_cells_ord  = null;
+let      grid_cells_movs = null;
 
-let      grid_observer  = null;
+let      grid_observer   = null;
 
 function grid_cells_order() {
   if    (is_first_render()) return;
@@ -675,12 +676,34 @@ function grid_cells_order() {
 
   const  els  =  grid_cells_els;
 
+/*
   const  arr  =  ord === 1 ? [0, 1, 2, 3, 5, 4] :
                  ord === 2 ? [0, 3, 1, 5, 2, 4] :
                  ord === 3 ? [0, 1, 2, 3, 4, 5] : null;
   if    (arr)
-    for (const idx of arr)
+    for (const idx of arr) // Possible for 1..5 because [0] never moved
       grid.moveBefore(els[idx], null);
+*/
+
+  if   (!grid_cells_movs) {
+         grid_cells_movs = {
+
+      '1 >> 2': [[2, 4], [1, 5]], // 2 before 4, 1 before 5
+      '2 >> 1': [[2, 3], [1, 2]], // 2 before 3, 1 before 2
+
+      '1 >> 3': [[4, 5]],         // 4 before 5
+      '3 >> 1': [[5, 4]],         // 5 before 4
+
+      '2 >> 3': [[5,  ], [3, 4]], // 5 before n, 3 before 4
+      '3 >> 2': [[5, 2], [3, 1]]  // 5 before 2, 3 before 1
+    };
+  }
+
+  const  steps = grid_cells_movs[grid_cells_ord + ' >> ' + ord];
+
+  if    (steps)
+    for (const [a, b] of steps)
+      grid.moveBefore(els[a], b === undefined ? null : els[b]);
 
   grid_cells_ord = ord;
 }
