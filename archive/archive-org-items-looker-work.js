@@ -667,6 +667,7 @@ function grid_cells_order() {
 
   if   (!grid_observer) {                        // Matches call order in process_filter
          grid_observer = new ResizeObserver(() => { tab_layout_upd(); grid_cells_order(); });
+         grid_observer . observe(grid);
   }
 
   const  ord  =  grid_columns_count();
@@ -677,14 +678,9 @@ function grid_cells_order() {
   const  arr  =  ord === 1 ? [0, 1, 2, 3, 5, 4] :
                  ord === 2 ? [0, 3, 1, 5, 2, 4] :
                  ord === 3 ? [0, 1, 2, 3, 4, 5] : null;
-  if    (arr) {
-    grid_observer.disconnect();
-
+  if    (arr)
     for (const idx of arr)
       grid.moveBefore(els[idx], null);
-
-    grid_observer.observe(grid);
-  }
 
   grid_cells_ord = ord;
 }
