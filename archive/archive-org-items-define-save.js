@@ -240,9 +240,11 @@ function process_filter() {
   const main_curr_date  =  date_main("curr");
   const main_curr_items = items_main("curr");
 
+  // Matches call order in grid_cells_order
+  //
   // Horizontal / Vertical Tab Buttons Positioning
   tab_layout_upd();
-
+  //
   // Grid Inputs Positioning
   grid_cells_order();
 

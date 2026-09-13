@@ -579,13 +579,19 @@ function tab_action() {
 
 // Layout
 
+let      tab_layout_compact = false;
+
 function tab_layout_upd() {
-  if   (is_first_render()) return;
+  if    (is_first_render()) return;
 
-  const tab_row = document.querySelector('.tab-row');
-  if  (!tab_row)  return;
+  const  compact  =  is_screen_narrow();
+  if    (compact === tab_layout_compact) return;
 
-  tab_row.classList.toggle('compact', is_screen_narrow());
+  const  tab_row  =  document.querySelector('.tab-row');
+  if   (!tab_row)    return;
+
+  tab_row.classList.toggle('compact', compact);
+  tab_layout_compact                = compact;
 }
 
 // Interface
@@ -627,9 +633,9 @@ function grid_columns_count() {
   if   (!grid)  return 0;
 
   // "250px 250px 250px"
-  const columns = window.getComputedStyle(grid).getPropertyValue('grid-template-columns');
-  let   count   = 0;
-  let   start   = 0;
+  const  columns = window.getComputedStyle(grid).getPropertyValue('grid-template-columns');
+  let    count   = 0;
+  let    start   = 0;
 
   do {
     const index = columns.indexOf('px', start);
@@ -646,8 +652,10 @@ function grid_columns_count() {
 let      grid_cells_els = null;
 let      grid_cells_ord = null;
 
+let      grid_observer  = null;
+
 function grid_cells_order() {
-  if (is_first_render()) return;
+  if    (is_first_render()) return;
 
   const  grid = grid_get();
   if   (!grid)  return;
@@ -657,17 +665,26 @@ function grid_cells_order() {
          grid_cells_ord = 3;
   }
 
-  const   ord  =  grid_columns_count();
-  if     (ord === grid_cells_ord) return;
+  if   (!grid_observer) {                        // Matches call order in process_filter
+         grid_observer = new ResizeObserver(() => { tab_layout_upd(); grid_cells_order(); });
+  }
 
-  const   els  =  grid_cells_els;
+  const  ord  =  grid_columns_count();
+  if    (ord === grid_cells_ord) return;
 
-  const   arr  =  ord === 1 ? [0, 1, 2, 3, 5, 4] :
-                  ord === 2 ? [0, 3, 1, 5, 2, 4] :
-                  ord === 3 ? [0, 1, 2, 3, 4, 5] : null;
-  if     (arr)
+  const  els  =  grid_cells_els;
+
+  const  arr  =  ord === 1 ? [0, 1, 2, 3, 5, 4] :
+                 ord === 2 ? [0, 3, 1, 5, 2, 4] :
+                 ord === 3 ? [0, 1, 2, 3, 4, 5] : null;
+  if    (arr) {
+    grid_observer.disconnect();
+
     for (const idx of arr)
       grid.moveBefore(els[idx], null);
+
+    grid_observer.observe(grid);
+  }
 
   grid_cells_ord = ord;
 }
