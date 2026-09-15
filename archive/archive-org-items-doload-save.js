@@ -83,8 +83,8 @@ function conv_stat_docs(docs) {
 
 // bstr_description <str name="description">
 
-// Subj: Text: 52.1 ms / 10; DOM: 84.6 ms / 1
-// Desc: Text: 53.8 ms / 10; DOM: 47.1 ms / 1
+// Subj: Text: 52.1 ms / 10; DOM: 84.6 ms / 1 / 210 463
+// Desc: Text: 53.8 ms / 10; DOM: 47.1 ms / 1 / 730 081
 function parse_sect_text_10(text, name) { // Rename: text_10 <-> text
   let du_min = Infinity;
 
@@ -127,7 +127,7 @@ function parse_sect_text_10(text, name) { // Rename: text_10 <-> text
   const items = parse_sect_text_1(text, name);
   const str   =  JSON.stringify  (items);
   if   (str  === JSON.stringify  (it_dom)) {
-//  alert("ok sect " + name + ": " + str.length);
+    alert("ok sect " + name + ": " + str.length);
   }
   else {
     alert("no sect " + name);
@@ -188,6 +188,7 @@ function parse_sect_desc(text) {
 
 // Text: 10.3 ms / 10
 // DOM : 70.4 ms / 1
+// Size: 321 497
 function parse_stat_text_10(text) { // Rename: text_10 <-> text
   let du_min = Infinity;
 
@@ -215,7 +216,7 @@ function parse_stat_text_10(text) { // Rename: text_10 <-> text
   const stats  = parse_stat_text_1(text);
   const str    =  JSON.stringify  (stats);
   if   (str   === JSON.stringify  (st_dom)) {
-//  alert("ok stat: " + str.length);
+    alert("ok stat: " + str.length);
   }
   else {
     alert("no stat");
