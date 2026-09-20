@@ -1,6 +1,7 @@
 /* Checking and Initial Filtering Items, and Calculating Stats */
 
 function filter_base(stats_items, stats_date,
+
   archived_min, archived_max, created_min, created_max,
   collections, creators, title, is_title_identifier) {
 
@@ -172,7 +173,9 @@ function filter_base(stats_items, stats_date,
 /* Filter Count Input Processing */
 
 // Syntax: [/] [input]
+//
 function get_title_prefix(title_str) {
+
   const is_title_prefix = title_str.startsWith('/');
 
   if (is_title_prefix) title_str = title_str.slice(1).trimStart();
@@ -181,7 +184,9 @@ function get_title_prefix(title_str) {
 }
 
 // Syntax: [^] [input]
+//
 function get_views_prefix(min_str, max_str) {
+
   const is_min_prefix = min_str.startsWith('^');
   const is_max_prefix = max_str.startsWith('^');
 
@@ -193,7 +198,9 @@ function get_views_prefix(min_str, max_str) {
 
 // Syntax: [non-negative float | non-negative integer]
 // Return: [ok, is_float, ratio]
+//
 function get_ratio(str) {
+
   if (!str) return [ false, false, null ];
 
   if (str.includes('.')) {
@@ -211,7 +218,9 @@ function get_ratio(str) {
 // Syntax: [non-negative float | non-negative integer]
 // Return: [ok, min_ratio, max_ratio]
 //          ok if at least one float
+//
 function get_ratios(min_str, max_str) {
+
   if (!min_str && !max_str) return [ false, null, null ];
 
   const [min_ok, is_min_float, min_ratio] = get_ratio(min_str);
@@ -225,7 +234,9 @@ function get_ratios(min_str, max_str) {
 
 // str: (grow or / | fall or \ | same or = | diff or !) [non-negative number [- non-negative number] [%]]
 // need_ratio: if true then number can be float or integer, else number must be integer only
+//
 function get_key(str, need_ratio = false) {
+
   let slc  = 0;
   let name = null;
 
@@ -332,23 +343,25 @@ function get_key(str, need_ratio = false) {
 //  str: [[ae for >= | a for > | be for <= | b for < | e for == | ne for !=] non-negative number]
 //  key_other: key name from other paired field (max for min, min for max)
 // need_ratio: if true then number can be float or integer, else number must be integer only
+//
 function get_num(str, key_other, need_ratio = false) {
-  if (!str) return [ "", null ]; // Any number on this side
 
-  let   sl = 0;
-  let   op = null;
+  if  (!str) return [ "", null ]; // Any number on this side
 
-  const s1 = str.slice(0, 1);
-  const s2 = str.slice(0, 2);
+  let   slc = 0;
+  let   op  = null;
 
-  if      (s2 === "ae") { sl = 2; op = "ae"; }
-  else if (s1 === 'a' ) { sl = 1; op = 'a' ; }
-  else if (s2 === "be") { sl = 2; op = "be"; }
-  else if (s1 === 'b' ) { sl = 1; op = 'b' ; }
-  else if (s1 ===  'e') { sl = 1; op =  'e'; }
-  else if (s2 === "ne") { sl = 2; op = "ne"; }
+  const s1  = str.slice(0, 1);
+  const s2  = str.slice(0, 2);
 
-  let s = sl ? str.slice(sl).trimStart() : str;
+  if      (s2 === "ae") { slc = 2; op = "ae"; }
+  else if (s1 === 'a' ) { slc = 1; op = 'a' ; }
+  else if (s2 === "be") { slc = 2; op = "be"; }
+  else if (s1 === 'b' ) { slc = 1; op = 'b' ; }
+  else if (s1 ===  'e') { slc = 1; op =  'e'; }
+  else if (s2 === "ne") { slc = 2; op = "ne"; }
+
+  let s = slc ? str.slice(slc).trimStart() : str;
 //let num;
 
   if (need_ratio) {
@@ -372,88 +385,100 @@ function get_num(str, key_other, need_ratio = false) {
   return [ s, op ];
 }
 
-// Syntax  : [[agg] non-negative integer]
+// Syntax    : [[agg] non-negative (number-sole | number-item | integer-rank)]
 //
-// agg is  : agg_item | agg_rank
+// agg is    : agg_item | agg_rank
 //
-// agg_item: (min | avg | max) | (add | sub) | (pos | neg) | (prev | curr)
+// agg_item  : (min | avg | max) | (add | sub) | (pos | neg) | (prev | curr)
 //
-// agg_rank: topn/tn | btmn/bn | topa/ta | btma/ba | topx/tx | btmx/bx
-//           topd/td | btmd/bd | tops/ts | btms/bs
-//           top+/t+ | btm+/b+ | top-/t- | btm-/b-
-//           topp/tp | btmp/bp | topc/tc | btmc/bc
+// agg_rank  : topn/tn | btmn/bn | topa/ta | btma/ba | topx/tx | btmx/bx
+//             topd/td | btmd/bd | tops/ts | btms/bs
+//             top+/t+ | btm+/b+ | top-/t- | btm-/b-
+//             topp/tp | btmp/bp | topc/tc | btmc/bc
 //
-function get_agg(str) {
-  if (!str) return [ "", null ]; // Any number on this side
+// need_ratio: if true then number-sole/item must be float only, else number-sole/item must be integer only
+//
+function get_agg(str, need_ratio = false) {
 
-  let  sl  = 0;
-  let  agg = null;
+  if  (!str) return [ "", null, null ]; // Any number on this side
 
-  const s2 = str.slice(0, 2);
-  const s3 = str.slice(0, 3);
-  const s4 = str.slice(0, 4);
+  let   slc  = 0;
+  let   agg  = null;
+  let   item = false;
 
-  if      (s3 === "min" ) { sl = 3; agg = "min" ; }
-  else if (s3 === "avg" ) { sl = 3; agg = "avg" ; }
-  else if (s3 === "max" ) { sl = 3; agg = "max" ; }
-  else if (s3 === "add" ) { sl = 3; agg = "add" ; }
-  else if (s3 === "sub" ) { sl = 3; agg = "sub" ; }
-  else if (s3 === "pos" ) { sl = 3; agg = "pos" ; }
-  else if (s3 === "neg" ) { sl = 3; agg = "neg" ; }
-  else if (s4 === "prev") { sl = 4; agg = "prev"; }
-  else if (s4 === "curr") { sl = 4; agg = "curr"; }
-  //
-  else if (s4 === "topn") { sl = 4; agg = "topn"; } // min
-  else if (s2 === "tn"  ) { sl = 2; agg = "topn"; }
-  else if (s4 === "btmn") { sl = 4; agg = "btmn"; }
-  else if (s2 === "bn"  ) { sl = 2; agg = "btmn"; }
-  //
-  else if (s4 === "topa") { sl = 4; agg = "topa"; } // avg
-  else if (s2 === "ta"  ) { sl = 2; agg = "topa"; }
-  else if (s4 === "btma") { sl = 4; agg = "btma"; }
-  else if (s2 === "ba"  ) { sl = 2; agg = "btma"; }
-  //
-  else if (s4 === "topx") { sl = 4; agg = "topx"; } // max
-  else if (s2 === "tx"  ) { sl = 2; agg = "topx"; }
-  else if (s4 === "btmx") { sl = 4; agg = "btmx"; }
-  else if (s2 === "bx"  ) { sl = 2; agg = "btmx"; }
-  //
-  else if (s4 === "topd") { sl = 4; agg = "topd"; } // add
-  else if (s2 === "td"  ) { sl = 2; agg = "topd"; }
-  else if (s4 === "btmd") { sl = 4; agg = "btmd"; }
-  else if (s2 === "bd"  ) { sl = 2; agg = "btmd"; }
-  //
-  else if (s4 === "tops") { sl = 4; agg = "tops"; } // sub
-  else if (s2 === "ts"  ) { sl = 2; agg = "tops"; }
-  else if (s4 === "btms") { sl = 4; agg = "btms"; }
-  else if (s2 === "bs"  ) { sl = 2; agg = "btms"; }
-  //
-  else if (s4 === "top+") { sl = 4; agg = "top+"; } // pos
-  else if (s2 === "t+"  ) { sl = 2; agg = "top+"; }
-  else if (s4 === "btm+") { sl = 4; agg = "btm+"; }
-  else if (s2 === "b+"  ) { sl = 2; agg = "btm+"; }
-  //
-  else if (s4 === "top-") { sl = 4; agg = "top-"; } // neg
-  else if (s2 === "t-"  ) { sl = 2; agg = "top-"; }
-  else if (s4 === "btm-") { sl = 4; agg = "btm-"; }
-  else if (s2 === "b-"  ) { sl = 2; agg = "btm-"; }
-  //
-  else if (s4 === "topp") { sl = 4; agg = "topp"; } // prev
-  else if (s2 === "tp"  ) { sl = 2; agg = "topp"; }
-  else if (s4 === "btmp") { sl = 4; agg = "btmp"; }
-  else if (s2 === "bp"  ) { sl = 2; agg = "btmp"; }
-  //
-  else if (s4 === "topc") { sl = 4; agg = "topc"; } // curr
-  else if (s2 === "tc"  ) { sl = 2; agg = "topc"; }
-  else if (s4 === "btmc") { sl = 4; agg = "btmc"; }
-  else if (s2 === "bc"  ) { sl = 2; agg = "btmc"; }
+  const s2   = str.slice(0, 2);
+  const s3   = str.slice(0, 3);
+  const s4   = str.slice(0, 4);
 
-  let s = sl ? str.slice(sl).trimStart() : str;
-  if (!/^\d{1,8}$/.test(s))    return [ str, null ];
-  const num = parseInt(s, 10);
-  if (isNaN(num) || (num < 0)) return [ str, null ];
+  if      (s3 === "min" ) { slc = 3; agg = "min" ; item = true; }
+  else if (s3 === "avg" ) { slc = 3; agg = "avg" ; item = true; }
+  else if (s3 === "max" ) { slc = 3; agg = "max" ; item = true; }
+  else if (s3 === "add" ) { slc = 3; agg = "add" ; item = true; }
+  else if (s3 === "sub" ) { slc = 3; agg = "sub" ; item = true; }
+  else if (s3 === "pos" ) { slc = 3; agg = "pos" ; item = true; }
+  else if (s3 === "neg" ) { slc = 3; agg = "neg" ; item = true; }
+  else if (s4 === "prev") { slc = 4; agg = "prev"; item = true; }
+  else if (s4 === "curr") { slc = 4; agg = "curr"; item = true; }
+  //
+  else if (s4 === "topn") { slc = 4; agg = "topn"; } // min
+  else if (s2 === "tn"  ) { slc = 2; agg = "topn"; }
+  else if (s4 === "btmn") { slc = 4; agg = "btmn"; }
+  else if (s2 === "bn"  ) { slc = 2; agg = "btmn"; }
+  //
+  else if (s4 === "topa") { slc = 4; agg = "topa"; } // avg
+  else if (s2 === "ta"  ) { slc = 2; agg = "topa"; }
+  else if (s4 === "btma") { slc = 4; agg = "btma"; }
+  else if (s2 === "ba"  ) { slc = 2; agg = "btma"; }
+  //
+  else if (s4 === "topx") { slc = 4; agg = "topx"; } // max
+  else if (s2 === "tx"  ) { slc = 2; agg = "topx"; }
+  else if (s4 === "btmx") { slc = 4; agg = "btmx"; }
+  else if (s2 === "bx"  ) { slc = 2; agg = "btmx"; }
+  //
+  else if (s4 === "topd") { slc = 4; agg = "topd"; } // add
+  else if (s2 === "td"  ) { slc = 2; agg = "topd"; }
+  else if (s4 === "btmd") { slc = 4; agg = "btmd"; }
+  else if (s2 === "bd"  ) { slc = 2; agg = "btmd"; }
+  //
+  else if (s4 === "tops") { slc = 4; agg = "tops"; } // sub
+  else if (s2 === "ts"  ) { slc = 2; agg = "tops"; }
+  else if (s4 === "btms") { slc = 4; agg = "btms"; }
+  else if (s2 === "bs"  ) { slc = 2; agg = "btms"; }
+  //
+  else if (s4 === "top+") { slc = 4; agg = "top+"; } // pos
+  else if (s2 === "t+"  ) { slc = 2; agg = "top+"; }
+  else if (s4 === "btm+") { slc = 4; agg = "btm+"; }
+  else if (s2 === "b+"  ) { slc = 2; agg = "btm+"; }
+  //
+  else if (s4 === "top-") { slc = 4; agg = "top-"; } // neg
+  else if (s2 === "t-"  ) { slc = 2; agg = "top-"; }
+  else if (s4 === "btm-") { slc = 4; agg = "btm-"; }
+  else if (s2 === "b-"  ) { slc = 2; agg = "btm-"; }
+  //
+  else if (s4 === "topp") { slc = 4; agg = "topp"; } // prev
+  else if (s2 === "tp"  ) { slc = 2; agg = "topp"; }
+  else if (s4 === "btmp") { slc = 4; agg = "btmp"; }
+  else if (s2 === "bp"  ) { slc = 2; agg = "btmp"; }
+  //
+  else if (s4 === "topc") { slc = 4; agg = "topc"; } // curr
+  else if (s2 === "tc"  ) { slc = 2; agg = "topc"; }
+  else if (s4 === "btmc") { slc = 4; agg = "btmc"; }
+  else if (s2 === "bc"  ) { slc = 2; agg = "btmc"; }
 
-  return [ s, agg ];
+  let s = slc ? str.slice(slc).trimStart() : str;
+  let num;
+
+  if (need_ratio && (!agg || item)) { // Must be float-sole or float-item
+    const [num_ok,    is_num_float, num_ratio] = get_ratio(s);
+    if   (!num_ok || !is_num_float) return [ str, null, undefined ]; // Erroneous number or not a float
+    num  = num_ratio;
+  }
+  else {
+    if   (!/^\d{1,8}$/.test(s)) return [ str, null, undefined ]; // Erroneous number
+    num  = parseInt(s, 10);
+  }
+
+  return [ s, agg, num ]; // Correct number
 }
 
 /* Filter Count */

@@ -24,6 +24,10 @@ const err_chars =
   err_ed +
   err_end;
 
+const err_number =
+  err_beg + 'Allowed numbers are non-negative: floats (123. / 123.456 / .456) or integers (123)' +
+  err_end;
+
 const err_parens =
   err_beg + 'Parentheses must match: ()' +
   err_end;
@@ -866,6 +870,102 @@ function filter_route(
       (!wk_min_ratio_key && wk_max_ratio_no_t && wk_max_ratio_str_t.includes('.')) ||
       (!wk_max_ratio_key && wk_min_ratio_no_t && wk_min_ratio_str_t.includes('.'))) {
     return { error: err_keys_no };
+  }
+
+  // Ratios: aggregate functions
+  let dl_min_ratio_agg = null;
+  let dl_max_ratio_agg = null;
+  let mo_min_ratio_agg = null;
+  let mo_max_ratio_agg = null;
+  let wk_min_ratio_agg = null;
+  let wk_max_ratio_agg = null;
+
+  let dl_min_ratio_agg_t = null;
+  let dl_max_ratio_agg_t = null;
+  let mo_min_ratio_agg_t = null;
+  let mo_max_ratio_agg_t = null;
+  let wk_min_ratio_agg_t = null;
+  let wk_max_ratio_agg_t = null;
+
+  let dl_min_ratio_agg_num = undefined;
+  let dl_max_ratio_agg_num = undefined;
+  let mo_min_ratio_agg_num = undefined;
+  let mo_max_ratio_agg_num = undefined;
+  let wk_min_ratio_agg_num = undefined;
+  let wk_max_ratio_agg_num = undefined;
+
+  let dl_min_ratio_agg_num_t = undefined;
+  let dl_max_ratio_agg_num_t = undefined;
+  let mo_min_ratio_agg_num_t = undefined;
+  let mo_max_ratio_agg_num_t = undefined;
+  let wk_min_ratio_agg_num_t = undefined;
+  let wk_max_ratio_agg_num_t = undefined;
+
+  [dl_min_str_t, dl_min_ratio_agg_t, dl_min_ratio_agg_num_t] = get_agg(dl_min_str, "need-ratio");
+  [dl_max_str_t, dl_max_ratio_agg_t, dl_max_ratio_agg_num_t] = get_agg(dl_max_str, "need-ratio");
+  [mo_min_str_t, mo_min_ratio_agg_t, mo_min_ratio_agg_num_t] = get_agg(mo_min_str, "need-ratio");
+  [mo_max_str_t, mo_max_ratio_agg_t, mo_max_ratio_agg_num_t] = get_agg(mo_max_str, "need-ratio");
+  [wk_min_str_t, wk_min_ratio_agg_t, wk_min_ratio_agg_num_t] = get_agg(wk_min_str, "need-ratio");
+  [wk_max_str_t, wk_max_ratio_agg_t, wk_max_ratio_agg_num_t] = get_agg(wk_max_str, "need-ratio");
+
+  if (!dl_min_ratio_key                      && !dl_max_ratio_key    &&
+      (dl_min_ratio_agg_t                    ||  dl_max_ratio_agg_t) &&
+      (dl_min_ratio_agg_num_t !== undefined) && (dl_max_ratio_agg_num_t !== undefined)) {
+
+    dl_min_ratio_agg     = dl_min_ratio_agg_t;
+    dl_max_ratio_agg     = dl_max_ratio_agg_t;
+
+    dl_min_ratio_agg_num = dl_min_ratio_agg_num_t;
+    dl_max_ratio_agg_num = dl_max_ratio_agg_num_t;
+
+    dl_min_str           = "";
+    dl_max_str           = "";
+  }
+
+  if (!mo_min_ratio_key                      && !mo_max_ratio_key    &&
+      (mo_min_ratio_agg_t                    ||  mo_max_ratio_agg_t) &&
+      (mo_min_ratio_agg_num_t !== undefined) && (mo_max_ratio_agg_num_t !== undefined)) {
+
+    mo_min_ratio_agg     = mo_min_ratio_agg_t;
+    mo_max_ratio_agg     = mo_max_ratio_agg_t;
+
+    mo_min_ratio_agg_num = mo_min_ratio_agg_num_t;
+    mo_max_ratio_agg_num = mo_max_ratio_agg_num_t;
+
+    mo_min_str           = "";
+    mo_max_str           = "";
+  }
+
+  if (!wk_min_ratio_key                      && !wk_max_ratio_key    &&
+      (wk_min_ratio_agg_t                    ||  wk_max_ratio_agg_t) &&
+      (wk_min_ratio_agg_num_t !== undefined) && (wk_max_ratio_agg_num_t !== undefined)) {
+
+    wk_min_ratio_agg     = wk_min_ratio_agg_t;
+    wk_max_ratio_agg     = wk_max_ratio_agg_t;
+
+    wk_min_ratio_agg_num = wk_min_ratio_agg_num_t;
+    wk_max_ratio_agg_num = wk_max_ratio_agg_num_t;
+
+    wk_min_str           = "";
+    wk_max_str           = "";
+  }
+
+  if ((dl_min_ratio_key && dl_max_ratio_agg_t) ||
+      (dl_max_ratio_key && dl_min_ratio_agg_t) ||
+      (mo_min_ratio_key && mo_max_ratio_agg_t) ||
+      (mo_max_ratio_key && mo_min_ratio_agg_t) ||
+      (wk_min_ratio_key && wk_max_ratio_agg_t) ||
+      (wk_max_ratio_key && wk_min_ratio_agg_t)) {
+    return { error: err_keys_agg };
+  }
+
+  if (( (dl_min_ratio_agg_t                    ||  dl_max_ratio_agg_t) &&
+       ((dl_min_ratio_agg_num_t === undefined) || (dl_max_ratio_agg_num_t === undefined))) ||
+      ( (mo_min_ratio_agg_t                    ||  mo_max_ratio_agg_t) &&
+       ((mo_min_ratio_agg_num_t === undefined) || (mo_max_ratio_agg_num_t === undefined))) ||
+      ( (wk_min_ratio_agg_t                    ||  wk_max_ratio_agg_t) &&
+       ((wk_min_ratio_agg_num_t === undefined) || (wk_max_ratio_agg_num_t === undefined))) ) {
+    return { error: err_number };
   }
 
   // Ratios: values
