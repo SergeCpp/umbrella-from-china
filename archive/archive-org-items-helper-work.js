@@ -232,7 +232,7 @@ function get_ratios(min_str, max_str) {
   return [ (min_ok && max_ok) && (is_min_float || is_max_float), min_ratio, max_ratio ];
 }
 
-// str: (grow or / | fall or \ | same or = | diff or !) [non-negative number [- non-negative number] [%]]
+// str: [.](grow or / | fall or \ | same or = | diff or !) [non-negative number [- non-negative number] [%]]
 // need_ratio: if true then number can be float or integer, else number must be integer only
 //
 function get_key(str, need_ratio = false) {
@@ -385,7 +385,7 @@ function get_num(str, key_other, need_ratio = false) {
   return [ s, op ];
 }
 
-// Syntax    : [[agg] non-negative (number-sole | number-item | integer-rank)]
+// Syntax    : [[[.]agg] non-negative (number-sole | number-item | integer-rank)]
 //
 // agg is    : agg_item | agg_rank
 //
@@ -396,7 +396,7 @@ function get_num(str, key_other, need_ratio = false) {
 //             top+/t+ | btm+/b+ | top-/t- | btm-/b-
 //             topp/tp | btmp/bp | topc/tc | btmc/bc
 //
-// need_ratio: if true then number-sole/item must be float only, else number-sole/item must be integer only
+// need_ratio: if true then number-sole/item can be float or integer, else number-sole/item must be integer only
 //
 function get_agg(str, need_ratio = false) {
 
@@ -405,10 +405,22 @@ function get_agg(str, need_ratio = false) {
   let   slc  = 0;
   let   agg  = null;
   let   item = false;
+  let   dot  = false;
 
-  const s2   = str.slice(0, 2);
-  const s3   = str.slice(0, 3);
-  const s4   = str.slice(0, 4);
+  let   s    = str;
+
+  if (need_ratio) {
+    if (s.startsWith('.')) {
+      if ((s.length < 2) || !is_digit(s[1])) {
+        dot = true;
+        s   = s.slice(1).trimStart();
+      }
+    }
+  }
+
+  const s2   = s.slice(0, 2);
+  const s3   = s.slice(0, 3);
+  const s4   = s.slice(0, 4);
 
   if      (s3 === "min" ) { slc = 3; agg = "min" ; item = true; }
   else if (s3 === "avg" ) { slc = 3; agg = "avg" ; item = true; }
@@ -465,12 +477,33 @@ function get_agg(str, need_ratio = false) {
   else if (s4 === "btmc") { slc = 4; agg = "btmc"; }
   else if (s2 === "bc"  ) { slc = 2; agg = "btmc"; }
 
-  let s = slc ? str.slice(slc).trimStart() : str;
+  if (slc) s = s.slice(slc).trimStart();
+
   let num;
 
-  if (need_ratio && (!agg || item)) { // Must be float-sole or float-item
-    const [num_ok,    is_num_float, num_ratio] = get_ratio(s);
-    if   (!num_ok || !is_num_float) return [ str, null, undefined ]; // Erroneous number or not a float
+  if (need_ratio) {
+    const [num_ok, is_num_float, num_ratio] = get_ratio(s);
+    if   (!num_ok) return [ str, null, undefined ]; // Erroneous number
+
+//  const sole = !agg;
+    const rank =  agg && !item;
+
+    if   (dot) {
+      //  dot: true,  sole: float >> ok    / integer >> ok
+      //              item: float >> ok    / integer >> ok
+      //              rank: float >> error / integer >> ok
+
+      if (rank && is_num_float) return [ str, null, undefined ];
+    }
+    else {
+      //  dot: false, sole: float >> ok    / integer >> error
+      //              item: float >> ok    / integer >> error
+      //              rank: float >> error / integer >> error
+
+      if (       !is_num_float) return [ str, null, undefined ];
+      if (rank && is_num_float) return [ str, null, undefined ];
+    }
+
     num  = num_ratio;
   }
   else {
@@ -741,10 +774,59 @@ function agg_nth(count_prev, count_curr, n, agg, time) {
 
 // Usage: At least one of *_agg must be of: see get_agg
 // If one of *_agg is not set, then this side uses agg of other side
+//
 function filter_count_range_agg(items_prev, items_curr,
-  min_str, min_agg, max_str, max_agg, get_count) {
-  let min_count = min_str ? parseInt(min_str, 10) : 0;
-  let max_count = max_str ? parseInt(max_str, 10) : Infinity;
+
+  min_str, min_agg, max_str, max_agg, get_count,
+
+      ratios        = false,
+  min_ratio_agg_num = undefined,
+  max_ratio_agg_num = undefined) {
+
+  /*
+
+  alert("min_agg: " +
+        (min_agg === undefined ? "undefined" :
+         min_agg === null      ? "null"      :
+  ('[' + min_agg + ']')) + '\n' +
+
+        "min_ratio_agg_num: " +
+        (min_ratio_agg_num === undefined ? "undefined" :
+         min_ratio_agg_num === null      ? "null"      :
+  ('[' + min_ratio_agg_num + ']')) + '\n\n' +
+
+        "max_agg: " +
+        (max_agg === undefined ? "undefined" :
+         max_agg === null      ? "null"      :
+  ('[' + max_agg + ']')) + '\n' +
+
+        "max_ratio_agg_num: " +
+        (max_ratio_agg_num === undefined ? "undefined" :
+         max_ratio_agg_num === null      ? "null"      :
+  ('[' + max_ratio_agg_num + ']')));
+
+  */
+
+  let min_passed;
+  let max_passed;
+
+  let min_count;
+  let max_count;
+
+  if (ratios) {
+    min_passed = min_ratio_agg_num !== null;
+    max_passed = max_ratio_agg_num !== null;
+
+    min_count  = min_passed ? min_ratio_agg_num : 0;
+    max_count  = max_passed ? max_ratio_agg_num : Infinity;
+  }
+  else {
+    min_passed = min_str;
+    max_passed = max_str;
+
+    min_count  = min_passed ? parseInt(min_str, 10) : 0;
+    max_count  = max_passed ? parseInt(max_str, 10) : Infinity;
+  }
 
   if (!min_agg) min_agg = max_agg;
   if (!max_agg) max_agg = min_agg;
@@ -774,11 +856,11 @@ function filter_count_range_agg(items_prev, items_curr,
   let max_time = null;
 
   if (is_nth_min) { // Use min_count as n
-    const n = min_str ? min_count : (min_agg_prefix === "btm") ? 0 : Infinity;
+    const n = min_passed  ? min_count : (min_agg_prefix === "btm") ? 0 : Infinity;
     [min_count, min_time] = agg_nth(count_prev, count_curr, n, min_agg, time);
   }
   if (is_nth_max) { // Use max_count as n
-    const n = max_str ? max_count : (max_agg_prefix === "top") ? 0 : Infinity;
+    const n = max_passed  ? max_count : (max_agg_prefix === "top") ? 0 : Infinity;
     [max_count, max_time] = agg_nth(count_prev, count_curr, n, max_agg, time);
   }
 
@@ -918,9 +1000,9 @@ function filter_views_keys_agg(items_prev, items_curr,
   const is_mo_key = is_key(mo_prev_str) || is_key(mo_curr_str);
   const is_wk_key = is_key(wk_prev_str) || is_key(wk_curr_str);
 
-  const is_dl_agg = dl_prev_agg || dl_curr_agg;
-  const is_mo_agg = mo_prev_agg || mo_curr_agg;
-  const is_wk_agg = wk_prev_agg || wk_curr_agg;
+  const is_dl_agg =        dl_prev_agg  ||        dl_curr_agg;
+  const is_mo_agg =        mo_prev_agg  ||        mo_curr_agg;
+  const is_wk_agg =        wk_prev_agg  ||        wk_curr_agg;
 
   if (!is_dl_key && !is_mo_key && !is_wk_key  &&
       !is_dl_agg && !is_mo_agg && !is_wk_agg) return { done: false };
@@ -931,11 +1013,13 @@ function filter_views_keys_agg(items_prev, items_curr,
     items_prev,
       items_curr,
         dl_prev_str, dl_prev_kv, dl_prev_no, dl_curr_str, dl_curr_kv, dl_curr_no, get_dl)
+
 : is_dl_agg
 ? filter_count_range_agg(
     items_prev,
       items_curr,
         dl_prev_str, dl_prev_agg, dl_curr_str, dl_curr_agg, get_dl)
+
 : filter_count_range_val(
     items_prev,
       items_curr,
@@ -947,11 +1031,13 @@ function filter_views_keys_agg(items_prev, items_curr,
     items_prev,
       items_curr,
         mo_prev_str, mo_prev_kv, mo_prev_no, mo_curr_str, mo_curr_kv, mo_curr_no, get_mo)
+
 : is_mo_agg
 ? filter_count_range_agg(
     items_prev,
       items_curr,
         mo_prev_str, mo_prev_agg, mo_curr_str, mo_curr_agg, get_mo)
+
 : filter_count_range_val(
     items_prev,
       items_curr,
@@ -963,11 +1049,13 @@ function filter_views_keys_agg(items_prev, items_curr,
     items_prev,
       items_curr,
         wk_prev_str, wk_prev_kv, wk_prev_no, wk_curr_str, wk_curr_kv, wk_curr_no, get_wk)
+
 : is_wk_agg
 ? filter_count_range_agg(
     items_prev,
       items_curr,
         wk_prev_str, wk_prev_agg, wk_curr_str, wk_curr_agg, get_wk)
+
 : filter_count_range_val(
     items_prev,
       items_curr,
@@ -1045,25 +1133,36 @@ function filter_views(items_prev, items_curr,
 
 /* Filter Ratios */
 
-function filter_ratios_keys(items_prev, items_curr,
+function filter_ratios_keys_agg(items_prev, items_curr,
 
   is_dl_ratios,         dl_prev_ratio,    dl_curr_ratio,   get_dl,
      dl_prev_ratio_key, dl_prev_ratio_kv, dl_prev_ratio_str,   dl_prev_ratio_no,
      dl_curr_ratio_key, dl_curr_ratio_kv, dl_curr_ratio_str,   dl_curr_ratio_no,
+     dl_prev_ratio_agg, dl_prev_ratio_agg_num,
+     dl_curr_ratio_agg, dl_curr_ratio_agg_num,
 
   is_mo_ratios,         mo_prev_ratio,    mo_curr_ratio,   get_mo,
      mo_prev_ratio_key, mo_prev_ratio_kv, mo_prev_ratio_str,   mo_prev_ratio_no,
      mo_curr_ratio_key, mo_curr_ratio_kv, mo_curr_ratio_str,   mo_curr_ratio_no,
+     mo_prev_ratio_agg, mo_prev_ratio_agg_num,
+     mo_curr_ratio_agg, mo_curr_ratio_agg_num,
 
   is_wk_ratios,         wk_prev_ratio,    wk_curr_ratio,   get_wk,
      wk_prev_ratio_key, wk_prev_ratio_kv, wk_prev_ratio_str,   wk_prev_ratio_no,
-     wk_curr_ratio_key, wk_curr_ratio_kv, wk_curr_ratio_str,   wk_curr_ratio_no) {
+     wk_curr_ratio_key, wk_curr_ratio_kv, wk_curr_ratio_str,   wk_curr_ratio_no,
+     wk_prev_ratio_agg, wk_prev_ratio_agg_num,
+     wk_curr_ratio_agg, wk_curr_ratio_agg_num) {
 
   const is_dl_key = dl_prev_ratio_key || dl_curr_ratio_key;
   const is_mo_key = mo_prev_ratio_key || mo_curr_ratio_key;
   const is_wk_key = wk_prev_ratio_key || wk_curr_ratio_key;
 
-  if  (!is_dl_key && !is_mo_key && !is_wk_key) return { done: false };
+  const is_dl_agg = dl_prev_ratio_agg || dl_curr_ratio_agg;
+  const is_mo_agg = mo_prev_ratio_agg || mo_curr_ratio_agg;
+  const is_wk_agg = wk_prev_ratio_agg || wk_curr_ratio_agg;
+
+  if  (!is_dl_key && !is_mo_key && !is_wk_key  &&
+       !is_dl_agg && !is_mo_agg && !is_wk_agg) return { done: false };
 
   const dl_res
    = is_dl_key
@@ -1072,7 +1171,20 @@ function filter_ratios_keys(items_prev, items_curr,
          items_curr,
            dl_prev_ratio_key || dl_prev_ratio_str, dl_prev_ratio_kv, dl_prev_ratio_no,
            dl_curr_ratio_key || dl_curr_ratio_str, dl_curr_ratio_kv, dl_curr_ratio_no,
-       get_dl,    "ratios")
+           get_dl,
+             "ratios")
+
+   : is_dl_agg
+   ? filter_count_range_agg(
+       items_prev,
+         items_curr,
+           null, dl_prev_ratio_agg,
+           null, dl_curr_ratio_agg,
+           get_dl,
+             "ratios",
+               dl_prev_ratio_agg_num,
+               dl_curr_ratio_agg_num)
+
    : filter_count_range_val(
        items_prev,
          items_curr,
@@ -1086,7 +1198,20 @@ function filter_ratios_keys(items_prev, items_curr,
          items_curr,
            mo_prev_ratio_key || mo_prev_ratio_str, mo_prev_ratio_kv, mo_prev_ratio_no,
            mo_curr_ratio_key || mo_curr_ratio_str, mo_curr_ratio_kv, mo_curr_ratio_no,
-       get_mo,    "ratios")
+           get_mo,
+             "ratios")
+
+   : is_mo_agg
+   ? filter_count_range_agg(
+       items_prev,
+         items_curr,
+           null, mo_prev_ratio_agg,
+           null, mo_curr_ratio_agg,
+           get_mo,
+             "ratios",
+               mo_prev_ratio_agg_num,
+               mo_curr_ratio_agg_num)
+
    : filter_count_range_val(
        items_prev,
          items_curr,
@@ -1100,7 +1225,20 @@ function filter_ratios_keys(items_prev, items_curr,
          items_curr,
            wk_prev_ratio_key || wk_prev_ratio_str, wk_prev_ratio_kv, wk_prev_ratio_no,
            wk_curr_ratio_key || wk_curr_ratio_str, wk_curr_ratio_kv, wk_curr_ratio_no,
-       get_wk,    "ratios")
+           get_wk,
+             "ratios")
+
+   : is_wk_agg
+   ? filter_count_range_agg(
+       items_prev,
+         items_curr,
+           null, wk_prev_ratio_agg,
+           null, wk_curr_ratio_agg,
+           get_wk,
+             "ratios",
+               wk_prev_ratio_agg_num,
+               wk_curr_ratio_agg_num)
+
    : filter_count_range_val(
        items_prev,
          items_curr,
@@ -1122,37 +1260,52 @@ function filter_ratios(items_prev, items_curr,
   is_dl_ratios,        dl_min_ratio,    dl_max_ratio,   is_dl_old,
      dl_min_ratio_key, dl_min_ratio_kv, dl_min_ratio_str,  dl_min_ratio_no,
      dl_max_ratio_key, dl_max_ratio_kv, dl_max_ratio_str,  dl_max_ratio_no,
+     dl_min_ratio_agg, dl_min_ratio_agg_num,
+     dl_max_ratio_agg, dl_max_ratio_agg_num,
 
   is_mo_ratios,        mo_min_ratio,    mo_max_ratio,   is_mo_23,
      mo_min_ratio_key, mo_min_ratio_kv, mo_min_ratio_str,  mo_min_ratio_no,
      mo_max_ratio_key, mo_max_ratio_kv, mo_max_ratio_str,  mo_max_ratio_no,
+     mo_min_ratio_agg, mo_min_ratio_agg_num,
+     mo_max_ratio_agg, mo_max_ratio_agg_num,
 
   is_wk_ratios,        wk_min_ratio,    wk_max_ratio,
      wk_min_ratio_key, wk_min_ratio_kv, wk_min_ratio_str,  wk_min_ratio_no,
-     wk_max_ratio_key, wk_max_ratio_kv, wk_max_ratio_str,  wk_max_ratio_no) {
+     wk_max_ratio_key, wk_max_ratio_kv, wk_max_ratio_str,  wk_max_ratio_no,
+     wk_min_ratio_agg, wk_min_ratio_agg_num,
+     wk_max_ratio_agg, wk_max_ratio_agg_num) {
 
   if (!is_dl_ratios     && !is_mo_ratios     && !is_wk_ratios      &&
 
       !dl_min_ratio_key && !mo_min_ratio_key && !wk_min_ratio_key  &&
-      !dl_max_ratio_key && !mo_max_ratio_key && !wk_max_ratio_key) return { done: false };
+      !dl_max_ratio_key && !mo_max_ratio_key && !wk_max_ratio_key  &&
+
+      !dl_min_ratio_agg && !mo_min_ratio_agg && !wk_min_ratio_agg  &&
+      !dl_max_ratio_agg && !mo_max_ratio_agg && !wk_max_ratio_agg) return { done: false };
 
   const get_dl = is_dl_old ? item => item.ratio_old : item => item.ratio_all;
   const get_mo = is_mo_23  ? item => item.ratio_23  : item => item.ratio_30;
   const get_wk =             item => item.ratio_7;
 
-  const ratios_keys = filter_ratios_keys(items_prev, items_curr,
+  const ratios_keys = filter_ratios_keys_agg(items_prev, items_curr,
 
   is_dl_ratios,        dl_min_ratio,    dl_max_ratio,   get_dl,
      dl_min_ratio_key, dl_min_ratio_kv, dl_min_ratio_str,   dl_min_ratio_no,
      dl_max_ratio_key, dl_max_ratio_kv, dl_max_ratio_str,   dl_max_ratio_no,
+     dl_min_ratio_agg, dl_min_ratio_agg_num,
+     dl_max_ratio_agg, dl_max_ratio_agg_num,
 
   is_mo_ratios,        mo_min_ratio,    mo_max_ratio,   get_mo,
      mo_min_ratio_key, mo_min_ratio_kv, mo_min_ratio_str,   mo_min_ratio_no,
      mo_max_ratio_key, mo_max_ratio_kv, mo_max_ratio_str,   mo_max_ratio_no,
+     mo_min_ratio_agg, mo_min_ratio_agg_num,
+     mo_max_ratio_agg, mo_max_ratio_agg_num,
 
   is_wk_ratios,        wk_min_ratio,    wk_max_ratio,   get_wk,
      wk_min_ratio_key, wk_min_ratio_kv, wk_min_ratio_str,   wk_min_ratio_no,
-     wk_max_ratio_key, wk_max_ratio_kv, wk_max_ratio_str,   wk_max_ratio_no);
+     wk_max_ratio_key, wk_max_ratio_kv, wk_max_ratio_str,   wk_max_ratio_no,
+     wk_min_ratio_agg, wk_min_ratio_agg_num,
+     wk_max_ratio_agg, wk_max_ratio_agg_num);
 
   if (ratios_keys.done) return ratios_keys;
 

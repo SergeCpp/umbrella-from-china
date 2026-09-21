@@ -775,7 +775,7 @@ function filter_route(
   // Views / Ratios: field prefixes
   let is_dl_old = false; // Use old instead dl, old = dl without last month
   let is_mo_23  = false; // Use 23 days instead month, 23 days = month withoul last week
-  let is_wk_7   = false; // This flag will not be used, week === 7 days
+  let is_wk_7   = false; // This flag is not used, week === 7 days
 
   [is_dl_old, dl_min_str, dl_max_str] = get_views_prefix(dl_min_str, dl_max_str);
   [is_mo_23,  mo_min_str, mo_max_str] = get_views_prefix(mo_min_str, mo_max_str);
@@ -1280,12 +1280,16 @@ function filter_route(
 
   // 4. Views
   const filtered_views = filter_views(results_prev, results_curr,
+
     dl_min_str, dl_min_kv, dl_min_no, dl_min_agg,
     dl_max_str, dl_max_kv, dl_max_no, dl_max_agg, is_dl_old,
+
     mo_min_str, mo_min_kv, mo_min_no, mo_min_agg,
     mo_max_str, mo_max_kv, mo_max_no, mo_max_agg, is_mo_23,
+
     wk_min_str, wk_min_kv, wk_min_no, wk_min_agg,
     wk_max_str, wk_max_kv, wk_max_no, wk_max_agg);
+
   if (filtered_views.done) {
     results_prev = filtered_views.prev;
     results_curr = filtered_views.curr;
@@ -1297,14 +1301,20 @@ function filter_route(
     is_dl_ratios,        dl_min_ratio,    dl_max_ratio,   is_dl_old,
        dl_min_ratio_key, dl_min_ratio_kv, dl_min_ratio_str,  dl_min_ratio_no,
        dl_max_ratio_key, dl_max_ratio_kv, dl_max_ratio_str,  dl_max_ratio_no,
+       dl_min_ratio_agg, dl_min_ratio_agg_num,
+       dl_max_ratio_agg, dl_max_ratio_agg_num,
 
     is_mo_ratios,        mo_min_ratio,    mo_max_ratio,   is_mo_23,
        mo_min_ratio_key, mo_min_ratio_kv, mo_min_ratio_str,  mo_min_ratio_no,
        mo_max_ratio_key, mo_max_ratio_kv, mo_max_ratio_str,  mo_max_ratio_no,
+       mo_min_ratio_agg, mo_min_ratio_agg_num,
+       mo_max_ratio_agg, mo_max_ratio_agg_num,
 
     is_wk_ratios,        wk_min_ratio,    wk_max_ratio,
        wk_min_ratio_key, wk_min_ratio_kv, wk_min_ratio_str,  wk_min_ratio_no,
-       wk_max_ratio_key, wk_max_ratio_kv, wk_max_ratio_str,  wk_max_ratio_no);
+       wk_max_ratio_key, wk_max_ratio_kv, wk_max_ratio_str,  wk_max_ratio_no,
+       wk_min_ratio_agg, wk_min_ratio_agg_num,
+       wk_max_ratio_agg, wk_max_ratio_agg_num);
 
   if (filtered_ratios.done) {
     results_prev = filtered_ratios.prev;
