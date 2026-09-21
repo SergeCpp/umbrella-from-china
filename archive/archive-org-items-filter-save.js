@@ -44,15 +44,14 @@ const err_date_range =
 
 const err_views =
   err_beg +
-  err_bds + 'Allowed are non-negative numbers, and keys: grow, fall, same, diff. Prefix: ^' +
+  err_bds + 'Allowed are non-negative numbers, and keys: grow, fall, same, diff. Prefixes: ^ and . (dot)' +
   err_es  +
   'Prefix ^ switches Downloads fields to Old = Downloads &minus; Month. Old is displayed in the table<br />' +
   'Prefix ^ switches Month fields to 23 = Month &minus; Week. 23 is displayed in the table<br />' +
   'Prefix ^ does nothing to Week fields. Week is always 7 days. Week is displayed in the table' +
   '</p><p>' +
-  'Integer range is for views count, float range is for views/day ratio<br />' +
+  'Integer range is for views count, float range is for views/day ratio, empty field is for no-limit value' +
   '</p><p>' +
-  'Range min/max values can be numbers, with empty field as no-limit value<br />' +
   'Aggregate range uses aggregate function in any field (or in both fields) of min/max pair<br />' +
   'Examples: min 10 / 20, min 10 / avg 30, also: max 20 / min 10 (reversed aggregate range)<br />' +
   'Note: min 10 / 20, and 10 / min 20 aggregate ranges both equal min 10 / min 20<br />' +
@@ -62,7 +61,8 @@ const err_views =
     'topd/td, btmd/bd for add; tops/ts, btms/bs for sub;<br />' +
     'top+/t+, btm+/b+ for pos; top-/t-, btm-/b- for neg;<br />' +
     'topp/tp, btmp/bp for prev; topc/tc, btmc/bc for curr<br />' +
-  'Equally ranked items ordered by date archived: min selects newer, max selects older' +
+  'Equally ranked items ordered by date archived: min selects newer, max selects older<br />' +
+  'Aggregate prefixed by . (dot) means views/day ratio, also use floats with item functions' +
   '</p><p>' +
   'Keys: grow, fall, same, diff (aliases: / \\ = !) switch min/max logic to prev/curr logic<br />' +
   'Key allows number or range min-max after it, and percent sign % can be after that<br />' +
