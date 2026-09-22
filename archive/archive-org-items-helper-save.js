@@ -582,6 +582,8 @@ function  is_diff(a, b, k) {
   return !is_same(a, b, k);
 }
 
+/* Filtering by keys logic */
+
 const op_fn = {
   ae: (a, b) => a >=  b,
   a : (a, b) => a >   b,
@@ -616,7 +618,9 @@ function get_count_map(items, is_key_exp, count, count_op, get_count) {
 }
 
 // Usage: At least one of *_str must be a key
+//
 function filter_count_keys(items_prev, items_curr,
+
   prev_str, prev_kv, prev_no, curr_str, curr_kv, curr_no, get_count, ratios = false) {
 
   /*
@@ -692,6 +696,8 @@ function filter_count_keys(items_prev, items_curr,
 
   return res;
 }
+
+/* Filtering by agg range */
 
 const agg_fn = {
   min  : (prev, curr) => Math.min(prev,  curr),
@@ -777,59 +783,40 @@ function agg_nth(count_prev, count_curr, n, agg, time) {
 //
 function filter_count_range_agg(items_prev, items_curr,
 
-  min_str, min_agg, max_str, max_agg, get_count,
-
-      ratios        = false,
-  min_ratio_agg_num = undefined,
-  max_ratio_agg_num = undefined) {
+  min_agg, min_agg_num, max_agg, max_agg_num, get_count) {
 
   /*
 
   alert("min_agg: " +
-        (min_agg === undefined ? "undefined" :
-         min_agg === null      ? "null"      :
-  ('[' + min_agg + ']')) + '\n' +
+        (min_agg     === undefined ? "undefined" :
+         min_agg     === null      ? "null"      :
+  ('[' + min_agg     + ']')) + '\n' +
 
-        "min_ratio_agg_num: " +
-        (min_ratio_agg_num === undefined ? "undefined" :
-         min_ratio_agg_num === null      ? "null"      :
-  ('[' + min_ratio_agg_num + ']')) + '\n\n' +
+        "min_agg_num: " +
+        (min_agg_num === undefined ? "undefined" :
+         min_agg_num === null      ? "null"      :
+  ('[' + min_agg_num + ']')) + '\n\n' +
 
         "max_agg: " +
-        (max_agg === undefined ? "undefined" :
-         max_agg === null      ? "null"      :
-  ('[' + max_agg + ']')) + '\n' +
+        (max_agg     === undefined ? "undefined" :
+         max_agg     === null      ? "null"      :
+  ('[' + max_agg     + ']')) + '\n' +
 
-        "max_ratio_agg_num: " +
-        (max_ratio_agg_num === undefined ? "undefined" :
-         max_ratio_agg_num === null      ? "null"      :
-  ('[' + max_ratio_agg_num + ']')));
+        "max_agg_num: " +
+        (max_agg_num === undefined ? "undefined" :
+         max_agg_num === null      ? "null"      :
+  ('[' + max_agg_num + ']')));
 
   */
 
-  let min_passed;
-  let max_passed;
-
-  let min_count;
-  let max_count;
-
-  if (ratios) {
-    min_passed = min_ratio_agg_num !== null;
-    max_passed = max_ratio_agg_num !== null;
-
-    min_count  = min_passed ? min_ratio_agg_num : 0;
-    max_count  = max_passed ? max_ratio_agg_num : Infinity;
-  }
-  else {
-    min_passed = min_str;
-    max_passed = max_str;
-
-    min_count  = min_passed ? parseInt(min_str, 10) : 0;
-    max_count  = max_passed ? parseInt(max_str, 10) : Infinity;
-  }
-
   if (!min_agg) min_agg = max_agg;
   if (!max_agg) max_agg = min_agg;
+
+  const min_passed = min_agg_num !== null;
+  const max_passed = max_agg_num !== null;
+
+  let   min_count  = min_passed ? min_agg_num : 0;
+  let   max_count  = max_passed ? max_agg_num : Infinity;
 
   const count_prev = {};
   const count_curr = {};
@@ -886,6 +873,8 @@ function filter_count_range_agg(items_prev, items_curr,
 
   return res;
 }
+
+/* Filtering from min to max */
 
 function filter_count_range_val(items_prev, items_curr,
   min_str, max_str, get_count,
@@ -1018,7 +1007,9 @@ function filter_views_keys_agg(items_prev, items_curr,
 ? filter_count_range_agg(
     items_prev,
       items_curr,
-        dl_prev_str, dl_prev_agg, dl_curr_str, dl_curr_agg, get_dl)
+        dl_prev_agg, dl_prev_str ? parseInt(dl_prev_str, 10) : null,
+        dl_curr_agg, dl_curr_str ? parseInt(dl_curr_str, 10) : null,
+        get_dl)
 
 : filter_count_range_val(
     items_prev,
@@ -1036,7 +1027,9 @@ function filter_views_keys_agg(items_prev, items_curr,
 ? filter_count_range_agg(
     items_prev,
       items_curr,
-        mo_prev_str, mo_prev_agg, mo_curr_str, mo_curr_agg, get_mo)
+        mo_prev_agg, mo_prev_str ? parseInt(mo_prev_str, 10) : null,
+        mo_curr_agg, mo_curr_str ? parseInt(mo_curr_str, 10) : null,
+        get_mo)
 
 : filter_count_range_val(
     items_prev,
@@ -1054,7 +1047,9 @@ function filter_views_keys_agg(items_prev, items_curr,
 ? filter_count_range_agg(
     items_prev,
       items_curr,
-        wk_prev_str, wk_prev_agg, wk_curr_str, wk_curr_agg, get_wk)
+        wk_prev_agg, wk_prev_str ? parseInt(wk_prev_str, 10) : null,
+        wk_curr_agg, wk_curr_str ? parseInt(wk_curr_str, 10) : null,
+        get_wk)
 
 : filter_count_range_val(
     items_prev,
@@ -1178,12 +1173,9 @@ function filter_ratios_keys_agg(items_prev, items_curr,
    ? filter_count_range_agg(
        items_prev,
          items_curr,
-           null, dl_prev_ratio_agg,
-           null, dl_curr_ratio_agg,
-           get_dl,
-             "ratios",
-               dl_prev_ratio_agg_num,
-               dl_curr_ratio_agg_num)
+           dl_prev_ratio_agg, dl_prev_ratio_agg_num,
+           dl_curr_ratio_agg, dl_curr_ratio_agg_num,
+           get_dl)
 
    : filter_count_range_val(
        items_prev,
@@ -1205,12 +1197,9 @@ function filter_ratios_keys_agg(items_prev, items_curr,
    ? filter_count_range_agg(
        items_prev,
          items_curr,
-           null, mo_prev_ratio_agg,
-           null, mo_curr_ratio_agg,
-           get_mo,
-             "ratios",
-               mo_prev_ratio_agg_num,
-               mo_curr_ratio_agg_num)
+           mo_prev_ratio_agg, mo_prev_ratio_agg_num,
+           mo_curr_ratio_agg, mo_curr_ratio_agg_num,
+           get_mo)
 
    : filter_count_range_val(
        items_prev,
@@ -1232,12 +1221,9 @@ function filter_ratios_keys_agg(items_prev, items_curr,
    ? filter_count_range_agg(
        items_prev,
          items_curr,
-           null, wk_prev_ratio_agg,
-           null, wk_curr_ratio_agg,
-           get_wk,
-             "ratios",
-               wk_prev_ratio_agg_num,
-               wk_curr_ratio_agg_num)
+           wk_prev_ratio_agg, wk_prev_ratio_agg_num,
+           wk_curr_ratio_agg, wk_curr_ratio_agg_num,
+           get_wk)
 
    : filter_count_range_val(
        items_prev,
@@ -1253,7 +1239,7 @@ function filter_ratios_keys_agg(items_prev, items_curr,
   return { done: true, prev: results_prev, curr: results_curr };
 }
 
-// Filtering by ratios: from min to max, or by keys logic
+// Filtering by ratios: from min to max, or by keys logic, or by agg range
 //
 function filter_ratios(items_prev, items_curr,
 
@@ -1340,16 +1326,22 @@ function filter_ratios(items_prev, items_curr,
 
 // Usage: favs_min_str as favs_prev_str, favs_max_str as favs_curr_str
 // *_str are: number / "" / keys: grow, fall, same, diff
+//
 function filter_favs_keys(items_prev, items_curr,
+
   favs_prev_str, favs_prev_kv, favs_prev_no,
   favs_curr_str, favs_curr_kv, favs_curr_no) {
+
   const is_key = (s) => ["grow", "fall", "same", "diff"].includes(s);
 
   if (!is_key(favs_prev_str) && !is_key(favs_curr_str)) return { done: false };
 
   const favs_res = filter_count_keys(items_prev, items_curr,
+
     favs_prev_str, favs_prev_kv, favs_prev_no,
-    favs_curr_str, favs_curr_kv, favs_curr_no, item => item.favorites);
+    favs_curr_str, favs_curr_kv, favs_curr_no,
+
+    item => item.favorites);
 
   const results_prev = items_prev.filter(item => favs_res[item.identifier]);
   const results_curr = items_curr.filter(item => favs_res[item.identifier]);
@@ -1359,15 +1351,20 @@ function filter_favs_keys(items_prev, items_curr,
 
 // *_str are: number / ""
 // *_agg are: see get_agg, and null is allowed for one of *_agg
+//
 function filter_favs_agg(items_prev, items_curr,
+
   favs_min_str, favs_min_agg,
   favs_max_str, favs_max_agg) {
 
   if (!favs_min_agg && !favs_max_agg) return { done: false };
 
   const favs_res = filter_count_range_agg(items_prev, items_curr,
-    favs_min_str, favs_min_agg,
-    favs_max_str, favs_max_agg, item => item.favorites);
+
+    favs_min_agg, favs_min_str ? parseInt(favs_min_str, 10) : null,
+    favs_max_agg, favs_max_str ? parseInt(favs_max_str, 10) : null,
+
+    item => item.favorites);
 
   const results_prev = items_prev.filter(item => favs_res[item.identifier]);
   const results_curr = items_curr.filter(item => favs_res[item.identifier]);
@@ -1377,18 +1374,23 @@ function filter_favs_agg(items_prev, items_curr,
 
 // Filtering by favorites count: from min to max, or by keys logic, or by agg range
 // *_str are: number / "" / keys
+//
 function filter_favs(items_prev, items_curr,
+
   favs_min_str, favs_min_kv, favs_min_no, favs_min_agg,
   favs_max_str, favs_max_kv, favs_max_no, favs_max_agg) {
+
   if (!favs_min_str && !favs_max_str) return { done: false };
 
   const favs_keys = filter_favs_keys(items_prev, items_curr,
+
     favs_min_str, favs_min_kv, favs_min_no,
     favs_max_str, favs_max_kv, favs_max_no);
 
   if (favs_keys.done) return favs_keys;
 
   const favs_agg = filter_favs_agg(items_prev, items_curr,
+
     favs_min_str, favs_min_agg,
     favs_max_str, favs_max_agg);
 
@@ -1410,6 +1412,7 @@ function filter_favs(items_prev, items_curr,
 /* Filter Sets */
 
 function filter_sets(items_prev, items_curr, only_prev, only_curr) {
+
   if (!only_prev && !only_curr) return { done: false };
 
   if (only_prev && !only_curr) {
