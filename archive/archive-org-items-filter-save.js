@@ -24,6 +24,10 @@ const err_chars =
   err_ed +
   err_end;
 
+const err_integer =
+  err_beg + 'Allowed numbers are non-negative integers: 123' +
+  err_end;
+
 const err_number =
   err_beg + 'Allowed numbers are non-negative: floats (123. / 123.456 / .456) or integers (123)' +
   err_end;
@@ -1197,17 +1201,28 @@ function filter_route(
   let favs_min_agg_t = null;
   let favs_max_agg_t = null;
 
-  [favs_min_str_t, favs_min_agg_t] = get_agg(favs_min_str);
-  [favs_max_str_t, favs_max_agg_t] = get_agg(favs_max_str);
+  let favs_min_agg_num = undefined;
+  let favs_max_agg_num = undefined;
+
+  let favs_min_agg_num_t = undefined;
+  let favs_max_agg_num_t = undefined;
+
+  [favs_min_str_t, favs_min_agg_t, favs_min_agg_num_t] = get_agg(favs_min_str);
+  [favs_max_str_t, favs_max_agg_t, favs_max_agg_num_t] = get_agg(favs_max_str);
 
   if (!input_allowed_keys(favs_min_str) && !input_allowed_keys(favs_max_str)) {
-    [favs_min_str, favs_min_agg] = [favs_min_str_t, favs_min_agg_t];
-    [favs_max_str, favs_max_agg] = [favs_max_str_t, favs_max_agg_t];
+    [favs_min_str, favs_min_agg, favs_min_agg_num] = [favs_min_str_t, favs_min_agg_t, favs_min_agg_num_t];
+    [favs_max_str, favs_max_agg, favs_max_agg_num] = [favs_max_str_t, favs_max_agg_t, favs_max_agg_num_t];
   }
 
   if ((input_allowed_keys(favs_min_str_t) && favs_max_agg_t) ||
       (input_allowed_keys(favs_max_str_t) && favs_min_agg_t)) {
     return { error: err_keys_agg };
+  }
+
+  if ( (favs_min_agg_t                    ||  favs_max_agg_t) &&
+      ((favs_min_agg_num_t === undefined) || (favs_max_agg_num_t === undefined)) ) {
+    return { error: err_integer };
   }
 
   // Favs: chars
@@ -1323,8 +1338,10 @@ function filter_route(
 
   // 6. Favs
   const filtered_favs = filter_favs(results_prev, results_curr,
-    favs_min_str, favs_min_kv, favs_min_no, favs_min_agg,
-    favs_max_str, favs_max_kv, favs_max_no, favs_max_agg);
+
+    favs_min_str, favs_min_kv, favs_min_no, favs_min_agg, favs_min_agg_num,
+    favs_max_str, favs_max_kv, favs_max_no, favs_max_agg, favs_max_agg_num);
+
   if (filtered_favs.done) {
     results_prev = filtered_favs.prev;
     results_curr = filtered_favs.curr;
@@ -1335,11 +1352,13 @@ function filter_route(
   const only_curr = input_values["only-curr"];
 
   const filtered_sets = filter_sets(results_prev, results_curr, only_prev, only_curr);
+
   if   (filtered_sets.done) {
     results_prev = filtered_sets.prev;
     results_curr = filtered_sets.curr;
   }
 
+  // Filter Route Done
   return { done: true, prev: results_prev, curr: results_curr };
 }
 

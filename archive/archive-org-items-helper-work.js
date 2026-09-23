@@ -1349,20 +1349,20 @@ function filter_favs_keys(items_prev, items_curr,
   return { done: true, prev: results_prev, curr: results_curr };
 }
 
-// *_str are: number / ""
 // *_agg are: see get_agg, and null is allowed for one of *_agg
+// *_num are: number / null
 //
 function filter_favs_agg(items_prev, items_curr,
 
-  favs_min_str, favs_min_agg,
-  favs_max_str, favs_max_agg) {
+  favs_min_agg, favs_min_agg_num,
+  favs_max_agg, favs_max_agg_num) {
 
   if (!favs_min_agg && !favs_max_agg) return { done: false };
 
   const favs_res = filter_count_range_agg(items_prev, items_curr,
 
-    favs_min_agg, favs_min_str ? parseInt(favs_min_str, 10) : null,
-    favs_max_agg, favs_max_str ? parseInt(favs_max_str, 10) : null,
+    favs_min_agg, favs_min_agg_num,
+    favs_max_agg, favs_max_agg_num,
 
     item => item.favorites);
 
@@ -1377,8 +1377,8 @@ function filter_favs_agg(items_prev, items_curr,
 //
 function filter_favs(items_prev, items_curr,
 
-  favs_min_str, favs_min_kv, favs_min_no, favs_min_agg,
-  favs_max_str, favs_max_kv, favs_max_no, favs_max_agg) {
+  favs_min_str, favs_min_kv, favs_min_no, favs_min_agg, favs_min_agg_num,
+  favs_max_str, favs_max_kv, favs_max_no, favs_max_agg, favs_max_agg_num) {
 
   if (!favs_min_str && !favs_max_str) return { done: false };
 
@@ -1391,8 +1391,8 @@ function filter_favs(items_prev, items_curr,
 
   const favs_agg = filter_favs_agg(items_prev, items_curr,
 
-    favs_min_str, favs_min_agg,
-    favs_max_str, favs_max_agg);
+    favs_min_agg, favs_min_agg_num,
+    favs_max_agg, favs_max_agg_num);
 
   if (favs_agg.done) return favs_agg;
 
