@@ -102,8 +102,8 @@ function filter_base(stats_items, stats_date,
     const colls_arr = doc.collection_arr;
     if (typeof colls_arr === "object") {
       const    colls_len = colls_arr.length;
-      for  (let i = 0; i < colls_len; i++) {
-        if (colls_arr [i].startsWith("fav-")) favorites++;
+      for  (let j = 0; j < colls_len; j++) {
+        if (colls_arr [j].startsWith("fav-")) favorites++;
       }
     }
     else { // Raw string
