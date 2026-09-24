@@ -1089,26 +1089,49 @@ function filter_route(
   let wk_min_agg_t = null;
   let wk_max_agg_t = null;
 
-  [dl_min_str_t, dl_min_agg_t] = get_agg(dl_min_str);
-  [dl_max_str_t, dl_max_agg_t] = get_agg(dl_max_str);
-  [mo_min_str_t, mo_min_agg_t] = get_agg(mo_min_str);
-  [mo_max_str_t, mo_max_agg_t] = get_agg(mo_max_str);
-  [wk_min_str_t, wk_min_agg_t] = get_agg(wk_min_str);
-  [wk_max_str_t, wk_max_agg_t] = get_agg(wk_max_str);
+  let dl_min_agg_num = undefined;
+  let dl_max_agg_num = undefined;
+  let mo_min_agg_num = undefined;
+  let mo_max_agg_num = undefined;
+  let wk_min_agg_num = undefined;
+  let wk_max_agg_num = undefined;
 
-  if (!input_allowed_keys(dl_min_str) && !input_allowed_keys(dl_max_str)) {
-    [dl_min_str, dl_min_agg] = [dl_min_str_t, dl_min_agg_t];
-    [dl_max_str, dl_max_agg] = [dl_max_str_t, dl_max_agg_t];
+  let dl_min_agg_num_t = undefined;
+  let dl_max_agg_num_t = undefined;
+  let mo_min_agg_num_t = undefined;
+  let mo_max_agg_num_t = undefined;
+  let wk_min_agg_num_t = undefined;
+  let wk_max_agg_num_t = undefined;
+
+  [dl_min_str_t, dl_min_agg_t, dl_min_agg_num_t] = get_agg(dl_min_str);
+  [dl_max_str_t, dl_max_agg_t, dl_max_agg_num_t] = get_agg(dl_max_str);
+  [mo_min_str_t, mo_min_agg_t, mo_min_agg_num_t] = get_agg(mo_min_str);
+  [mo_max_str_t, mo_max_agg_t, mo_max_agg_num_t] = get_agg(mo_max_str);
+  [wk_min_str_t, wk_min_agg_t, wk_min_agg_num_t] = get_agg(wk_min_str);
+  [wk_max_str_t, wk_max_agg_t, wk_max_agg_num_t] = get_agg(wk_max_str);
+
+  if (!input_allowed_keys(dl_min_str)  && !input_allowed_keys(dl_max_str) &&
+      (dl_min_agg_t                    ||  dl_max_agg_t)                  &&
+      (dl_min_agg_num_t !== undefined) && (dl_max_agg_num_t !== undefined)) {
+
+    [dl_min_str, dl_min_agg, dl_min_agg_num] = [dl_min_str_t, dl_min_agg_t, dl_min_agg_num_t];
+    [dl_max_str, dl_max_agg, dl_max_agg_num] = [dl_max_str_t, dl_max_agg_t, dl_max_agg_num_t];
   }
 
-  if (!input_allowed_keys(mo_min_str) && !input_allowed_keys(mo_max_str)) {
-    [mo_min_str, mo_min_agg] = [mo_min_str_t, mo_min_agg_t];
-    [mo_max_str, mo_max_agg] = [mo_max_str_t, mo_max_agg_t];
+  if (!input_allowed_keys(mo_min_str)  && !input_allowed_keys(mo_max_str) &&
+      (mo_min_agg_t                    ||  mo_max_agg_t)                  &&
+      (mo_min_agg_num_t !== undefined) && (mo_max_agg_num_t !== undefined)) {
+
+    [mo_min_str, mo_min_agg, mo_min_agg_num] = [mo_min_str_t, mo_min_agg_t, mo_min_agg_num_t];
+    [mo_max_str, mo_max_agg, mo_max_agg_num] = [mo_max_str_t, mo_max_agg_t, mo_max_agg_num_t];
   }
 
-  if (!input_allowed_keys(wk_min_str) && !input_allowed_keys(wk_max_str)) {
-    [wk_min_str, wk_min_agg] = [wk_min_str_t, wk_min_agg_t];
-    [wk_max_str, wk_max_agg] = [wk_max_str_t, wk_max_agg_t];
+  if (!input_allowed_keys(wk_min_str)  && !input_allowed_keys(wk_max_str) &&
+      (wk_min_agg_t                    ||  wk_max_agg_t)                  &&
+      (wk_min_agg_num_t !== undefined) && (wk_max_agg_num_t !== undefined)) {
+
+    [wk_min_str, wk_min_agg, wk_min_agg_num] = [wk_min_str_t, wk_min_agg_t, wk_min_agg_num_t];
+    [wk_max_str, wk_max_agg, wk_max_agg_num] = [wk_max_str_t, wk_max_agg_t, wk_max_agg_num_t];
   }
 
   if ((input_allowed_keys(dl_min_str_t) && dl_max_agg_t) ||
@@ -1118,6 +1141,15 @@ function filter_route(
       (input_allowed_keys(wk_min_str_t) && wk_max_agg_t) ||
       (input_allowed_keys(wk_max_str_t) && wk_min_agg_t)) {
     return { error: err_keys_agg };
+  }
+
+  if (( (dl_min_agg_t                    ||  dl_max_agg_t) &&
+       ((dl_min_agg_num_t === undefined) || (dl_max_agg_num_t === undefined))) ||
+      ( (mo_min_agg_t                    ||  mo_max_agg_t) &&
+       ((mo_min_agg_num_t === undefined) || (mo_max_agg_num_t === undefined))) ||
+      ( (wk_min_agg_t                    ||  wk_max_agg_t) &&
+       ((wk_min_agg_num_t === undefined) || (wk_max_agg_num_t === undefined))) ) {
+    return { error: err_integer };
   }
 
   // Views: chars
@@ -1262,9 +1294,11 @@ function filter_route(
 
   /////////////////////////////////////////////////////////////////
   // 1. Checking and Initial Filtering Items, and Calculating Stats
+
   let results_prev = filter_base(base_prev_items, base_prev_date,
     archived_min_range, archived_max_range, created_min_range, created_max_range,
     collections, creators, title, is_title_identifier);
+
   let results_curr = filter_base(base_curr_items, base_curr_date,
     archived_min_range, archived_max_range, created_min_range, created_max_range,
     collections, creators, title, is_title_identifier);
@@ -1272,6 +1306,7 @@ function filter_route(
   // 2. Subjects
   const filtered_subjects = filter_section(results_prev, results_curr,
     sect_subjects.items, subjects);
+
   if (filtered_subjects.done) {
     results_prev = filtered_subjects.prev;
     results_curr = filtered_subjects.curr;
@@ -1286,6 +1321,7 @@ function filter_route(
   // 3. Description
   const filtered_descriptions = filter_section(results_prev, results_curr,
     sect_descriptions.items, description);
+
   if (filtered_descriptions.done) {
     results_prev = filtered_descriptions.prev;
     results_curr = filtered_descriptions.curr;
@@ -1300,14 +1336,14 @@ function filter_route(
   // 4. Views
   const filtered_views = filter_views(results_prev, results_curr,
 
-    dl_min_str, dl_min_kv, dl_min_no, dl_min_agg,
-    dl_max_str, dl_max_kv, dl_max_no, dl_max_agg, is_dl_old,
+    dl_min_str, dl_min_kv, dl_min_no, dl_min_agg, dl_min_agg_num,
+    dl_max_str, dl_max_kv, dl_max_no, dl_max_agg, dl_max_agg_num, is_dl_old,
 
-    mo_min_str, mo_min_kv, mo_min_no, mo_min_agg,
-    mo_max_str, mo_max_kv, mo_max_no, mo_max_agg, is_mo_23,
+    mo_min_str, mo_min_kv, mo_min_no, mo_min_agg, mo_min_agg_num,
+    mo_max_str, mo_max_kv, mo_max_no, mo_max_agg, mo_max_agg_num, is_mo_23,
 
-    wk_min_str, wk_min_kv, wk_min_no, wk_min_agg,
-    wk_max_str, wk_max_kv, wk_max_no, wk_max_agg);
+    wk_min_str, wk_min_kv, wk_min_no, wk_min_agg, wk_min_agg_num,
+    wk_max_str, wk_max_kv, wk_max_no, wk_max_agg, wk_max_agg_num);
 
   if (filtered_views.done) {
     results_prev = filtered_views.prev;

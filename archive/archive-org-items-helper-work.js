@@ -14,14 +14,15 @@ function filter_base(stats_items, stats_date,
   // To count one day for an item published on the day before
   const calc_date_ms   = Date.parse(stats_date + "T11:59:59.999Z");
 
+  const stats_length   = stats_items.length;
   const filtered_items = [];
 
 //parse: 3.60 ms
 //round: 2.00 ms
 //const _ts = performance.now();
 
-  for (let i = 0; i < stats_items.length; i++) {
-    const doc = stats_items[i];
+  for (let index = 0; index < stats_length; index++) {
+    const doc = stats_items[index];
 
     /* Checking and Initial Filtering Items */
 
@@ -102,8 +103,8 @@ function filter_base(stats_items, stats_date,
     const colls_arr = doc.collection_arr;
     if (typeof colls_arr === "object") {
       const    colls_len = colls_arr.length;
-      for  (let j = 0; j < colls_len; j++) {
-        if (colls_arr [j].startsWith("fav-")) favorites++;
+      for  (let i = 0; i < colls_len; i++) {
+        if (colls_arr [i].startsWith("fav-")) favorites++;
       }
     }
     else { // Raw string
@@ -974,14 +975,14 @@ function res_intersection(dl_res, mo_res, wk_res) {
 //
 function filter_views_keys_agg(items_prev, items_curr,
 
-  dl_prev_str, dl_prev_kv, dl_prev_no, dl_prev_agg,
-  dl_curr_str, dl_curr_kv, dl_curr_no, dl_curr_agg, get_dl,
+  dl_prev_str, dl_prev_kv, dl_prev_no, dl_prev_agg, dl_prev_agg_num,
+  dl_curr_str, dl_curr_kv, dl_curr_no, dl_curr_agg, dl_curr_agg_num, get_dl,
 
-  mo_prev_str, mo_prev_kv, mo_prev_no, mo_prev_agg,
-  mo_curr_str, mo_curr_kv, mo_curr_no, mo_curr_agg, get_mo,
+  mo_prev_str, mo_prev_kv, mo_prev_no, mo_prev_agg, mo_prev_agg_num,
+  mo_curr_str, mo_curr_kv, mo_curr_no, mo_curr_agg, mo_curr_agg_num, get_mo,
 
-  wk_prev_str, wk_prev_kv, wk_prev_no, wk_prev_agg,
-  wk_curr_str, wk_curr_kv, wk_curr_no, wk_curr_agg, get_wk) {
+  wk_prev_str, wk_prev_kv, wk_prev_no, wk_prev_agg, wk_prev_agg_num,
+  wk_curr_str, wk_curr_kv, wk_curr_no, wk_curr_agg, wk_curr_agg_num, get_wk) {
 
   const is_key = (s) => ["grow", "fall", "same", "diff"].includes(s);
 
@@ -1007,8 +1008,8 @@ function filter_views_keys_agg(items_prev, items_curr,
 ? filter_count_range_agg(
     items_prev,
       items_curr,
-        dl_prev_agg, dl_prev_str ? parseInt(dl_prev_str, 10) : null,
-        dl_curr_agg, dl_curr_str ? parseInt(dl_curr_str, 10) : null,
+        dl_prev_agg, dl_prev_agg_num,
+        dl_curr_agg, dl_curr_agg_num,
         get_dl)
 
 : filter_count_range_val(
@@ -1027,8 +1028,8 @@ function filter_views_keys_agg(items_prev, items_curr,
 ? filter_count_range_agg(
     items_prev,
       items_curr,
-        mo_prev_agg, mo_prev_str ? parseInt(mo_prev_str, 10) : null,
-        mo_curr_agg, mo_curr_str ? parseInt(mo_curr_str, 10) : null,
+        mo_prev_agg, mo_prev_agg_num,
+        mo_curr_agg, mo_curr_agg_num,
         get_mo)
 
 : filter_count_range_val(
@@ -1047,8 +1048,8 @@ function filter_views_keys_agg(items_prev, items_curr,
 ? filter_count_range_agg(
     items_prev,
       items_curr,
-        wk_prev_agg, wk_prev_str ? parseInt(wk_prev_str, 10) : null,
-        wk_curr_agg, wk_curr_str ? parseInt(wk_curr_str, 10) : null,
+        wk_prev_agg, wk_prev_agg_num,
+        wk_curr_agg, wk_curr_agg_num,
         get_wk)
 
 : filter_count_range_val(
@@ -1069,14 +1070,14 @@ function filter_views_keys_agg(items_prev, items_curr,
 //
 function filter_views(items_prev, items_curr,
 
-  dl_min_str, dl_min_kv, dl_min_no, dl_min_agg,
-  dl_max_str, dl_max_kv, dl_max_no, dl_max_agg, is_dl_old,
+  dl_min_str, dl_min_kv, dl_min_no, dl_min_agg, dl_min_agg_num,
+  dl_max_str, dl_max_kv, dl_max_no, dl_max_agg, dl_max_agg_num, is_dl_old,
 
-  mo_min_str, mo_min_kv, mo_min_no, mo_min_agg,
-  mo_max_str, mo_max_kv, mo_max_no, mo_max_agg, is_mo_23,
+  mo_min_str, mo_min_kv, mo_min_no, mo_min_agg, mo_min_agg_num,
+  mo_max_str, mo_max_kv, mo_max_no, mo_max_agg, mo_max_agg_num, is_mo_23,
 
-  wk_min_str, wk_min_kv, wk_min_no, wk_min_agg,
-  wk_max_str, wk_max_kv, wk_max_no, wk_max_agg) {
+  wk_min_str, wk_min_kv, wk_min_no, wk_min_agg, wk_min_agg_num,
+  wk_max_str, wk_max_kv, wk_max_no, wk_max_agg, wk_max_agg_num) {
 
   if (!dl_min_str && !dl_max_str &&
       !mo_min_str && !mo_max_str &&
@@ -1088,14 +1089,14 @@ function filter_views(items_prev, items_curr,
 
   const views_keys_agg = filter_views_keys_agg(items_prev, items_curr,
 
-    dl_min_str, dl_min_kv, dl_min_no, dl_min_agg,
-    dl_max_str, dl_max_kv, dl_max_no, dl_max_agg, get_dl,
+    dl_min_str, dl_min_kv, dl_min_no, dl_min_agg, dl_min_agg_num,
+    dl_max_str, dl_max_kv, dl_max_no, dl_max_agg, dl_max_agg_num, get_dl,
 
-    mo_min_str, mo_min_kv, mo_min_no, mo_min_agg,
-    mo_max_str, mo_max_kv, mo_max_no, mo_max_agg, get_mo,
+    mo_min_str, mo_min_kv, mo_min_no, mo_min_agg, mo_min_agg_num,
+    mo_max_str, mo_max_kv, mo_max_no, mo_max_agg, mo_max_agg_num, get_mo,
 
-    wk_min_str, wk_min_kv, wk_min_no, wk_min_agg,
-    wk_max_str, wk_max_kv, wk_max_no, wk_max_agg, get_wk);
+    wk_min_str, wk_min_kv, wk_min_no, wk_min_agg, wk_min_agg_num,
+    wk_max_str, wk_max_kv, wk_max_no, wk_max_agg, wk_max_agg_num, get_wk);
 
   if (views_keys_agg.done) return views_keys_agg;
 
