@@ -1114,24 +1114,42 @@ function filter_route(
       (dl_min_agg_t                    ||  dl_max_agg_t)                  &&
       (dl_min_agg_num_t !== undefined) && (dl_max_agg_num_t !== undefined)) {
 
-    [dl_min_str, dl_min_agg, dl_min_agg_num] = [dl_min_str_t, dl_min_agg_t, dl_min_agg_num_t];
-    [dl_max_str, dl_max_agg, dl_max_agg_num] = [dl_max_str_t, dl_max_agg_t, dl_max_agg_num_t];
+    dl_min_str     = dl_min_str_t;
+    dl_max_str     = dl_max_str_t;
+
+    dl_min_agg     = dl_min_agg_t;
+    dl_max_agg     = dl_max_agg_t;
+
+    dl_min_agg_num = dl_min_agg_num_t;
+    dl_max_agg_num = dl_max_agg_num_t;
   }
 
   if (!input_allowed_keys(mo_min_str)  && !input_allowed_keys(mo_max_str) &&
       (mo_min_agg_t                    ||  mo_max_agg_t)                  &&
       (mo_min_agg_num_t !== undefined) && (mo_max_agg_num_t !== undefined)) {
 
-    [mo_min_str, mo_min_agg, mo_min_agg_num] = [mo_min_str_t, mo_min_agg_t, mo_min_agg_num_t];
-    [mo_max_str, mo_max_agg, mo_max_agg_num] = [mo_max_str_t, mo_max_agg_t, mo_max_agg_num_t];
+    mo_min_str     = mo_min_str_t;
+    mo_max_str     = mo_max_str_t;
+
+    mo_min_agg     = mo_min_agg_t;
+    mo_max_agg     = mo_max_agg_t;
+
+    mo_min_agg_num = mo_min_agg_num_t;
+    mo_max_agg_num = mo_max_agg_num_t;
   }
 
   if (!input_allowed_keys(wk_min_str)  && !input_allowed_keys(wk_max_str) &&
       (wk_min_agg_t                    ||  wk_max_agg_t)                  &&
       (wk_min_agg_num_t !== undefined) && (wk_max_agg_num_t !== undefined)) {
 
-    [wk_min_str, wk_min_agg, wk_min_agg_num] = [wk_min_str_t, wk_min_agg_t, wk_min_agg_num_t];
-    [wk_max_str, wk_max_agg, wk_max_agg_num] = [wk_max_str_t, wk_max_agg_t, wk_max_agg_num_t];
+    wk_min_str     = wk_min_str_t;
+    wk_max_str     = wk_max_str_t;
+
+    wk_min_agg     = wk_min_agg_t;
+    wk_max_agg     = wk_max_agg_t;
+
+    wk_min_agg_num = wk_min_agg_num_t;
+    wk_max_agg_num = wk_max_agg_num_t;
   }
 
   if ((input_allowed_keys(dl_min_str_t) && dl_max_agg_t) ||
@@ -1246,9 +1264,18 @@ function filter_route(
   [favs_min_str_t, favs_min_agg_t, favs_min_agg_num_t] = get_agg(favs_min_str);
   [favs_max_str_t, favs_max_agg_t, favs_max_agg_num_t] = get_agg(favs_max_str);
 
-  if (!input_allowed_keys(favs_min_str) && !input_allowed_keys(favs_max_str)) {
-    [favs_min_str, favs_min_agg, favs_min_agg_num] = [favs_min_str_t, favs_min_agg_t, favs_min_agg_num_t];
-    [favs_max_str, favs_max_agg, favs_max_agg_num] = [favs_max_str_t, favs_max_agg_t, favs_max_agg_num_t];
+  if (!input_allowed_keys(favs_min_str)  && !input_allowed_keys(favs_max_str) &&
+      (favs_min_agg_t                    ||  favs_max_agg_t)                  &&
+      (favs_min_agg_num_t !== undefined) && (favs_max_agg_num_t !== undefined)) {
+
+    favs_min_str     = favs_min_str_t;
+    favs_max_str     = favs_max_str_t;
+
+    favs_min_agg     = favs_min_agg_t;
+    favs_max_agg     = favs_max_agg_t;
+
+    favs_min_agg_num = favs_min_agg_num_t;
+    favs_max_agg_num = favs_max_agg_num_t;
   }
 
   if ((input_allowed_keys(favs_min_str_t) && favs_max_agg_t) ||
