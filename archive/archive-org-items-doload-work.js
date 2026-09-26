@@ -676,18 +676,17 @@ function load_stat_file(date, dual = false) {
     })
 //  .then(text => new Promise(resolve => setTimeout(resolve, 15000, text))) // For testing
     .then(text => {
-      const time_1 = performance.now();
-      const stats  = parse_stat_text(text);
-      const time_2 = performance.now();
+      const time_1   = performance.now();
+      const stats    = parse_stat_text(text);
+      const time_2   = performance.now();
 
       if (dual) {
-        sf_du_load   = Math.max(sf_du_load, // Longest of
-                         time_1 - time_0);  //
-        sf_du_parse +=   time_2 - time_1;   // Accumulate
+        sf_du_load   = time_1 - time_0; // Longest of
+        sf_du_parse += time_2 - time_1; // Accumulate
       }
       else {
-        sf_du_load   =   time_1 - time_0;   // Anew
-        sf_du_parse  =   time_2 - time_1;   //
+        sf_du_load   = time_1 - time_0; // Anew
+        sf_du_parse  = time_2 - time_1; //
       }
 
       const cache_dates = Object.keys(stat_file_cache);
