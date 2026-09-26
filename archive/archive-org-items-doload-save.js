@@ -456,12 +456,12 @@ function load_section(section) {
       return response.text();
     })
     .then(text => {
-      const time_1  = performance.now();
-      section.items = parse_sect_text(text, section.name_data);
-      const time_2  = performance.now();
+      const time_1     = performance.now();
+      section.items    = parse_sect_text(text, section.name_data);
+      const time_2     = performance.now();
 
-      section.du_load  = (time_1 - time_0); // Anew
-      section.du_parse = (time_2 - time_1); //
+      section.du_load  = time_1 - time_0; // Anew
+      section.du_parse = time_2 - time_1; //
     })
     .catch(() => {
       section.items = undefined; // Set undefined as marker of error
@@ -650,11 +650,15 @@ function init_dates() {
 
 /* Main */
 
-function load_stat_file(date) {
+function load_stat_file(date, dual = false) {
   const cached = stat_file_cache[date];
   if   (cached) {
     sf_cache_hits++;
     cached.usage++;
+
+    sf_du_load  = 0; // Already loaded
+    sf_du_parse = 0; // Already parsed
+
     return Promise.resolve(cached.data);
   }
   sf_cache_misses++;
@@ -676,16 +680,26 @@ function load_stat_file(date) {
       const stats  = parse_stat_text(text);
       const time_2 = performance.now();
 
-      sf_du_load  += (time_1 - time_0); // Accumulate
-      sf_du_parse += (time_2 - time_1); //
+      if (dual) {
+        sf_du_load   = Math.max(sf_du_load, // Longest of
+                         time_1 - time_0);  //
+        sf_du_parse +=   time_2 - time_1;   // Accumulate
+      }
+      else {
+        sf_du_load   =   time_1 - time_0;   // Anew
+        sf_du_parse  =   time_2 - time_1;   //
+      }
 
       const cache_dates = Object.keys(stat_file_cache);
       if   (cache_dates.length >= 7) {
         let min_usage = Infinity;
         let min_entry = null;
+
         for (const cd of cache_dates) {
-          if ((cd === stat_prev_date) || (cd === stat_curr_date)) continue;
-          const usage = stat_file_cache[cd].usage;
+          if ((cd === stat_prev_date) ||
+              (cd === stat_curr_date)) continue;
+
+          const   usage = stat_file_cache[cd].usage;
           if (min_usage > usage) {
               min_usage = usage;
               min_entry = cd;
@@ -717,9 +731,6 @@ function load_stat(date, what, focus_id = null) {
 
   if (load_stat_loading[date]) return;
       load_stat_loading[date] = true;
-
-  sf_du_load  = 0; // Clear
-  sf_du_parse = 0; //
 
   load_stat_file(date)
 //  .then(loaded_items => new Promise(resolve => setTimeout(resolve, 15000, loaded_items))) // For testing
@@ -780,10 +791,12 @@ function load_stats() {
       });
   } else { // Different dates to load
     Promise.all([
-      load_stat_file(stat_prev_date),
-      load_stat_file(stat_curr_date)
+      load_stat_file     (stat_prev_date, "dual-prev"),
+      load_stat_file     (stat_curr_date, "dual-curr")
     ])
-    .then(([loaded_prev_items, loaded_curr_items]) => {
+    .then(            ([loaded_prev_items,
+                        loaded_curr_items]) => {
+
       stat_prev_items = loaded_prev_items;
       stat_curr_items = loaded_curr_items;
 
