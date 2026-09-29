@@ -460,8 +460,8 @@ function load_section(section) {
       section.items    = parse_sect_text(text, section.name_data);
       const time_2     = performance.now();
 
-      section.du_load  = time_1 - time_0; // Anew
-      section.du_parse = time_2 - time_1; //
+      section.du_load  = time_1 - time_0;
+      section.du_parse = time_2 - time_1;
     })
     .catch(() => {
       section.items = undefined; // Set undefined as marker of error
@@ -650,7 +650,7 @@ function init_dates() {
 
 /* Main */
 
-function load_stat_file(date, dual = false) {
+function load_stat_file(date) {
   const cached = stat_file_cache[date];
   if   (cached) {
     sf_cache_hits++;
@@ -676,18 +676,17 @@ function load_stat_file(date, dual = false) {
     })
 //  .then(text => new Promise(resolve => setTimeout(resolve, 15000, text))) // For testing
     .then(text => {
-      const time_1   = performance.now();
-      const stats    = parse_stat_text(text);
-      const time_2   = performance.now();
+      const time_1 = performance.now();
+      const stats  = parse_stat_text(text);
+      const time_2 = performance.now();
 
-      if (dual) {
-        sf_du_load   = time_1 - time_0; // Longest of
-        sf_du_parse += time_2 - time_1; // Accumulate
-      }
-      else {
-        sf_du_load   = time_1 - time_0; // Anew
-        sf_du_parse  = time_2 - time_1; //
-      }
+      // For parallel loading of fast and slow files the durations will become:
+      //
+      // du_load   = max(fast_file_load + fast_file_parse, slow_file_load)
+      // du_parse  = slow_file_parse
+
+      sf_du_load   = time_1 - time_0;
+      sf_du_parse  = time_2 - time_1;
 
       const cache_dates = Object.keys(stat_file_cache);
       if   (cache_dates.length >= 7) {
@@ -790,8 +789,8 @@ function load_stats() {
       });
   } else { // Different dates to load
     Promise.all([
-      load_stat_file     (stat_prev_date, "dual-prev"),
-      load_stat_file     (stat_curr_date, "dual-curr")
+      load_stat_file     (stat_prev_date),
+      load_stat_file     (stat_curr_date)
     ])
     .then(            ([loaded_prev_items,
                         loaded_curr_items]) => {
