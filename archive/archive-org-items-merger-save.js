@@ -32,8 +32,8 @@ function defer_render() {
 
   if (!defer_render_wrappers.length) { defer_render_finished(); return; }
 
-  const chunk_sz_override  =  Math .round(defer_render_chunk_sz / 2) + 1; // Shorter first chunk
-  requestAnimationFrame(() => defer_render_step(defer_render_id, chunk_sz_override)); // Fast start
+  const first_chunk_sz     =  Math .round(defer_render_chunk_sz / 2) + 1; // Shorter first chunk
+  requestAnimationFrame(() => defer_render_step(defer_render_id, first_chunk_sz)); // Fast start
 }
 
 function defer_render_step(render_id, chunk_sz = defer_render_chunk_sz) {
