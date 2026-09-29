@@ -36,14 +36,14 @@ function defer_render() {
   requestAnimationFrame(() => defer_render_step(defer_render_id, chunk_sz_override)); // Fast start
 }
 
-function defer_render_step(render_id, chunk_sz_override) {
-  if (render_id !== defer_render_id) return;
+function defer_render_step(render_id, chunk_sz = defer_render_chunk_sz) {
+  if  (render_id !== defer_render_id) return;
 
-  const defer_render_total     =   defer_render_wrappers.length;
-  if   (defer_render_processed === defer_render_total)   return;
+  const defer_render_total  =  defer_render_wrappers . length;
+  if   (defer_render_total === defer_render_processed) return; // Not a normal way here
 
   const time_0   = performance.now();
-  let   count    = Math.min(chunk_sz_override || defer_render_chunk_sz, defer_render_total - defer_render_processed);
+  let   count    = Math.min(chunk_sz, defer_render_total - defer_render_processed);
   let   duration = 0;
 
   do {
@@ -61,7 +61,7 @@ function defer_render_step(render_id, chunk_sz_override) {
   while(count);
 
   defer_render_chunks++;
-  defer_render_duration += (performance.now() - time_0);
+  defer_render_duration += performance.now() - time_0;
 
   if (defer_render_processed === defer_render_total) { defer_render_finished(); return; }
 
@@ -69,7 +69,7 @@ function defer_render_step(render_id, chunk_sz_override) {
 }
 
 function defer_render_finished() {
-    setTimeout(render_finished, 0);
+  setTimeout  (render_finished, 0);
 }
 
 /* Cells */
