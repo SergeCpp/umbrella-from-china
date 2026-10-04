@@ -206,22 +206,6 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev,
     const time_all  = item.time_all;
 
     ///////
-    // Prev
-    //
-    if (!no_prev) {
-      if (show_by_old) {
-        add_prev_raw(index_curr, item_prev.views_old, item_prev.days_old, item_prev.ratio_old,
-                                 item_prev.views_23,                      item_prev.ratio_23,
-                                 item_prev.views_7,                       item_prev.ratio_7);
-      }
-      else {
-        add_prev_raw(index_curr, item_prev.views_all, item_prev.days_all, item_prev.ratio_all,
-                                 item_prev.views_30,                      item_prev.ratio_30,
-                                 item_prev.views_7,                       item_prev.ratio_7);
-      }
-    }
-
-    ///////
     // Curr
     //
     if (!is_prev) {

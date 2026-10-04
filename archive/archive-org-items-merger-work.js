@@ -173,8 +173,8 @@ function create_cells_raw(wrapper, shown_idx) {
 
   //
   set_item_title(index, item, title_container, shown_idx);
-  set_item_prev (index,        prev_container);
-  set_item_curr (index,        curr_container);
+  set_item_prev (index, item,  prev_container);
+  set_item_curr (index, item,  curr_container);
   set_item_grow (index,        grow_container);
 
   //
@@ -230,8 +230,6 @@ function init_title_raw       (title_is_title) {
 }
 
 function set_item_title(index, item, container, shown_idx) {
-  const  identifier = item.identifier;
-
   const item_gauge_above_a = document.createElement("div");
   item_gauge_above_a.className = "item-gauge-above-a";
 
@@ -243,12 +241,12 @@ function set_item_title(index, item, container, shown_idx) {
 
   const item_link = document.createElement("a");
   item_link.className = "text-ellipsis";
-  item_link.href = "https://archive.org/details/" + identifier;
+  item_link.href = "https://archive.org/details/" + item.identifier;
   item_link.rel = "noopener"; // Safe for _blank
   item_link.tabIndex = 0; // To show focus outline when set by focus() (else not shown)
   item_link.target = "_blank";
   item_link.textContent = (shown_idx === index ? "" : (shown_idx + 1) + " / ") + (index + 1) + ". " +
-    (title_raw_title_is_title ? item.title : identifier);
+    (title_raw_title_is_title ? item.title : item.identifier);
   item_title.appendChild(item_link);
 
   const item_gauge_below_a = document.createElement("div");
@@ -306,40 +304,25 @@ function set_item_gauges(index, item, gauge_above_a, gauge_above_b, gauge_below_
 
 /* Prev */
 
-let prev_raw_23_30   = null;
+let prev_raw_old     = null;
 let prev_raw_ratio   = null;
 let prev_raw_compact = null;
 
-let prev_raw_data    = {};
 let prev_raw_rank_is = {};
 
 function init_prev_raw(show_by_old, sort_by_ratio, compact) {
-    prev_raw_23_30   = show_by_old
-                     ? "23" : "30";
+    prev_raw_old     = show_by_old;
     prev_raw_ratio   =              sort_by_ratio;
     prev_raw_compact =                             compact;
 
-    prev_raw_data    = {};
     prev_raw_rank_is = {};
-}
-
-function add_prev_raw(index,
-    views_old_all, days_old_all, ratio_old_all,
-    views_23_30,                 ratio_23_30,
-    views_7,                     ratio_7) { prev_raw_data[index] = {
-
-    views_old_all, days_old_all, ratio_old_all,
-    views_23_30,                 ratio_23_30,
-    views_7,                     ratio_7 };
 }
 
 function add_prev_raw_rank_is(index,   rank_is) {
              prev_raw_rank_is[index] = rank_is;
 }
 
-function set_item_prev(index, container) {
-  const raw = prev_raw_data[index];
-
+function set_item_prev(index, item, container) {
   // Rank substantial changes marking: up and dn
   const rank_is = prev_raw_rank_is[index];
   const rank_is_class = rank_is > 0 ? " item-mark-up"
@@ -357,16 +340,30 @@ function set_item_prev(index, container) {
   if (prev_raw_compact) {
     container.classList.add("compact");
 
-    if (raw) {
+    if (!item.no_prev) {
       if (prev_raw_ratio) {
-        stat_prev_old.textContent = raw.ratio_old_all.toFixed(3).padStart(7);
-        stat_prev_23 .textContent = raw.ratio_23_30  .toFixed(3).padStart(7);
-        stat_prev_7  .textContent = raw.ratio_7      .toFixed(3).padStart(7);
+        if (prev_raw_old) {
+          stat_prev_old.textContent = item.item_prev.ratio_old.toFixed(3).padStart(7);
+          stat_prev_23 .textContent = item.item_prev.ratio_23 .toFixed(3).padStart(7);
+          stat_prev_7  .textContent = item.item_prev.ratio_7  .toFixed(3).padStart(7);
+        }
+        else {
+          stat_prev_old.textContent = item.item_prev.ratio_all.toFixed(3).padStart(7);
+          stat_prev_23 .textContent = item.item_prev.ratio_30 .toFixed(3).padStart(7);
+          stat_prev_7  .textContent = item.item_prev.ratio_7  .toFixed(3).padStart(7);
+        }
       }
       else {
-        stat_prev_old.textContent = raw.views_old_all.toString().padStart(7);
-        stat_prev_23 .textContent = raw.views_23_30  .toString().padStart(7);
-        stat_prev_7  .textContent = raw.views_7      .toString().padStart(7);
+        if (prev_raw_old) {
+          stat_prev_old.textContent = item.item_prev.views_old.toString().padStart(7);
+          stat_prev_23 .textContent = item.item_prev.views_23 .toString().padStart(7);
+          stat_prev_7  .textContent = item.item_prev.views_7  .toString().padStart(7);
+        }
+        else {
+          stat_prev_old.textContent = item.item_prev.views_all.toString().padStart(7);
+          stat_prev_23 .textContent = item.item_prev.views_30 .toString().padStart(7);
+          stat_prev_7  .textContent = item.item_prev.views_7  .toString().padStart(7);
+        }
       }
     }
     else {                      // 1..4..7
@@ -376,14 +373,25 @@ function set_item_prev(index, container) {
     }
   }
   else {
-    if (raw) {
-      stat_prev_old.textContent = raw.views_old_all.toString().padStart(6) + " /" +
-                                  raw. days_old_all.toString().padStart(5) + " =" +
-                                  raw.ratio_old_all.toFixed(3).padStart(7);
-      stat_prev_23 .textContent = raw.views_23_30  .toString().padStart(6) + " /   " + prev_raw_23_30 + " =" +
-                                  raw.ratio_23_30  .toFixed(3).padStart(7);
-      stat_prev_7  .textContent = raw.views_7      .toString().padStart(6) + " /    7 =" +
-                                  raw.ratio_7      .toFixed(3).padStart(7);
+    if (!item.no_prev) {
+      if (prev_raw_old) {
+        stat_prev_old.textContent = item.item_prev.views_old.toString().padStart(6) + " /" +
+                                    item.item_prev. days_old.toString().padStart(5) +        " =" +
+                                    item.item_prev.ratio_old.toFixed(3).padStart(7);
+        stat_prev_23 .textContent = item.item_prev.views_23 .toString().padStart(6) + " /   23 =" +
+                                    item.item_prev.ratio_23 .toFixed(3).padStart(7);
+        stat_prev_7  .textContent = item.item_prev.views_7  .toString().padStart(6) + " /    7 =" +
+                                    item.item_prev.ratio_7  .toFixed(3).padStart(7);
+      }
+      else {
+        stat_prev_old.textContent = item.item_prev.views_all.toString().padStart(6) + " /" +
+                                    item.item_prev. days_all.toString().padStart(5) +        " =" +
+                                    item.item_prev.ratio_all.toFixed(3).padStart(7);
+        stat_prev_23 .textContent = item.item_prev.views_30 .toString().padStart(6) + " /   30 =" +
+                                    item.item_prev.ratio_30 .toFixed(3).padStart(7);
+        stat_prev_7  .textContent = item.item_prev.views_7  .toString().padStart(6) + " /    7 =" +
+                                    item.item_prev.ratio_7  .toFixed(3).padStart(7);
+      }
     }
     else {                      // 1...5...901...5...9012
       stat_prev_old.textContent = "                      ";
@@ -399,6 +407,7 @@ function set_item_prev(index, container) {
 
 /* Curr */
 
+let curr_raw_old     = null;
 let curr_raw_23_30   = null;
 let curr_raw_ratio   = null;
 let curr_raw_compact = null;
@@ -408,6 +417,7 @@ let curr_raw_horz_is = {};
 let curr_raw_vert_is = {};
 
 function init_curr_raw(show_by_old, sort_by_ratio, compact) {
+    curr_raw_old     = show_by_old;
     curr_raw_23_30   = show_by_old
                      ? "23" : "30";
     curr_raw_ratio   =              sort_by_ratio;
@@ -436,7 +446,7 @@ function add_curr_raw_vert_is(index,   vert_is) {
              curr_raw_vert_is[index] = vert_is;
 }
 
-function set_item_curr(index, container) {
+function set_item_curr(index, item, container) {
   const raw = curr_raw_data[index];
 
   // Substantial changes marking: horizontal impact of old      from prev to     curr
