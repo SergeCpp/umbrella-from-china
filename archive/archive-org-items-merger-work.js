@@ -231,7 +231,6 @@ function init_title_raw       (title_is_title) {
 
 function set_item_title(index, item, container, shown_idx) {
   const  identifier = item.identifier;
-  const  title      = title_raw_title_is_title ? item.title : null;
 
   const item_gauge_above_a = document.createElement("div");
   item_gauge_above_a.className = "item-gauge-above-a";
@@ -249,7 +248,7 @@ function set_item_title(index, item, container, shown_idx) {
   item_link.tabIndex = 0; // To show focus outline when set by focus() (else not shown)
   item_link.target = "_blank";
   item_link.textContent = (shown_idx === index ? "" : (shown_idx + 1) + " / ") + (index + 1) + ". " +
-    (title_raw_title_is_title ? title : identifier);
+    (title_raw_title_is_title ? item.title : identifier);
   item_title.appendChild(item_link);
 
   const item_gauge_below_a = document.createElement("div");
@@ -258,7 +257,7 @@ function set_item_title(index, item, container, shown_idx) {
   const item_gauge_below_b = document.createElement("div");
   item_gauge_below_b.className = "item-gauge-below-b";
 
-  set_item_gauges(index, item_gauge_above_a, item_gauge_above_b, item_gauge_below_a, item_gauge_below_b);
+  set_item_gauges(index, item, item_gauge_above_a, item_gauge_above_b, item_gauge_below_a, item_gauge_below_b);
 
   container.appendChild(item_gauge_above_a);
   container.appendChild(item_gauge_above_b);
@@ -274,70 +273,34 @@ let gauges_base_ratio     = 0;
 let gauges_max_favorites  = 0;
 let gauges_base_favorites = 0;
 
-let gauges_raw_above_a    = {};
-let gauges_raw_above_b    = {};
-let gauges_raw_below_a    = {};
-let gauges_raw_below_b    = {};
-
 function init_gauges_raw   (max_ratio, base_ratio, max_favorites, base_favorites) {
     gauges_max_ratio      = max_ratio;
     gauges_base_ratio     = base_ratio;
     gauges_max_favorites  = max_favorites;
     gauges_base_favorites = base_favorites;
-
-    gauges_raw_above_a    = {};
-    gauges_raw_above_b    = {};
-    gauges_raw_below_a    = {};
-    gauges_raw_below_b    = {};
-}
-
-function add_gauge_above_a(index,   ratio) {
-        gauges_raw_above_a[index] = ratio;
-}
-
-function add_gauge_above_b(index,   ratio) {
-        gauges_raw_above_b[index] = ratio;
-}
-
-function add_gauge_below_a(index,   favorites) {
-        gauges_raw_below_a[index] = favorites;
-}
-
-function add_gauge_below_b(index,   favorites) {
-        gauges_raw_below_b[index] = favorites;
 }
 
 const get_gauge_percentage = (value, max, base) =>
   (value <=   0) ?   '0%' :
   (value >= max) ? '100%' : (Math.log(value + 1) * base).toFixed(3) + '%';
 
-function set_item_gauges(index, gauge_above_a, gauge_above_b, gauge_below_a, gauge_below_b) {
-  if  (!gauge_above_a) return;
-  const gauge_above_a_ratio   = gauges_raw_above_a[index];
-  if   (gauge_above_a_ratio !== undefined) {
-    const width = get_gauge_percentage(gauge_above_a_ratio, gauges_max_ratio, gauges_base_ratio);
-    if   (width !== '0%') gauge_above_a.style.width = width;
+function set_item_gauges(index, item, gauge_above_a, gauge_above_b, gauge_below_a, gauge_below_b) {
+  if (!item.is_prev) {
+    const width_a = get_gauge_percentage(item.ratio_old, gauges_max_ratio, gauges_base_ratio);
+    if   (width_a !== '0%') gauge_above_a.style.width = width_a;
+
+    const width_b = get_gauge_percentage(item.ratio_all, gauges_max_ratio, gauges_base_ratio);
+    if   (width_b !== '0%') gauge_above_b.style.width = width_b;
   }
 
-  if  (!gauge_above_b) return;
-  const gauge_above_b_ratio   = gauges_raw_above_b[index];
-  if   (gauge_above_b_ratio !== undefined) {
-    const width = get_gauge_percentage(gauge_above_b_ratio, gauges_max_ratio, gauges_base_ratio);
-    if   (width !== '0%') gauge_above_b.style.width = width;
+  if (!item.no_prev) {
+    const width_a = get_gauge_percentage(item.item_prev.favorites, gauges_max_favorites, gauges_base_favorites);
+    if   (width_a !== '0%') gauge_below_a.style.width = width_a;
   }
 
-  if  (!gauge_below_a) return;
-  const gauge_below_a_favorites   = gauges_raw_below_a[index];
-  if   (gauge_below_a_favorites !== undefined) {
-    const width = get_gauge_percentage(gauge_below_a_favorites, gauges_max_favorites, gauges_base_favorites);
-    if   (width !== '0%') gauge_below_a.style.width = width;
-  }
-
-  if  (!gauge_below_b) return;
-  const gauge_below_b_favorites   = gauges_raw_below_b[index];
-  if   (gauge_below_b_favorites !== undefined) {
-    const width = get_gauge_percentage(gauge_below_b_favorites, gauges_max_favorites, gauges_base_favorites);
-    if   (width !== '0%') gauge_below_b.style.width = width;
+  if (!item.is_prev) {
+    const width_b = get_gauge_percentage(item          .favorites, gauges_max_favorites, gauges_base_favorites);
+    if   (width_b !== '0%') gauge_below_b.style.width = width_b;
   }
 }
 

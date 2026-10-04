@@ -345,21 +345,6 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev,
     }
     mood_pos_neg.push({ index: index_curr, value: mood, time: time_all }); // Needed in array anyway
 
-    /////////
-    // Gauges
-    //
-    if (!no_prev) {
-      // Display favorites prev count on the below a gauge
-      add_gauge_below_a(index_curr, item_prev.favorites);
-    }
-    if (!is_prev) {
-      // Display favorites curr count on the below b gauge
-      add_gauge_below_b(index_curr, item.favorites);
-
-      // Display ratios old and all for curr on the above gauges
-      add_gauge_above_a(index_curr, item.ratio_old);
-      add_gauge_above_b(index_curr, item.ratio_all);
-    }
   } // for (index_curr) closing
 
   // 1:0, 3:0, 4:1, 10:1, 20:2, 30:3, 50:4, 75:5, 100:6, 125:7, 150:8, 200:10, 300:12, 500:16, 800:21, 826:21
