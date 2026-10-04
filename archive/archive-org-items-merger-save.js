@@ -408,34 +408,19 @@ function set_item_prev(index, item, container) {
 /* Curr */
 
 let curr_raw_old     = null;
-let curr_raw_23_30   = null;
 let curr_raw_ratio   = null;
 let curr_raw_compact = null;
 
-let curr_raw_data    = {};
 let curr_raw_horz_is = {};
 let curr_raw_vert_is = {};
 
 function init_curr_raw(show_by_old, sort_by_ratio, compact) {
     curr_raw_old     = show_by_old;
-    curr_raw_23_30   = show_by_old
-                     ? "23" : "30";
     curr_raw_ratio   =              sort_by_ratio;
     curr_raw_compact =                             compact;
 
-    curr_raw_data    = {};
     curr_raw_horz_is = {};
     curr_raw_vert_is = {};
-}
-
-function add_curr_raw(index,
-    views_old_all, days_old_all, ratio_old_all,
-    views_23_30,                 ratio_23_30,
-    views_7,                     ratio_7) { curr_raw_data[index] = {
-
-    views_old_all, days_old_all, ratio_old_all,
-    views_23_30,                 ratio_23_30,
-    views_7,                     ratio_7 };
 }
 
 function add_curr_raw_horz_is(index,   horz_is) {
@@ -447,8 +432,6 @@ function add_curr_raw_vert_is(index,   vert_is) {
 }
 
 function set_item_curr(index, item, container) {
-  const raw = curr_raw_data[index];
-
   // Substantial changes marking: horizontal impact of old      from prev to     curr
   // Substantial changes marking: vertical   impact of 23 and 7 into all  within curr
   //
@@ -472,16 +455,30 @@ function set_item_curr(index, item, container) {
   if (curr_raw_compact) {
     container.classList.add("compact");
 
-    if (raw) {
+    if (!item.is_prev) {
       if (curr_raw_ratio) {
-        stat_curr_old.textContent = raw.ratio_old_all.toFixed(3).padStart(7);
-        stat_curr_23 .textContent = raw.ratio_23_30  .toFixed(3).padStart(7);
-        stat_curr_7  .textContent = raw.ratio_7      .toFixed(3).padStart(7);
+        if (curr_raw_old) {
+          stat_curr_old.textContent = item.ratio_old.toFixed(3).padStart(7);
+          stat_curr_23 .textContent = item.ratio_23 .toFixed(3).padStart(7);
+          stat_curr_7  .textContent = item.ratio_7  .toFixed(3).padStart(7);
+        }
+        else {
+          stat_curr_old.textContent = item.ratio_all.toFixed(3).padStart(7);
+          stat_curr_23 .textContent = item.ratio_30 .toFixed(3).padStart(7);
+          stat_curr_7  .textContent = item.ratio_7  .toFixed(3).padStart(7);
+        }
       }
       else {
-        stat_curr_old.textContent = raw.views_old_all.toString().padStart(7);
-        stat_curr_23 .textContent = raw.views_23_30  .toString().padStart(7);
-        stat_curr_7  .textContent = raw.views_7      .toString().padStart(7);
+        if (curr_raw_old) {
+          stat_curr_old.textContent = item.views_old.toString().padStart(7);
+          stat_curr_23 .textContent = item.views_23 .toString().padStart(7);
+          stat_curr_7  .textContent = item.views_7  .toString().padStart(7);
+        }
+        else {
+          stat_curr_old.textContent = item.views_all.toString().padStart(7);
+          stat_curr_23 .textContent = item.views_30 .toString().padStart(7);
+          stat_curr_7  .textContent = item.views_7  .toString().padStart(7);
+        }
       }
     }
     else {                      // 1..4..7
@@ -491,14 +488,25 @@ function set_item_curr(index, item, container) {
     }
   }
   else {
-    if (raw) {
-      stat_curr_old.textContent = raw.views_old_all.toString().padStart(6) + " /" +
-                                  raw. days_old_all.toString().padStart(5) + " =" +
-                                  raw.ratio_old_all.toFixed(3).padStart(7);
-      stat_curr_23 .textContent = raw.views_23_30  .toString().padStart(6) + " /   " + curr_raw_23_30 + " =" +
-                                  raw.ratio_23_30  .toFixed(3).padStart(7);
-      stat_curr_7  .textContent = raw.views_7      .toString().padStart(6) + " /    7 =" +
-                                  raw.ratio_7      .toFixed(3).padStart(7);
+    if (!item.is_prev) {
+      if (curr_raw_old) {
+        stat_curr_old.textContent = item.views_old.toString().padStart(6) + " /" +
+                                    item. days_old.toString().padStart(5) +        " =" +
+                                    item.ratio_old.toFixed(3).padStart(7);
+        stat_curr_23 .textContent = item.views_23 .toString().padStart(6) + " /   23 =" +
+                                    item.ratio_23 .toFixed(3).padStart(7);
+        stat_curr_7  .textContent = item.views_7  .toString().padStart(6) + " /    7 =" +
+                                    item.ratio_7  .toFixed(3).padStart(7);
+      }
+      else {
+        stat_curr_old.textContent = item.views_all.toString().padStart(6) + " /" +
+                                    item. days_all.toString().padStart(5) +        " =" +
+                                    item.ratio_all.toFixed(3).padStart(7);
+        stat_curr_23 .textContent = item.views_30 .toString().padStart(6) + " /   30 =" +
+                                    item.ratio_30 .toFixed(3).padStart(7);
+        stat_curr_7  .textContent = item.views_7  .toString().padStart(6) + " /    7 =" +
+                                    item.ratio_7  .toFixed(3).padStart(7);
+      }
     }
     else {                      // 1...5...901...5...9012
       stat_curr_old.textContent = "                      ";

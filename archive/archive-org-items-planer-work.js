@@ -205,22 +205,6 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev,
 
     const time_all  = item.time_all;
 
-    ///////
-    // Curr
-    //
-    if (!is_prev) {
-      if (show_by_old) {
-        add_curr_raw(index_curr, item.views_old, item.days_old, item.ratio_old,
-                                 item.views_23,                 item.ratio_23,
-                                 item.views_7,                  item.ratio_7);
-      }
-      else {
-        add_curr_raw(index_curr, item.views_all, item.days_all, item.ratio_all,
-                                 item.views_30,                 item.ratio_30,
-                                 item.views_7,                  item.ratio_7);
-      }
-    }
-
     ////////////////////////////////////////////////////
     // Horz and Vert substantial changes, 0 is no change
     //
