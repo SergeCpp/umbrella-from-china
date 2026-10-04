@@ -121,6 +121,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
       no_prev      : null,
       is_both      : null,
       index_prev   : null,
+       item_prev   : null,
       horz_change  : 0,
       vert_change  : 0,
       rank_change  : 0,
@@ -148,6 +149,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
         no_prev      : null,
         is_both      : null,
         index_prev   : null,
+         item_prev   : null,
         horz_change  : 0,
         vert_change  : 0,
         rank_change  : 0,
@@ -192,9 +194,14 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   // Set is_both actual values in curr expanded results
   const map_curr_exp = {};
   for (const item of results_curr_exp) {
-    map_curr_exp[item.identifier] = item;
-    item.no_prev = !map_prev[item.identifier];
-    item.is_both = !item.no_prev && !item.is_prev;
+    const identifier =      item.identifier;
+    const item_prev  =  map_prev[identifier];
+
+    item. item_prev  =  item_prev;
+    item.   no_prev  = !item_prev;
+    item.   is_both  = !item.no_prev && !item.is_prev;
+
+    map_curr_exp[identifier] = item;
   }
 
   // Traverse prev expanded and set index_prev in curr expanded
@@ -803,6 +810,7 @@ function render_results_dom(
     const item_wrapper      = document.createElement("div");
     item_wrapper.className  = "item-wrapper item-wrapper-init";
     item_wrapper.item_index = index;
+    item_wrapper.item_data  = item;
 
     add_defer_render(item_wrapper);
     add_cells_raw_is(index, is_prev, no_prev, is_both);

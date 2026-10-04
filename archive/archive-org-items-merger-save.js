@@ -100,21 +100,24 @@ function add_cells_raw_marks  (index,   marks) {
 }
 
 function create_cells_raw(wrapper, shown_idx) {
-  const   index   = wrapper.item_index;
-  if     (index === undefined)   return false;
+  const  index         =  wrapper.item_index;
+  if    (index === undefined)   return false;
 
-  const  raw_is   = cells_raw_is[index];
-  if   (!raw_is)    return false;
+  const  item          =  wrapper.item_data;
+  if   (!item)            return false;
 
-  const  is_prev  = raw_is.is_prev;
-  const  no_prev  = raw_is.no_prev;
-  const  is_both  = raw_is.is_both;
+  const  raw_is        =  cells_raw_is[index];
+  if   (!raw_is)          return false;
 
-  const raw_subst     = cells_raw_subst[index];
+  const  is_prev       =  raw_is.is_prev;
+  const  no_prev       =  raw_is.no_prev;
+  const  is_both       =  raw_is.is_both;
 
-  const prev_is_subst = raw_subst?.prev_is_subst;
-  const curr_is_subst = raw_subst?.curr_is_subst;
-  const grow_is_subst = raw_subst?.grow_is_subst;
+  const  raw_subst     =  cells_raw_subst[index];
+
+  const  prev_is_subst =  raw_subst?.prev_is_subst;
+  const  curr_is_subst =  raw_subst?.curr_is_subst;
+  const  grow_is_subst =  raw_subst?.grow_is_subst;
 
   // Inner flex container
   const inner     = document.createElement("div");
@@ -169,19 +172,19 @@ function create_cells_raw(wrapper, shown_idx) {
   if (grow_is_subst) grow_container.is_subst = true;
 
   //
-  set_item_title(index, title_container, shown_idx);
-  set_item_prev (index,  prev_container);
-  set_item_curr (index,  curr_container);
-  set_item_grow (index,  grow_container);
+  set_item_title(index, item, title_container, shown_idx);
+  set_item_prev (index,        prev_container);
+  set_item_curr (index,        curr_container);
+  set_item_grow (index,        grow_container);
 
   //
-  inner  .appendChild  (title_container);
-  inner  .appendChild  ( prev_container);
-  inner  .appendChild  ( curr_container);
-  inner  .appendChild  ( grow_container);
+  inner  .appendChild        (title_container);
+  inner  .appendChild        ( prev_container);
+  inner  .appendChild        ( curr_container);
+  inner  .appendChild        ( grow_container);
 
-  wrapper.appendChild  (inner);
-  wrapper.classList.remove("item-wrapper-init"); // Was added for initial rendering only
+  wrapper.appendChild        (inner);
+  wrapper.classList.remove   ("item-wrapper-init"); // Was added for initial rendering only
 
   //
   const raw_marks = cells_raw_marks[index];
@@ -222,28 +225,13 @@ function create_cells_raw(wrapper, shown_idx) {
 
 let title_raw_title_is_title = true;
 
-let title_raw_identifier     = {}; // Separate flat objects are some faster than { a, b } inside one object
-let title_raw_title          = {}; //
-
 function init_title_raw       (title_is_title) {
     title_raw_title_is_title = title_is_title;
-
-    title_raw_identifier     = {};
-    title_raw_title          = {};
 }
 
-function add_title_raw  (index,   identifier, title) {
-    title_raw_identifier[index] = identifier;
-
-  if (title_raw_title_is_title)
-      title_raw_title   [index] =             title;
-}
-
-function set_item_title(index, container, shown_idx) {
-  const  identifier = title_raw_identifier[index];
-  if   (!identifier)  return;
-
-  const  title      = title_raw_title_is_title ? title_raw_title[index] : null;
+function set_item_title(index, item, container, shown_idx) {
+  const  identifier = item.identifier;
+  const  title      = title_raw_title_is_title ? item.title : null;
 
   const item_gauge_above_a = document.createElement("div");
   item_gauge_above_a.className = "item-gauge-above-a";

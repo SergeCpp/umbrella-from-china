@@ -205,16 +205,6 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev,
 
     const time_all  = item.time_all;
 
-    ////////
-    // Title
-    //
-    if (title_is_title) {
-      add_title_raw(index_curr, item.identifier, item.title);
-    }
-    else {
-      add_title_raw(index_curr, item.identifier);
-    }
-
     ///////
     // Prev
     //
