@@ -4,7 +4,7 @@ const    defer_render_chunk_sz  = 30; // 1 x 16 + 27 x 30 = 826
 const    defer_render_chunk_du  = 4;  // ms, max allowed for chunk: 110 ms / 826 * 30 = 3.995 ms
 const    defer_render_wait      = 7;  // ms, between chunks
 
-let      defer_render_id        = 0;  // Set in init only
+let      defer_render_id        = 0;  // Set in init and stop
 
 let      defer_render_processed = 0;  // Set in init and step
 let      defer_render_chunks    = 0;  //
@@ -15,6 +15,10 @@ let      defer_render_wrappers  = []; // Set in init and add
 function init_defer_render() {
          defer_render_id        = performance.now();
          defer_render_wrappers  = [];
+}
+
+function stop_defer_render() {
+         defer_render_id        = 0;
 }
 
 function time_defer_render() {
@@ -175,7 +179,7 @@ function create_cells_raw(wrapper, shown_idx) {
   set_item_title(index, item, title_container, shown_idx);
   set_item_prev (index, item,  prev_container);
   set_item_curr (index, item,  curr_container);
-  set_item_grow (index,        grow_container);
+  set_item_grow (index, item,  grow_container);
 
   //
   inner  .appendChild        (title_container);
@@ -522,25 +526,17 @@ function set_item_curr(index, item, container) {
 
 /* Grow */
 
-let grow_raw_data    = {};
 let grow_raw_mood_is = {};
 
 function init_grow_raw() {
-    grow_raw_data    = {};
     grow_raw_mood_is = {};
-}
-
-function add_grow_raw(index,     grow_old, grow_23, grow_7) {
-        grow_raw_data[index] = { grow_old, grow_23, grow_7 };
 }
 
 function add_grow_raw_mood_is(index,   mood_is) {
              grow_raw_mood_is[index] = mood_is;
 }
 
-function set_item_grow(index, container) {
-  const raw = grow_raw_data[index];
-
+function set_item_grow(index, item, container) {
   // Grow mood substantial changes marking: positive and negative
   const mood_is = grow_raw_mood_is[index];
   const mood_is_class = mood_is > 0 ? " item-mark-grow"
@@ -555,10 +551,10 @@ function set_item_grow(index, container) {
   const stat_grow_7       = document.createElement("div");
   stat_grow_7  .className = "item-grow-7"   + mood_is_class;
 
-  if (raw) {
-    stat_grow_old.textContent = raw.grow_old;
-    stat_grow_23 .textContent = raw.grow_23;
-    stat_grow_7  .textContent = raw.grow_7;
+  if (item.is_both) {
+    stat_grow_old.textContent = item.grow_old;
+    stat_grow_23 .textContent = item.grow_23;
+    stat_grow_7  .textContent = item.grow_7;
   }
   else {                      // 123
     stat_grow_old.textContent = "   ";

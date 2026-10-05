@@ -297,7 +297,9 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev,
                      : get_grow_fixed(item_prev.views_30,  item.views_30 );
       const grow_7   = get_grow_fixed(item_prev.views_7,   item.views_7  );
 
-      add_grow_raw(index_curr, grow_old, grow_23, grow_7);
+      item .grow_old = grow_old;
+      item .grow_23  = grow_23;
+      item .grow_7   = grow_7;
 
       const grow_mood = get_grow_mood(grow_old, grow_23, grow_7, mood_by_same);
       if   (grow_mood) {

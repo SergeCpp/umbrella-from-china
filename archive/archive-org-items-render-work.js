@@ -103,6 +103,8 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     return;
   }
 
+  stop_defer_render();
+
   ///////
   // Sets
   //
@@ -117,25 +119,28 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   for (const item of results_curr) {
     results_curr_ids[item.identifier] = true;
     results_curr_exp.push({ ...item,
-      is_prev      : false,
-      no_prev      : null,
-      is_both      : null,
-      index_prev   : null,
-       item_prev   : null,
-      horz_change  : 0,
-      vert_change  : 0,
-      rank_change  : 0,
-      mood         : 0,
-      marks        : null,
-      is_rank_up   : null,
-      is_rank_dn   : null,
-      is_horz_grow : null,
-      is_horz_fall : null,
-      is_vert_grow : null,
-      is_vert_fall : null,
-      is_mood_pos  : null,
-      is_mood_neg  : null,
-      is_plain     : null });
+        is_prev      : false,
+        no_prev      : null,
+        is_both      : null,
+        index_prev   : null,
+         item_prev   : null,
+        horz_change  : 0,
+        vert_change  : 0,
+        rank_change  : 0,
+        mood         : 0,
+        grow_old     : null,
+        grow_23      : null,
+        grow_7       : null,
+        marks        : null,
+        is_rank_up   : null,
+        is_rank_dn   : null,
+        is_horz_grow : null,
+        is_horz_fall : null,
+        is_vert_grow : null,
+        is_vert_fall : null,
+        is_mood_pos  : null,
+        is_mood_neg  : null,
+        is_plain     : null });
   }
 
   // Add items from  results_prev that absent in results_curr
@@ -154,6 +159,9 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
         vert_change  : 0,
         rank_change  : 0,
         mood         : 0,
+        grow_old     : null,
+        grow_23      : null,
+        grow_7       : null,
         marks        : null,
         is_rank_up   : null,
         is_rank_dn   : null,

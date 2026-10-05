@@ -677,6 +677,7 @@ body:has(.tab-btn.not-filtered) #process-filter:active {
   outline-offset: -2px; /* For outline not to be clipped, to be within padding */
   overflow-x: hidden; /* To constrain the child, to use ellipsis there. Value "clip" not works here */
 /*padding: 0.5rem 0.5rem; */ /* Padding moved to inner to allow wrapper to shrink to zero */
+  user-select: none;
 }
 .header-title-inner { /* Title holder */
   font-family: sans-serif;
@@ -691,6 +692,7 @@ body:has(.tab-btn.not-filtered) #process-filter:active {
   font-family: monospace;
   outline-offset: -2px; /* For outline not to be clipped, to be within padding */
   padding: 0.5rem 0 0.5rem 0.5rem;
+  user-select: none;
 }
 .header-stat-wrapper.compact {
   flex-basis: 7ch;
@@ -706,6 +708,7 @@ body:has(.tab-btn.not-filtered) #process-filter:active {
   font-family: monospace;
   outline-offset: -2px; /* For outline not to be clipped, to be within padding */
   padding: 0.5rem calc(0.5rem - 0.5ch); /* Lessen by 1ch added above */
+  user-select: none;
 }
 .header-grow-inner { /* For bold subtitle of other font */
   font-family: sans-serif; /* No letter-spacing here, for equal left and right space */
