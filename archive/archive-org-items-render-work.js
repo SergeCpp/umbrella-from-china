@@ -295,7 +295,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   ////////////////////////////////////////////////
   // Total counts calculating for expanded results
   //
-  const curr_exp_totals = get_totals(results_curr_exp, map_prev);
+  const curr_exp_totals = get_totals(results_curr_exp);
   const curr_exp_total  =  curr_exp_totals.audio +   curr_exp_totals.video;
   const curr_exp_media  =  curr_exp_totals.audio && !curr_exp_totals.video ? 'Audio ' :
                           !curr_exp_totals.audio &&  curr_exp_totals.video ? 'Video ' : "";
@@ -310,7 +310,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
     vert_marks,
     rank_marks,
     mood_marks
-  } = compose_items(results_curr_exp, curr_exp_totals, map_prev,
+  } = compose_items(results_curr_exp, curr_exp_totals,
         title_is, show_by, sort_by, mood_by, subst_scaled,
         compact);
 
@@ -410,7 +410,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
   process_du_render.pre = performance.now() - time_0;
 
   setTimeout(render_results_dom, 0,
-    results_prev, date_prev, results_curr, date_curr, results_curr_exp, curr_length, map_prev,
+    results_prev, date_prev, results_curr, date_curr, results_curr_exp, curr_length,
     curr_exp_totals, curr_exp_total, curr_exp_media,
     only_prev, only_curr, only_both, plain_items, subst_items,
     horz_marks, vert_marks, rank_marks, mood_marks,
@@ -424,7 +424,7 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 }
 
 function render_results_dom(
-    results_prev, date_prev, results_curr, date_curr, results_curr_exp, curr_length, map_prev,
+    results_prev, date_prev, results_curr, date_curr, results_curr_exp, curr_length,
     curr_exp_totals, curr_exp_total, curr_exp_media,
     only_prev, only_curr, only_both, plain_items, subst_items,
     horz_marks, vert_marks, rank_marks, mood_marks,
@@ -469,7 +469,7 @@ function render_results_dom(
   ///////////////////
   // Diffs displaying
   //
-  render_diffs(results_curr_exp, map_prev, curr_length, show_by, container);
+  render_diffs(results_curr_exp, curr_length, show_by, container);
 
   ////////////////////////////////////////
   // Checkboxes chain (for arrows setting)
@@ -821,7 +821,6 @@ function render_results_dom(
     item_wrapper.item_data  = item;
 
     add_defer_render(item_wrapper);
-    add_cells_raw_is(index, is_prev, no_prev, is_both);
 
     // Rank substantial changes marking: up and dn
     //
@@ -853,10 +852,8 @@ function render_results_dom(
     }
 
     if (item.marks) {
-      item_wrapper.classList.add("item-wrapper-init-" + item.marks.length + "-marks");
-      item_wrapper.style.borderBottom = "none"; // Last mark replaces wrapper border (see create_cells_raw)
-
-      add_cells_raw_marks(index, item.marks);
+        item_wrapper.classList.add("item-wrapper-init-" + item.marks.length + "-marks");
+        item_wrapper.style.borderBottom = "none"; // Last mark replaces wrapper border (see create_cells_raw)
     }
 
     // Add item to the page
@@ -866,7 +863,7 @@ function render_results_dom(
     // Count vievs and favorites diff for shown items
     if (is_filtering) {
       add_views_favs_shown(
-        no_prev ? null : is_prev ? item : map_prev[item.identifier],
+        no_prev ? null : is_prev ? item : item.item_prev,
         is_prev ? null : item);
     }
 

@@ -477,7 +477,7 @@ function get_scale_sig(index, length, base, steep, rc, start, decay, sig_min, si
 
 /* Stats */
 
-function get_totals(results_curr_exp, map_prev) {
+function get_totals(results_curr_exp) {
   const totals = { audio: 0, video: 0, bytes: 0, views: 0, favorites: 0, favorited: 0,
                    max_favorites: 0, max_ratio_old: 0, max_ratio_all: 0 };
 
@@ -503,7 +503,7 @@ function get_totals(results_curr_exp, map_prev) {
         totals.max_ratio_all = item.ratio_all; }
 
     if (item.is_both) {
-      const item_prev = map_prev[item.identifier];
+      const item_prev = item.item_prev;
 
       if (totals.max_favorites < item_prev.favorites) {
           totals.max_favorites = item_prev.favorites; }
@@ -552,11 +552,11 @@ function add_to_diff(item_prev, item_curr, diff) {
   if (c_fd > p_fd) diff.favd_grow += (c_fd - p_fd); else diff.favd_fall += (p_fd - c_fd);
 }
 
-function get_views_favs(results_curr_exp, map_prev) {
+function get_views_favs(results_curr_exp) {
   const views_favs = new_views_favs();
 
   for (const item of results_curr_exp) {
-    const item_prev = item.no_prev ? null : item.is_prev ? item : map_prev[item.identifier];
+    const item_prev = item.no_prev ? null : item.is_prev ? item : item.item_prev;
     const item_curr = item.is_prev ? null : item;
 
     add_to_views(item_prev,            views_favs.prev);
@@ -877,11 +877,11 @@ function create_diffs_inner(views_favs_prev, views_favs_curr, total_cnt, shown_c
     format_nowrap    ('Favs: ' + d_favs_str + '\u200a/\u200a' + d_favd_str);
 }
 
-function render_diffs(results_curr_exp, map_prev, total_cnt, show_by, container) {
+function render_diffs(results_curr_exp, total_cnt, show_by, container) {
   diffs_text = document.createElement("div");
   diffs_text.className = "text-center text-comment";
 
-  const views_favs     = get_views_favs(results_curr_exp, map_prev);
+  const views_favs     = get_views_favs(results_curr_exp);
   const diff           = views_favs.diff;
 
   diffs_text_inner     = create_diffs_inner(views_favs.prev, views_favs.curr, total_cnt, total_cnt, show_by, diff);

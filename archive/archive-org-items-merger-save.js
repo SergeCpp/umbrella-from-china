@@ -75,20 +75,12 @@ function defer_render_finished() {
 
 /* Cells */
 
-let cells_raw_is      = [];
 let cells_raw_subst   = {};
 let cells_raw_changes = {};
-let cells_raw_marks   = {};
 
 function init_cells_raw () {
-    cells_raw_is      = [];
     cells_raw_subst   = {};
     cells_raw_changes = {};
-    cells_raw_marks   = {};
-}
-
-function add_cells_raw_is     (index,     is_prev, no_prev, is_both) {
-             cells_raw_is     [index] = { is_prev, no_prev, is_both };
 }
 
 function add_cells_raw_subst  (index,     prev_is_subst, curr_is_subst, grow_is_subst) {
@@ -99,10 +91,6 @@ function add_cells_raw_changes(index,     shown, time, rank_change, horz_change,
              cells_raw_changes[index] = { shown, time, rank_change, horz_change, vert_change, mood };
 }
 
-function add_cells_raw_marks  (index,   marks) {
-             cells_raw_marks  [index] = marks;
-}
-
 function create_cells_raw(wrapper, shown_idx) {
   const  index         =  wrapper.item_index;
   if    (index === undefined)   return false;
@@ -110,12 +98,9 @@ function create_cells_raw(wrapper, shown_idx) {
   const  item          =  wrapper.item_data;
   if   (!item)            return false;
 
-  const  raw_is        =  cells_raw_is[index];
-  if   (!raw_is)          return false;
-
-  const  is_prev       =  raw_is.is_prev;
-  const  no_prev       =  raw_is.no_prev;
-  const  is_both       =  raw_is.is_both;
+  const  is_prev       =  item.is_prev;
+  const  no_prev       =  item.no_prev;
+  const  is_both       =  item.is_both;
 
   const  raw_subst     =  cells_raw_subst[index];
 
@@ -191,7 +176,7 @@ function create_cells_raw(wrapper, shown_idx) {
   wrapper.classList.remove   ("item-wrapper-init"); // Was added for initial rendering only
 
   //
-  const raw_marks = cells_raw_marks[index];
+  const raw_marks = item.marks;
 
   if   (raw_marks) {
     const marks_num = raw_marks.length;

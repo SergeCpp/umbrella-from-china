@@ -100,7 +100,7 @@ function compose_header(title_is, title_is_set,
 /* Compose Items */
 
 // results_curr_exp is sorted
-function compose_items(results_curr_exp, curr_exp_totals, map_prev,
+function compose_items(results_curr_exp, curr_exp_totals,
   title_is, show_by, sort_by, mood_by, subst_scaled,
   compact) {
 
@@ -197,7 +197,7 @@ function compose_items(results_curr_exp, curr_exp_totals, map_prev,
   //
   for (let index_curr = 0; index_curr < curr_length; index_curr++) {
     const item      = results_curr_exp[index_curr];
-    const item_prev = map_prev[item.identifier];
+    const item_prev = item.item_prev;
 
     const is_prev   = item.is_prev;
     const no_prev   = item.no_prev;
