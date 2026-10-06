@@ -98,12 +98,12 @@ function render_results(results_prev, date_prev, results_curr, date_curr, result
 
   const time_0 = performance.now();
 
+  stop_defer_render();
+
   if (!results_prev.length && !results_curr.length) {
     process_error(error_compose("No items matched the filters"));
     return;
   }
-
-  stop_defer_render();
 
   ///////
   // Sets
@@ -841,11 +841,7 @@ function render_results_dom(
     if (is_vert_fall) { add_curr_raw_vert_is(index, -1); curr_is_subst = true; }
 
     // Grow mood substantial changes marking: positive and negative
-    //
-    let grow_is_subst = false;
-    //
-    if (is_mood_pos) { add_grow_raw_mood_is(index, +1); grow_is_subst = true; }
-    if (is_mood_neg) { add_grow_raw_mood_is(index, -1); grow_is_subst = true; }
+    const grow_is_subst = is_mood_pos || is_mood_neg;
 
     if                          (prev_is_subst || curr_is_subst || grow_is_subst) {
       add_cells_raw_subst(index, prev_is_subst,   curr_is_subst,   grow_is_subst)

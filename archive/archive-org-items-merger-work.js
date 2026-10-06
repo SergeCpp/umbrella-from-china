@@ -326,66 +326,68 @@ function set_item_prev(index, item, container) {
   const stat_prev_7       = document.createElement("div");
   stat_prev_7  .className = "item-stat-prev-7"   + rank_is_class;
 
+  const item_prev         =  item.item_prev;
+
   if (prev_raw_compact) {
     container.classList.add("compact");
 
     if (!item.no_prev) {
       if (prev_raw_ratio) {
         if (prev_raw_old) {
-          stat_prev_old.textContent = item.item_prev.ratio_old.toFixed(3).padStart(7);
-          stat_prev_23 .textContent = item.item_prev.ratio_23 .toFixed(3).padStart(7);
-          stat_prev_7  .textContent = item.item_prev.ratio_7  .toFixed(3).padStart(7);
+          stat_prev_old.textContent = item_prev.ratio_old.toFixed(3).padStart(7);
+          stat_prev_23 .textContent = item_prev.ratio_23 .toFixed(3).padStart(7);
+          stat_prev_7  .textContent = item_prev.ratio_7  .toFixed(3).padStart(7);
         }
         else {
-          stat_prev_old.textContent = item.item_prev.ratio_all.toFixed(3).padStart(7);
-          stat_prev_23 .textContent = item.item_prev.ratio_30 .toFixed(3).padStart(7);
-          stat_prev_7  .textContent = item.item_prev.ratio_7  .toFixed(3).padStart(7);
+          stat_prev_old.textContent = item_prev.ratio_all.toFixed(3).padStart(7);
+          stat_prev_23 .textContent = item_prev.ratio_30 .toFixed(3).padStart(7);
+          stat_prev_7  .textContent = item_prev.ratio_7  .toFixed(3).padStart(7);
         }
       }
       else {
         if (prev_raw_old) {
-          stat_prev_old.textContent = item.item_prev.views_old.toString().padStart(7);
-          stat_prev_23 .textContent = item.item_prev.views_23 .toString().padStart(7);
-          stat_prev_7  .textContent = item.item_prev.views_7  .toString().padStart(7);
+          stat_prev_old.textContent = item_prev.views_old.toString().padStart(7);
+          stat_prev_23 .textContent = item_prev.views_23 .toString().padStart(7);
+          stat_prev_7  .textContent = item_prev.views_7  .toString().padStart(7);
         }
         else {
-          stat_prev_old.textContent = item.item_prev.views_all.toString().padStart(7);
-          stat_prev_23 .textContent = item.item_prev.views_30 .toString().padStart(7);
-          stat_prev_7  .textContent = item.item_prev.views_7  .toString().padStart(7);
+          stat_prev_old.textContent = item_prev.views_all.toString().padStart(7);
+          stat_prev_23 .textContent = item_prev.views_30 .toString().padStart(7);
+          stat_prev_7  .textContent = item_prev.views_7  .toString().padStart(7);
         }
       }
     }
-    else {                      // 1..4..7
-      stat_prev_old.textContent = "       ";
-      stat_prev_23 .textContent = "       ";
-      stat_prev_7  .textContent = "       ";
+    else {                          // 1..4..7
+          stat_prev_old.textContent = "       ";
+          stat_prev_23 .textContent = "       ";
+          stat_prev_7  .textContent = "       ";
     }
   }
   else {
     if (!item.no_prev) {
       if (prev_raw_old) {
-        stat_prev_old.textContent = item.item_prev.views_old.toString().padStart(6) + " /" +
-                                    item.item_prev. days_old.toString().padStart(5) +        " =" +
-                                    item.item_prev.ratio_old.toFixed(3).padStart(7);
-        stat_prev_23 .textContent = item.item_prev.views_23 .toString().padStart(6) + " /   23 =" +
-                                    item.item_prev.ratio_23 .toFixed(3).padStart(7);
-        stat_prev_7  .textContent = item.item_prev.views_7  .toString().padStart(6) + " /    7 =" +
-                                    item.item_prev.ratio_7  .toFixed(3).padStart(7);
+          stat_prev_old.textContent = item_prev.views_old.toString().padStart(6) + " /" +
+                                      item_prev. days_old.toString().padStart(5) +        " =" +
+                                      item_prev.ratio_old.toFixed(3).padStart(7);
+          stat_prev_23 .textContent = item_prev.views_23 .toString().padStart(6) + " /   23 =" +
+                                      item_prev.ratio_23 .toFixed(3).padStart(7);
+          stat_prev_7  .textContent = item_prev.views_7  .toString().padStart(6) + " /    7 =" +
+                                      item_prev.ratio_7  .toFixed(3).padStart(7);
       }
       else {
-        stat_prev_old.textContent = item.item_prev.views_all.toString().padStart(6) + " /" +
-                                    item.item_prev. days_all.toString().padStart(5) +        " =" +
-                                    item.item_prev.ratio_all.toFixed(3).padStart(7);
-        stat_prev_23 .textContent = item.item_prev.views_30 .toString().padStart(6) + " /   30 =" +
-                                    item.item_prev.ratio_30 .toFixed(3).padStart(7);
-        stat_prev_7  .textContent = item.item_prev.views_7  .toString().padStart(6) + " /    7 =" +
-                                    item.item_prev.ratio_7  .toFixed(3).padStart(7);
+          stat_prev_old.textContent = item_prev.views_all.toString().padStart(6) + " /" +
+                                      item_prev. days_all.toString().padStart(5) +        " =" +
+                                      item_prev.ratio_all.toFixed(3).padStart(7);
+          stat_prev_23 .textContent = item_prev.views_30 .toString().padStart(6) + " /   30 =" +
+                                      item_prev.ratio_30 .toFixed(3).padStart(7);
+          stat_prev_7  .textContent = item_prev.views_7  .toString().padStart(6) + " /    7 =" +
+                                      item_prev.ratio_7  .toFixed(3).padStart(7);
       }
     }
-    else {                      // 1...5...901...5...9012
-      stat_prev_old.textContent = "                      ";
-      stat_prev_23 .textContent = "                      ";
-      stat_prev_7  .textContent = "                      ";
+    else {                          // 1...5...901...5...9012
+          stat_prev_old.textContent = "                      ";
+          stat_prev_23 .textContent = "                      ";
+          stat_prev_7  .textContent = "                      ";
     }
   }
 
@@ -470,37 +472,37 @@ function set_item_curr(index, item, container) {
         }
       }
     }
-    else {                      // 1..4..7
-      stat_curr_old.textContent = "       ";
-      stat_curr_23 .textContent = "       ";
-      stat_curr_7  .textContent = "       ";
+    else {                          // 1..4..7
+          stat_curr_old.textContent = "       ";
+          stat_curr_23 .textContent = "       ";
+          stat_curr_7  .textContent = "       ";
     }
   }
   else {
     if (!item.is_prev) {
       if (curr_raw_old) {
-        stat_curr_old.textContent = item.views_old.toString().padStart(6) + " /" +
-                                    item. days_old.toString().padStart(5) +        " =" +
-                                    item.ratio_old.toFixed(3).padStart(7);
-        stat_curr_23 .textContent = item.views_23 .toString().padStart(6) + " /   23 =" +
-                                    item.ratio_23 .toFixed(3).padStart(7);
-        stat_curr_7  .textContent = item.views_7  .toString().padStart(6) + " /    7 =" +
-                                    item.ratio_7  .toFixed(3).padStart(7);
+          stat_curr_old.textContent = item.views_old.toString().padStart(6) + " /" +
+                                      item. days_old.toString().padStart(5) +        " =" +
+                                      item.ratio_old.toFixed(3).padStart(7);
+          stat_curr_23 .textContent = item.views_23 .toString().padStart(6) + " /   23 =" +
+                                      item.ratio_23 .toFixed(3).padStart(7);
+          stat_curr_7  .textContent = item.views_7  .toString().padStart(6) + " /    7 =" +
+                                      item.ratio_7  .toFixed(3).padStart(7);
       }
       else {
-        stat_curr_old.textContent = item.views_all.toString().padStart(6) + " /" +
-                                    item. days_all.toString().padStart(5) +        " =" +
-                                    item.ratio_all.toFixed(3).padStart(7);
-        stat_curr_23 .textContent = item.views_30 .toString().padStart(6) + " /   30 =" +
-                                    item.ratio_30 .toFixed(3).padStart(7);
-        stat_curr_7  .textContent = item.views_7  .toString().padStart(6) + " /    7 =" +
-                                    item.ratio_7  .toFixed(3).padStart(7);
+          stat_curr_old.textContent = item.views_all.toString().padStart(6) + " /" +
+                                      item. days_all.toString().padStart(5) +        " =" +
+                                      item.ratio_all.toFixed(3).padStart(7);
+          stat_curr_23 .textContent = item.views_30 .toString().padStart(6) + " /   30 =" +
+                                      item.ratio_30 .toFixed(3).padStart(7);
+          stat_curr_7  .textContent = item.views_7  .toString().padStart(6) + " /    7 =" +
+                                      item.ratio_7  .toFixed(3).padStart(7);
       }
     }
-    else {                      // 1...5...901...5...9012
-      stat_curr_old.textContent = "                      ";
-      stat_curr_23 .textContent = "                      ";
-      stat_curr_7  .textContent = "                      ";
+    else {                          // 1...5...901...5...9012
+          stat_curr_old.textContent = "                      ";
+          stat_curr_23 .textContent = "                      ";
+          stat_curr_7  .textContent = "                      ";
     }
   }
 
@@ -511,21 +513,10 @@ function set_item_curr(index, item, container) {
 
 /* Grow */
 
-let grow_raw_mood_is = {};
-
-function init_grow_raw() {
-    grow_raw_mood_is = {};
-}
-
-function add_grow_raw_mood_is(index,   mood_is) {
-             grow_raw_mood_is[index] = mood_is;
-}
-
 function set_item_grow(index, item, container) {
   // Grow mood substantial changes marking: positive and negative
-  const mood_is = grow_raw_mood_is[index];
-  const mood_is_class = mood_is > 0 ? " item-mark-grow"
-                      : mood_is < 0 ? " item-mark-fall" : "";
+  const mood_is_class = item.is_mood_pos ? " item-mark-grow"
+                      : item.is_mood_neg ? " item-mark-fall" : "";
 
   const stat_grow_old     = document.createElement("div");
   stat_grow_old.className = "item-grow-old" + mood_is_class;

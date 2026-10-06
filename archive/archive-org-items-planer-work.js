@@ -126,7 +126,6 @@ function compose_items(results_curr_exp, curr_exp_totals,
   init_title_raw(title_is_title);
   init_prev_raw (show_by_old, sort_by_ratio, compact);
   init_curr_raw (show_by_old, sort_by_ratio, compact);
-  init_grow_raw ();
   //
   // For log/sig scaling of marks
   //
