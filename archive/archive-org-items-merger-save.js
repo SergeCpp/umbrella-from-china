@@ -289,25 +289,16 @@ let prev_raw_old     = null;
 let prev_raw_ratio   = null;
 let prev_raw_compact = null;
 
-let prev_raw_rank_is = {};
-
 function init_prev_raw(show_by_old, sort_by_ratio, compact) {
     prev_raw_old     = show_by_old;
     prev_raw_ratio   =              sort_by_ratio;
     prev_raw_compact =                             compact;
-
-    prev_raw_rank_is = {};
-}
-
-function add_prev_raw_rank_is(index,   rank_is) {
-             prev_raw_rank_is[index] = rank_is;
 }
 
 function set_item_prev(index, item, container) {
   // Rank substantial changes marking: up and dn
-  const rank_is = prev_raw_rank_is[index];
-  const rank_is_class = rank_is > 0 ? " item-mark-up"
-                      : rank_is < 0 ? " item-mark-dn" : "";
+  const rank_is_class     = item.is_rank_up ? " item-mark-up"
+                          : item.is_rank_dn ? " item-mark-dn" : "";
 
   const stat_prev_old     = document.createElement("div");
   stat_prev_old.className = "item-stat-prev-old" + rank_is_class;
@@ -394,37 +385,21 @@ let curr_raw_old     = null;
 let curr_raw_ratio   = null;
 let curr_raw_compact = null;
 
-let curr_raw_horz_is = {};
-let curr_raw_vert_is = {};
-
 function init_curr_raw(show_by_old, sort_by_ratio, compact) {
     curr_raw_old     = show_by_old;
     curr_raw_ratio   =              sort_by_ratio;
     curr_raw_compact =                             compact;
-
-    curr_raw_horz_is = {};
-    curr_raw_vert_is = {};
-}
-
-function add_curr_raw_horz_is(index,   horz_is) {
-             curr_raw_horz_is[index] = horz_is;
-}
-
-function add_curr_raw_vert_is(index,   vert_is) {
-             curr_raw_vert_is[index] = vert_is;
 }
 
 function set_item_curr(index, item, container) {
   // Substantial changes marking: horizontal impact of old      from prev to     curr
   // Substantial changes marking: vertical   impact of 23 and 7 into all  within curr
   //
-  const horz_is = curr_raw_horz_is[index];
-  const horz_is_class = horz_is > 0 ? " item-mark-grow"
-                      : horz_is < 0 ? " item-mark-fall" : "";
+  const horz_is_class     = item.is_horz_grow ? " item-mark-grow"
+                          : item.is_horz_fall ? " item-mark-fall" : "";
   //
-  const vert_is = curr_raw_vert_is[index];
-  const vert_is_class = vert_is > 0 ? " item-mark-grow"
-                      : vert_is < 0 ? " item-mark-fall" : "";
+  const vert_is_class     = item.is_vert_grow ? " item-mark-grow"
+                          : item.is_vert_fall ? " item-mark-fall" : "";
 
   const stat_curr_old     = document.createElement("div");
   stat_curr_old.className = "item-stat-curr-old" + horz_is_class;
@@ -507,8 +482,8 @@ function set_item_curr(index, item, container) {
 
 function set_item_grow(index, item, container) {
   // Grow mood substantial changes marking: positive and negative
-  const mood_is_class = item.is_mood_pos ? " item-mark-grow"
-                      : item.is_mood_neg ? " item-mark-fall" : "";
+  const mood_is_class     = item.is_mood_pos ? " item-mark-grow"
+                          : item.is_mood_neg ? " item-mark-fall" : "";
 
   const stat_grow_old     = document.createElement("div");
   stat_grow_old.className = "item-grow-old" + mood_is_class;

@@ -822,20 +822,6 @@ function render_results_dom(
 
     add_defer_render(item_wrapper);
 
-    // Rank substantial changes marking: up and dn
-    //
-    if (is_rank_up)   add_prev_raw_rank_is(index, +1);
-    if (is_rank_dn)   add_prev_raw_rank_is(index, -1);
-
-    // Substantial changes marking: horizontal impact of old      from prev to     curr
-    // Substantial changes marking: vertical   impact of 23 and 7 into all  within curr
-    //
-    if (is_horz_grow) add_curr_raw_horz_is(index, +1);
-    if (is_horz_fall) add_curr_raw_horz_is(index, -1);
-    //
-    if (is_vert_grow) add_curr_raw_vert_is(index, +1);
-    if (is_vert_fall) add_curr_raw_vert_is(index, -1);
-
     if (item.marks) {
         item_wrapper.classList.add("item-wrapper-init-" + item.marks.length + "-marks");
         item_wrapper.style.borderBottom = "none"; // Last mark replaces wrapper border (see create_cells_raw)
