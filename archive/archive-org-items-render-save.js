@@ -718,7 +718,6 @@ function render_results_dom(
   clr_linkage_for_items ();
   //
   init_defer_render();
-  init_cells_raw   ();
   //
   for (let index = 0; index < curr_length; index++) {
     const item    = results_curr_exp[index];
@@ -838,10 +837,6 @@ function render_results_dom(
         is_prev ? null : item);
     }
 
-    if (is_both || !is_prev) { // Explicitly two conditions used
-      add_cells_raw_changes(index, shown_cnt, item.time_all,
-        item.rank_change, item.horz_change, item.vert_change, item.mood);
-    }
   } // for (index) closing
 
   if (shown_cnt !== curr_length) update_diffs(curr_length, shown_cnt, show_by);

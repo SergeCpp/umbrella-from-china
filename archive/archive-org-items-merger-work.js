@@ -75,16 +75,6 @@ function defer_render_finished() {
 
 /* Cells */
 
-let cells_raw_changes = {};
-
-function init_cells_raw () {
-    cells_raw_changes = {};
-}
-
-function add_cells_raw_changes(index,     shown, time, rank_change, horz_change, vert_change, mood) {
-             cells_raw_changes[index] = { shown, time, rank_change, horz_change, vert_change, mood };
-}
-
 function create_cells_raw(wrapper, shown_idx) {
   const  index         =  wrapper.item_index;
   if    (index === undefined)   return false;
@@ -154,9 +144,9 @@ function create_cells_raw(wrapper, shown_idx) {
 
   //
   set_item_title(index, item, title_container, shown_idx);
-  set_item_prev (index, item,  prev_container);
-  set_item_curr (index, item,  curr_container);
-  set_item_grow (index, item,  grow_container);
+  set_item_prev        (item,  prev_container);
+  set_item_curr        (item,  curr_container);
+  set_item_grow        (item,  grow_container);
 
   //
   inner  .appendChild        (title_container);
@@ -186,16 +176,13 @@ function create_cells_raw(wrapper, shown_idx) {
   }
 
   //
-  const raw_changes = cells_raw_changes[index];
-
-  if   (raw_changes) {
-    add_linkage_for_items(index,
-                 raw_changes.shown, // shown is 1-based (is shown_cnt)
-                 raw_changes.time,
-      is_both && raw_changes.rank_change,  is_both && prev_container,
-      is_both && raw_changes.horz_change,  is_both && curr_container,
-     !is_prev && raw_changes.vert_change, !is_prev && curr_container,
-      is_both && raw_changes.mood,         is_both && grow_container);
+  if (is_both || !is_prev) { // Explicitly two conditions used
+    add_linkage_for_items(index, shown_idx + 1, // is 1-based shown_cnt
+                    item .time_all,
+         is_both && item .rank_change,  is_both && prev_container,
+         is_both && item .horz_change,  is_both && curr_container,
+        !is_prev && item .vert_change, !is_prev && curr_container,
+         is_both && item .mood,         is_both && grow_container);
   }
 
   //
@@ -236,7 +223,7 @@ function set_item_title(index, item, container, shown_idx) {
   const item_gauge_below_b = document.createElement("div");
   item_gauge_below_b.className = "item-gauge-below-b";
 
-  set_item_gauges(index, item, item_gauge_above_a, item_gauge_above_b, item_gauge_below_a, item_gauge_below_b);
+  set_item_gauges(item, item_gauge_above_a, item_gauge_above_b, item_gauge_below_a, item_gauge_below_b);
 
   container.appendChild(item_gauge_above_a);
   container.appendChild(item_gauge_above_b);
@@ -263,7 +250,7 @@ const get_gauge_percentage = (value, max, base) =>
   (value <=   0) ?   '0%' :
   (value >= max) ? '100%' : (Math.log(value + 1) * base).toFixed(3) + '%';
 
-function set_item_gauges(index, item, gauge_above_a, gauge_above_b, gauge_below_a, gauge_below_b) {
+function set_item_gauges(item, gauge_above_a, gauge_above_b, gauge_below_a, gauge_below_b) {
   if (!item.is_prev) {
     const width_a = get_gauge_percentage(item.ratio_old, gauges_max_ratio, gauges_base_ratio);
     if   (width_a !== '0%') gauge_above_a.style.width = width_a;
@@ -295,7 +282,7 @@ function init_prev_raw(show_by_old, sort_by_ratio, compact) {
     prev_raw_compact =                             compact;
 }
 
-function set_item_prev(index, item, container) {
+function set_item_prev(item, container) {
   // Rank substantial changes marking: up and dn
   const rank_is_class     = item.is_rank_up ? " item-mark-up"
                           : item.is_rank_dn ? " item-mark-dn" : "";
@@ -391,7 +378,7 @@ function init_curr_raw(show_by_old, sort_by_ratio, compact) {
     curr_raw_compact =                             compact;
 }
 
-function set_item_curr(index, item, container) {
+function set_item_curr(item, container) {
   // Substantial changes marking: horizontal impact of old      from prev to     curr
   // Substantial changes marking: vertical   impact of 23 and 7 into all  within curr
   //
@@ -480,7 +467,7 @@ function set_item_curr(index, item, container) {
 
 /* Grow */
 
-function set_item_grow(index, item, container) {
+function set_item_grow(item, container) {
   // Grow mood substantial changes marking: positive and negative
   const mood_is_class     = item.is_mood_pos ? " item-mark-grow"
                           : item.is_mood_neg ? " item-mark-fall" : "";
