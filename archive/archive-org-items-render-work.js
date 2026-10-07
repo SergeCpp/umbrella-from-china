@@ -824,28 +824,17 @@ function render_results_dom(
 
     // Rank substantial changes marking: up and dn
     //
-    let prev_is_subst = false;
-    //
-    if (is_rank_up) { add_prev_raw_rank_is(index, +1); prev_is_subst = true; }
-    if (is_rank_dn) { add_prev_raw_rank_is(index, -1); prev_is_subst = true; }
+    if (is_rank_up)   add_prev_raw_rank_is(index, +1);
+    if (is_rank_dn)   add_prev_raw_rank_is(index, -1);
 
     // Substantial changes marking: horizontal impact of old      from prev to     curr
     // Substantial changes marking: vertical   impact of 23 and 7 into all  within curr
     //
-    let curr_is_subst = false;
+    if (is_horz_grow) add_curr_raw_horz_is(index, +1);
+    if (is_horz_fall) add_curr_raw_horz_is(index, -1);
     //
-    if (is_horz_grow) { add_curr_raw_horz_is(index, +1); curr_is_subst = true; }
-    if (is_horz_fall) { add_curr_raw_horz_is(index, -1); curr_is_subst = true; }
-    //
-    if (is_vert_grow) { add_curr_raw_vert_is(index, +1); curr_is_subst = true; }
-    if (is_vert_fall) { add_curr_raw_vert_is(index, -1); curr_is_subst = true; }
-
-    // Grow mood substantial changes marking: positive and negative
-    const grow_is_subst = is_mood_pos || is_mood_neg;
-
-    if                          (prev_is_subst || curr_is_subst || grow_is_subst) {
-      add_cells_raw_subst(index, prev_is_subst,   curr_is_subst,   grow_is_subst)
-    }
+    if (is_vert_grow) add_curr_raw_vert_is(index, +1);
+    if (is_vert_fall) add_curr_raw_vert_is(index, -1);
 
     if (item.marks) {
         item_wrapper.classList.add("item-wrapper-init-" + item.marks.length + "-marks");

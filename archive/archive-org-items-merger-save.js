@@ -75,16 +75,10 @@ function defer_render_finished() {
 
 /* Cells */
 
-let cells_raw_subst   = {};
 let cells_raw_changes = {};
 
 function init_cells_raw () {
-    cells_raw_subst   = {};
     cells_raw_changes = {};
-}
-
-function add_cells_raw_subst  (index,     prev_is_subst, curr_is_subst, grow_is_subst) {
-             cells_raw_subst  [index] = { prev_is_subst, curr_is_subst, grow_is_subst };
 }
 
 function add_cells_raw_changes(index,     shown, time, rank_change, horz_change, vert_change, mood) {
@@ -102,11 +96,9 @@ function create_cells_raw(wrapper, shown_idx) {
   const  no_prev       =  item.no_prev;
   const  is_both       =  item.is_both;
 
-  const  raw_subst     =  cells_raw_subst[index];
-
-  const  prev_is_subst =  raw_subst?.prev_is_subst;
-  const  curr_is_subst =  raw_subst?.curr_is_subst;
-  const  grow_is_subst =  raw_subst?.grow_is_subst;
+  const  prev_is_subst =  item.is_rank_up   || item.is_rank_dn;
+  const  curr_is_subst =  item.is_horz_grow || item.is_horz_fall || item.is_vert_grow || item.is_vert_fall;
+  const  grow_is_subst =  item.is_mood_pos  || item.is_mood_neg;
 
   // Inner flex container
   const inner     = document.createElement("div");
@@ -198,7 +190,7 @@ function create_cells_raw(wrapper, shown_idx) {
 
   if   (raw_changes) {
     add_linkage_for_items(index,
-                 raw_changes.shown,
+                 raw_changes.shown, // shown is 1-based (is shown_cnt)
                  raw_changes.time,
       is_both && raw_changes.rank_change,  is_both && prev_container,
       is_both && raw_changes.horz_change,  is_both && curr_container,
