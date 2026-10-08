@@ -29,6 +29,10 @@ function add_defer_render   (wrapper) {
   defer_render_wrappers.push(wrapper);
 }
 
+function get_defer_render_wrappers() {
+  return     defer_render_wrappers;
+}
+
 function defer_render() {
   defer_render_processed   =  0;
   defer_render_chunks      =  0;
@@ -173,16 +177,6 @@ function create_cells_raw(wrapper, shown_idx) {
 
     wrapper.classList.remove("item-wrapper-init-" + marks_num + "-marks");
 //  wrapper.style.borderBottom = "none"; // Last mark replaces wrapper border (set in render_results_dom)
-  }
-
-  //
-  if (is_both || !is_prev) { // Explicitly two conditions used
-    add_linkage_for_items(index, shown_idx + 1, // is 1-based shown_cnt
-                    item .time_all,
-         is_both && item .rank_change,  is_both && prev_container,
-         is_both && item .horz_change,  is_both && curr_container,
-        !is_prev && item .vert_change, !is_prev && curr_container,
-         is_both && item .mood,         is_both && grow_container);
   }
 
   //

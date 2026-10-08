@@ -841,10 +841,6 @@ function render_results_dom(
 
   if (shown_cnt !== curr_length) update_diffs(curr_length, shown_cnt, show_by);
 
-  container.onclick   = event => results_click  (event);
-  container.onkeyup   = event => results_keyup  (event);
-  container.onkeydown = event => results_keydown(event);
-
   restore_focus();
 
   defer_render();
@@ -864,6 +860,12 @@ function render_results_dom(
 }
 
 function render_finished() {
+  const     container = document.getElementById("results");
+
+  container.onclick   = event => results_click  (event);
+  container.onkeyup   = event => results_keyup  (event);
+  container.onkeydown = event => results_keydown(event);
+
   set_chain_arrows_plane   (chks_chain);
   init_chks_filtered_states(chks_chain);
 

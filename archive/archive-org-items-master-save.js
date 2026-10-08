@@ -638,6 +638,41 @@ function clr_linkage_for_items() {
     linkages_are_ready = false;
 }
 
+function add_linkages_for_items() {
+  const wrappers  = get_defer_render_wrappers();
+  const shown_len = wrappers.length;
+
+  for (let shown_idx = 0; shown_idx < shown_len; shown_idx++) {
+    const wrapper = wrappers[shown_idx];
+
+    const index   = wrapper.item_index;
+    if   (index === undefined) return;
+
+    const item    = wrapper.item_data;
+    if  (!item)     return;
+
+    const inner   = wrapper.firstElementChild;
+    if  (!inner)    return;
+
+    const is_prev = item.is_prev;
+    const is_both = item.is_both;
+
+    if  (!is_both && is_prev) continue;
+
+    const [title_container,
+            prev_container,
+            curr_container,
+            grow_container] = Array.from(inner.children);
+
+    add_linkage_for_items(index, shown_idx + 1, // 1-based shown_cnt
+                    item .time_all,
+         is_both && item .rank_change,  is_both && prev_container,
+         is_both && item .horz_change,  is_both && curr_container,
+        !is_prev && item .vert_change, !is_prev && curr_container,
+         is_both && item .mood,         is_both && grow_container);
+  }
+}
+
 // index is 0-based
 // shown is 1-based
 function add_linkage_for_items(index, shown, time,
@@ -658,7 +693,7 @@ function add_linkage_for_items(index, shown, time,
       mood_linkage.push({ index, shown, time, value: mood,        container: mood_container, ordinal: null });
 }
 
-function set_linkage_for_items() {
+function set_linkages_for_items() {
   // Descending || Ascending
   rank_linkage.sort((above, below) => (below.value - above.value) || (above.time - below.time));
   horz_linkage.sort((above, below) => (below.value - above.value) || (above.time - below.time));
@@ -697,7 +732,8 @@ function set_linkage_for_items() {
 function ensure_linkages_are_ready() {
   if (linkages_are_ready) return;
 
-  set_linkage_for_items();
+  add_linkages_for_items();
+  set_linkages_for_items();
 }
 
 // Linkage Events
