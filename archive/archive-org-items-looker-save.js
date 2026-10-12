@@ -380,10 +380,11 @@ function tab_infos_init() {
 }
 
 function tab_info_to_el(id, info) {
-  const info_el = tab_infos_el[id];
+  const info_el = tab_infos_el [id];
+  const focused = tab_input_els[id] === document.activeElement;
 
   info_el.value         = info;
-  info_el.style.display = info ? 'block' : 'none';
+  info_el.style.display = info && !focused ? 'block' : 'none';
 }
 
 function tab_info_set(tab, id, info) {

@@ -299,7 +299,7 @@ function parse_node_split(term, op) {
     if   (index === -1) break;
 
     if (!paren_depth(term, index)) {
-      parts.push(term.substring(part, index));
+      parts.push(term.slice(part, index));
       part = index + op.length;
     }
 
@@ -309,7 +309,7 @@ function parse_node_split(term, op) {
 
   if (!parts.length) return null;
 
-  parts.push(term.substring(part));
+  parts.push(term.slice(part));
 
   return {
     type : op,
@@ -337,8 +337,9 @@ function parse_node_sides(term, op) {
   if (!found) return null;
 
   const ex_ix = op_ix + op.length;
-  const incl  = term.substring(0, op_ix).trimEnd(); // Left
-  const excl  = term.substring(   ex_ix); // Right
+  const incl  = term.slice(0, op_ix).trimEnd(); // Left
+  const excl  = term.slice(   ex_ix);           // Right
+
   return {
     type: op,
     incl: incl ? parse_term(incl) : null,
@@ -387,47 +388,8 @@ function parse_term(term) {
   if (node) return node;
 
   // Check for COUNT next
-  const cnd_ones = ['=' , '!' , '<' , '>' ];
-  const cnd_twos = ['==', '!=', '<=', '>='];
-  let   cnd_one  = null;
-  let   cnd_idx  = -1;
-
-  for (let i = term.length - 1; i >= 0; i--) {
-    if (cnd_ones.includes(term[i]) && !paren_depth(term, i)) {
-      cnd_one = term[i];
-      cnd_idx = i;
-      break;
-    }
-  }
-
-  if (cnd_one) {
-    let cnd_two = null;
-
-    if ((cnd_one === '=') && (cnd_idx > 0)) {
-      const str_two = term.substring(cnd_idx - 1, cnd_idx + 1);
-      if (cnd_twos.includes(str_two)) {
-        cnd_two = str_two;
-        cnd_idx--;
-      }
-    }
-
-    const cnd     = cnd_two ? cnd_two : cnd_one;
-    const nxt_idx = cnd_idx + cnd.length;
-    const test    = term.substring(0, cnd_idx); // Term to test for
-    const cnt_str = term.substring(   nxt_idx).trimStart(); // Count of occurrences for it
-
-    if (/^\d{1,4}$/.test(cnt_str)) { // Reasonable limit to count
-      let cnt = parseInt(cnt_str, 10);
-      if (!isNaN(cnt) && (cnt >= 0)) { // Only valid count to use
-        return {
-          type: "COUNT",
-          test: parse_term(test),
-          cnd,
-          cnt
-        };
-      }
-    }
-  }
+  node = parse_count(term);
+  if (node) return node;
 
   // Check for CHARS_NUM next
   node = parse_chars_num(term);
@@ -445,6 +407,48 @@ function parse_term(term) {
   };
 }
 
+function parse_count(term) {
+  const cnd_ones = ['=' , '!' , '<' , '>' ];
+  const cnd_twos = ['==', '!=', '<=', '>='];
+  let   cnd_one  = null;
+  let   cnd_idx  = -1;
+
+  for (let i = term.length - 1; i >= 0; i--) {
+    if (cnd_ones.includes(term[i]) && !paren_depth(term, i)) {
+        cnd_one = term[i];
+        cnd_idx = i;
+        break;
+    }
+  }
+
+  if (!cnd_one) return null;
+
+  let  cnd_two = null;
+
+  if ((cnd_one === '=') && (cnd_idx > 0)) {
+    const str_two = term.slice(cnd_idx - 1, cnd_idx + 1);
+
+    if   (cnd_twos.includes(str_two)) {
+          cnd_two = str_two;
+          cnd_idx--;
+    }
+  }
+
+  const cnd     = cnd_two ? cnd_two : cnd_one;
+  const nxt_idx = cnd_idx + cnd.length;
+  const test    = term.slice(0, cnd_idx);             // Term to test for
+  const cnt_str = term.slice(   nxt_idx).trimStart(); // Count of occurrences for it
+
+  if (!/^\d{1,4}$/.test(cnt_str)) return null; // Not a valid count
+
+  return {
+    type: "COUNT",
+    test: parse_term(test),
+    cnd,
+    cnt : parseInt(cnt_str, 10)
+  };
+}
+
 function parse_chars_num(term) {
   if (!term.startsWith('{') || !term.endsWith('}')) return null;
 
@@ -455,7 +459,7 @@ function parse_chars_num(term) {
   const min_str = limits[0].trim();
 
   if   (min_str) {
-    if (!/^\d{1,6}$/.test(min_str)) return null; // Not a valid number
+    if (!/^\d{1,5}$/.test(min_str)) return null; // Not a valid length
 
     min = parseInt(min_str, 10);
   }
@@ -463,11 +467,11 @@ function parse_chars_num(term) {
   let max = min;
 
   if (limits.length === 2) {
-    max = 999999; // Reasonable limit
+    max = Infinity;
     const max_str = limits[1].trim();
 
     if   (max_str) {
-      if (!/^\d{1,6}$/.test(max_str)) return null; // Not a valid number
+      if (!/^\d{1,5}$/.test(max_str)) return null; // Not a valid length
 
       max = parseInt(max_str, 10);
       if (min > max) return null; // Not a correct range

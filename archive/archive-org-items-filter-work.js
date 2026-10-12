@@ -18,11 +18,11 @@ const err_chars =
   'Title: \' Xiaodan \' finds items (10) with name Xiaodan surrounded by spaces in title<br />' +
   'Title: /-xiaodan- finds items (same 10) with string -xiaodan- in identifier (not in title)<br />' +
   'Description: \'p=2\' finds items (102) with string p=2 in description (no counting)<br />' +
-  'Description: {99} finds one item with description length of 99 characters<br />' +
-  '{exact}, {min-max}, {-max}, {min-} are allowed' +
+  'Description: {99} finds one item with description length of 99 characters' +
   '</p><p>' +
-  'Conditionals are: = or ==, ! or !=, &lt;, &lt;=, &gt;, &gt;=<br />' +
-  'Allowed counts: 0 to 9999' +
+  'Conditionals: = or ==, ! or !=, &lt;, &lt;=, &gt;, &gt;=<br />' +
+  'Length: {exact}, {min-max}, {min-}, {-max}<br />' +
+  'Allowed count: 0 to 9999, length: 0 to 99999' +
   err_ed +
   err_end;
 

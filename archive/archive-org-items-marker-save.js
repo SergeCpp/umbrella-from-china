@@ -446,6 +446,8 @@ function get_marks(rel, cnt, mid) {
                     tim: below_cnt ? below_tim :  null } };
 }
 
+/*
+//
 // index: 0..length-1, base: log(length), steep: 1..9, decay: max value (min value: 1)
 function get_scale_log(index, base, steep, decay) {
   if (base === 0) return 1; // length === 1 (length === 0 cannot be here)
@@ -456,6 +458,8 @@ function get_scale_log(index, base, steep, decay) {
 
   return scale;
 }
+//
+*/
 
 // index: 0..length-1, base: 0..1 (of length), steep: 1..9
 // rc: Richards curve, start: min value, decay: max value
