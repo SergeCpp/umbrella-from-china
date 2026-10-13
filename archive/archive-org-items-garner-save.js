@@ -181,7 +181,9 @@ function evaluate_term(term, values) {
       }
     }
     case "CHARS_NUM":
-      return values.some(value => (value.length >= term.min) && (value.length <= term.max));
+      return values.some(value => term.lang
+                                ? is_chars_num_in_value(term.lang, term.min, term.max, value)
+                                : (value.length >= term.min) && (value.length <= term.max));
 
     case "B_TEXT_B":
       return values.some(value => is_b_text_b_in_value(term.bpre, term.text, term.bsuf, value));
@@ -192,6 +194,38 @@ function evaluate_term(term, values) {
     default:
       return false; // Unknown type of term
   }
+}
+
+function is_chars_num_in_value(lang, min, max, value) {
+  const  len = value.length;
+  if    (len < min)  return false;
+
+  let    cnt = 0;
+  let    pos = -1;
+
+  while (cnt < min) {
+    pos++;
+    if (pos === len) break;
+    if (is_char_of_lang(value[pos], lang)) cnt++;
+  }
+
+  if (cnt  <  min) return false;
+  //  cnt === min
+
+  const rem = len - (pos + 1); // Chars remained in value after pos
+
+  if ((cnt + rem) <= max) return true;
+
+  while (cnt <= max) {
+    pos++;
+    if (pos === len) break;
+    if (is_char_of_lang(value[pos], lang)) cnt++;
+  }
+
+  if (cnt <= max) return true;
+  //  cnt >  max
+
+  return false;
 }
 
 function is_b_text_b_in_value(bpre, text, bsuf, value) {
@@ -265,6 +299,26 @@ function is_alpha(char) {
 
   if ((code >= 0x41) && (code <= 0x5a)) return true;
   if ((code >= 0x61) && (code <= 0x7a)) return true;
+
+  return false;
+}
+
+function is_zhong(char) {
+  if (!char) return false;
+
+  const code = char.charCodeAt(0);
+
+  if ((code >= 0x4e00) && (code <= 0x9fff)) return true; // CJK Unified Ideographs
+  if ((code >= 0x3400) && (code <= 0x4dbf)) return true; // CJK Unified Ideographs Extension A
+
+  return false;
+}
+
+function is_char_of_lang(char, lang) {
+  switch (lang) {
+    case "en": return is_alpha(char);
+    case "zh": return is_zhong(char);
+  }
 
   return false;
 }
@@ -452,11 +506,23 @@ function parse_count(term) {
 function parse_chars_num(term) {
   if (!term.startsWith('{') || !term.endsWith('}')) return null;
 
-  const limits = term.slice(1, -1).split('-');
+  term = term.slice(1, -1).trim();
+
+  let     lang     = null;
+  const   lang_str = term.slice(0, 3).toLowerCase();
+
+  switch (lang_str) {
+    case "en.":
+    case "zh.":
+      lang = lang_str.slice(0, 2);
+      term = term    .slice(3).trimStart();
+  }
+
+  const limits = term.split('-');
   if   (limits.length > 2) return null; // Must be no more than two limits
 
   let   min     = 0;
-  const min_str = limits[0].trim();
+  const min_str = limits[0].trimEnd();
 
   if   (min_str) {
     if (!/^\d{1,5}$/.test(min_str)) return null; // Not a valid length
@@ -468,7 +534,7 @@ function parse_chars_num(term) {
 
   if (limits.length === 2) {
     max = Infinity;
-    const max_str = limits[1].trim();
+    const max_str = limits[1].trimStart();
 
     if   (max_str) {
       if (!/^\d{1,5}$/.test(max_str)) return null; // Not a valid length
@@ -480,6 +546,7 @@ function parse_chars_num(term) {
 
   return {
     type: "CHARS_NUM",
+    lang,
     min,
     max
   };

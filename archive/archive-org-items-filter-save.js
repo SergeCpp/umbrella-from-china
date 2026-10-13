@@ -8,15 +8,17 @@ const err_end = '</div>';
 
 const err_chars =
   err_beg +
-  err_bds + 'Allowed characters are: a-z, 0-9, =!&lt;&gt;, (), {}, [], _-, period, comma, quote, and space' +
+  err_bds + 'Allowed characters are: a-z, 中文、0-9, =!&lt;&gt;, (), {}, [], _-, period, comma, quote, and space' +
   err_es  +
   'Creators: =5 finds items (two) with exactly five creators<br />' +
   'Creators: Xiao >1 finds items (three) where more than one creator has Xiao in name<br />' +
   'Creators: Xiao] finds Xiao Wu, and not finds Xiaodan<br />' +
   'Creators: Xiao[ finds Xiaodan, and not finds Xiao Wu<br />' +
   'Subjects: Dance >4 finds items (14) where more than four subjects contain Dance<br />' +
+  'Subjects: {en.33-} finds items (three) with 33+ English characters in some subject<br />' +
   'Title: \' Xiaodan \' finds items (10) with name Xiaodan surrounded by spaces in title<br />' +
   'Title: /-xiaodan- finds items (same 10) with string -xiaodan- in identifier (not in title)<br />' +
+  'Title: {zh.1-} finds items (16) with at least one Chinese character in title<br />' +
   'Description: \'p=2\' finds items (102) with string p=2 in description (no counting)<br />' +
   'Description: {99} finds one item with description length of 99 characters' +
   '</p><p>' +
@@ -139,6 +141,7 @@ function input_clean_parse(input) {
   return input
     .replace(/  +/g, ' ')
     .replace(/\) ?\(/g, ')AND(') // Normalize ()() to ()AND()
+    .replace(/\} ?\{/g, '}AND{') // Normalize {}{} to {}AND{}
     .split  (',')
     .map    (term => term.trim())
     .filter (term => term) // Non-empty only
@@ -168,7 +171,7 @@ function input_parens_match(input) {
 }
 
 function input_allowed_chars(input) {
-  return !/[^a-zA-Z0-9._\-'" =!<>(){}\[\],]/.test(input);
+  return !/[^a-zA-Z0-9._\-'" =!<>\(\)\{\}\[\],\p{Script=Han}【】《》、，。]/v.test(input);
 }
 
 function input_allowed_keys(input) {
