@@ -240,26 +240,32 @@ function init_gauges_raw   (max_ratio, base_ratio, max_favorites, base_favorites
     gauges_base_favorites = base_favorites;
 }
 
-const get_gauge_percentage = (value, max, base) =>
+const get_gauge_percentage = (value, max, base, scale = 1) =>
   (value <=   0) ?   '0%' :
-  (value >= max) ? '100%' : (Math.log(value + 1) * base).toFixed(3) + '%';
+  (value >= max) ? '100%' : (Math.log(value + 1) * base * scale).toFixed(3) + '%';
 
 function set_item_gauges(item, gauge_above_a, gauge_above_b, gauge_below_a, gauge_below_b) {
   if (!item.is_prev) {
-    const width_a = get_gauge_percentage(item.ratio_old, gauges_max_ratio, gauges_base_ratio);
+    const ratio_old = item.ratio_old;
+    const ratio_all = item.ratio_all;
+
+    const scale_old = ratio_old < ratio_all ? 0.99 : 1;
+    const scale_all = ratio_all < ratio_old ? 0.99 : 1;
+
+    const width_a   = get_gauge_percentage(ratio_old, gauges_max_ratio, gauges_base_ratio, scale_old);
     if   (width_a !== '0%') gauge_above_a.style.width = width_a;
 
-    const width_b = get_gauge_percentage(item.ratio_all, gauges_max_ratio, gauges_base_ratio);
+    const width_b   = get_gauge_percentage(ratio_all, gauges_max_ratio, gauges_base_ratio, scale_all);
     if   (width_b !== '0%') gauge_above_b.style.width = width_b;
   }
 
   if (!item.no_prev) {
-    const width_a = get_gauge_percentage(item.item_prev.favorites, gauges_max_favorites, gauges_base_favorites);
+    const width_a   = get_gauge_percentage(item.item_prev.favorites, gauges_max_favorites, gauges_base_favorites);
     if   (width_a !== '0%') gauge_below_a.style.width = width_a;
   }
 
   if (!item.is_prev) {
-    const width_b = get_gauge_percentage(item          .favorites, gauges_max_favorites, gauges_base_favorites);
+    const width_b   = get_gauge_percentage(item          .favorites, gauges_max_favorites, gauges_base_favorites);
     if   (width_b !== '0%') gauge_below_b.style.width = width_b;
   }
 }

@@ -121,7 +121,17 @@ function filter_matches(doc, field, terms) {
 function evaluate_term(term, values) {
   switch (term.type) {
     case "AND":
+      //  AND : Include if any value matches
       return term.terms.every(part => evaluate_term(part, values));
+
+    case "ANDSAME":
+      //  ANDSAME : Include if the same value matches
+      return values.some(value => term.terms.every(part => evaluate_term(part, [value])));
+
+    case "ANDALL":
+      //  ANDALL : Include if all values (every value) matches
+      //  values.every returns true for values === []
+      return values.length && values.every(value => term.terms.every(part => evaluate_term(part, [value])));
 
     case "OR":
       return term.terms.some (part => evaluate_term(part, values));
@@ -421,39 +431,36 @@ function parse_term(term) {
   node = parse_node_split(term, "AND");
   if (node) return node;
 
-  // Check for NOT next
+  node = parse_node_split(term, "ANDSAME");
+  if (node) return node;
+
+  node = parse_node_split(term, "ANDALL");
+  if (node) return node;
+
   node = parse_node_sides(term, "NOT");
   if (node) return node;
 
-  // Check for NOTANY next
   node = parse_node_sides(term, "NOTANY");
   if (node) return node;
 
-  // Check for NOTALL next
   node = parse_node_sides(term, "NOTALL");
   if (node) return node;
 
-  // Check for XOR next
   node = parse_node_split(term, "XOR");
   if (node) return node;
 
-  // Check for OR next
   node = parse_node_split(term, "OR");
   if (node) return node;
 
-  // Check for COUNT next
   node = parse_count(term);
   if (node) return node;
 
-  // Check for CHARS_NUM next
   node = parse_chars_num(term);
   if (node) return node;
 
-  // Check for B_TEXT_B next
   node = parse_b_text_b(term);
   if (node) return node;
 
-  // TEXT
   // Plain text term (OR behavior of comma-separated terms)
   return {
     type: "TEXT",

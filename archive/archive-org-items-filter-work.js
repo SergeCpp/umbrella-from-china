@@ -11,10 +11,10 @@ const err_chars =
   err_bds + 'Allowed characters are: a-z, 中文、0-9, =!&lt;&gt;, (), {}, [], _-, period, comma, quote, and space' +
   err_es  +
   'Creators: =5 finds items (two) with exactly five creators<br />' +
-  'Creators: Xiao >1 finds items (three) where more than one creator has Xiao in name<br />' +
-  'Creators: Xiao] finds Xiao Wu, and not finds Xiaodan<br />' +
-  'Creators: Xiao[ finds Xiaodan, and not finds Xiao Wu<br />' +
-  'Subjects: Dance >4 finds items (14) where more than four subjects contain Dance<br />' +
+  'Creators: Xiao &gt;1 finds items (three) where more than one creator has Xiao in name<br />' +
+  'Creators: Xiao] finds Xiao Wu, but not Xiaodan<br />' +
+  'Creators: Xiao[ finds Xiaodan, but not Xiao Wu<br />' +
+  'Subjects: Dance &gt;4 finds items (14) where more than four subjects contain Dance<br />' +
   'Subjects: {en.33-} finds items (three) with 33+ English characters in some subject<br />' +
   'Title: \' Xiaodan \' finds items (10) with name Xiaodan surrounded by spaces in title<br />' +
   'Title: /-xiaodan- finds items (same 10) with string -xiaodan- in identifier (not in title)<br />' +
@@ -25,6 +25,8 @@ const err_chars =
   'Conditionals: = or ==, ! or !=, &lt;, &lt;=, &gt;, &gt;=<br />' +
   'Length: {exact}, {min-max}, {min-}, {-max}<br />' +
   'Allowed count: 0 to 9999, length: 0 to 99999' +
+  '</p><p>' +
+  'Operators: AND, ANDSAME, ANDALL, OR, XOR, NOT, NOTANY, NOTALL, group by ()' +
   err_ed +
   err_end;
 
