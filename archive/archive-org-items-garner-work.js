@@ -265,21 +265,6 @@ function is_b_text_b_in_value(bpre, text, bsuf, value) {
   return false;
 }
 
-function paren_depth(term, index) {
-  if (index < 0) return 0;
-
-  let depth = 0;
-
-  for (let i = 0; i < term.length; i++) {
-    if (i === index) return depth;
-
-    if (term[i] === '(') { depth++; continue; }
-    if (term[i] === ')')   depth--;
-  }
-
-  return depth; // For index beyond term
-}
-
 function is_digit(char) {
   if (!char) return false;
 
@@ -320,6 +305,7 @@ function is_zhong(char) {
 
   if ((code >= 0x4e00) && (code <= 0x9fff)) return true; // CJK Unified Ideographs
   if ((code >= 0x3400) && (code <= 0x4dbf)) return true; // CJK Unified Ideographs Extension A
+//if ((code >= 0x4dc0) && (code <= 0x4dff)) return true; // Yijing Hexagram Symbols
 
   return false;
 }
@@ -331,6 +317,23 @@ function is_char_of_lang(char, lang) {
   }
 
   return false;
+}
+
+/* Parse */
+
+function paren_depth(term, index) {
+  if (index < 0) return 0;
+
+  let depth = 0;
+
+  for (let i = 0; i < term.length; i++) {
+    if (i === index) return depth;
+
+    if (term[i] === '(') { depth++; continue; }
+    if (term[i] === ')')   depth--;
+  }
+
+  return depth; // For index beyond term
 }
 
 function parse_find_op(term, op, index) {
