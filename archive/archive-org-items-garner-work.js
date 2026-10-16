@@ -121,13 +121,24 @@ function filter_matches(doc, field, terms) {
 function evaluate_term(term, values) {
   switch (term.type) {
     case "AND":
-      //  AND : Include if any value matches
+      //  AND : Include if any combination of values matches
       return term.terms.every(part => evaluate_term(part, values));
 
     case "ANDSAME":
-      //  ANDSAME : Include if the same value matches
+      //  ANDSAME : Include if the same value matches (allowed any count of such "the same" values)
       return values.some(value => term.terms.every(part => evaluate_term(part, [value])));
 
+    case "ANDONE": {
+      //  ANDONE : Include if the same value matches (allowed only one such "the same" value)
+      let cnt_match = 0;
+      for (const value of values) {
+        if (term.terms.every(part => evaluate_term(part, [value]))) {
+          cnt_match++;
+          if (cnt_match > 1) return false;
+        }
+      }
+      return cnt_match === 1;
+    }
     case "ANDALL":
       //  ANDALL : Include if all values (every value) matches
       //  values.every returns true for values === []
@@ -155,7 +166,8 @@ function evaluate_term(term, values) {
     }
     case "NOTALL": {
       //  NOTALL : Exclude if all values matches term.excl
-      const all_match = values.every(value => evaluate_term(term.excl, [value]));
+      //  values.every returns true for values === []
+      const all_match = values.length && values.every(value => evaluate_term(term.excl, [value]));
       return (!term.incl || evaluate_term(term.incl, values)) && !all_match;
     }
     case "COUNT": {
@@ -435,6 +447,9 @@ function parse_term(term) {
   if (node) return node;
 
   node = parse_node_split(term, "ANDSAME");
+  if (node) return node;
+
+  node = parse_node_split(term, "ANDONE");
   if (node) return node;
 
   node = parse_node_split(term, "ANDALL");

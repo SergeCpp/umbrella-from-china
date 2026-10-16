@@ -14,19 +14,31 @@ const err_chars =
   'Creators: Xiao &gt;1 finds items (three) where more than one creator has Xiao in name<br />' +
   'Creators: Xiao] finds Xiao Wu, but not Xiaodan<br />' +
   'Creators: Xiao[ finds Xiaodan, but not Xiao Wu<br />' +
+
+  'Creators: Xiao AND {14-} AND &gt;1 finds 7 items (try it)<br />' +
+  'Creators: Xiao ANDSAME {14-} AND &gt;1 finds 5 items (try it)<br />' +
+  'Creators: Xiao ANDONE {14-} AND &gt;1 finds 4 items (try it)<br />' +
+  'Creators: Xiao ANDALL {14-} AND &gt;1 finds one item (try it)<br />' +
+
+  'Creators: NOTALL \' \' NOT NOTANY \' \' finds 39 items (try it)<br />' +
+
   'Subjects: Dance &gt;4 finds items (14) where more than four subjects contain Dance<br />' +
   'Subjects: {en.33-} finds items (three) with 33+ English characters in some subject<br />' +
+
   'Title: \' Xiaodan \' finds items (10) with name Xiaodan surrounded by spaces in title<br />' +
   'Title: /-xiaodan- finds items (same 10) with string -xiaodan- in identifier (not in title)<br />' +
   'Title: {zh.1-} finds items (16) with at least one Chinese character in title<br />' +
+
   'Description: \'p=2\' finds items (102) with string p=2 in description (no counting)<br />' +
   'Description: {99} finds one item with description length of 99 characters' +
   '</p><p>' +
+
   'Conditionals: = or ==, ! or !=, &lt;, &lt;=, &gt;, &gt;=<br />' +
   'Length: {exact}, {min-max}, {min-}, {-max}<br />' +
   'Allowed count: 0 to 9999, length: 0 to 99999' +
   '</p><p>' +
-  'Operators: AND, ANDSAME, ANDALL, OR, XOR, NOT, NOTANY, NOTALL, group by ()' +
+
+  'Operators: AND, ANDSAME, ANDONE, ANDALL, OR, XOR, NOT, NOTANY, NOTALL, group by ()' +
   err_ed +
   err_end;
 
