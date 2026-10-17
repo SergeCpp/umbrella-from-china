@@ -237,13 +237,22 @@ function is_chars_num_in_value(lang, min, max, value) {
   const  len = value.length;
   if    (len < min)  return false;
 
+  let    is_code_of_lang;
+
+  switch (lang) {
+    case "en": is_code_of_lang = is_alpha_code; break;
+    case "zh": is_code_of_lang = is_hanzi_code; break;
+
+    default  : return false; // Unknown lang
+  }
+
   let    cnt = 0;
   let    pos = -1;
 
   while (cnt < min) {
     pos++;
     if (pos === len) break;
-    if (is_code_of_lang(value.charCodeAt(pos), lang)) cnt++;
+    if (is_code_of_lang(value.charCodeAt(pos))) cnt++;
   }
 
   if (cnt  <  min) return false;
@@ -256,7 +265,7 @@ function is_chars_num_in_value(lang, min, max, value) {
   while (cnt <= max) {
     pos++;
     if (pos === len) break;
-    if (is_code_of_lang(value.charCodeAt(pos), lang)) cnt++;
+    if (is_code_of_lang(value.charCodeAt(pos))) cnt++;
   }
 
   if (cnt <= max) return true;
@@ -327,7 +336,7 @@ function         is_alpha     (char) {
   return char && is_alpha_code(char.charCodeAt(0));
 }
 
-function is_zhong_code(code) {
+function is_hanzi_code(code) {
   if ((code >= 0x4e00) && (code <= 0x9fff)) return true; // CJK Unified Ideographs
   if ((code >= 0x3400) && (code <= 0x4dbf)) return true; // CJK Unified Ideographs Extension A
 //if ((code >= 0x4dc0) && (code <= 0x4dff)) return true; // Yijing Hexagram Symbols
@@ -335,21 +344,8 @@ function is_zhong_code(code) {
   return false;
 }
 
-function         is_zhong     (char) {
-  return char && is_zhong_code(char.charCodeAt(0));
-}
-
-function is_code_of_lang(code, lang) {
-  switch (lang) {
-    case "en": return is_alpha_code(code);
-    case "zh": return is_zhong_code(code);
-  }
-
-  return false;
-}
-
-function         is_char_of_lang(char,               lang) {
-  return char && is_code_of_lang(char.charCodeAt(0), lang);
+function         is_hanzi     (char) {
+  return char && is_hanzi_code(char.charCodeAt(0));
 }
 
 /* Parse */
