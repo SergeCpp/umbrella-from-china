@@ -38,7 +38,7 @@ const err_chars =
   'Allowed count: 0 to 9999, length: 0 to 99999' +
   '</p><p>' +
 
-  'Operators: AND, ANDSAME, ANDONE, ANDALL, OR, XOR, NOT, NOTANY, NOTALL, group by ()' +
+  'Operators: AND, ANDSAME, ANDONE, ANDALL, OR, XOR, NOT, NOTANY, NOTONE, NOTALL, group by ()' +
   err_ed +
   err_end;
 

@@ -145,7 +145,7 @@ function evaluate_term(term, values) {
       return values.length && values.every(value => term.terms.every(part => evaluate_term(part, [value])));
 
     case "OR":
-      return term.terms.some (part => evaluate_term(part, values));
+      return term.terms.some(part => evaluate_term(part, values));
 
     case "XOR": {
       //  XOR : Include if one match only
@@ -159,17 +159,32 @@ function evaluate_term(term, values) {
       return cnt_match === 1;
     }
     case "NOT"   :
-    case "NOTANY": {
+    case "NOTANY":
       //  NOTANY : Exclude if any value matches term.excl
-      const any_match = evaluate_term(term.excl, values);
-      return (!term.incl || evaluate_term(term.incl, values)) && !any_match;
+      if (term.incl && !evaluate_term(term.incl, values)) return false; // Not include
+      if               (evaluate_term(term.excl, values)) return false; // Any match
+      return true;
+
+    case "NOTONE": {
+      //  NOTONE : Exclude if more than one value matches term.excl
+      if (term.incl && !evaluate_term(term.incl, values)) return false; // Not include
+
+      let cnt_match = 0;
+      for (const value of values) {
+        if (evaluate_term(term.excl, [value])) {
+          cnt_match++;
+          if (cnt_match > 1) return false;
+        }
+      }
+      return true; // No matches or one match
     }
-    case "NOTALL": {
+    case "NOTALL":
       //  NOTALL : Exclude if all values matches term.excl
       //  values.every returns true for values === []
-      const all_match = values.length && values.every(value => evaluate_term(term.excl, [value]));
-      return (!term.incl || evaluate_term(term.incl, values)) && !all_match;
-    }
+      if (term.incl     &&                      !evaluate_term(term.incl,  values) ) return false; // Not include
+      if (values.length && values.every(value => evaluate_term(term.excl, [value]))) return false; // All match
+      return true;
+
     case "COUNT": {
       let cnt_match = 0;
       for (const value of values) {
@@ -228,7 +243,7 @@ function is_chars_num_in_value(lang, min, max, value) {
   while (cnt < min) {
     pos++;
     if (pos === len) break;
-    if (is_char_of_lang(value[pos], lang)) cnt++;
+    if (is_code_of_lang(value.charCodeAt(pos), lang)) cnt++;
   }
 
   if (cnt  <  min) return false;
@@ -241,7 +256,7 @@ function is_chars_num_in_value(lang, min, max, value) {
   while (cnt <= max) {
     pos++;
     if (pos === len) break;
-    if (is_char_of_lang(value[pos], lang)) cnt++;
+    if (is_code_of_lang(value.charCodeAt(pos), lang)) cnt++;
   }
 
   if (cnt <= max) return true;
@@ -261,13 +276,13 @@ function is_b_text_b_in_value(bpre, text, bsuf, value) {
 
     if (bpre) {
       const ipre =   index  -  1;
-      const vpre = ((ipre === -1)   || !is_alnum(value[ipre])) ? "no_alnum" : "alnum";
+      const vpre = ((ipre === -1)   || !is_alnum_code(value.charCodeAt(ipre))) ? "no_alnum" : "alnum";
       if   (vpre !== bpre) continue;
     }
 
     if (bsuf) {
       const isuf =   index  + tlen;
-      const vsuf = ((isuf === vlen) || !is_alnum(value[isuf])) ? "no_alnum" : "alnum";
+      const vsuf = ((isuf === vlen) || !is_alnum_code(value.charCodeAt(isuf))) ? "no_alnum" : "alnum";
       if   (vsuf !== bsuf) continue;
     }
 
@@ -277,21 +292,19 @@ function is_b_text_b_in_value(bpre, text, bsuf, value) {
   return false;
 }
 
-function is_digit(char) {
-  if (!char) return false;
+/* Character Classification */
 
-  const code = char.charCodeAt(0);
-
+function is_digit_code(code) {
   if ((code >= 0x30) && (code <= 0x39)) return true;
 
   return false;
 }
 
-function is_alnum(char) {
-  if (!char) return false;
+function         is_digit     (char) {
+  return char && is_digit_code(char.charCodeAt(0));
+}
 
-  const code = char.charCodeAt(0);
-
+function is_alnum_code(code) {
   if ((code >= 0x30) && (code <= 0x39)) return true;
   if ((code >= 0x41) && (code <= 0x5a)) return true;
   if ((code >= 0x61) && (code <= 0x7a)) return true;
@@ -299,22 +312,22 @@ function is_alnum(char) {
   return false;
 }
 
-function is_alpha(char) {
-  if (!char) return false;
+function         is_alnum     (char) {
+  return char && is_alnum_code(char.charCodeAt(0));
+}
 
-  const code = char.charCodeAt(0);
-
+function is_alpha_code(code) {
   if ((code >= 0x41) && (code <= 0x5a)) return true;
   if ((code >= 0x61) && (code <= 0x7a)) return true;
 
   return false;
 }
 
-function is_zhong(char) {
-  if (!char) return false;
+function         is_alpha     (char) {
+  return char && is_alpha_code(char.charCodeAt(0));
+}
 
-  const code = char.charCodeAt(0);
-
+function is_zhong_code(code) {
   if ((code >= 0x4e00) && (code <= 0x9fff)) return true; // CJK Unified Ideographs
   if ((code >= 0x3400) && (code <= 0x4dbf)) return true; // CJK Unified Ideographs Extension A
 //if ((code >= 0x4dc0) && (code <= 0x4dff)) return true; // Yijing Hexagram Symbols
@@ -322,13 +335,21 @@ function is_zhong(char) {
   return false;
 }
 
-function is_char_of_lang(char, lang) {
+function         is_zhong     (char) {
+  return char && is_zhong_code(char.charCodeAt(0));
+}
+
+function is_code_of_lang(code, lang) {
   switch (lang) {
-    case "en": return is_alpha(char);
-    case "zh": return is_zhong(char);
+    case "en": return is_alpha_code(code);
+    case "zh": return is_zhong_code(code);
   }
 
   return false;
+}
+
+function         is_char_of_lang(char,               lang) {
+  return char && is_code_of_lang(char.charCodeAt(0), lang);
 }
 
 /* Parse */
@@ -359,8 +380,8 @@ function parse_find_op(term, op, index) {
 
     const inext = index + olen;
 
-    if  ((index > 0)    && is_alnum(term[index - 1])) { index = inext; continue; }
-    if  ((inext < tlen) && is_alnum(term[inext    ])) { index = inext; continue; }
+    if  ((index > 0   ) && is_alnum_code(term.charCodeAt(index - 1))) { index = inext; continue; }
+    if  ((inext < tlen) && is_alnum_code(term.charCodeAt(inext    ))) { index = inext; continue; }
 
     return index;
   }
@@ -459,6 +480,9 @@ function parse_term(term) {
   if (node) return node;
 
   node = parse_node_sides(term, "NOTANY");
+  if (node) return node;
+
+  node = parse_node_sides(term, "NOTONE");
   if (node) return node;
 
   node = parse_node_sides(term, "NOTALL");
