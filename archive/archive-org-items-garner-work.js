@@ -341,6 +341,8 @@ function is_hanzi_code(code) {
   if ((code >= 0x3400) && (code <= 0x4dbf)) return true; // CJK Unified Ideographs Extension A
 //if ((code >= 0x4dc0) && (code <= 0x4dff)) return true; // Yijing Hexagram Symbols
 
+// No occurrences of Extension A characters, but no speedup of commenting that comparison detected
+
   return false;
 }
 

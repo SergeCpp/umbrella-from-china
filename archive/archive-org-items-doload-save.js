@@ -320,7 +320,7 @@ function get_desc_str(text, beg, ptr) {
        ? str.replace (/&quot;/g, '"') // 350 occurrences in 'description' (474 '&' only there)
             .replace (/&amp;/g,  '&') //  79 in two collections (39 + 39) and one video
             .replace (/&gt;/g,   '>') //  39 mainly in one collection
-            .replace (/&lt;/g,   '<') //   6
+            .replace (/&lt;/g,   '<') //   6 in three items
        : str;
 }
 
