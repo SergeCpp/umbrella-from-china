@@ -10,8 +10,8 @@ const err_chars =
   err_beg +
   err_bds + 'Allowed characters are: a-z, 中文、0-9, =!&lt;&gt;, (), {}, [], _-, period, comma, quote, and space' +
   err_es  +
-  'Creators: =5 finds items (two) with exactly five creators<br />' +
-  'Creators: Xiao &gt;1 finds items (three) where more than one creator has Xiao in name<br />' +
+  'Creators: =5 finds two items with exactly five creators<br />' +
+  'Creators: Xiao &gt;1 finds three items where more than one creator has Xiao in name<br />' +
   'Creators: Xiao] finds Xiao Wu, but not Xiaodan<br />' +
   'Creators: Xiao[ finds Xiaodan, but not Xiao Wu<br />' +
 
@@ -22,15 +22,17 @@ const err_chars =
 
   'Creators: NOTALL \' \' NOT NOTANY \' \' finds 39 items (try it)<br />' +
 
-  'Subjects: Dance &gt;4 finds items (14) where more than four subjects contain Dance<br />' +
-  'Subjects: {en.33-} finds items (three) with 33+ English characters in some subject<br />' +
+  'Subjects: Dance &gt;4 finds 14 items where more than four subjects contain Dance<br />' +
+  'Subjects: {en=33-} finds three items with 33+ English characters in some subject<br />' +
 
-  'Title: \' Xiaodan \' finds items (10) with name Xiaodan surrounded by spaces in title<br />' +
-  'Title: /-xiaodan- finds items (same 10) with string -xiaodan- in identifier (not in title)<br />' +
-  'Title: {zh.1-} finds items (16) with at least one Chinese character in title<br />' +
+  'Title: \' Xiaodan \' finds 10 items with name Xiaodan surrounded by spaces in title<br />' +
+  'Title: /-xiaodan- finds 10 items (the same) with string -xiaodan- in identifier (not in title)<br />' +
+  'Title: {zh=1-} finds 16 items with at least one Chinese character in title<br />' +
 
-  'Description: \'p=2\' finds items (102) with string p=2 in description (no counting)<br />' +
-  'Description: {99} finds one item with description length of 99 characters' +
+  'Description: \'p=2\' finds 102 items with string p=2 in description (no counting)<br />' +
+  'Description: {99} finds one item with description length of 99 characters<br />' +
+  'Description: {en!100-110} finds 27 items with 100 to 110 non-English characters in description<br />' +
+  'Description: {zh!200-220} finds 15 items with 200 to 220 non-Chinese characters in description' +
   '</p><p>' +
 
   'Conditionals: = or ==, ! or !=, &lt;, &lt;=, &gt;, &gt;=<br />' +

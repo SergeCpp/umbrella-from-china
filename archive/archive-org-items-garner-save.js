@@ -219,7 +219,7 @@ function evaluate_term(term, values) {
     }
     case "CHARS_NUM":
       return values.some(value => term.lang
-                                ? is_chars_num_in_value(term.lang, term.min, term.max, value)
+                                ? is_chars_num_in_value(term.lang, term.mode, term.min, term.max, value)
                                 : (value.length >= term.min) && (value.length <= term.max));
 
     case "B_TEXT_B":
@@ -233,17 +233,24 @@ function evaluate_term(term, values) {
   }
 }
 
-function is_chars_num_in_value(lang, min, max, value) {
-  const  len = value.length;
-  if    (len < min)  return false;
+function  is_chars_num_in_value(lang, mode, min, max, value) {
+  const   len = value.length;
+  if     (len < min)  return false;
 
-  let    is_code_of_lang;
-
+  let  is_lang;
   switch (lang) {
-    case "en": is_code_of_lang = is_alpha_code; break;
-    case "zh": is_code_of_lang = is_hanzi_code; break;
+    case "en": is_lang = is_alpha_code; break;
+    case "zh": is_lang = is_hanzi_code; break;
 
     default  : return false; // Unknown lang
+  }
+
+  let  is_same;
+  switch (mode) {
+    case '=' : is_same = true;  break;
+    case '!' : is_same = false; break;
+
+    default  : return false; // Unknown mode
   }
 
   let    cnt = 0;
@@ -252,7 +259,7 @@ function is_chars_num_in_value(lang, min, max, value) {
   while (cnt < min) {
     pos++;
     if (pos === len) break;
-    if (is_code_of_lang(value.charCodeAt(pos))) cnt++;
+    if (is_lang(value.charCodeAt(pos)) === is_same) cnt++;
   }
 
   if (cnt  <  min) return false;
@@ -265,7 +272,7 @@ function is_chars_num_in_value(lang, min, max, value) {
   while (cnt <= max) {
     pos++;
     if (pos === len) break;
-    if (is_code_of_lang(value.charCodeAt(pos))) cnt++;
+    if (is_lang(value.charCodeAt(pos)) === is_same) cnt++;
   }
 
   if (cnt <= max) return true;
@@ -555,14 +562,18 @@ function parse_chars_num(term) {
 
   term = term.slice(1, -1).trim();
 
-  let     lang     = null;
-  const   lang_str = term.slice(0, 3).toLowerCase();
+  let     lang      = null;
+  let          mode = null;
+  const   lang_mode = term.slice(0, 3).toLowerCase();
 
-  switch (lang_str) {
-    case "en.":
-    case "zh.":
-      lang = lang_str.slice(0, 2);
-      term = term    .slice(3).trimStart();
+  switch (lang_mode) {
+    case "en=":
+    case "en!":
+    case "zh=":
+    case "zh!":
+      lang = lang_mode.slice(0, 2);
+      mode = lang_mode.slice(2, 3);
+      term = term     .slice(3).trimStart();
   }
 
   const limits = term.split('-');
@@ -594,6 +605,7 @@ function parse_chars_num(term) {
   return {
     type: "CHARS_NUM",
     lang,
+    mode,
     min,
     max
   };
