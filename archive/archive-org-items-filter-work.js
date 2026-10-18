@@ -1,10 +1,10 @@
 /* Error Messages */
 
-const err_beg = '<div class="text-center text-comment">';
-const err_bds = '<details><summary class="text-ellipsis" style="width: fit-content; max-width: 100%; margin: 0 auto;">';
-const err_es  = '</summary><p>';
-const err_ed  = '</p></details>';
-const err_end = '</div>';
+const err_beg   = '<div class="text-center text-comment">';
+const err_bds   = '<details><summary class="text-ellipsis" style="width: fit-content; max-width: 100%; margin: 0 auto;">';
+const err_es    = '</summary><p>';
+const err_ed    = '</p></details>';
+const err_end   = '</div>';
 
 const err_chars =
   err_beg +
@@ -59,9 +59,11 @@ const err_parens =
 const err_date =
   err_beg + 'Valid dates are: YYYY-MM-DD / YYYY-MM / YYYY / MM-DD / MM' +
   err_end;
+
 const err_date_base =
   err_beg + 'Range must be equally based: year first or month first' +
   err_end;
+
 const err_date_range =
   err_beg + 'Min date of range must be before or at max date of range' +
   err_end;
@@ -74,27 +76,34 @@ const err_views =
   'Prefix ^ switches Month fields to 23 = Month &minus; Week. 23 is displayed in the table<br />' +
   'Prefix ^ does nothing to Week fields. Week is always 7 days. Week is displayed in the table' +
   '</p><p>' +
+
   'Integer range is for views count, float range is for views/day ratio, empty field is for no-limit value' +
   '</p><p>' +
+
   'Aggregate range uses aggregate function in any field (or in both fields) of min/max pair<br />' +
   'Examples: min 10 / 20, min 10 / avg 30, also: max 20 / min 10 (reversed aggregate range)<br />' +
   'Note: min 10 / 20, and 10 / min 20 aggregate ranges both equal min 10 / min 20<br />' +
   'Aggregate item functions are: min, avg, max, add, sub, pos, neg, prev, curr<br />' +
   'Aggregate rank functions are:<br />' +
+
     'topn/tn, btmn/bn for min; topa/ta, btma/ba for avg; topx/tx, btmx/bx for max;<br />' +
     'topd/td, btmd/bd for add; tops/ts, btms/bs for sub;<br />' +
     'top+/t+, btm+/b+ for pos; top-/t-, btm-/b- for neg;<br />' +
     'topp/tp, btmp/bp for prev; topc/tc, btmc/bc for curr<br />' +
+
   'Equally ranked items ordered by date archived: min selects newer, max selects older<br />' +
   'Aggregate prefixed by . (dot) means views/day ratio, also use floats with item functions' +
   '</p><p>' +
+
   'Keys: grow, fall, same, diff (aliases: / \\ = !) switch min/max logic to prev/curr logic<br />' +
   'Key allows number or range min-max after it, and percent sign % can be after that<br />' +
   'Key prefixed by . (dot) means views/day ratio key: ./ or .grow (at 0.001 by default)' +
   '</p><p>' +
+
   'Number in prev/curr logic (alone, not after key) allows prefix: a, ae, b, be, e, ne' +
   err_ed +
   err_end;
+
 const err_views_range =
   err_beg + 'Min views count must be less than or equal to max views count' +
   err_end;
@@ -111,12 +120,15 @@ const err_favs =
   'For / and \\ number is distance, for = and ! number is tolerance<br />' +
   'Defaults: / is /1, \\ is \\1, = is =0, ! is !0' +
   '</p><p>' +
+
   'Number alone (not after key) allows prefix: a, ae, b, be, e, ne<br />' +
   'Meaning: above, above or equal, below, below or equal, equal, not equal' +
   '</p><p>' +
+
   'Examples: /3, \\2, =1, !1, a1, be2, e3' +
   err_ed +
   err_end;
+
 const err_favs_range =
   err_beg + 'Min favorites count must be less than or equal to max favorites count' +
   err_end;
@@ -124,18 +136,22 @@ const err_favs_range =
 const err_key_range =
   err_beg + 'Min key value must be less than or equal to max key value' +
   err_end;
+
 const err_keys_agg =
   err_beg + 'Aggregate functions are not allowed with keys' +
   err_end;
+
 const err_keys_no =
   err_beg + 'Number prefixes are allowed only with keys' +
   err_end;
 
 const err_xml = ' &mdash; XML file cannot be loaded or loading error occurred';
+
 const err_subjects =
   err_beg + 'Subjects' +
   err_xml +
   err_end;
+
 const err_descriptions =
   err_beg + 'Descriptions' +
   err_xml +
@@ -149,6 +165,23 @@ function error_compose(title, description = null) {
   if (description) return err_beg + err_bds + title + err_es + description + err_ed + err_end;
 
   return err_beg + title + err_end;
+}
+
+/* Parse Errors */
+
+let          parse_error = null;
+
+function clr_parse_error() {
+             parse_error = null;
+}
+
+function set_parse_error  (error) {
+      if   (!parse_error)
+             parse_error = error;
+}
+
+function get_parse_error() {
+  return     parse_error;
 }
 
 /* Filter Input Check */
@@ -296,6 +329,9 @@ function filter_route(
   const subjects    = input_clean_parse(   subjects_str);
   const title       = input_clean_parse(      title_str);
   const description = input_clean_parse(description_str);
+
+  const error       = get_parse_error();
+  if   (error)      { clr_parse_error(); return { error: error_compose(error) }; }
 
   // Collections and Creators: ensure filtering fields available
   ensure_field_can_filter("collection", collections);

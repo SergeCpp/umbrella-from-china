@@ -577,13 +577,13 @@ function parse_chars_num(term) {
   }
 
   const limits = term.split('-');
-  if   (limits.length > 2) return null; // Must be no more than two limits
+  if   (limits.length > 2) { set_parse_error("Must be no more than two limits for characters count"); return null; }
 
   let   min     = 0;
   const min_str = limits[0].trimEnd();
 
   if   (min_str) {
-    if (!/^\d{1,5}$/.test(min_str)) return null; // Not a valid length
+    if (!/^\d{1,5}$/.test(min_str)) { set_parse_error("Not a valid characters count"); return null; }
 
     min = parseInt(min_str, 10);
   }
@@ -595,10 +595,13 @@ function parse_chars_num(term) {
     const max_str = limits[1].trimStart();
 
     if   (max_str) {
-      if (!/^\d{1,5}$/.test(max_str)) return null; // Not a valid length
+      if (!/^\d{1,5}$/.test(max_str)) { set_parse_error("Not a valid characters count"); return null; }
 
       max = parseInt(max_str, 10);
-      if (min > max) return null; // Not a correct range
+
+      if (min > max) { // Not a correct range
+        set_parse_error("Min characters count must be less than or equal to max characters count"); return null;
+      }
     }
   }
 

@@ -204,13 +204,13 @@ function get_filter_info(input_values) {
     "no-wait");
 
   const error = results_filter.error;
-  if   (error) {
-    if (error.includes("characters" )) return "Characters";
-    if (error.includes("Parentheses")) return "Parens: ()";
-    if (error.includes("XML"        )) return "Not loaded";
+  if   (error) {                                    //  123....890
+    if (error.includes("Allowed characters"  )) return "Characters";
+    if (error.includes("Min characters count")) return "Range";
+    if (error.includes("Parentheses"         )) return "Parens: ()";
+    if (error.includes("XML"                 )) return "Not loaded";
   }
-
-  if (!results_filter.done) return "Error";
+  if (!results_filter.done)                     return "Error";
 
   const  prev_cnt = results_filter.prev.length;
   const  curr_cnt = results_filter.curr.length;
