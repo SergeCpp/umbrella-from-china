@@ -547,7 +547,7 @@ function parse_count(term) {
   const test    = term.slice(0, cnd_idx);             // Term to test for
   const cnt_str = term.slice(   nxt_idx).trimStart(); // Count of occurrences for it
 
-  if (!/^\d{1,4}$/.test(cnt_str)) return null; // Not a valid count
+  if (!/^\d{1,4}$/.test(cnt_str)) { set_parse_error("Not a valid count. Allowed: 0 to 9999"); return null; }
 
   return {
     type: "COUNT",
@@ -577,13 +577,15 @@ function parse_chars_num(term) {
   }
 
   const limits = term.split('-');
-  if   (limits.length > 2) { set_parse_error("Must be no more than two limits for characters count"); return null; }
+  if   (limits.length > 2) {
+    set_parse_error("Length or characters count format: {exact}, {min-max}, {min-}, {-max}"); return null; }
 
   let   min     = 0;
   const min_str = limits[0].trimEnd();
 
   if   (min_str) {
-    if (!/^\d{1,5}$/.test(min_str)) { set_parse_error("Not a valid characters count"); return null; }
+    if (!/^\d{1,5}$/.test(min_str)) {
+      set_parse_error("Not a valid length or characters count. Allowed: 0 to 99999"); return null; }
 
     min = parseInt(min_str, 10);
   }
@@ -595,12 +597,13 @@ function parse_chars_num(term) {
     const max_str = limits[1].trimStart();
 
     if   (max_str) {
-      if (!/^\d{1,5}$/.test(max_str)) { set_parse_error("Not a valid characters count"); return null; }
+      if (!/^\d{1,5}$/.test(max_str)) {
+        set_parse_error("Not a valid length or characters count. Allowed: 0 to 99999"); return null; }
 
       max = parseInt(max_str, 10);
 
       if (min > max) { // Not a correct range
-        set_parse_error("Min characters count must be less than or equal to max characters count"); return null;
+        set_parse_error("Min length or characters count must be less than or equal to max"); return null;
       }
     }
   }
@@ -629,7 +632,7 @@ function parse_b_text_b(term) {
   if (is_suf_opn || is_suf_cls) term = term.slice(0, -1);
 
   term = term2text(term); // To see actual chars not hidden by quotes
-  if (!term.length) return null;
+  if (!term.length) { set_parse_error("Text for boundaries checking is empty"); return null; }
 
   const is_pre_alnum = is_alnum(term.at( 0));
   const is_suf_alnum = is_alnum(term.at(-1));
