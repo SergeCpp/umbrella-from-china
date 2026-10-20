@@ -516,6 +516,8 @@ function parse_term(term) {
 }
 
 function parse_count(term) {
+  if (term.startsWith('{') && term.endsWith('}')) return null; // Is CHARS_NUM (also uses '=' and '!')
+
   const cnd_ones = ['=' , '!' , '<' , '>' ];
   const cnd_twos = ['==', '!=', '<=', '>='];
   let   cnd_one  = null;
