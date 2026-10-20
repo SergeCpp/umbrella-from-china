@@ -53,11 +53,15 @@ audio, video {
   padding: 1em;
   text-align: left;
 }
-.song-list summary {
+.song-list > details > summary {
   border-radius: 0.5rem;
 }
-.song-list summary:hover {
+.song-list > details > summary:hover {
   background-color: #f2f2f2; /* Gray95 */
+}
+.song-list > details > pre > .text-comment.text-ellipsis {
+  display: inline-block;
+  width: 100%;
 }
 
 .song-line {
@@ -108,6 +112,7 @@ audio, video {
   flex: 0 0 auto;
   font-style: italic;
   max-width: 100%; /* For ellipsis to work when flex-shrink is 0 */
+  padding-right: 0.2ch; /* For italic letters at eol to not be clipped (0.15ch is not enough for 'd') */
 }
 
 /* EOF */

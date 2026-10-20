@@ -273,7 +273,7 @@ function item_load_song_list(item_key) {
   if  (!song_list) return;
 
   const item_type_name = item_data[item_key].type_name;
-  song_list.innerHTML  = '<span class="text-comment">' + item_type_name + ' list loading...</span>';
+  song_list.innerHTML  = '<span class="text-comment text-ellipsis">' + item_type_name + ' list loading...</span>';
 
   fetch(item_data[item_key].song_list_file)
     .then(response => {
@@ -365,11 +365,11 @@ function item_load_song_list(item_key) {
       }
       else {
          song_list.innerHTML =
-           '<span class="text-comment">No correct ' + item_type_name.toLowerCase() + ' entries found</span>';
+           '<span class="text-comment text-ellipsis">No correct ' + item_type_name.toLowerCase() + ' entries found</span>';
       }
     })
     .catch(err => {
-      song_list.innerHTML = '<span class="text-comment">Error: ' + err.message + '</span>';
+      song_list.innerHTML = '<span class="text-comment text-ellipsis">Error: ' + err.message + '</span>';
     });
 }
 
