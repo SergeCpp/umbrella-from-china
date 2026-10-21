@@ -188,9 +188,8 @@ function get_parse_error() {
 
 function input_clean_parse(input) {
   return input
-    .replace(/  +/g, ' ')
-    .replace(/\) ?\(/g, ')AND(') // Normalize ()() to ()AND()
-    .replace(/\} ?\{/g, '}AND{') // Normalize {}{} to {}AND{}
+    .replace(/  +/g, ' ') // Compress
+    .replace(/([\}\)]) ?([\(\{])/g, '$1AND$2') // Normalize
     .split  (',')
     .map    (term => term.trim())
     .filter (term => term) // Non-empty only
