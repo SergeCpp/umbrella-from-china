@@ -387,18 +387,18 @@ function tab_info_to_el(id, info) {
   info_el.style.display = info && !focused ? 'block' : 'none';
 }
 
-function tab_info_set(tab, id, info) {
+function tab_info_set(tab, id, info, is_tab_switch = false) {
   tab_infos[tab][id] = info;
 
-  if (tab === tab_active) {
+  if ((tab === tab_active) && !is_tab_switch) {
     tab_info_to_el(id, info);
   }
 }
 
-function tab_info_upd(tab, id) {
+function tab_info_upd(tab, id, is_tab_switch = false) {
   const info = tab_input_info_calc(tab, id);
 
-  tab_info_set(tab, id, info);
+  tab_info_set(tab, id, info, is_tab_switch);
 }
 
 function tab_infos_clr(tab) {
@@ -449,17 +449,9 @@ function tab_input_info_focus(id) {
 }
 
 function tab_input_info_blur(input, target) {
-  const id    = input.id;
-  const value = input.value;
+  const is_tab_switch = target && target.classList.contains('tab-btn') && (target.id !== ('tab-' + tab_active));
 
-  let timeout = 10;
-
-  if (target)
-    if (target.classList.contains('tab-btn'))
-      if (target.id !== ('tab-' + tab_active))
-        timeout = 200;
-
-  setTimeout(tab_info_upd, timeout, tab_active, id);
+  tab_info_upd(tab_active, input.id, is_tab_switch);
 }
 
 // Mode
