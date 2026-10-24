@@ -528,6 +528,15 @@ function init() {
     const sing_match = sing_list.id.match(/^sing(.*?)-song-player$/);
     if   (sing_match) sing_init(sing_match[1]);
   });
+
+  document.querySelectorAll('video').forEach(player => {
+    player.onclick = () => {
+      player.onclick  = null;
+      player.controls = true;
+
+      player.play();
+    };
+  });
 }
 
 /* Songs x Times */
