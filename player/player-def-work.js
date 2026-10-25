@@ -1,8 +1,10 @@
-/* Global Variables */
+/* Player */
 
 // Common
 
 let   timer_tick_interval   = 2000;  // milliseconds
+
+let   players_video         = [];    // of any type, for entire page
 
 // Coll
 
@@ -529,12 +531,22 @@ function init() {
     if   (sing_match) sing_init(sing_match[1]);
   });
 
-  document.querySelectorAll('video').forEach(player => {
-    player.onclick = () => {
-      player.onclick  = null;
-      player.controls = true;
+  players_video = Array.from(document.querySelectorAll('video'));
 
-      player.play();
+  players_video.forEach(player => {
+    player.onclick = () => {
+      if (player === document.fullscreenElement) return;
+      if (player.controls) return;
+
+          player.controls = true;
+
+      if (player.paused) {
+          scroll_to_view(player);
+          player.play();
+      }
+      else {
+          player.pause();
+      }
     };
   });
 }
@@ -961,6 +973,19 @@ function timer_logic() {
   for(let s = 0; s < sing_keys.length; s++) { // Sing Players
     sing_timer_logic(sing_keys[s]);
   }
+
+  players_video.forEach(player => {
+    if    (player === document.fullscreenElement) return;
+
+    if    (player.paused) {
+      if  (player.controls)
+           player.controls = false;
+    }
+    else {
+      if (!player.controls)
+           player.controls = true;
+    }
+  });
 }
 
 function timer_tick() {
