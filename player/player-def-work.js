@@ -61,9 +61,17 @@ const sing_keys             = [];    // "", '2', '3', etc.
 /* Player Control */
 
 function scroll_to_view(player) {
-  if(player && (player.tagName.toLowerCase() === 'video')) {
-     player.scrollIntoView({ behavior: 'smooth', block: 'start' }); // better overall than 'center'
-  }
+  if  (!player || (player.tagName.toLowerCase() !== 'video')) return;
+
+  const p_rect = player.getBoundingClientRect();
+
+  if  ((p_rect.top >= 0) && (p_rect.bottom <= window.innerHeight)) return; // player within window
+  if  ((p_rect.top <= 0) && (p_rect.bottom >= window.innerHeight)) return; // window within player
+
+  const p_tall = p_rect.height > window.innerHeight;
+  const block  = p_tall && (p_rect.bottom > 0) && (p_rect.bottom < window.innerHeight) ? 'end' : 'start';
+
+  player.scrollIntoView({ behavior: 'smooth', block }); // 'start' is better overall than 'center'
 }
 
 function poster_to_show(player) {
