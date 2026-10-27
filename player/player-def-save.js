@@ -68,10 +68,14 @@ function scroll_to_view(player) {
   if  ((p_rect.top >= 0) && (p_rect.bottom <= window.innerHeight)) return; // player within window
   if  ((p_rect.top <= 0) && (p_rect.bottom >= window.innerHeight)) return; // window within player
 
-  const p_tall = p_rect.height > window.innerHeight;
-  const block  = p_tall && (p_rect.bottom > 0) && (p_rect.bottom < window.innerHeight) ? 'end' : 'start';
+  const block  = (p_rect.height > window.innerHeight) && // player is tall
+                 (p_rect.bottom > 0                 ) && // bottom is
+                 (p_rect.bottom < window.innerHeight)    // within window
 
-  player.scrollIntoView({ behavior: 'smooth', block }); // 'start' is better overall than 'center'
+               ? 'end'
+               : 'start'; // 'start' is better overall than 'center'
+
+  player.scrollIntoView({ behavior: 'smooth', block });
 }
 
 function poster_to_show(player) {
