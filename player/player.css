@@ -115,6 +115,13 @@ audio, video {
   padding-right: 0.2ch; /* For italic letters at eol to not be clipped (0.15ch is not enough for 'd') */
 }
 
+.summary-right {
+  float: right;
+  font-style: italic;
+  max-width: 60%; /* Empirical value */
+  padding-right: calc(0.2ch + 0.3em); /* Sum of paddings for line-right and song-line */
+}
+
 /* EOF */
 
 

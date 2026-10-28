@@ -51,6 +51,7 @@ const item_data             = {};    // [item_key] = {
 //    item_player_running   = false; //  true if started
 //    item_song_to_start    = null;  //  song_id to start at next timer tick
 //    item_song_states      = {};    // [song_id]        = state: "played" / "paused", can be 0..1 states
+//    item_song_base_time   = {};    // [song_id]        = seconds, song start time in playlist
 //    item_song_file_names  = {};    // [song_id]        = song_file_name
 //    item_file_name_songs  = {};    // [song_file_name] = song_id
 
@@ -281,6 +282,17 @@ function kbd(e)     { const k    = e.key; if(k === 'Enter' || k === ' ') { e.pre
 
 /* Initialization */
 
+function make_hms         (seconds) {
+   const h   = Math.floor( seconds / 3600      );
+   const m   = Math.floor((seconds % 3600) / 60);
+   const s   = Math.round( seconds         % 60); // to the nearest whole second
+
+   const hms = String(h).padStart(2, '0') + ':' +
+               String(m).padStart(2, '0') + ':' +
+               String(s).padStart(2, '0');
+  return hms;
+}
+
 function item_load_song_list(item_key) {
   const item_name = "item" + item_key;
   const song_list = document.getElementById(item_name + "-song-list");
@@ -336,12 +348,7 @@ function item_load_song_list(item_key) {
           throw new Error(item_type_name + ' ' + song_num + " &mdash; Length format is incorrect");
         }
 
-        const h = Math.floor( total_seconds / 3600      );
-        const m = Math.floor((total_seconds % 3600) / 60);
-        const s = Math.round( total_seconds         % 60); // to the nearest whole second
-        const song_hms = String(h).padStart(2, '0') + ':' +
-                         String(m).padStart(2, '0') + ':' +
-                         String(s).padStart(2, '0');
+        const song_hms = make_hms(total_seconds);
 
         const [title_left, title_right] = song_title.split("<>", 2);
 
@@ -370,12 +377,21 @@ function item_load_song_list(item_key) {
         item_data[item_key].song_file_names[song_id] = song_file_name_conv;
         item_data[item_key].file_name_songs[song_file_name_conv] = song_id;
 
+        item_data[item_key].song_base_time [song_id] = total_seconds;
         total_seconds += song_seconds;
       }
       song_list.innerHTML = song_list_html;
 
       if(song_list.children.length > 0) {
         item_data[item_key].present = true;
+
+        // display current / total times at the summary right
+        const summary = song_list.parentElement.firstElementChild;
+        const summary_right = document.createElement('span');
+        summary_right.className = 'summary-right text-ellipsis';
+        summary_right.id = item_name + '-time-span';
+        summary_right.textContent = '00:00:00 / ' + make_hms(total_seconds);
+        summary.prepend(summary_right);
       }
       else {
          song_list.innerHTML =
@@ -512,6 +528,7 @@ function item_init(item_key) {
     player_running  : false,
     song_to_start   : null,
     song_states     : {},
+    song_base_time  : {},
     song_file_names : {},
     file_name_songs : {}
   };
@@ -911,6 +928,28 @@ function item_update_song_cover(item_key) {
   }
 }
 
+function item_update_time_current(item_key) {
+  const item_name = "item" + item_key;
+  const time_span = document.getElementById(item_name + '-time-span');
+  if  (!time_span) return;
+
+  const player = document.getElementById(item_name + '-song-player');
+  if  (!player) return;
+
+  const song_id = get_song_id_curr(player, "item", item_key);
+  if  (!song_id) return;
+
+  const current_time = item_data[item_key].song_base_time[song_id] + player.currentTime;
+  const current_hms  = make_hms(current_time);
+
+  const time_span_text    = time_span.textContent;
+  const time_span_current = current_hms + time_span_text.slice(8);
+
+  if   (time_span_text      !== time_span_current) {
+        time_span.textContent = time_span_current;
+  }
+}
+
 function item_player_transitions(item_key) {
   if(item_data[item_key].song_to_start) {
      const song_id = item_data[item_key].song_to_start;
@@ -960,9 +999,10 @@ function item_timer_logic(item_key) {
   if(!item_data[item_key].present) return;
   if((Date.now() - item_data[item_key].player_load_time) <= timer_tick_interval) return;
 
-  item_player_transitions(item_key);
-  item_update_song_states(item_key);
-  item_update_song_cover (item_key);
+  item_player_transitions (item_key);
+  item_update_song_states (item_key);
+  item_update_song_cover  (item_key);
+  item_update_time_current(item_key);
 }
 
 function sing_timer_logic(sing_key) {
