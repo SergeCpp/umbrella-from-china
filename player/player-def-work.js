@@ -279,18 +279,19 @@ function mou(e, pl) { const song = e.target.closest('span.song-line[id]');
 function kbu(e, pl) { const k    = e.key; if(k === 'Enter' || k === ' ') { mou      (e,       pl); } }
 function kbd(e)     { const k    = e.key; if(k === 'Enter' || k === ' ') { e.preventDefault();     }
                                           else                           { kb_arrows(e);           } }
-
 /* Initialization */
 
-function make_hms         (seconds) {
-   const h   = Math.floor( seconds / 3600      );
-   const m   = Math.floor((seconds % 3600) / 60);
-   const s   = Math.round( seconds         % 60); // to the nearest whole second
+function make_hms              (seconds) {
+   const secs_int = Math.round (seconds); // To the nearest whole second
 
-   const hms = String(h).padStart(2, '0') + ':' +
-               String(m).padStart(2, '0') + ':' +
-               String(s).padStart(2, '0');
-  return hms;
+   const      h   = Math.floor (secs_int / 3600);
+   const       m  = Math.floor((secs_int % 3600) / 60);
+   const        s =             secs_int         % 60;
+
+   const      hms = String(h  ).padStart(2, '0') + ':' +
+                    String( m ).padStart(2, '0') + ':' +
+                    String(  s).padStart(2, '0');
+  return      hms;
 }
 
 function item_load_song_list(item_key) {
@@ -382,10 +383,11 @@ function item_load_song_list(item_key) {
       }
       song_list.innerHTML = song_list_html;
 
-      if(song_list.children.length > 0) {
+      if (song_list.children.length) {
         item_data[item_key].present = true;
 
-        // display current / total times at the summary right
+        // Display current / total times at the summary right
+
         const summary = song_list.parentElement.firstElementChild;
         const summary_right = document.createElement('span');
         summary_right.className = 'summary-right text-ellipsis';
@@ -594,6 +596,8 @@ function coll_is_time_in_song(time, song_id, coll_key) {
   return time_in_song;
 }
 
+/*
+//
 function coll_is_time_in_song_test() {
   const coll_key  = ""; // "", '2', '3'
   const songs     = coll_data[coll_key].song_order.length;
@@ -632,6 +636,8 @@ function coll_is_time_in_song_test() {
     ok_3m + ' <3< ' + ok_2m + ' <2< ' + ok_1m + ' <1< ' +
     ok_0  + ' >1> ' + ok_1p + ' >2> ' + ok_2p + ' >3> ' + ok_3p + ' and ' + no + ' no');
 }
+//
+*/
 
 // key is coll_key or item_key
 function get_song_id_next(song_id, player_type, key) {
@@ -931,15 +937,16 @@ function item_update_song_cover(item_key) {
 function item_update_time_current(item_key) {
   const item_name = "item" + item_key;
   const time_span = document.getElementById(item_name + '-time-span');
-  if  (!time_span) return;
+  if  (!time_span)  return;
 
   const player = document.getElementById(item_name + '-song-player');
-  if  (!player) return;
+  if  (!player)  return;
 
-  const song_id = get_song_id_curr(player, "item", item_key);
+  const song_to_start = item_data[item_key].song_to_start;
+  const song_id       = song_to_start || get_song_id_curr(player, "item", item_key);
   if  (!song_id) return;
 
-  const current_time = item_data[item_key].song_base_time[song_id] + player.currentTime;
+  const current_time = item_data[item_key].song_base_time[song_id] + (song_to_start ? 0 : player.currentTime);
   const current_hms  = make_hms(current_time);
 
   const time_span_text    = time_span.textContent;
