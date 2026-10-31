@@ -100,11 +100,11 @@ function get_date_range(date_str) {
   return null; // Invalid format
 }
 
-// Construct date and check if it corrects the input
+// Construct date and check if JS corrects the input
 function  is_date_valid               (year, month,     day) {
-  const      date = new Date(Date.UTC (year, month - 1, day));
+   const     date = new Date(Date. UTC(year, month - 1, day));
   return     date.getUTCFullYear() === year
-          && date.getUTCMonth   () ===      (month - 1)
+          && date.getUTCMonth   () ===       month - 1
           && date.getUTCDate    () ===                  day;
 }
 
