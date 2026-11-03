@@ -325,7 +325,7 @@ function tab_input_adjustables_init    () {
     const input = tab_input_els[id];
     if  (!input)  return;
 
-    if   (input.hasAttribute('adjustable')) {
+    if   (input.hasAttribute('data-adjustable')) {
       tab_input_adjustables_range[id] = { min: input.size, size: input.size, max: input.maxLength };
     }
   });
