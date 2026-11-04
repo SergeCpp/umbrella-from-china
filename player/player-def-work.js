@@ -62,7 +62,7 @@ const sing_keys             = [];    // "", '2', '3', etc.
 /* Player Control */
 
 function scroll_to_view(player) {
-  if  (!player || (player.tagName.toLowerCase() !== 'video')) return;
+  if  (!player || (player.localName !== 'video')) return;
 
   const p_rect = player.getBoundingClientRect();
 
@@ -80,11 +80,11 @@ function scroll_to_view(player) {
 }
 
 function poster_to_show(player) {
-  if(player && (player.tagName.toLowerCase() === 'video') && player.poster) {
-     scroll_to_view(player);
-     player.src = player.currentSrc; // reset video to show poster, with respect to preload="none"
-   //player.load() alone also shows poster, but forces a load, so ignores preload="none"
-  }
+  if (!player || (player.localName !== 'video') || !player.poster) return;
+
+  scroll_to_view(player);
+  player.src = player.currentSrc; // reset video to show poster, with respect to preload="none"
+//player.load() alone also shows poster, but forces a load, so ignores preload="none"
 }
 
 function goto_song(song_id, pl) {
@@ -857,11 +857,11 @@ function coll_update_player_song_states(coll_key) {
   const coll_song_states_curr  = {};
 
   players.forEach(player => {
-    if(!player) return;
+    if (!player) return;
 
-    if (player.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) // === 3
-      if(!player.paused) // can be played state for an empty source
-          player.pause();
+    if  (player.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) // === 3
+      if (!player.paused) // can be played state for an empty source
+           player.pause();
 
     const song_id = get_song_id_curr(player, "coll", coll_key);
     if  (!song_id) return;
@@ -870,12 +870,22 @@ function coll_update_player_song_states(coll_key) {
 
     const state = player.paused ? "paused" : "played";
 
-    if(!coll_song_states_curr[song_id] || state === "played") {
-        coll_song_states_curr[song_id]  = state;
+    if (!coll_song_states_curr[song_id] || state === "played") {
+         coll_song_states_curr[song_id]  = state;
     }
   });
   traverse_player_states(coll_data[coll_key].player_songs, coll_player_songs_curr);
   traverse_song_states  (coll_data[coll_key].song_states,  coll_song_states_curr );
+}
+
+function coll_check_video_ended(coll_key) {
+  const coll_name ="coll" + coll_key;
+  const play_base = coll_name + '-song-player-';
+  const player    = document.getElementById(play_base + 'v');
+  if  (!player) return;
+  if  (!player.ended) return;
+
+  setTimeout(poster_to_show, timer_tick_interval, player); // give slack for end credits and song state showing
 }
 
 /* Item */
@@ -1000,6 +1010,7 @@ function coll_timer_logic(coll_key) {
   if(!coll_data[coll_key].present) return;
 
   coll_update_player_song_states(coll_key);
+  coll_check_video_ended        (coll_key);
 }
 
 function item_timer_logic(item_key) {
