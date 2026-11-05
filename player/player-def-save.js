@@ -583,7 +583,7 @@ function init() {
           scroll_to_view(player);
           player_to_play(player);
       }
-      else {
+      else {  // played
           player.pause();
       }
     };
@@ -593,15 +593,18 @@ function init() {
 /* Songs x Times */
 
 function coll_is_time_in_song(time, song_id, coll_key) {
-  const song_time = coll_data[coll_key].song_begins[song_id];
-  if   (song_time === undefined) return false;
+  const  song_time       =  coll_data[coll_key].song_begins[song_id];
+  if    (song_time      === undefined) return false;
+  if    (song_time       >  time)      return false;
 
-  const song_id_next   = get_song_id_next(song_id, "coll", coll_key);
-  let   song_time_next = coll_data[coll_key].song_begins[song_id_next];
-  if   (song_time_next === undefined) { song_time_next = Infinity; }
+  const  song_id_next    =  get_song_id_next(song_id, "coll", coll_key);
+  if   (!song_id_next)                 return true;
 
-  const  time_in_song = ((time >= song_time) && (time < song_time_next));
-  return time_in_song;
+  const  song_time_next  =  coll_data[coll_key].song_begins[song_id_next];
+  if    (song_time_next === undefined) return true;
+  if    (song_time_next  >  time)      return true;
+
+  return false;
 }
 
 /*
@@ -649,30 +652,35 @@ function coll_is_time_in_song_test() {
 
 // key is coll_key or item_key
 function get_song_id_next(song_id, player_type, key) {
-  if(!song_id) return null;
+  if (!song_id) return null;
 
-  if(player_type === "coll") {
-    const coll_key = key;
-    const song_id_num = coll_data[coll_key].song_order.indexOf(song_id);
-    if   (song_id_num === -1) return null;
+  if (player_type === "coll") {
+    const  coll_key = key;
+    const  song_id_num = coll_data[coll_key].song_order.indexOf(song_id);
+    if    (song_id_num === -1) return null;
 
-    const song_id_num_next = song_id_num + 1;
-    if   (song_id_num_next >= coll_data[coll_key].song_order.length) return null;
+    const  song_id_num_next = song_id_num + 1;
+    if    (song_id_num_next >= coll_data[coll_key].song_order.length) return null;
 
-    return coll_data[coll_key].song_order[song_id_num_next];
-  }
-  if(player_type === "item") {
-    const item_key = key;
-    const song_id_match = song_id.match(/^(item.*?-)(\d+)$/); // song_id format: item?-#
-    if  (!song_id_match) return null;
-
-    const song_id_num      = song_id_match[2];
-    const song_id_num_next = String(parseInt(song_id_num) + 1).padStart(song_id_num.length, '0');
-    const song_id_next     = song_id_match[1] + song_id_num_next;
-    if  (!item_data[item_key].song_file_names[song_id_next]) return null;
+    const  song_id_next = coll_data[coll_key].song_order[song_id_num_next];
+    if   (!song_id_next) return null;
 
     return song_id_next;
   }
+
+  if (player_type === "item") {
+    const  item_key = key;
+    const  song_id_match = song_id.match(/^(item.*?-)(\d+)$/); // song_id format: item?-#
+    if   (!song_id_match) return null;
+
+    const  song_id_num      = song_id_match[2];
+    const  song_id_num_next = String(parseInt(song_id_num, 10) + 1).padStart(song_id_num.length, '0');
+    const  song_id_next     = song_id_match[1] + song_id_num_next;
+    if   (!item_data[item_key].song_file_names[song_id_next]) return null;
+
+    return song_id_next;
+  }
+
   return null;
 }
 
