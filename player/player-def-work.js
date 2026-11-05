@@ -87,6 +87,14 @@ function poster_to_show(player) {
 //player.load() alone also shows poster, but forces a load, so ignores preload="none"
 }
 
+function player_to_play(player) {
+  if (!player) return;
+
+  player.play()
+    .then (() => {})
+    .catch(() => {});
+}
+
 function goto_song(song_id, pl) {
   if(!song_id) return;
 
@@ -137,7 +145,7 @@ function goto_song(song_id, pl) {
            (player.networkState === HTMLMediaElement.NETWORK_LOADING)) // 2
         {
           scroll_to_view(player);
-          player.play();
+          player_to_play(player);
           item_data[item_key].player_running = true;
         }
       } else { // played
@@ -189,7 +197,7 @@ function goto_song(song_id, pl) {
       if  (player.paused) {
         if(player.duration || (player.networkState === HTMLMediaElement.NETWORK_IDLE)) { // 1
            scroll_to_view(player);
-           player.play();
+           player_to_play(player);
         }
       } else { // played
            player.pause();
@@ -200,7 +208,7 @@ function goto_song(song_id, pl) {
       if(player.duration || (player.networkState === HTMLMediaElement.NETWORK_IDLE)) { // 1
          player.currentTime = coll_data[coll_key].song_begins[song_id];
          scroll_to_view(player);
-         player.play();
+         player_to_play(player);
       }
     }
   }
@@ -573,7 +581,7 @@ function init() {
 
       if (player.paused) {
           scroll_to_view(player);
-          player.play();
+          player_to_play(player);
       }
       else {
           player.pause();
