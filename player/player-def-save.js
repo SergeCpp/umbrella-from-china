@@ -587,6 +587,8 @@ function init() {
           player.pause();
       }
     };
+
+    player.onresize = () => setTimeout(scroll_to_view, timer_tick_interval, player);
   });
 }
 
