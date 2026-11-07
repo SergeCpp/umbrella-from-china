@@ -141,18 +141,20 @@ function goto_song(song_id, pl) {
     // For preload="none" no actual load is performed in case of src change.
     // Calling load() performs metadata load for preload="none".
 
-    if(player_src_cur !== player_src_new) // start a new src
+    if (player_src_cur !== player_src_new) // start a new src
     {
-       player.src       = player_src_new; // loads with respect to preload value
+        player.src       = player_src_new; // loads with respect to preload value
+                                           // and shows poster
+        scroll_to_view_timed(player);      // to poster
 
-       item_data[item_key].player_load_time = Date.now();
-       item_data[item_key].song_to_start    = song_id; // defer to next timer tick
+        item_data[item_key].player_load_time = Date.now();
+        item_data[item_key].song_to_start    = song_id; // defer to next timer tick
     }
     else // src is already set to song_id
     {
-      if(player.paused) {
-        if((player.networkState === HTMLMediaElement.NETWORK_IDLE) ||  // 1
-           (player.networkState === HTMLMediaElement.NETWORK_LOADING)) // 2
+      if (player.paused) {
+        if ((player.networkState === HTMLMediaElement.NETWORK_IDLE) ||  // 1
+            (player.networkState === HTMLMediaElement.NETWORK_LOADING)) // 2
         {
           scroll_to_view(player);
           player_to_play(player);
@@ -905,6 +907,14 @@ function coll_update_player_song_states(coll_key) {
          coll_song_states_curr[song_id]  = state;
     }
   });
+
+  const vs_prev = coll_data[coll_key].player_songs['v'];
+  const vs_curr = coll_player_songs_curr          ['v'];
+
+  if   (vs_prev && vs_curr && (vs_prev !== vs_curr)) {
+    scroll_to_view(document.getElementById(play_base + 'v'));
+  }
+
   traverse_player_states(coll_data[coll_key].player_songs, coll_player_songs_curr);
   traverse_song_states  (coll_data[coll_key].song_states,  coll_song_states_curr );
 }
@@ -926,12 +936,13 @@ function item_update_song_states(item_key) {
   const player = document.getElementById(item_name + '-song-player');
   const item_song_states_curr = {};
 
-  if(player) {
+  if (player) {
     const song_id = get_song_id_curr(player, "item", item_key);
     if   (song_id) {
       item_song_states_curr[song_id] = player.paused ? "paused" : "played";
     }
   }
+
   traverse_song_states(item_data[item_key].song_states, item_song_states_curr);
 }
 
