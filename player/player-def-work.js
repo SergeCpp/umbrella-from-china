@@ -79,12 +79,22 @@ function scroll_to_view(player) {
   player.scrollIntoView({ behavior: 'smooth', block });
 }
 
+function scroll_to_view_timed(player) {
+  if  (!player || (player.localName !== 'video')) return;
+
+  requestAnimationFrame(() =>
+    setTimeout(scroll_to_view, 0, player)); // for case of rendered already
+
+    setTimeout(scroll_to_view, timer_tick_interval, player); // for case of not rendered above
+}
+
 function poster_to_show(player) {
   if (!player || (player.localName !== 'video') || !player.poster) return;
 
-  scroll_to_view(player);
   player.src = player.currentSrc; // reset video to show poster, with respect to preload="none"
 //player.load() alone also shows poster, but forces a load, so ignores preload="none"
+
+  scroll_to_view_timed(player);
 }
 
 function player_to_play(player) {
@@ -591,12 +601,7 @@ function init() {
     // Playback is ready to start
     // Even if this event fires, the element might still not be potentially playing
     //
-    player.onplaying = () => {
-      requestAnimationFrame(() =>
-        setTimeout(scroll_to_view, 0, player)); // for case of started already
-
-        setTimeout(scroll_to_view, timer_tick_interval, player); // for case of not started above
-    };
+    player.onplaying = () => scroll_to_view_timed(player);
   });
 }
 
