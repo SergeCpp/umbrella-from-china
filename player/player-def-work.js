@@ -600,6 +600,12 @@ function init() {
       }
     };
 
+    player.onfullscreenchange = () => {
+      if (player === document.fullscreenElement) return;
+
+      scroll_to_view_timed(player);
+    };
+
     // Playback is ready to start
     // Even if this event fires, the element might still not be potentially playing
     //
