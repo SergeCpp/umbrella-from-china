@@ -886,6 +886,7 @@ function coll_update_player_song_states(coll_key) {
   const coll_name ="coll" + coll_key;
   const play_base = coll_name + '-song-player-';
   const players   = ['v', 'a', 'b'].map(pl => document.getElementById(play_base + pl));
+
   const coll_player_songs_curr = {};
   const coll_song_states_curr  = {};
 
@@ -897,7 +898,7 @@ function coll_update_player_song_states(coll_key) {
            player.pause();
 
     const song_id = get_song_id_curr(player, "coll", coll_key);
-    if  (!song_id) return;
+    if  (!song_id)  return;
 
     coll_player_songs_curr[player.id.slice(-1)] = song_id; // ['v' / 'a' / 'b']
 
@@ -908,15 +909,17 @@ function coll_update_player_song_states(coll_key) {
     }
   });
 
-  const vs_prev = coll_data[coll_key].player_songs['v'];
-  const vs_curr = coll_player_songs_curr          ['v'];
+  const coll_data_key = coll_data[coll_key];
 
-  if   (vs_prev && vs_curr && (vs_prev !== vs_curr)) {
+  const vs_prev = coll_data_key.player_songs['v'];
+  const vs_curr = coll_player_songs_curr    ['v'];
+
+  if  ((vs_prev && vs_curr) && (vs_prev !== vs_curr)) {
     scroll_to_view(document.getElementById(play_base + 'v'));
   }
 
-  traverse_player_states(coll_data[coll_key].player_songs, coll_player_songs_curr);
-  traverse_song_states  (coll_data[coll_key].song_states,  coll_song_states_curr );
+  traverse_player_states(coll_data_key.player_songs, coll_player_songs_curr);
+  traverse_song_states  (coll_data_key.song_states,  coll_song_states_curr );
 }
 
 function coll_check_video_ended(coll_key) {
