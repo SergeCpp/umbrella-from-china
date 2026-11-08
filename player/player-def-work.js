@@ -72,22 +72,34 @@ function scroll_to_view(player) {
   const p_height = p_rect.height;
   const w_height = window.innerHeight;
 
-  if   (p_top  === 0) return; // in place already
+  const eps      = 0.5; // diffs up to 0.47 (abs value) were encountered (both negatives and positives)
+
+  if   (Math.abs(p_top) < eps) return; // in place already
 
   // For player within window scroll to start anyway
-  //  ((p_top   >= 0) && (p_bottom <= w_height))
+  //
+  //  ((p_top > 0 - eps) && (p_bottom < w_height + eps))
 
   // For window within player do not touch if played (also can be poster if paused)
-  if (((p_top   <= 0) && (p_bottom >= w_height)) && !player.paused) return;
+  // For scrolling to start: press 'pause' within timer_tick_interval after 'play'
+  //
+  if (((p_top < 0 + eps) && (p_bottom > w_height - eps)) && !player.paused) return;
 
-  const block    = (p_height >  w_height) && // player is tall
-                   (p_bottom >= 0       ) && // bottom is
-                   (p_bottom <= w_height) && // within window
-                                             //
-                   !player.paused            // is played (also can be poster if paused)
+  /*
+  alert('p_top'    + ': ' + p_top    + '\n' +
+        'p_bottom' + ': ' + p_bottom + '\n' +
+        'p_height' + ': ' + p_height + '\n' +
+        'w_height' + ': ' + w_height);
+  */
 
-                 ? 'end'
-                 : 'start'; // 'start' is better overall than 'center'
+  const block = (p_height > w_height - eps) && // player is tall
+                (p_bottom > 0        - eps) && // bottom is
+                (p_bottom < w_height + eps) && // within window
+                                               //
+                !player.paused                 // is played (also can be poster if paused)
+
+              ? 'end'
+              : 'start'; // 'start' is better overall than 'center'
 
   player.scrollIntoView({ behavior: 'smooth', block });
 }
@@ -95,9 +107,11 @@ function scroll_to_view(player) {
 function scroll_to_view_timed(player) {
   if  (!player || (player.localName !== 'video')) return;
 
+  scroll_to_view(player); // for case of the frame (or poster) is rendered already
+
   requestAnimationFrame(() => // two RAFs and timer are actually needed for some cases
     requestAnimationFrame(() =>
-      setTimeout(scroll_to_view, 0, player))); // for case of rendered already
+      setTimeout(scroll_to_view, 0, player))); // for case of rendered with small delay
 
       setTimeout(scroll_to_view, timer_tick_interval, player); // for case of not rendered above
 }
