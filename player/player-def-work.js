@@ -64,17 +64,30 @@ const sing_keys             = [];    // "", '2', '3', etc.
 function scroll_to_view(player) {
   if  (!player || (player.localName !== 'video')) return;
 
-  const p_rect = player.getBoundingClientRect();
+  const p_rect   = player.getBoundingClientRect();
 
-  if  ((p_rect.top >= 0) && (p_rect.bottom <= window.innerHeight)) return; // player within window
-  if  ((p_rect.top <= 0) && (p_rect.bottom >= window.innerHeight)) return; // window within player
+  const p_top    = p_rect.top;
+  const p_bottom = p_rect.bottom;
 
-  const block  = (p_rect.height > window.innerHeight) && // player is tall
-                 (p_rect.bottom > 0                 ) && // bottom is
-                 (p_rect.bottom < window.innerHeight)    // within window
+  const p_height = p_rect.height;
+  const w_height = window.innerHeight;
 
-               ? 'end'
-               : 'start'; // 'start' is better overall than 'center'
+  if   (p_top  === 0) return; // in place already
+
+  // For player within window scroll to start anyway
+  //  ((p_top   >= 0) && (p_bottom <= w_height))
+
+  // For window within player do not touch if played (also can be poster if paused)
+  if (((p_top   <= 0) && (p_bottom >= w_height)) && !player.paused) return;
+
+  const block    = (p_height >  w_height) && // player is tall
+                   (p_bottom >= 0       ) && // bottom is
+                   (p_bottom <= w_height) && // within window
+                                             //
+                   !player.paused            // is played (also can be poster if paused)
+
+                 ? 'end'
+                 : 'start'; // 'start' is better overall than 'center'
 
   player.scrollIntoView({ behavior: 'smooth', block });
 }
@@ -82,10 +95,11 @@ function scroll_to_view(player) {
 function scroll_to_view_timed(player) {
   if  (!player || (player.localName !== 'video')) return;
 
-  requestAnimationFrame(() =>
-    setTimeout(scroll_to_view, 0, player)); // for case of rendered already
+  requestAnimationFrame(() => // two RAFs and timer are actually needed for some cases
+    requestAnimationFrame(() =>
+      setTimeout(scroll_to_view, 0, player))); // for case of rendered already
 
-    setTimeout(scroll_to_view, timer_tick_interval, player); // for case of not rendered above
+      setTimeout(scroll_to_view, timer_tick_interval, player); // for case of not rendered above
 }
 
 function poster_to_show(player) {
@@ -778,7 +792,7 @@ function set_player_state(pl, song_id, state) {
   const buttons = song.querySelectorAll('span[role="button"]');
   if  (!buttons.length) return;
 
-  const button_index = { 'v': 0, 'a': 1, 'b': 2 }[pl]; // map 'v'/'a'/'b' to 0/1/2
+  const button_index = { 'v': 0, 'a': 1, 'b': 2 }[pl]; // map 'v' / 'a' / 'b' to 0 / 1 / 2
   if   (button_index === undefined) return;
 
   const button = buttons[button_index];
