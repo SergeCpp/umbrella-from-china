@@ -83,8 +83,22 @@ function conv_stat_docs(docs) {
 
 // bstr_description <str name="description">
 
-// Subj: Text: 52.1 ms / 10; DOM: 84.6 ms / 1 / 210 463
-// Desc: Text: 53.8 ms / 10; DOM: 47.1 ms / 1 / 730 081
+function performance_start() {
+  const start_0 = performance.now(); // Takes 1 microsecond
+  let   loops   = 1000; // Timer resolution is 100 microseconds, so guard of 1000 is more than enough
+
+  do {
+    const start = performance.now();
+    if   (start !== start_0) return start;
+  }
+  while(--loops);
+
+  return start_0;
+}
+
+// Subj: Text: 52.1 ms / 10; DOM: 84.6 ms / 1; Size: 210 463
+// Desc: Text: 53.8 ms / 10; DOM: 47.1 ms / 1; Size: 730 081
+//
 function parse_sect_text_10(text, name) { // Rename: text_10 <-> text
   let du_min = Infinity;
 
@@ -186,43 +200,48 @@ function parse_sect_desc(text) {
   return descs;
 }
 
-// Text: 10.4 ms / 10
-// DOM : 70.4 ms / 1
-// Size: 321 948
+// 2026-09-15 Size: 321 497
+// 2026-10-15 Size: 321 948
+// 2026-11-15 Size: 322 235
+//
+// Text:  10.3 ms / 10
+// Docs: 111.4 ms / 1
+//
 function parse_stat_text_10(text) { // Rename: text_10 <-> text
-  let du_min = Infinity;
+  let du_text = Infinity;
 
-  for (let warm = 0; warm < 10; warm++) parse_stat_text_1(text);
+  for (let warm = 0; warm < 100; warm++) parse_stat_text_1(text);
 
-  for (let loop = 0; loop < 10; loop++) {
-    const start = performance.now();
+  for (let loop = 0; loop < 100; loop++) {
+    const start = performance_start();
     for (let i = 0; i < 10; i++) parse_stat_text_1(text);
     const du_10 = performance.now() - start;
-    if   (du_10 < du_min) du_min = du_10;
+    if   (du_10 < du_text) du_text = du_10;
   }
 
-  const start  = performance.now();
+  const start  = performance_start();
   const parser = new DOMParser();
   const xml    = parser.parseFromString(text, "text/xml");
   if   (xml.querySelector("parsererror")) throw new Error("Invalid XML format");
 
-  const docs   = xml.querySelectorAll("doc");
-  const st_dom = conv_stat_docs(docs);
-  const du_dom = performance.now() - start;
+  const      docs = xml.querySelectorAll("doc");
+  const stat_docs = conv_stat_docs(docs);
+  const   du_docs = performance.now() - start;
 
-  alert("Text: " + du_min.toFixed(1) + " ms / 10" + '\n' +
-        "DOM: "  + du_dom.toFixed(1) + " ms / 1");
+  alert("Text: " + du_text.toFixed(1) + " ms / 10" + '\n' +
+        "Docs: " + du_docs.toFixed(1) + " ms / 1");
 
-  const stats  = parse_stat_text_1(text);
-  const str    =  JSON.stringify  (stats);
-  if   (str   === JSON.stringify  (st_dom)) {
-    alert("ok stat: " + str.length);
+  const stat_text  =  parse_stat_text_1  (text);
+  const json_text  =  JSON.stringify(stat_text);
+  if   (json_text === JSON.stringify(stat_docs)) {
+
+    alert("ok stat: " + json_text.length);
   }
   else {
     alert("no stat");
   }
 
-  return stats;
+  return stat_text;
 }
 
 function parse_stat_text(text) { // Rename: text <-> text_1
