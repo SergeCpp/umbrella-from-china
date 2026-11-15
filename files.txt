@@ -80,8 +80,9 @@ https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-202
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2026-09-15.xml.txt
 
 https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2026-10-15.xml.txt
+https://umbrella-from-china.neocities.org/archive/stats/archive-org-sergecpp-2026-11-15.xml.txt
 -----------------------------------------------------------
-1 dates + 28 stats + 1 subjects + 1 descriptions = 31 files
+1 dates + 29 stats + 1 subjects + 1 descriptions = 32 files
 
 All images listed are used actually
 -----------------------------------
@@ -377,7 +378,7 @@ https://umbrella-from-china.neocities.org/ziyan-dancer.txt
 -------------------------------------------
 1 css + 29 html + 33 txt + 1 xml = 64 files
 
-The total size of the site files is less than 79 megabytes
+The total size of the site files is less than 80 megabytes
 
 No external images hotlinking, all images are hosted on this site
 
