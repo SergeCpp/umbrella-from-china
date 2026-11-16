@@ -96,17 +96,17 @@ function performance_start() {
   return start_0;
 }
 
-// Subj: Text: 51.4 ms / 10; DOM: 123.1 ms / 1; Size: 210 463
-// Desc: Text: 53.4 ms / 10; DOM:  54.7 ms / 1; Size: 730 081
+// Subj: Text: 409 265 chars / 10.0 ms / 2, DOM: 97.4 ms / 1, JSON: 210 463 chars
+// Desc: Text: 798 034 chars / 10.4 ms / 2, DOM: 49.9 ms / 1, JSON: 730 081 chars
 //
-function parse_sect_text_10(text, name) { // Rename: text_10 <-> text
-  let du_text = Infinity;
+function parse_sect_text_test(text, name) { // Rename: text_test <-> text
+  let du_text   = Infinity;
 
-  for (let warm = 0; warm < 20; warm++) parse_sect_text_1(text, name);
+  for (let warm = 0; warm <  20; warm++) parse_sect_text_1(text, name);
 
-  for (let loop = 0; loop < 20; loop++) {
+  for (let loop = 0; loop < 100; loop++) {
     const start = performance_start();
-    for  (let i = 0; i < 10; i++) parse_sect_text_1(text, name);
+    for  (let i = 0; i    <   2; i++)    parse_sect_text_1(text, name);
     const du_10 = performance.now() - start;
     if   (du_10 < du_text) du_text = du_10;
   }
@@ -136,14 +136,14 @@ function parse_sect_text_10(text, name) { // Rename: text_10 <-> text
 
   const du_docs = performance.now() - start;
 
-  alert("Text" + ": " + du_text.toFixed(1) + " ms / 10" + '\n' +
+  alert("Text" + ": " + du_text.toFixed(1) + " ms / 2" + '\n' +
         "DOM"  + ": " + du_docs.toFixed(1) + " ms / 1");
 
   const items_text  = parse_sect_text_1(text, name);
   const  json_text  =  JSON.stringify  (items_text);
   if    (json_text === JSON.stringify  (items_docs)) {
 
-    alert("ok sect " + name + ": " + json_text.length);
+//  alert("ok sect " + name + ": text " + text.length + " to JSON " + json_text.length);
   }
   else {
     alert("no sect " + name);
@@ -202,21 +202,21 @@ function parse_sect_desc(text) {
   return descs;
 }
 
-// 2026-09-15 Size: 321 497
-// 2026-10-15 Size: 321 948
-// 2026-11-15 Size: 322 235
+// 2026-09-15 Text: 538 674 chars, JSON: 321 497 chars
+// 2026-10-15 Text: 539 126 chars, JSON: 321 948 chars
+// 2026-11-15 Text: 539 412 chars, JSON: 322 235 chars
 //
-// Text:  10.3 ms / 10
-// DOM : 111.4 ms / 1
+// Text: 10.3 ms / 10
+// DOM : 80.2 ms / 1
 //
-function parse_stat_text_10(text) { // Rename: text_10 <-> text
-  let du_text = Infinity;
+function parse_stat_text_test(text) { // Rename: text_test <-> text
+  let du_text   = Infinity;
 
   for (let warm = 0; warm < 100; warm++) parse_stat_text_1(text);
 
   for (let loop = 0; loop < 100; loop++) {
     const start = performance_start();
-    for  (let i = 0; i < 10; i++) parse_stat_text_1(text);
+    for  (let i = 0; i    <  10; i++)    parse_stat_text_1(text);
     const du_10 = performance.now() - start;
     if   (du_10 < du_text) du_text = du_10;
   }
@@ -237,7 +237,7 @@ function parse_stat_text_10(text) { // Rename: text_10 <-> text
   const json_text  =  JSON.stringify(stat_text);
   if   (json_text === JSON.stringify(stat_docs)) {
 
-    alert("ok stat: " + json_text.length);
+//  alert("ok text " + text.length + " to JSON " + json_text.length);
   }
   else {
     alert("no stat");
