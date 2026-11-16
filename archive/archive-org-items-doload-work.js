@@ -96,58 +96,60 @@ function performance_start() {
   return start_0;
 }
 
-// Subj: Text: 52.1 ms / 10; DOM: 84.6 ms / 1; Size: 210 463
-// Desc: Text: 53.8 ms / 10; DOM: 47.1 ms / 1; Size: 730 081
+// Subj: Text: 51.4 ms / 10; DOM: 123.1 ms / 1; Size: 210 463
+// Desc: Text: 53.4 ms / 10; DOM:  54.7 ms / 1; Size: 730 081
 //
 function parse_sect_text_10(text, name) { // Rename: text_10 <-> text
-  let du_min = Infinity;
+  let du_text = Infinity;
 
-  for (let warm = 0; warm < 10; warm++) parse_sect_text_1(text, name);
+  for (let warm = 0; warm < 20; warm++) parse_sect_text_1(text, name);
 
-  for (let loop = 0; loop < 10; loop++) {
-    const start = performance.now();
-    for (let i = 0; i < 10; i++) parse_sect_text_1(text, name);
+  for (let loop = 0; loop < 20; loop++) {
+    const start = performance_start();
+    for  (let i = 0; i < 10; i++) parse_sect_text_1(text, name);
     const du_10 = performance.now() - start;
-    if   (du_10 < du_min) du_min = du_10;
+    if   (du_10 < du_text) du_text = du_10;
   }
 
-  const start  = performance.now();
+  const start  = performance_start();
   const parser = new DOMParser();
   const xml    = parser.parseFromString(text, "text/xml");
   if   (xml.querySelector("parsererror")) throw new Error("Invalid XML format");
 
-  const docs   = xml.querySelectorAll("doc");
-  const it_dom = {};
+  const       docs = xml.querySelectorAll("doc");
+  const items_docs = {};
+
   const data_selector = 'arr[name="' + name + '"], ' +
                         'str[name="' + name + '"]';
   for (const doc of docs) {
     const node_id = doc.querySelector('str[name="identifier"]');
     if  (!node_id) continue;
 
-    const identifier = node_id.textContent;
-    const data = get_node_arr(doc, data_selector, true);
+    const identifier =     node_id .textContent;
+    const data       = get_node_arr(doc, data_selector, true);
 
     // For two collections
     if ((data[0] === undefined) && (name === "description")) data[0] = "";
 
-    it_dom[identifier] = data;
+    items_docs[identifier] = data;
   }
 
-  const du_dom = performance.now() - start;
+  const du_docs = performance.now() - start;
 
-  alert("Text: " + du_min.toFixed(1) + " ms / 10" + '\n' +
-        "DOM: "  + du_dom.toFixed(1) + " ms / 1");
+  alert("Text" + ": " + du_text.toFixed(1) + " ms / 10" + '\n' +
+        "DOM"  + ": " + du_docs.toFixed(1) + " ms / 1");
 
-  const items = parse_sect_text_1(text, name);
-  const str   =  JSON.stringify  (items);
-  if   (str  === JSON.stringify  (it_dom)) {
-    alert("ok sect " + name + ": " + str.length);
+  const items_text  = parse_sect_text_1(text, name);
+  const  json_text  =  JSON.stringify  (items_text);
+  if    (json_text === JSON.stringify  (items_docs)) {
+
+    alert("ok sect " + name + ": " + json_text.length);
   }
   else {
     alert("no sect " + name);
   }
 
-  return items;
+  return items_text;
 }
 
 function parse_sect_text(text, name) { // Rename: text <-> text_1
@@ -205,7 +207,7 @@ function parse_sect_desc(text) {
 // 2026-11-15 Size: 322 235
 //
 // Text:  10.3 ms / 10
-// Docs: 111.4 ms / 1
+// DOM : 111.4 ms / 1
 //
 function parse_stat_text_10(text) { // Rename: text_10 <-> text
   let du_text = Infinity;
@@ -214,7 +216,7 @@ function parse_stat_text_10(text) { // Rename: text_10 <-> text
 
   for (let loop = 0; loop < 100; loop++) {
     const start = performance_start();
-    for (let i = 0; i < 10; i++) parse_stat_text_1(text);
+    for  (let i = 0; i < 10; i++) parse_stat_text_1(text);
     const du_10 = performance.now() - start;
     if   (du_10 < du_text) du_text = du_10;
   }
@@ -228,10 +230,10 @@ function parse_stat_text_10(text) { // Rename: text_10 <-> text
   const stat_docs = conv_stat_docs(docs);
   const   du_docs = performance.now() - start;
 
-  alert("Text: " + du_text.toFixed(1) + " ms / 10" + '\n' +
-        "Docs: " + du_docs.toFixed(1) + " ms / 1");
+  alert("Text" + ": " + du_text.toFixed(1) + " ms / 10" + '\n' +
+        "DOM"  + ": " + du_docs.toFixed(1) + " ms / 1");
 
-  const stat_text  =  parse_stat_text_1  (text);
+  const stat_text  = parse_stat_text_1   (text);
   const json_text  =  JSON.stringify(stat_text);
   if   (json_text === JSON.stringify(stat_docs)) {
 
