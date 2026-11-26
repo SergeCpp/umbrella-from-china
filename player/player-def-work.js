@@ -61,6 +61,31 @@ const sing_keys             = [];    // "", '2', '3', etc.
 
 /* Player Control */
 
+function player_most_visible() {
+  if (document.fullscreenElement) return document.fullscreenElement; // assume it is player
+
+  let player  = null;
+  let visible = 0;
+
+  players_video.forEach(p => {
+    const p_rect    = p.getBoundingClientRect();
+
+    const p_top     = p_rect.top;
+    const p_bottom  = p_rect.bottom;
+
+    const w_height  = window.innerHeight;
+
+    const p_visible = Math.min(p_bottom, w_height) - Math.max(p_top, 0);
+
+    if     (visible < p_visible) {
+            visible = p_visible;
+            player  = p;
+    }
+  });
+
+  return player;
+}
+
 function scroll_to_view(player) {
   if  (!player || (player.localName !== 'video')) return;
 
@@ -639,6 +664,43 @@ function init() {
     //
     player.onplaying = () => scroll_to_view_timed(player);
   });
+
+  if (!players_video.length) return;
+
+  document.onkeyup = event => {
+    if (event.code !== 'KeyF') return;
+    if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
+
+    if (document.fullscreenElement) { document.exitFullscreen(); return; }
+
+    const player = player_most_visible();
+
+    if   (player) {
+          player.requestFullscreen()
+            .then (() => {})
+            .catch(() => {});
+    }
+  };
+
+  document.onkeydown = event => {
+    if ((event.code !== 'Comma') && (event.code !== 'Period')) return;
+    if ( event.ctrlKey || event.altKey || event.metaKey) return;
+
+    const player =  player_most_visible();
+    if  (!player || player.ended || !player.paused || !player.duration || player.seeking) return;
+
+    let   time   =  player.currentTime;
+    const offset =   event.shiftKey ? 0.5 : 1 / 30;
+
+    switch (event.code) {
+      case 'Comma'  : time = Math.max(time - offset, 0);               break;
+      case 'Period' : time = Math.min(time + offset, player.duration); break;
+    }
+
+    if (player.currentTime !== time) {
+        player.currentTime =   time;
+    }
+  };
 }
 
 /* Songs x Times */
@@ -772,8 +834,10 @@ function get_song_id_curr(player, player_type, key) {
         }
       }
     }
+
     return null;
   }
+
   if(player_type === "item") {
     const item_key = key;
     const player_src = player.currentSrc;
@@ -783,6 +847,7 @@ function get_song_id_curr(player, player_type, key) {
     const  song_id = item_data[item_key].file_name_songs[song_file_name];
     return song_id;
   }
+
   return null;
 }
 
