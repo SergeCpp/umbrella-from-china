@@ -668,6 +668,20 @@ function init() {
   if (!players_video.length) return;
 
   document.onkeyup = event => {
+    if ((event.key === 'Enter') || (event.key === ' ')) {
+      const player = document.fullscreenElement;
+      if  (!player || (player === event.target)) return;
+
+      if   (player.paused) {
+            player_to_play(player);
+      }
+      else {    // played
+            player.pause();
+      }
+
+      return;
+    }
+
     if (event.code !== 'KeyF') return;
     if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
 
@@ -683,6 +697,14 @@ function init() {
   };
 
   document.onkeydown = event => {
+    if ((event.key === 'Enter') || (event.key === ' ')) {
+      const player = document.fullscreenElement;
+      if  (!player || (player === event.target)) return;
+
+      event.preventDefault();
+      return;
+    }
+
     if ((event.code !== 'Comma') && (event.code !== 'Period')) return;
     if ( event.ctrlKey || event.altKey || event.metaKey) return;
 
