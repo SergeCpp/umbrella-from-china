@@ -645,8 +645,13 @@ function init() {
           player.controls = true;
 
       if (player.paused) {
+        if ( player.duration ||
+            (player.networkState === HTMLMediaElement.NETWORK_IDLE) ||  // 1
+            (player.networkState === HTMLMediaElement.NETWORK_LOADING)) // 2
+        {
           scroll_to_view(player);
           player_to_play(player);
+        }
       }
       else {  // played
           player.pause();
@@ -673,10 +678,15 @@ function init() {
       if  (!player || (player === event.target)) return;
 
       if   (player.paused) {
-            player_to_play(player);
+        if ( player.duration ||
+            (player.networkState === HTMLMediaElement.NETWORK_IDLE) ||  // 1
+            (player.networkState === HTMLMediaElement.NETWORK_LOADING)) // 2
+        {
+          player_to_play(player);
+        }
       }
-      else {    // played
-            player.pause();
+      else {  // played
+          player.pause();
       }
 
       return;
