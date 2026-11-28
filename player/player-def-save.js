@@ -64,22 +64,22 @@ const sing_keys             = [];    // "", '2', '3', etc.
 function player_most_visible() {
   if (document.fullscreenElement) return document.fullscreenElement; // assume it is player
 
-  let player  = null;
-  let visible = 0;
+  let       player  =   null;
+  let       visible =   0;
+
+  const   w_height  =   window.innerHeight;
 
   players_video.forEach(p => {
-    const p_rect    = p.getBoundingClientRect();
+    const p_rect    =   p.getBoundingClientRect();
 
-    const p_top     = p_rect.top;
-    const p_bottom  = p_rect.bottom;
+    const p_top     =   p_rect.top;
+    const p_bottom  =   p_rect.bottom;
 
-    const w_height  = window.innerHeight;
+    const p_visible =   Math.min(p_bottom, w_height) - Math.max(p_top, 0);
 
-    const p_visible = Math.min(p_bottom, w_height) - Math.max(p_top, 0);
-
-    if     (visible < p_visible) {
-            visible = p_visible;
-            player  = p;
+    if     (visible <   p_visible) {
+            visible =   p_visible;
+            player  =   p;
     }
   });
 
@@ -657,6 +657,8 @@ function init() {
 
   players_video = Array.from(document.querySelectorAll('video'));
 
+  if (!players_video.length) return;
+
   players_video.forEach(player => {
     player.onclick = () => {
       if (player === document.fullscreenElement) return;
@@ -677,51 +679,58 @@ function init() {
     player.onplaying = () => scroll_to_view_timed(player);
   });
 
-  if (!players_video.length) return;
-
   document.onkeyup = event => {
+    if ( event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
+
+    const fullscreen_element = document.fullscreenElement;
+
     if ((event.key === 'Enter') || (event.key === ' ')) {
-      const  player = document.fullscreenElement;
+      const  player =   fullscreen_element;
       if   (!player || (player === event.target)) return;
 
       player_toggle_play(player);
       return;
     }
 
-    if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
+    const player = player_most_visible();
+
+    if (event.code === 'KeyM') {
+      if (player) player.muted = !player.muted;
+      return;
+    }
 
     if (event.code === 'KeyK') {
       player_toggle_play(
-        player_most_visible(),
-        document.fullscreenElement ? false : 'controls',
-       'scroll');
+        player,
+        fullscreen_element ? false : 'controls',
+        fullscreen_element ? false : 'scroll');
 
       return;
     }
 
     if (event.code !== 'KeyF') return;
 
-    if (document.fullscreenElement) { document.exitFullscreen(); return; }
+    if (fullscreen_element) { document.exitFullscreen(); return; }
 
-    const player = player_most_visible();
-
-    if   (player) {
-          player.requestFullscreen()
-            .then (() => {})
-            .catch(() => {});
+    if (player) {
+        player.requestFullscreen()
+          .then (() => {})
+          .catch(() => {});
     }
   };
 
   document.onkeydown = event => {
-    if ((event.key === 'Enter') || (event.key === ' ')) {
+    if  ( event.ctrlKey || event.altKey || event.metaKey) return;
+
+    if  ((event.key === 'Enter') || (event.key === ' ')) {
+      if (event.shiftKey) return;
+
       const player = document.fullscreenElement;
       if  (!player || (player === event.target)) return;
 
       event.preventDefault();
       return;
     }
-
-    if   (event.ctrlKey || event.altKey || event.metaKey) return;
 
     const code_cp = (event.code === 'Comma') || (event.code === 'Period');
     const code_jl = (event.code === 'KeyJ' ) || (event.code === 'KeyL'  );
