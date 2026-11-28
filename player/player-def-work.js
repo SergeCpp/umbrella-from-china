@@ -87,6 +87,8 @@ function player_most_visible() {
 }
 
 function scroll_to_view(player) {
+  if  (document.fullscreenElement) return;
+
   if  (!player || (player.localName !== 'video')) return;
 
   const p_rect   = player.getBoundingClientRect();
@@ -130,6 +132,8 @@ function scroll_to_view(player) {
 }
 
 function scroll_to_view_timed(player) {
+  if  (document.fullscreenElement) return;
+
   if  (!player || (player.localName !== 'video')) return;
 
   scroll_to_view(player); // for case of the frame (or poster) is rendered already
@@ -156,6 +160,22 @@ function player_to_play(player) {
   player.play()
     .then (() => {})
     .catch(() => {});
+}
+
+function player_toggle_play(player, controls = false, scroll = false) {
+  if (!player) return;
+
+  if (!player.paused) { player.pause(); return; } // played
+
+  if (!player.duration &&
+      (player.networkState !== HTMLMediaElement.NETWORK_IDLE)     &&      // 1
+      (player.networkState !== HTMLMediaElement.NETWORK_LOADING)) return; // 2
+
+  if  (controls && !player.controls) player.controls = true;
+
+  if  (scroll) scroll_to_view(player);
+
+  player_to_play(player);
 }
 
 function goto_song(song_id, pl) {
@@ -642,20 +662,7 @@ function init() {
       if (player === document.fullscreenElement) return;
       if (player.controls) return;
 
-          player.controls = true;
-
-      if (player.paused) {
-        if ( player.duration ||
-            (player.networkState === HTMLMediaElement.NETWORK_IDLE) ||  // 1
-            (player.networkState === HTMLMediaElement.NETWORK_LOADING)) // 2
-        {
-          scroll_to_view(player);
-          player_to_play(player);
-        }
-      }
-      else {  // played
-          player.pause();
-      }
+      player_toggle_play(player, 'controls', 'scroll');
     };
 
     player.onfullscreenchange = () => {
@@ -674,26 +681,25 @@ function init() {
 
   document.onkeyup = event => {
     if ((event.key === 'Enter') || (event.key === ' ')) {
-      const player = document.fullscreenElement;
-      if  (!player || (player === event.target)) return;
+      const  player = document.fullscreenElement;
+      if   (!player || (player === event.target)) return;
 
-      if   (player.paused) {
-        if ( player.duration ||
-            (player.networkState === HTMLMediaElement.NETWORK_IDLE) ||  // 1
-            (player.networkState === HTMLMediaElement.NETWORK_LOADING)) // 2
-        {
-          player_to_play(player);
-        }
-      }
-      else {  // played
-          player.pause();
-      }
+      player_toggle_play(player);
+      return;
+    }
+
+    if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
+
+    if (event.code === 'KeyK') {
+      player_toggle_play(
+        player_most_visible(),
+        document.fullscreenElement ? false : 'controls',
+       'scroll');
 
       return;
     }
 
     if (event.code !== 'KeyF') return;
-    if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
 
     if (document.fullscreenElement) { document.exitFullscreen(); return; }
 
@@ -715,18 +721,29 @@ function init() {
       return;
     }
 
-    if ((event.code !== 'Comma') && (event.code !== 'Period')) return;
-    if ( event.ctrlKey || event.altKey || event.metaKey) return;
+    if   (event.ctrlKey || event.altKey || event.metaKey) return;
+
+    const code_cp = (event.code === 'Comma') || (event.code === 'Period');
+    const code_jl = (event.code === 'KeyJ' ) || (event.code === 'KeyL'  );
+
+    if  (!code_cp && !code_jl) return;
 
     const player =  player_most_visible();
-    if  (!player || player.ended || !player.paused || !player.duration || player.seeking) return;
+    if  (!player || player.ended || !player.duration || player.seeking) return;
+
+    if  (!player.paused && code_cp) return;
 
     let   time   =  player.currentTime;
-    const offset =   event.shiftKey ? 0.5 : 1 / 30;
+
+    const ofs_cp =   event.shiftKey ?  0.5 : 1 / 30;
+    const ofs_jl =   event.shiftKey ? 30   : 5;
 
     switch (event.code) {
-      case 'Comma'  : time = Math.max(time - offset, 0);               break;
-      case 'Period' : time = Math.min(time + offset, player.duration); break;
+      case 'Comma'  : time = Math.max(time - ofs_cp, 0);               break;
+      case 'Period' : time = Math.min(time + ofs_cp, player.duration); break;
+
+      case 'KeyJ'   : time = Math.max(time - ofs_jl, 0);               break;
+      case 'KeyL'   : time = Math.min(time + ofs_jl, player.duration); break;
     }
 
     if (player.currentTime !== time) {
@@ -1155,7 +1172,7 @@ function item_player_transitions(item_key) {
   const player = document.getElementById(item_name + '-song-player');
   if  (!player) return;
                              // HTMLMediaElement.NETWORK_NO_SOURCE // 3
-  if   (player.paused) {     // HTMLMediaElement.NETWORK_LOADING   // 2
+  if  ( player.paused) {     // HTMLMediaElement.NETWORK_LOADING   // 2
     if (player.networkState === HTMLMediaElement.NETWORK_IDLE) {   // 1
         item_data[item_key].player_running = false;
     }
@@ -1231,7 +1248,7 @@ function timer_logic() {
       if  (player.controls)
            player.controls = false;
     }
-    else {
+    else {     // played
       if (!player.controls)
            player.controls = true;
     }
